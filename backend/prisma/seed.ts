@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { seedConstants } from '../seed-constants';
+import { seedPrices } from '../seed-prices';
 
 const prisma = new PrismaClient();
 
@@ -55,9 +57,9 @@ async function main() {
   });
 
   console.log('Үндсэн хэрэглэгчдийг амжилттай үүсгэлээ!');
-  console.log({ admin, finance, sales, production });
+  await seedConstants(prisma);
+  await seedPrices(prisma);
 }
-
 main()
   .catch((e) => {
     console.error(e);

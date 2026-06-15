@@ -1,7 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 const initialConstants = [
   { type: 'CATEGORY', value: 'Ном' },
   { type: 'CATEGORY', value: 'Сэтгүүл' },
@@ -23,7 +21,7 @@ const initialConstants = [
   { type: 'NEXT_PROCESS', value: 'Түүхий эд бэлтгэх' }
 ];
 
-async function main() {
+export async function seedConstants(prisma: PrismaClient) {
   console.log('Seeding constants...');
   for (const c of initialConstants) {
     const existing = await prisma.constant.findFirst({
@@ -39,14 +37,5 @@ async function main() {
       console.log(`Added ${c.type}: ${c.value}`);
     }
   }
-  console.log('Done!');
+  console.log('Done constants!');
 }
-
-main()
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

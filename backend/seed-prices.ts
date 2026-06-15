@@ -1,7 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 const prices = [
   // Номын шар
   { category: 'Цаас', item_name: 'Номын шар Гөлгөр 68гр B1 (789x1092)', unit_cost: 300 },
@@ -70,14 +68,14 @@ const prices = [
   { category: 'Материал', item_name: 'Цавуу /хажуу болон шил наана/ 20кг', unit_cost: 480000 },
 ];
 
-async function main() {
+export async function seedPrices(prisma: PrismaClient) {
   console.log('Seeding MasterPrice...');
   // Find the first admin user to assign logs
   const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
   
   for (const p of prices) {
     const existing = await prisma.masterprice.findFirst({
-      where: { item_name: p.item_name }
+      where: { item_name: p.item_name, category: p.category }
     });
 
     if (!existing) {
@@ -85,7 +83,8 @@ async function main() {
         data: {
           category: p.category,
           item_name: p.item_name,
-          unit_cost: p.unit_cost
+          unit_cost: p.unit_cost,
+          divide_by: (p as any).divide_by,
         }
       });
 
@@ -103,14 +102,5 @@ async function main() {
       console.log(`Added ${p.item_name}: ${p.unit_cost}₮`);
     }
   }
-  console.log('Done!');
+  console.log('Done prices!');
 }
-
-main()
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
