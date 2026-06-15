@@ -1,0 +1,52 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const initialConstants = [
+  { type: 'CATEGORY', value: 'Ном' },
+  { type: 'CATEGORY', value: 'Сэтгүүл' },
+  { type: 'CATEGORY', value: 'Брошур' },
+  { type: 'CATEGORY', value: 'Календарь' },
+  { type: 'SIZE', value: 'A4' },
+  { type: 'SIZE', value: 'A5' },
+  { type: 'SIZE', value: 'B5' },
+  { type: 'SIZE', value: 'Custom' },
+  { type: 'COVER_COLOR', value: '4+0' },
+  { type: 'COVER_COLOR', value: '4+4' },
+  { type: 'INNER_COLOR', value: '1+0' },
+  { type: 'INNER_COLOR', value: '1+1' },
+  { type: 'INNER_COLOR', value: '4+4' },
+  { type: 'PAYMENT_METHOD', value: 'Бэлэн' },
+  { type: 'PAYMENT_METHOD', value: 'Данс' },
+  { type: 'PAYMENT_METHOD', value: 'Карт' },
+  { type: 'NEXT_PROCESS', value: 'Эх бэлтгэл' },
+  { type: 'NEXT_PROCESS', value: 'Түүхий эд бэлтгэх' }
+];
+
+async function main() {
+  console.log('Seeding constants...');
+  for (const c of initialConstants) {
+    const existing = await prisma.constant.findFirst({
+      where: { type: c.type, value: c.value }
+    });
+    if (!existing) {
+      await prisma.constant.create({
+        data: {
+          type: c.type,
+          value: c.value
+        }
+      });
+      console.log(`Added ${c.type}: ${c.value}`);
+    }
+  }
+  console.log('Done!');
+}
+
+main()
+  .catch(e => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
