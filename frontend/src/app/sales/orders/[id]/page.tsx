@@ -53,6 +53,7 @@ export default function EditOrderPage() {
             📄 Үнийн санал (PDF)
           </button>
         )}
+      </header>
       <div className="card">
         <OrderForm initialData={initialData} isEdit={!isDuplicate} orderId={Number(id)} />
       </div>
