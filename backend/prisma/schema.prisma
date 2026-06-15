@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -17,14 +17,14 @@ model constant {
 
 model customer {
   id              Int      @id @default(autoincrement())
-  name            String   @unique(map: "Customer_name_key")
+  name            String   @unique
   phone           String?
   email           String?
   company_name    String?
   discount_margin Int?     @default(20)
   notes           String?
   createdAt       DateTime @default(now())
-  updatedAt          DateTime            @updatedAt
+  updatedAt       DateTime @updatedAt
 }
 
 model masterprice {
@@ -33,7 +33,7 @@ model masterprice {
   item_name      String
   unit_cost      Float
   createdAt      DateTime         @default(now())
-  updatedAt          DateTime            @updatedAt
+  updatedAt      DateTime         @updatedAt
   masterpricelog masterpricelog[]
 }
 
@@ -44,48 +44,48 @@ model masterpricelog {
   old_cost      Float
   new_cost      Float
   createdAt     DateTime    @default(now())
-  user          user        @relation(fields: [changed_by], references: [id], map: "MasterPriceLog_changed_by_fkey")
-  masterprice   masterprice @relation(fields: [masterPriceId], references: [id], onDelete: Cascade, map: "MasterPriceLog_masterPriceId_fkey")
+  user          user        @relation(fields: [changed_by], references: [id])
+  masterprice   masterprice @relation(fields: [masterPriceId], references: [id], onDelete: Cascade)
 
-  @@index([changed_by], map: "MasterPriceLog_changed_by_fkey")
-  @@index([masterPriceId], map: "MasterPriceLog_masterPriceId_fkey")
+  @@index([changed_by])
+  @@index([masterPriceId])
 }
 
 model order {
-  id                 Int                 @id @default(autoincrement())
-  customer_name      String
-  phone              String?
-  deadline           DateTime?
-  product_name       String
-  category           String?
-  total_qty          Int
-  size               String?
-  sub_size           String?
-  needs_design       Boolean             @default(false)
-  is_urgent          Boolean             @default(false)
-  sales_person_name  String?
-  sales_person_id    Int?
-  notes              String?
-  profit_margin      Float               @default(0)
-  has_vat            Boolean             @default(false)
-  final_price        Float               @default(0)
-  payment_method_1   String?
-  payment_percent_1  Float?
-  payment_method_2   String?
-  payment_percent_2  Float?
-  finance_notes      String?
-  current_status     String              @default("Хүлээгдэж буй")
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  order_number       String?             @unique(map: "Order_order_number_key")
-  user               user?               @relation(fields: [sales_person_id], references: [id], map: "Order_sales_person_id_fkey")
-  materials          ordermaterial[]
-  operations         orderoperation[]
-  outsourcedJobs     orderoutsourced[]
-  specifications     orderspecification?
-  orderstatuslog     orderstatuslog[]
+  id                Int                 @id @default(autoincrement())
+  customer_name     String
+  phone             String?
+  deadline          DateTime?
+  product_name      String
+  category          String?
+  total_qty         Int
+  size              String?
+  sub_size          String?
+  needs_design      Boolean             @default(false)
+  is_urgent         Boolean             @default(false)
+  sales_person_name String?
+  sales_person_id   Int?
+  notes             String?
+  profit_margin     Float               @default(0)
+  has_vat           Boolean             @default(false)
+  final_price       Float               @default(0)
+  payment_method_1  String?
+  payment_percent_1 Float?
+  payment_method_2  String?
+  payment_percent_2 Float?
+  finance_notes     String?
+  current_status    String              @default("Хүлээгдэж буй")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  order_number      String?             @unique
+  user              user?               @relation(fields: [sales_person_id], references: [id])
+  materials         ordermaterial[]
+  operations        orderoperation[]
+  outsourcedJobs    orderoutsourced[]
+  specifications    orderspecification?
+  orderstatuslog    orderstatuslog[]
 
-  @@index([sales_person_id], map: "Order_sales_person_id_fkey")
+  @@index([sales_person_id])
 }
 
 model ordermaterial {
@@ -103,9 +103,9 @@ model ordermaterial {
   total_cost    Float
   notes         String?
   sheet_qty     Float?
-  order         order   @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "OrderMaterial_order_id_fkey")
+  order         order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
-  @@index([order_id], map: "OrderMaterial_order_id_fkey")
+  @@index([order_id])
 }
 
 model orderoperation {
@@ -116,9 +116,9 @@ model orderoperation {
   unit_cost      Float
   total_cost     Float
   notes          String?
-  order          order   @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "OrderOperation_order_id_fkey")
+  order          order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
-  @@index([order_id], map: "OrderOperation_order_id_fkey")
+  @@index([order_id])
 }
 
 model orderoutsourced {
@@ -129,20 +129,20 @@ model orderoutsourced {
   unit_cost  Float
   total_cost Float
   notes      String?
-  order      order   @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "OrderOutsourced_order_id_fkey")
+  order      order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
-  @@index([order_id], map: "OrderOutsourced_order_id_fkey")
+  @@index([order_id])
 }
 
 model orderspecification {
   id           Int     @id @default(autoincrement())
-  order_id     Int     @unique(map: "OrderSpecification_order_id_key")
+  order_id     Int     @unique
   cover_color  String?
   inner_color  String?
   has_bookmark String?
   total_pages  Int?
   print_cost   Float?  @default(0)
-  order        order   @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "OrderSpecification_order_id_fkey")
+  order        order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 }
 
 model orderstatuslog {
@@ -153,16 +153,16 @@ model orderstatuslog {
   new_status String
   notes      String?
   createdAt  DateTime @default(now())
-  user       user     @relation(fields: [changed_by], references: [id], map: "OrderStatusLog_changed_by_fkey")
-  order      order    @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "OrderStatusLog_order_id_fkey")
+  user       user     @relation(fields: [changed_by], references: [id])
+  order      order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
-  @@index([changed_by], map: "OrderStatusLog_changed_by_fkey")
-  @@index([order_id], map: "OrderStatusLog_order_id_fkey")
+  @@index([changed_by])
+  @@index([order_id])
 }
 
 model producttemplate {
   id            Int      @id @default(autoincrement())
-  template_name String   @unique(map: "ProductTemplate_template_name_key")
+  template_name String   @unique
   category      String?
   size          String?
   cover_color   String?
@@ -171,7 +171,7 @@ model producttemplate {
   needs_design  Boolean  @default(false)
   notes         String?
   createdAt     DateTime @default(now())
-  updatedAt          DateTime            @updatedAt
+  updatedAt     DateTime @updatedAt
 }
 
 model user {
@@ -180,7 +180,7 @@ model user {
   role           user_role        @default(SALES)
   password       String
   createdAt      DateTime         @default(now())
-  updatedAt          DateTime            @updatedAt
+  updatedAt      DateTime         @updatedAt
   stamp_url      String?
   masterpricelog masterpricelog[]
   order          order[]
