@@ -221,8 +221,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       const existing = newOps.find(o => o.operation_name === name);
       if (existing) {
         if (existing.qty !== qty || existing.unit_cost !== ctpPrice) {
-          existing.qty = qty;
-          existing.unit_cost = ctpPrice;
+          const index = newOps.indexOf(existing);
+          newOps[index] = { ...existing, qty, unit_cost: ctpPrice };
           opsChanged = true;
         }
       } else {
