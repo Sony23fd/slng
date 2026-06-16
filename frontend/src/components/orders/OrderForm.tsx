@@ -362,8 +362,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <label>[B1] Хавтасны өнгө (Гадна)</label>
               <select {...register("cover_color")}>
                 <option value="">Сонгох...</option>
-                {masterPrices.filter((p: any) => p.category === 'Хавтасны өнгө').map((p: any) => (
-                  <option key={p.id} value={p.item_name}>{p.item_name}</option>
+                {groupedConstants['COVER_COLOR']?.map((c: any) => (
+                  <option key={c.id} value={c.value}>{c.value}</option>
                 ))}
               </select>
             </div>
@@ -371,8 +371,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <label>[B2] Хавтасны дотор өнгө/хэвлэл</label>
               <select {...register("inner_color")}>
                 <option value="">Сонгох...</option>
-                {masterPrices.filter((p: any) => p.category === 'Дотор өнгө').map((p: any) => (
-                  <option key={p.id} value={p.item_name}>{p.item_name}</option>
+                {groupedConstants['INNER_COLOR']?.map((c: any) => (
+                  <option key={c.id} value={c.value}>{c.value}</option>
                 ))}
               </select>
             </div>
