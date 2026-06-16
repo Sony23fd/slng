@@ -433,7 +433,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                              const divs = calculatePaperDivision(m.print_size || 'A2', val);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
@@ -509,7 +509,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         setValue(`materials.${index}.press_sheet`, String(m4));
                         const base = Number(m.base_qty) || 0;
                         const extra = Number(m.extra_qty) || 0;
-                        const divs = calculatePaperDivision(m.print_size || 'A2', val);
+                        const divs = calculatePaperDivision(m.print_size || 'A2', a7);
                         const setups = calculateSetups(m4, divs);
                         const total = (base * m4) + (extra * setups);
                         setValue(`materials.${index}.total_qty`, total);
