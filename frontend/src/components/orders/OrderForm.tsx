@@ -185,29 +185,59 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     const b1 = formValues.cover_color;
     const b2 = formValues.inner_color;
     const mats = formValues.materials || [];
-    let totalPlates = 0;
-
-    mats.forEach(m => {
+    const ops = getValues('operations') || [];
+    
+    const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
+    const ctpPrice = Number(ctpPriceStr);
+    
+    const requiredCtps: Record<string, number> = {};
+    
+    mats.forEach((m, i) => {
       const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
       const colorToUse = isCover ? b1 : b2;
-      totalPlates += calcPlates(colorToUse, Number(m.press_sheet) || 0);
+      const plates = calcPlates(colorToUse, Number(m.press_sheet) || 0);
+      if (plates > 0) {
+        const name = `CTP хавтан - ${m.material_name || `Материал ${i+1}`}`;
+        requiredCtps[name] = (requiredCtps[name] || 0) + plates;
+      }
     });
 
-    if (totalPlates > 0) {
-      const ops = getValues('operations') || [];
-      const existingIndex = ops.findIndex(o => (o.operation_name || '').includes('CTP'));
-      
-      const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
-      const ctpPrice = Number(ctpPriceStr);
+    let opsChanged = false;
+    let newOps = [...ops];
 
-      if (existingIndex >= 0) {
-        if (ops[existingIndex].qty !== totalPlates || ops[existingIndex].unit_cost !== ctpPrice) {
-          setValue(`operations.${existingIndex}.qty`, totalPlates);
-          setValue(`operations.${existingIndex}.unit_cost`, ctpPrice);
+    // Устгагдсан эсвэл тоо хэмжээ нь 0 болсон CTP хавтангуудыг устгах
+    newOps = newOps.filter(o => {
+      if ((o.operation_name || '').startsWith('CTP хавтан')) {
+        if (!requiredCtps[o.operation_name]) {
+          opsChanged = true;
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Шинээр нэмэгдсэн эсвэл тоо нь өөрчлөгдсөн CTP хавтангуудыг шинэчлэх
+    Object.entries(requiredCtps).forEach(([name, qty]) => {
+      const existing = newOps.find(o => o.operation_name === name);
+      if (existing) {
+        if (existing.qty !== qty || existing.unit_cost !== ctpPrice) {
+          existing.qty = qty;
+          existing.unit_cost = ctpPrice;
+          opsChanged = true;
         }
       } else {
-        appendOp({ operation_name: 'CTP хавтан', qty: totalPlates, unit_cost: ctpPrice, notes: 'Автомат тооцоолол' });
+        newOps.push({
+          operation_name: name,
+          qty,
+          unit_cost: ctpPrice,
+          notes: 'Автомат тооцоолол'
+        });
+        opsChanged = true;
       }
+    });
+
+    if (opsChanged) {
+      setValue('operations', newOps);
     }
   }, [formValues.materials, formValues.cover_color, formValues.inner_color, constants, getValues, setValue, appendOp]);
 
