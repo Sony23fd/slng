@@ -288,7 +288,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     setValue(`materials.${index}.base_qty`, a6);
                     const press = Number(m.press_sheet) || 1;
                     const extra = Number(m.extra_qty) || 0;
-                    const total = (a6 + extra) * press;
+                    const total = (a6 * press) + (extra * Math.ceil(press));
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
                     setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -323,7 +323,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const total = (base + extra) * m4;
+                              const total = (base * m4) + (extra * Math.ceil(m4));
                               setValue(`materials.${index}.total_qty`, total);
                               const divBy = Number(m.divide_by) || 1;
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -395,7 +395,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         setValue(`materials.${index}.press_sheet`, String(m4));
                         const base = Number(m.base_qty) || 0;
                         const extra = Number(m.extra_qty) || 0;
-                        const total = (base + extra) * m4;
+                        const total = (base * m4) + (extra * Math.ceil(m4));
                         setValue(`materials.${index}.total_qty`, total);
                         const divBy = Number(m.divide_by) || 1;
                         setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -551,7 +551,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 setValue(`materials.${index}.press_sheet`, String(m4));
                                 const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                                 const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                const total = (base + extra) * m4;
+                                const total = (base * m4) + (extra * Math.ceil(m4));
                                 setValue(`materials.${index}.total_qty`, total);
                                 const divBy = ratio > 1 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
                                 setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -570,7 +570,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const press = Number(e.target.value) || 1;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                            const total = (base + extra) * press;
+                            const total = (base * press) + (extra * Math.ceil(press));
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -583,7 +583,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const base = Number(e.target.value) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const total = (base + extra) * press;
+                            const total = (base * press) + (extra * Math.ceil(press));
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -596,7 +596,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const total = (base + extra) * press;
+                            const total = (base * press) + (extra * Math.ceil(press));
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
