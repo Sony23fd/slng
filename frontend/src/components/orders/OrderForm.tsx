@@ -159,6 +159,59 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const [displayUnitPrice, setDisplayUnitPrice] = useState<string>('');
 
   useEffect(() => {
+    const calcPlates = (colorStr: string, pressSheet: number) => {
+      if (!colorStr || !pressSheet) return 0;
+      const parts = colorStr.split('+').map(Number);
+      if (parts.length !== 2) return 0;
+      const front = parts[0] || 0;
+      const back = parts[1] || 0;
+      const platesPerSheet = front + back;
+      if (platesPerSheet === 0) return 0;
+
+      const fullSheets = Math.floor(pressSheet);
+      const fraction = pressSheet - fullSheets;
+
+      let fractionalPlates = 0;
+      if (fraction > 0) {
+        if (back > 0) {
+          fractionalPlates = Math.max(front, back);
+        } else {
+          fractionalPlates = front;
+        }
+      }
+      return (fullSheets * platesPerSheet) + fractionalPlates;
+    };
+
+    const b1 = formValues.cover_color;
+    const b2 = formValues.inner_color;
+    const mats = formValues.materials || [];
+    let totalPlates = 0;
+
+    mats.forEach(m => {
+      const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+      const colorToUse = isCover ? b1 : b2;
+      totalPlates += calcPlates(colorToUse, Number(m.press_sheet) || 0);
+    });
+
+    if (totalPlates > 0) {
+      const ops = getValues('operations') || [];
+      const existingIndex = ops.findIndex(o => (o.operation_name || '').includes('CTP'));
+      
+      const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
+      const ctpPrice = Number(ctpPriceStr);
+
+      if (existingIndex >= 0) {
+        if (ops[existingIndex].qty !== totalPlates || ops[existingIndex].unit_cost !== ctpPrice) {
+          setValue(`operations.${existingIndex}.qty`, totalPlates);
+          setValue(`operations.${existingIndex}.unit_cost`, ctpPrice);
+        }
+      } else {
+        appendOp({ operation_name: 'CTP хавтан', qty: totalPlates, unit_cost: ctpPrice, notes: 'Автомат тооцоолол' });
+      }
+    }
+  }, [formValues.materials, formValues.cover_color, formValues.inner_color, constants, getValues, setValue, appendOp]);
+
+  useEffect(() => {
     const currentRounded = Math.round(prices.unitPrice).toString();
     if (Math.abs(Number(displayUnitPrice) - prices.unitPrice) > 1) {
       setDisplayUnitPrice(currentRounded);
