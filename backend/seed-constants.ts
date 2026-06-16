@@ -18,7 +18,8 @@ const initialConstants = [
   { type: 'PAYMENT_METHOD', value: 'Данс' },
   { type: 'PAYMENT_METHOD', value: 'Карт' },
   { type: 'NEXT_PROCESS', value: 'Эх бэлтгэл' },
-  { type: 'NEXT_PROCESS', value: 'Түүхий эд бэлтгэх' }
+  { type: 'NEXT_PROCESS', value: 'Түүхий эд бэлтгэх' },
+  { type: 'CTP_PLATE_PRICE', value: '8800' }
 ];
 
 export async function seedConstants(prisma: PrismaClient) {
