@@ -61,6 +61,27 @@ interface OrderFormValues {
   next_process: string;
 }
 
+
+// helpers for folding algorithm
+function popcount(n: number) {
+  let count = 0;
+  let val = Math.floor(n);
+  while (val > 0) {
+    count += val & 1;
+    val >>= 1;
+  }
+  return count;
+}
+
+function calculateSetups(pressSheet: number, divisions: number) {
+  const fullSheets = Math.floor(pressSheet);
+  const fraction = pressSheet - fullSheets;
+  if (fraction === 0) return fullSheets;
+  const fractionLeaves = Math.round(fraction * divisions);
+  const fractionalSetups = popcount(fractionLeaves);
+  return fullSheets + fractionalSetups;
+}
+
 export default function OrderForm({ initialData, isEdit, orderId }: { initialData?: any, isEdit?: boolean, orderId?: number }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
@@ -159,27 +180,26 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const [displayUnitPrice, setDisplayUnitPrice] = useState<string>('');
 
   useEffect(() => {
-    const calcPlates = (colorStr: string, pressSheet: number) => {
+    const calcPlates = (colorStr: string, pressSheet: number, divisions: number) => {
       if (!colorStr || !pressSheet) return 0;
       const parts = colorStr.split('+').map(Number);
       if (parts.length !== 2) return 0;
       const front = parts[0] || 0;
       const back = parts[1] || 0;
-      const platesPerSheet = front + back;
-      if (platesPerSheet === 0) return 0;
+      const platesPerFull = front + back;
+      if (platesPerFull === 0) return 0;
 
       const fullSheets = Math.floor(pressSheet);
       const fraction = pressSheet - fullSheets;
 
-      let fractionalPlates = 0;
+      let fractionalSetups = 0;
       if (fraction > 0) {
-        if (back > 0) {
-          fractionalPlates = Math.max(front, back);
-        } else {
-          fractionalPlates = front;
-        }
+        const fractionLeaves = Math.round(fraction * divisions);
+        fractionalSetups = popcount(fractionLeaves);
       }
-      return (fullSheets * platesPerSheet) + fractionalPlates;
+      
+      const platesPerFraction = Math.max(front, back);
+      return (fullSheets * platesPerFull) + (fractionalSetups * platesPerFraction);
     };
 
     const b1 = formValues.cover_color;
@@ -195,7 +215,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     mats.forEach((m, i) => {
       const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
       const colorToUse = isCover ? b1 : b2;
-      const plates = calcPlates(colorToUse, Number(m.press_sheet) || 0);
+      const a7 = formValues.size || 'A5';
+      const divisions = calculatePaperDivision(m.print_size || 'A2', a7);
+      const plates = calcPlates(colorToUse, Number(m.press_sheet) || 0, divisions);
       if (plates > 0) {
         const name = `CTP хавтан - ${m.material_name || `Материал ${i+1}`}`;
         requiredCtps[name] = (requiredCtps[name] || 0) + plates;
@@ -371,7 +393,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     setValue(`materials.${index}.base_qty`, a6);
                     const press = Number(m.press_sheet) || 1;
                     const extra = Number(m.extra_qty) || 0;
-                    const total = (a6 * press) + (extra * Math.ceil(press));
+                    const a7 = formValues.size || 'A5';
+                    const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                    const setups = calculateSetups(press, divs);
+                    const total = (a6 * press) + (extra * setups);
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
                     setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -408,7 +433,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const total = (base * m4) + (extra * Math.ceil(m4));
+                              const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                              const setups = calculateSetups(m4, divs);
+                              const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
                               const divBy = Number(m.divide_by) || 1;
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -482,7 +509,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         setValue(`materials.${index}.press_sheet`, String(m4));
                         const base = Number(m.base_qty) || 0;
                         const extra = Number(m.extra_qty) || 0;
-                        const total = (base * m4) + (extra * Math.ceil(m4));
+                        const divs = calculatePaperDivision(m.print_size || 'A2', val);
+                        const setups = calculateSetups(m4, divs);
+                        const total = (base * m4) + (extra * setups);
                         setValue(`materials.${index}.total_qty`, total);
                         const divBy = Number(m.divide_by) || 1;
                         setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -639,7 +668,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 setValue(`materials.${index}.press_sheet`, String(m4));
                                 const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                                 const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                const total = (base * m4) + (extra * Math.ceil(m4));
+                                const a7 = formValues.size || 'A5';
+                                const divs = calculatePaperDivision(e.target.value || 'A2', a7);
+                                const setups = calculateSetups(m4, divs);
+                                const total = (base * m4) + (extra * setups);
                                 setValue(`materials.${index}.total_qty`, total);
                                 const divBy = ratio > 1 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
                                 setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -658,7 +690,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const press = Number(e.target.value) || 1;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                            const total = (base * press) + (extra * Math.ceil(press));
+                            const a7 = formValues.size || 'A5';
+                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                            const setups = calculateSetups(press, divs);
+                            const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -671,7 +706,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const base = Number(e.target.value) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const total = (base * press) + (extra * Math.ceil(press));
+                            const a7 = formValues.size || 'A5';
+                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                            const setups = calculateSetups(press, divs);
+                            const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -684,7 +722,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const total = (base * press) + (extra * Math.ceil(press));
+                            const a7 = formValues.size || 'A5';
+                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                            const setups = calculateSetups(press, divs);
+                            const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                             setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
