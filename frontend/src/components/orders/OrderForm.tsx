@@ -372,7 +372,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
                           const targetPages = isCover ? 4 : b4;
                           if (m.print_size && val && targetPages > 0) {
-                            const pagesPerSheet = calculatePaperDivision(m.print_size, val);
+                            const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
                             if (pagesPerSheet > 0) {
                               const m4 = targetPages / pagesPerSheet;
                               setValue(`materials.${index}.press_sheet`, String(m4));
@@ -446,7 +446,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
                     const targetPages = isCover ? 4 : b4;
                     if (m.print_size && a7 && targetPages > 0) {
-                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7);
+                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
                       if (pagesPerSheet > 0) {
                         const m4 = targetPages / pagesPerSheet;
                         setValue(`materials.${index}.press_sheet`, String(m4));
@@ -603,7 +603,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const isCover = (formValues.materials?.[index]?.material_name || '').toLowerCase().includes('хавтас');
                             const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
                             if (val && a7 && b4 > 0) {
-                              const pagesPerSheet = calculatePaperDivision(val, a7);
+                              const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
                               if (pagesPerSheet > 0) {
                                 const m4 = b4 / pagesPerSheet;
                                 setValue(`materials.${index}.press_sheet`, String(m4));
