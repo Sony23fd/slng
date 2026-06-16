@@ -295,16 +295,18 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                       onChange={(selected: any) => {
                         const val = selected ? selected.value : '';
                         field.onChange(val);
-                        // Trigger press_sheet calculation (M4 = M2 / A7)
+                        // Trigger press_sheet calculation (M4 = B4 / (M3 / A7 * 2))
+                        const b4 = Number(getValues('total_pages')) || 0;
                         const materials = getValues('materials') || [];
                         materials.forEach((m, index) => {
-                          if (m.size && val) {
-                            const pressRatio = calculatePaperDivision(m.size, val);
-                            if (pressRatio > 0) {
-                              setValue(`materials.${index}.press_sheet`, String(pressRatio));
+                          if (m.print_size && val && b4 > 0) {
+                            const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
+                            if (pagesPerSheet > 0) {
+                              const m4 = b4 / pagesPerSheet;
+                              setValue(`materials.${index}.press_sheet`, String(m4));
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const total = (base + extra) * pressRatio;
+                              const total = (base + extra) * m4;
                               setValue(`materials.${index}.total_qty`, total);
                               const divBy = Number(m.divide_by) || 1;
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -361,7 +363,31 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <label>[B3] Хавчуурга</label>
               <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
             </div>
-            <div className="form-group"><label>[B4] Нийт нүүр (Хавтас орохгүй)</label><input type="number" {...register("total_pages")} /></div>
+            <div className="form-group">
+              <label>[B4] Нийт нүүр (Хавтас орохгүй)</label>
+              <input type="number" {...register("total_pages", {
+                onChange: (e) => {
+                  const b4 = Number(e.target.value) || 0;
+                  const a7 = getValues('size') || '';
+                  const materials = getValues('materials') || [];
+                  materials.forEach((m, index) => {
+                    if (m.print_size && a7 && b4 > 0) {
+                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
+                      if (pagesPerSheet > 0) {
+                        const m4 = b4 / pagesPerSheet;
+                        setValue(`materials.${index}.press_sheet`, String(m4));
+                        const base = Number(m.base_qty) || 0;
+                        const extra = Number(m.extra_qty) || 0;
+                        const total = (base + extra) * m4;
+                        setValue(`materials.${index}.total_qty`, total);
+                        const divBy = Number(m.divide_by) || 1;
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                      }
+                    }
+                  });
+                }
+              })} />
+            </div>
             <div className="form-group"><label style={{ color: 'var(--primary-hover)', fontWeight: 'bold' }}>[B5] Хэвлэлийн өртөг (₮)</label><input type="number" step="any" readOnly {...register("print_cost")} style={{ border: '1px solid var(--primary-hover)', background: '#f1f5f9' }} /></div>
           </div>
         </section>
@@ -474,18 +500,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                     setValue(`materials.${index}.divide_by`, ratio);
                                     finalDivBy = ratio;
                                   }
-                                  const productSize = formValues.size || '';
-                                  if (productSize && val) {
-                                    const pressRatio = calculatePaperDivision(val, productSize);
-                                    if (pressRatio > 0) {
-                                      setValue(`materials.${index}.press_sheet`, String(pressRatio));
-                                      const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                      const total = (base + extra) * pressRatio;
-                                      setValue(`materials.${index}.total_qty`, total);
-                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / finalDivBy));
-                                    }
-                                  }
+                                  // M4 is no longer calculated from M2, but from M3 and A7
                                 }
                               }}
                               value={field.value ? { value: field.value, label: field.value || (field.value === '' && availableSizes.length > 0 && availableSizes[0].sizeName === '' ? 'Үндсэн (Хэмжээгүй)' : '') } : null}
@@ -507,6 +522,25 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const ratio = calculatePaperDivision(sourceSize, val);
                             if (ratio > 1) {
                               setValue(`materials.${index}.divide_by`, ratio);
+                            }
+                            
+                            // Trigger M4 calculation
+                            const a7 = formValues.size || '';
+                            const b4 = Number(formValues.total_pages) || 0;
+                            if (val && a7 && b4 > 0) {
+                              const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
+                              if (pagesPerSheet > 0) {
+                                const m4 = b4 / pagesPerSheet;
+                                setValue(`materials.${index}.press_sheet`, String(m4));
+                                const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                                const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                const total = (base + extra) * m4;
+                                setValue(`materials.${index}.total_qty`, total);
+                                const divBy = ratio > 1 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                              }
+                            } else if (ratio > 1) {
+                              // If M4 calculation didn't run, still update sheet_qty based on ratio
                               const total = Number(formValues.materials?.[index]?.total_qty) || 0;
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
                             }
