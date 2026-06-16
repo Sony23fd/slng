@@ -278,7 +278,24 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 )}
               </select>
             </div>
-            <div className="form-group"><label>[A6] Хэвлэгдэх тоо нийт</label><input type="number" {...register("total_qty")} /></div>
+            <div className="form-group">
+              <label>[A6] Хэвлэгдэх тоо нийт</label>
+              <input type="number" {...register("total_qty", {
+                onChange: (e) => {
+                  const a6 = Number(e.target.value) || 0;
+                  const materials = getValues('materials') || [];
+                  materials.forEach((m, index) => {
+                    setValue(`materials.${index}.base_qty`, a6);
+                    const press = Number(m.press_sheet) || 1;
+                    const extra = Number(m.extra_qty) || 0;
+                    const total = (a6 + extra) * press;
+                    setValue(`materials.${index}.total_qty`, total);
+                    const divBy = Number(m.divide_by) || 1;
+                    setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                  });
+                }
+              })} />
+            </div>
             <div className="form-group">
               <label>[A7] Бүтээгдэхүүний хэмжээ</label>
               <Controller
@@ -619,7 +636,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
+          <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
             + Материал нэмэх
           </button>
         </section>
