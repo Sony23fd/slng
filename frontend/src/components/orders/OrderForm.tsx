@@ -369,10 +369,12 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         const b4 = Number(getValues('total_pages')) || 0;
                         const materials = getValues('materials') || [];
                         materials.forEach((m, index) => {
-                          if (m.print_size && val && b4 > 0) {
-                            const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
+                          const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                          const targetPages = isCover ? 4 : b4;
+                          if (m.print_size && val && targetPages > 0) {
+                            const pagesPerSheet = calculatePaperDivision(m.print_size, val);
                             if (pagesPerSheet > 0) {
-                              const m4 = b4 / pagesPerSheet;
+                              const m4 = targetPages / pagesPerSheet;
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
@@ -441,10 +443,12 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   const a7 = getValues('size') || '';
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
-                    if (m.print_size && a7 && b4 > 0) {
-                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
+                    const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                    const targetPages = isCover ? 4 : b4;
+                    if (m.print_size && a7 && targetPages > 0) {
+                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7);
                       if (pagesPerSheet > 0) {
-                        const m4 = b4 / pagesPerSheet;
+                        const m4 = targetPages / pagesPerSheet;
                         setValue(`materials.${index}.press_sheet`, String(m4));
                         const base = Number(m.base_qty) || 0;
                         const extra = Number(m.extra_qty) || 0;
@@ -596,9 +600,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             
                             // Trigger M4 calculation
                             const a7 = formValues.size || '';
-                            const b4 = Number(formValues.total_pages) || 0;
+                            const isCover = (formValues.materials?.[index]?.material_name || '').toLowerCase().includes('хавтас');
+                            const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
                             if (val && a7 && b4 > 0) {
-                              const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
+                              const pagesPerSheet = calculatePaperDivision(val, a7);
                               if (pagesPerSheet > 0) {
                                 const m4 = b4 / pagesPerSheet;
                                 setValue(`materials.${index}.press_sheet`, String(m4));
@@ -618,7 +623,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         })} placeholder="A2" />
                       </td>
                       <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input style={inputStyle} {...register(`materials.${index}.press_sheet`, {
+                        <input style={{...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
                           onChange: (e) => {
                             const press = Number(e.target.value) || 1;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
