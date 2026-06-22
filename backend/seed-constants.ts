@@ -19,7 +19,14 @@ const initialConstants = [
   { type: 'PAYMENT_METHOD', value: 'Карт' },
   { type: 'NEXT_PROCESS', value: 'Эх бэлтгэл' },
   { type: 'NEXT_PROCESS', value: 'Түүхий эд бэлтгэх' },
-  { type: 'CTP_PLATE_PRICE', value: '8800' }
+  { type: 'CTP_PLATE_PRICE', value: '8800' },
+  { type: 'ORDER_STATUS', value: 'Шинэ захиалга' },
+  { type: 'ORDER_STATUS', value: 'Эх бэлтгэл' },
+  { type: 'ORDER_STATUS', value: 'Хэвлэл' },
+  { type: 'ORDER_STATUS', value: 'Дардас' },
+  { type: 'ORDER_STATUS', value: 'Бэлэн' },
+  { type: 'ORDER_STATUS', value: 'Олгосон' },
+
 ];
 
 export async function seedConstants(prisma: PrismaClient) {

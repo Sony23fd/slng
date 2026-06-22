@@ -82,6 +82,7 @@ function SettingsContent() {
     PAYMENT_METHOD: 'Төлбөрийн хэлбэр',
     NEXT_PROCESS: 'Дараагийн процесс',
     ORDER_START_SEQ: 'Захиалгын эхлэх дугаар (Ж: 700)',
+    ORDER_STATUS: 'Захиалгын төлөв (Kanban)',
     OUTSOURCED_JOB: 'Гадуур ажлын нэр',
     OUTSOURCED_CONTRACTOR: 'Гүйцэтгэгч байгууллага',
     DEFAULT_PROFIT_MARGIN: 'Үндсэн ашгийн хувь (Ж: 20)',

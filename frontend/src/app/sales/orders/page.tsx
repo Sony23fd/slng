@@ -27,9 +27,14 @@ export default function MyOrdersPage() {
           <h1 className="title">Миний захиалгууд</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Таны үүсгэсэн бүх захиалгын жагсаалт</p>
         </div>
-        <button onClick={() => router.push('/sales/orders/new')} className="btn btn-primary">
-          + Шинэ захиалга
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => router.push('/sales/orders/board')} className="btn btn-outline">
+            📋 Самбараар харах
+          </button>
+          <button onClick={() => router.push('/sales/orders/new')} className="btn btn-primary">
+            + Шинэ захиалга
+          </button>
+        </div>
       </header>
 
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
