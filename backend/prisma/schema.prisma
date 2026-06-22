@@ -207,3 +207,15 @@ model coverrule {
 
   @@unique([size, binding])
 }
+
+model product_category {
+  id             Int     @id @default(autoincrement())
+  name           String  @unique
+  calc_mode      String
+  has_cover      Boolean @default(true)
+  has_inner      Boolean @default(true)
+  has_binding    Boolean @default(true)
+  has_pages      Boolean @default(true)
+  has_bookmark   Boolean @default(false)
+  waste_qty      Int     @default(0)
+}

@@ -85,6 +85,32 @@ async function main() {
     });
   }
   console.log('Cover rules seeded successfully!');
+
+  // Product Categories Seeding
+  const productCategories = [
+    { name: 'Ном', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: true, waste_qty: 100 },
+    { name: 'Сэтгүүл', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
+    { name: 'Брошур', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
+    { name: 'Календарь', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: false, has_pages: true, has_bookmark: false, waste_qty: 50 },
+    { name: 'Флаер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
+    { name: 'Нэрийн хуудас', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
+    { name: 'Урилга', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
+    { name: 'Меню', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
+    { name: 'Билет', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
+    { name: 'Тор', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
+    { name: 'Хайрцаг', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 }
+  ];
+
+  for (const c of productCategories) {
+    // @ts-ignore
+    await prisma.product_category.upsert({
+      where: { name: c.name },
+      update: {},
+      create: c,
+    });
+  }
+  console.log('Product categories seeded successfully!');
+
 }
 main()
   .catch((e) => {
