@@ -696,6 +696,48 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             />
                           )}
                         />
+                        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <input type="checkbox" {...register(`materials.${index}.is_cover`, {
+                            onChange: (e) => {
+                              const isCov = e.target.checked;
+                              const bt = getValues('binding_type') || '';
+                              const b4 = Number(getValues('total_pages')) || 0;
+                              const a7 = getValues('size') || '';
+                              
+                              const coverLogic = isCov ? getCoverLogic(a7, bt) : null;
+                              let m4 = 0;
+                              let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
+
+                              if (coverLogic) {
+                                m4 = coverLogic.pressSheet;
+                                divBy = coverLogic.divideBy;
+                                setValue(`materials.${index}.press_sheet`, String(m4));
+                                setValue(`materials.${index}.divide_by`, String(divBy));
+                              } else {
+                                const targetPages = isCov ? 4 : b4;
+                                const printSize = getValues(`materials.${index}.print_size`);
+                                if (printSize && a7 && targetPages > 0) {
+                                  const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
+                                  if (pagesPerSheet > 0) {
+                                    m4 = targetPages / pagesPerSheet;
+                                    setValue(`materials.${index}.press_sheet`, String(m4));
+                                  }
+                                }
+                              }
+
+                              if (m4 > 0) {
+                                const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
+                                const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
+                                const divs = calculatePaperDivision(getValues(`materials.${index}.print_size`) || 'A2', a7);
+                                const setups = calculateSetups(m4, divs);
+                                const total = (base * m4) + (extra * setups);
+                                setValue(`materials.${index}.total_qty`, total);
+                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                              }
+                            }
+                          })} />
+                          <label style={{ fontSize: '0.75rem', color: '#475569', cursor: 'pointer', margin: 0 }}>Хавтас</label>
+                        </div>
                       </td>
                       <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <Controller
