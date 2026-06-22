@@ -73,6 +73,21 @@ function popcount(n: number) {
   return count;
 }
 
+
+function getCoverLogic(size: string, bindingType: string) {
+  const s = size?.toUpperCase() || '';
+  const bt = bindingType?.toLowerCase() || '';
+
+  if (s === 'A4' && bt === 'наалттай') return { pressSheet: 1.0, divideBy: 6 };
+  if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4 };
+  if (s === 'A5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 5 };
+  if (s === 'A5' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4 };
+  if (s === 'B5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 4 };
+  if (s === 'B5' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5 };
+  
+  return null;
+}
+
 function calculateSetups(pressSheet: number, divisions: number) {
   const fullSheets = Math.floor(pressSheet);
   const fraction = pressSheet - fullSheets;
@@ -324,6 +339,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 const t = selected.template;
                 if (t.category) setValue('category', t.category);
                 if (t.size) setValue('size', t.size);
+                if (t.binding_type) setValue('binding_type', t.binding_type);
                 if (t.cover_color) setValue('cover_color', t.cover_color);
                 if (t.inner_color) setValue('inner_color', t.inner_color);
                 if (t.total_pages) setValue('total_pages', t.total_pages);
@@ -425,22 +441,38 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         const materials = getValues('materials') || [];
                         materials.forEach((m, index) => {
                           const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
-                          const targetPages = isCover ? 4 : b4;
-                          if (m.print_size && val && targetPages > 0) {
-                            const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
-                            if (pagesPerSheet > 0) {
-                              const m4 = targetPages / pagesPerSheet;
+
+                            const bt = getValues('binding_type') || '';
+                            const coverLogic = isCover ? getCoverLogic(val, bt) : null;
+                            let m4 = 0;
+                            let divBy = Number(m.divide_by) || 1;
+
+                            if (coverLogic) {
+                              m4 = coverLogic.pressSheet;
+                              divBy = coverLogic.divideBy;
                               setValue(`materials.${index}.press_sheet`, String(m4));
+                              setValue(`materials.${index}.divide_by`, String(divBy));
+                            } else {
+                              const targetPages = isCover ? 4 : b4;
+                              if (m.print_size && val && targetPages > 0) {
+                                const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
+                                if (pagesPerSheet > 0) {
+                                  m4 = targetPages / pagesPerSheet;
+                                  setValue(`materials.${index}.press_sheet`, String(m4));
+                                }
+                              }
+                            }
+
+                            if (m4 > 0) {
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
                               const divs = calculatePaperDivision(m.print_size || 'A2', val);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
-                              const divBy = Number(m.divide_by) || 1;
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
                             }
-                          }
+
                         });
                       }}
                       value={field.value ? { value: field.value, label: field.value } : null}
@@ -453,6 +485,42 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               />
             </div>
             <div className="form-group"><label>Дэд хэмжээ</label><input {...register("sub_size")} /></div>
+            <div className="form-group">
+              <label>[A8] Хавтасны төрөл</label>
+              <select {...register("binding_type", {
+                onChange: (e) => {
+                  const bt = e.target.value;
+                  const b4 = Number(getValues('total_pages')) || 0;
+                  const a7 = getValues('size') || '';
+                  const materials = getValues('materials') || [];
+                  materials.forEach((m, index) => {
+                    const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                    if (!isCover) return;
+                    
+                    const coverLogic = getCoverLogic(a7, bt);
+                    if (coverLogic) {
+                      const m4 = coverLogic.pressSheet;
+                      const divBy = coverLogic.divideBy;
+                      setValue(`materials.${index}.press_sheet`, String(m4));
+                      setValue(`materials.${index}.divide_by`, String(divBy));
+                      
+                      const base = Number(m.base_qty) || 0;
+                      const extra = Number(m.extra_qty) || 0;
+                      const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                      const setups = calculateSetups(m4, divs);
+                      const total = (base * m4) + (extra * setups);
+                      setValue(`materials.${index}.total_qty`, total);
+                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                    }
+                  });
+                }
+              })}>
+                <option value="">Сонгох...</option>
+                <option value="Наалттай">Наалттай</option>
+                <option value="Үдээстэй">Үдээстэй</option>
+                <option value="Хатуу хавтастай">Хатуу хавтастай</option>
+              </select>
+            </div>
             <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
               <input type="checkbox" {...register("needs_design")} style={{ width: '1.2rem', height: '1.2rem' }} />
               <label style={{ margin: 0 }}>Эх бэлтгэл хийх шаардлагатай</label>
@@ -501,22 +569,38 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
                     const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
-                    const targetPages = isCover ? 4 : b4;
-                    if (m.print_size && a7 && targetPages > 0) {
-                      const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
-                      if (pagesPerSheet > 0) {
-                        const m4 = targetPages / pagesPerSheet;
-                        setValue(`materials.${index}.press_sheet`, String(m4));
-                        const base = Number(m.base_qty) || 0;
-                        const extra = Number(m.extra_qty) || 0;
-                        const divs = calculatePaperDivision(m.print_size || 'A2', a7);
-                        const setups = calculateSetups(m4, divs);
-                        const total = (base * m4) + (extra * setups);
-                        setValue(`materials.${index}.total_qty`, total);
-                        const divBy = Number(m.divide_by) || 1;
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
-                      }
-                    }
+
+                            const bt = getValues('binding_type') || '';
+                            const coverLogic = isCover ? getCoverLogic(a7, bt) : null;
+                            let m4 = 0;
+                            let divBy = Number(m.divide_by) || 1;
+
+                            if (coverLogic) {
+                              m4 = coverLogic.pressSheet;
+                              divBy = coverLogic.divideBy;
+                              setValue(`materials.${index}.press_sheet`, String(m4));
+                              setValue(`materials.${index}.divide_by`, String(divBy));
+                            } else {
+                              const targetPages = isCover ? 4 : b4;
+                              if (m.print_size && a7 && targetPages > 0) {
+                                const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
+                                if (pagesPerSheet > 0) {
+                                  m4 = targetPages / pagesPerSheet;
+                                  setValue(`materials.${index}.press_sheet`, String(m4));
+                                }
+                              }
+                            }
+
+                            if (m4 > 0) {
+                              const base = Number(m.base_qty) || 0;
+                              const extra = Number(m.extra_qty) || 0;
+                              const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                              const setups = calculateSetups(m4, divs);
+                              const total = (base * m4) + (extra * setups);
+                              setValue(`materials.${index}.total_qty`, total);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                            }
+
                   });
                 }
               })} />

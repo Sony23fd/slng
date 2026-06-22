@@ -58,6 +58,7 @@ model order {
   deadline          DateTime?
   product_name      String
   category          String?
+  binding_type      String?
   total_qty         Int
   size              String?
   sub_size          String?
@@ -164,6 +165,7 @@ model producttemplate {
   id            Int      @id @default(autoincrement())
   template_name String   @unique
   category      String?
+  binding_type  String?
   size          String?
   cover_color   String?
   inner_color   String?

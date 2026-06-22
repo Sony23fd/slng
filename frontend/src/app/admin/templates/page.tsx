@@ -51,7 +51,7 @@ export default function TemplatesPage() {
     if (res.ok) {
       setShowAdd(false);
       setEditingId(null);
-      setFormData({ template_name: '', category: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
+      setFormData({ template_name: '', category: '', binding_type: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
       fetchTemplates();
     } else {
       alert("Алдаа гарлаа. Нэр давхардсан байж болзошгүй.");
@@ -60,7 +60,7 @@ export default function TemplatesPage() {
 
   const handleEdit = (t: any) => {
     setEditingId(t.id);
-    setFormData({ template_name: t.template_name, category: t.category || '', size: t.size || '', cover_color: t.cover_color || '', inner_color: t.inner_color || '', total_pages: t.total_pages || 0, needs_design: t.needs_design || false, notes: t.notes || '' });
+    setFormData({ template_name: t.template_name, category: t.category || '', binding_type: t.binding_type || '', size: t.size || '', cover_color: t.cover_color || '', inner_color: t.inner_color || '', total_pages: t.total_pages || 0, needs_design: t.needs_design || false, notes: t.notes || '' });
     setShowAdd(true);
   };
 
@@ -86,7 +86,7 @@ export default function TemplatesPage() {
         <button className="btn btn-primary" onClick={() => {
           setShowAdd(!showAdd);
           setEditingId(null);
-          setFormData({ template_name: '', category: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
+          setFormData({ template_name: '', category: '', binding_type: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
         }}>
           {showAdd ? 'Буцах' : '+ Загвар үүсгэх'}
         </button>
@@ -112,6 +112,15 @@ export default function TemplatesPage() {
               <select value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="input">
                 <option value="">Сонгох...</option>
                 {groupedConstants['SIZE']?.map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="label">Хавтасны төрөл</label>
+              <select value={formData.binding_type} onChange={e => setFormData({...formData, binding_type: e.target.value})} className="input">
+                <option value="">Сонгох...</option>
+                <option value="Наалттай">Наалттай</option>
+                <option value="Үдээстэй">Үдээстэй</option>
+                <option value="Хатуу хавтастай">Хатуу хавтастай</option>
               </select>
             </div>
             <div className="form-group">
