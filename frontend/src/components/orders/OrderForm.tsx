@@ -24,6 +24,7 @@ interface OrderFormValues {
   is_urgent: boolean;
   sales_person_name: string;
   notes: string;
+  binding_type?: string;
   
   // 2. Өнгө
   cover_color: string;
@@ -40,7 +41,7 @@ interface OrderFormValues {
   materials: { 
     material_name: string; size: string; print_size: string; press_sheet: string; 
     base_qty: number; extra_qty: number; total_qty: number; divide_by: number; 
-    sheet_qty: number; unit_cost: number; notes: string;
+    sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
   }[];
   
   // 6. Ажиллагаа
