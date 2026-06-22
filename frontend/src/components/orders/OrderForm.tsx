@@ -452,7 +452,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               m4 = coverLogic.pressSheet;
                               divBy = coverLogic.divideBy;
                               setValue(`materials.${index}.press_sheet`, String(m4));
-                              setValue(`materials.${index}.divide_by`, String(divBy));
+                              setValue(`materials.${index}.divide_by`, divBy);
                             } else {
                               const targetPages = isCover ? 4 : b4;
                               if (m.print_size && val && targetPages > 0) {
@@ -503,7 +503,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                       const m4 = coverLogic.pressSheet;
                       const divBy = coverLogic.divideBy;
                       setValue(`materials.${index}.press_sheet`, String(m4));
-                      setValue(`materials.${index}.divide_by`, String(divBy));
+                      setValue(`materials.${index}.divide_by`, divBy);
                       
                       const base = Number(m.base_qty) || 0;
                       const extra = Number(m.extra_qty) || 0;
@@ -580,7 +580,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               m4 = coverLogic.pressSheet;
                               divBy = coverLogic.divideBy;
                               setValue(`materials.${index}.press_sheet`, String(m4));
-                              setValue(`materials.${index}.divide_by`, String(divBy));
+                              setValue(`materials.${index}.divide_by`, divBy);
                             } else {
                               const targetPages = isCover ? 4 : b4;
                               if (m.print_size && a7 && targetPages > 0) {
@@ -713,7 +713,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 m4 = coverLogic.pressSheet;
                                 divBy = coverLogic.divideBy;
                                 setValue(`materials.${index}.press_sheet`, String(m4));
-                                setValue(`materials.${index}.divide_by`, String(divBy));
+                                setValue(`materials.${index}.divide_by`, divBy);
                               } else {
                                 const targetPages = isCov ? 4 : b4;
                                 const printSize = getValues(`materials.${index}.print_size`);
