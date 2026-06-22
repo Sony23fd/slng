@@ -102,6 +102,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const { token, user } = useAuthStore();
   const router = useRouter();
   const [constants, setConstants] = useState<any[]>([]);
+  const [coverRules, setCoverRules] = useState<any[]>([]);
   const [masterPrices, setMasterPrices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -140,6 +141,15 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setCustomers(data);
+      })
+      .catch(console.error);
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/coverrules`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCoverRules(data);
       })
       .catch(console.error);
 
@@ -705,15 +715,18 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const b4 = Number(getValues('total_pages')) || 0;
                               const a7 = getValues('size') || '';
                               
-                              const coverLogic = isCov ? getCoverLogic(a7, bt) : null;
+                              const coverLogic = isCov ? coverRules.find((r: any) => r.size?.toUpperCase() === a7?.toUpperCase() && r.binding?.toLowerCase() === bt?.toLowerCase()) : null;
                               let m4 = 0;
                               let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
 
                               if (coverLogic) {
-                                m4 = coverLogic.pressSheet;
-                                divBy = coverLogic.divideBy;
+                                m4 = coverLogic.press_sheet;
+                                divBy = coverLogic.divide_by;
                                 setValue(`materials.${index}.press_sheet`, String(m4));
                                 setValue(`materials.${index}.divide_by`, divBy);
+                                if (coverLogic.print_size) {
+                                  setValue(`materials.${index}.print_size`, coverLogic.print_size);
+                                }
                               } else {
                                 const targetPages = isCov ? 4 : b4;
                                 const printSize = getValues(`materials.${index}.print_size`);

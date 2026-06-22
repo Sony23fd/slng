@@ -196,3 +196,14 @@ enum user_role {
   SALES
   PRODUCTION
 }
+
+model coverrule {
+  id          Int      @id @default(autoincrement())
+  size        String
+  binding     String
+  press_sheet Float
+  divide_by   Int
+  print_size  String
+
+  @@unique([size, binding])
+}
