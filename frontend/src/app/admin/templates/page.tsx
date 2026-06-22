@@ -11,7 +11,7 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ template_name: '', category: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
+  const [formData, setFormData] = useState({ template_name: '', category: '', binding_type: '', size: '', cover_color: '', inner_color: '', total_pages: 0, needs_design: false, notes: '' });
   const [constants, setConstants] = useState<any[]>([]);
 
   useEffect(() => {
