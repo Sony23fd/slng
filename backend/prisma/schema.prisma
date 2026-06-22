@@ -98,6 +98,7 @@ model ordermaterial {
   press_sheet   String?
   base_qty      Int?
   extra_qty     Int?
+  is_cover      Boolean @default(false)
   total_qty     Int
   divide_by     Int     @default(1)
   unit_cost     Float

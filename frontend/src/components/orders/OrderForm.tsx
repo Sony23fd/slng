@@ -228,7 +228,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     const requiredCtps: Record<string, number> = {};
     
     mats.forEach((m, i) => {
-      const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+      const isCover = m.is_cover || false;
       const colorToUse = isCover ? b1 : b2;
       const a7 = formValues.size || 'A5';
       const divisions = calculatePaperDivision(m.print_size || 'A2', a7);
@@ -440,7 +440,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         const b4 = Number(getValues('total_pages')) || 0;
                         const materials = getValues('materials') || [];
                         materials.forEach((m, index) => {
-                          const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                          const isCover = m.is_cover || false;
 
                             const bt = getValues('binding_type') || '';
                             const coverLogic = isCover ? getCoverLogic(val, bt) : null;
@@ -494,7 +494,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   const a7 = getValues('size') || '';
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
-                    const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                    const isCover = m.is_cover || false;
                     if (!isCover) return;
                     
                     const coverLogic = getCoverLogic(a7, bt);
@@ -568,7 +568,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   const a7 = getValues('size') || '';
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
-                    const isCover = (m.material_name || '').toLowerCase().includes('хавтас');
+                    const isCover = m.is_cover || false;
 
                             const bt = getValues('binding_type') || '';
                             const coverLogic = isCover ? getCoverLogic(a7, bt) : null;
@@ -743,7 +743,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             
                             // Trigger M4 calculation
                             const a7 = formValues.size || '';
-                            const isCover = (formValues.materials?.[index]?.material_name || '').toLowerCase().includes('хавтас');
+                            const isCover = formValues.materials?.[index]?.is_cover || false;
                             const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
                             if (val && a7 && b4 > 0) {
                               const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
