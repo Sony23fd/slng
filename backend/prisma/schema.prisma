@@ -219,3 +219,12 @@ model product_category {
   has_bookmark   Boolean @default(false)
   waste_qty      Int     @default(0)
 }
+
+model calculation_formula {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  expression  String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
