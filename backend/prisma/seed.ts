@@ -59,6 +59,32 @@ async function main() {
   console.log('Үндсэн хэрэглэгчдийг амжилттай үүсгэлээ!');
   await seedConstants(prisma);
   await seedPrices(prisma);
+
+  // Cover Rules Seeding
+  const coverRules = [
+    { size: 'A4', binding: 'Наалттай', press_sheet: 1.0, divide_by: 6, print_size: 'A3' },
+    { size: 'A4', binding: 'Үдээстэй', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'A5', binding: 'Наалттай', press_sheet: 0.5, divide_by: 5, print_size: 'B3' },
+    { size: 'A5', binding: 'Үдээстэй', press_sheet: 0.25, divide_by: 4, print_size: 'A2' },
+    { size: 'A6', binding: 'Наалттай', press_sheet: 0.25, divide_by: 4, print_size: 'A2' },
+    { size: 'A6', binding: 'Үдээстэй', press_sheet: 0.125, divide_by: 4, print_size: 'A2' },
+    { size: 'B4', binding: 'Наалттай', press_sheet: 1.0, divide_by: 4, print_size: 'A2' },
+    { size: 'B4', binding: 'Үдээстэй', press_sheet: 0.5, divide_by: 2, print_size: 'B2' },
+    { size: 'B5', binding: 'Наалттай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'B5', binding: 'Үдээстэй', press_sheet: 0.5, divide_by: 5, print_size: 'B3' },
+    { size: 'B6', binding: 'Наалттай', press_sheet: 0.25, divide_by: 4, print_size: 'A2' },
+    { size: 'B6', binding: 'Үдээстэй', press_sheet: 0.25, divide_by: 5, print_size: 'B3' }
+  ];
+
+  for (const r of coverRules) {
+    // @ts-ignore
+    await prisma.coverrule.upsert({
+      where: { size_binding: { size: r.size, binding: r.binding } },
+      update: {},
+      create: r,
+    });
+  }
+  console.log('Cover rules seeded successfully!');
 }
 main()
   .catch((e) => {
