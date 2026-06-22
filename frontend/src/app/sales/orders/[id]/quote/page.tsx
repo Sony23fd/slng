@@ -5,6 +5,9 @@ import { useAuthStore } from '../../../../../stores/useAuthStore';
 import { useRouter, useParams } from 'next/navigation';
 import Head from 'next/head';
 
+// We require html2pdf dynamically inside the function because it depends on window/document.
+
+
 export default function QuotationPage() {
   const { token, user } = useAuthStore();
   const router = useRouter();
@@ -36,7 +39,25 @@ export default function QuotationPage() {
 
   if (!order || !profile) return <div>Түр хүлээнэ үү...</div>;
 
+  const handleDownloadPDF = async () => {
+    // Dynamic import to avoid Next.js SSR issues
+    const html2pdf = (await import('html2pdf.js')).default;
+    const element = document.getElementById('printable-area');
+    
+    // Create a clone to fix any styling issues specifically for PDF
+    const opt = {
+      margin:       [10, 10, 10, 10], // top, left, bottom, right
+      filename:     `Quotation_${order.order_number || order.id}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+  };
+
   const today = new Date().toLocaleDateString('mn-MN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
@@ -66,7 +87,8 @@ export default function QuotationPage() {
       <div style={{ maxWidth: '800px', width: '100%' }}>
         <div className="no-print" style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
           <button className="btn btn-outline" onClick={() => router.back()}>Буцах</button>
-          <button className="btn btn-primary" onClick={() => window.print()}>Хэвлэх (PDF)</button>
+          <button className="btn btn-outline" onClick={() => window.print()}>Хэвлэх</button>
+          <button className="btn btn-primary" onClick={handleDownloadPDF}>PDF-ээр татах</button>
         </div>
 
         <div id="printable-area" style={{ background: 'white', padding: '3rem', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
