@@ -82,9 +82,9 @@ export const createOrder = async (req: Request, res: Response) => {
     });
 
     res.status(201).json(order);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to create order' });
+    res.status(500).json({ error: 'Failed to create order', details: error.message || String(error) });
   }
 };
 
@@ -215,8 +215,8 @@ export const updateOrder = async (req: Request, res: Response) => {
     ]);
     
     res.json({ message: 'Order updated successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to update order' });
+    res.status(500).json({ error: 'Failed to update order', details: error.message || String(error) });
   }
 };

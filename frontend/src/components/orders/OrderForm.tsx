@@ -383,7 +383,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       .then(res => res.json())
       .then(resData => {
         if (resData.error) {
-          alert('Алдаа гарлаа: ' + resData.error);
+          alert('Алдаа гарлаа: ' + resData.error + (resData.details ? '\\nДэлгэрэнгүй: ' + resData.details : ''));
         } else {
           alert(isEdit ? 'Захиалга амжилттай шинэчлэгдлээ!' : 'Захиалга амжилттай үүслээ!');
           router.push('/sales/orders');
