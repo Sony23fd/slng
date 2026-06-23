@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --ext ts,json src/server.ts",
-    "build": "npx tsc",
+    "build": "npx prisma generate && npx tsc",
     "start": "npx prisma db push --accept-data-loss && npx prisma db seed && node dist/server.js"
   },
   "keywords": [],
