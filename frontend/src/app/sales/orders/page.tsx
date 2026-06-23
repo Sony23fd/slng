@@ -59,9 +59,40 @@ export default function MyOrdersPage() {
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
                 <td style={{ padding: '1rem' }}>
-                  <span style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem' }}>
-                    {o.current_status}
-                  </span>
+                  <select 
+                    value={o.current_status} 
+                    onChange={async (e) => {
+                      const newStatus = e.target.value;
+                      if (!confirm(`Төлөвийг '${newStatus}' болгож өөрчлөх үү?`)) return;
+                      try {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${o.id}/status`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ new_status: newStatus, changed_by: user?.name, notes: 'Жагсаалтаас өөрчлөв' })
+                        });
+                        if (res.ok) {
+                          setOrders(orders.map(order => order.id === o.id ? { ...order, current_status: newStatus } : order));
+                        } else {
+                          alert('Төлөв өөрчлөхөд алдаа гарлаа.');
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert('Алдаа гарлаа.');
+                      }
+                    }}
+                    style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
+                  >
+                    <option value="Хүлээгдэж буй">Хүлээгдэж буй</option>
+                    <option value="Шинэ захиалга">Шинэ захиалга</option>
+                    <option value="Эх бэлтгэл">Эх бэлтгэл</option>
+                    <option value="Хэвлэл">Хэвлэл</option>
+                    <option value="Дардас">Дардас</option>
+                    <option value="Бэлэн">Бэлэн</option>
+                    <option value="Олгосон">Олгосон</option>
+                  </select>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
