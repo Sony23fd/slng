@@ -76,9 +76,14 @@ function popcount(n: number) {
 }
 
 
-function getCoverLogic(size: string, bindingType: string) {
+function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []) {
   const s = size?.toUpperCase() || '';
   const bt = bindingType?.toLowerCase() || '';
+
+  if (coverRules && coverRules.length > 0) {
+    const rule = coverRules.find((r: any) => r.size?.toUpperCase() === s && r.binding?.toLowerCase() === bt);
+    if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
+  }
 
   if (s === 'A4' && bt === 'наалттай') return { pressSheet: 1.0, divideBy: 6 };
   if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4 };
@@ -506,7 +511,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           const isCover = m.is_cover || false;
 
                             const bt = getValues('binding_type') || '';
-                            const coverLogic = isCover ? getCoverLogic(val, bt) : null;
+                            const coverLogic = isCover ? getCoverLogic(val, bt, coverRules) : null;
                             let m4 = 0;
                             let divBy = Number(m.divide_by) || 1;
 
@@ -560,7 +565,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const isCover = m.is_cover || false;
                     if (!isCover) return;
                     
-                    const coverLogic = getCoverLogic(a7, bt);
+                    const coverLogic = getCoverLogic(a7, bt, coverRules);
                     if (coverLogic) {
                       const m4 = coverLogic.pressSheet;
                       const divBy = coverLogic.divideBy;
@@ -634,7 +639,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const isCover = m.is_cover || false;
 
                             const bt = getValues('binding_type') || '';
-                            const coverLogic = isCover ? getCoverLogic(a7, bt) : null;
+                            const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
                             let m4 = 0;
                             let divBy = Number(m.divide_by) || 1;
 
@@ -773,14 +778,14 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
                               const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
                               if (categoryConfig.calc_mode === 'BOOK_MODE' && isCov) {
-                                coverLogic = coverRules.find((r: any) => r.size?.toUpperCase() === a7?.toUpperCase() && r.binding?.toLowerCase() === bt?.toLowerCase());
+                                coverLogic = getCoverLogic(a7, bt, coverRules);
                                 if (coverLogic) {
-                                  m4 = coverLogic.press_sheet;
-                                  divBy = coverLogic.divide_by;
+                                  m4 = coverLogic.pressSheet || coverLogic.press_sheet;
+                                  divBy = coverLogic.divideBy || coverLogic.divide_by;
                                   setValue(`materials.${index}.press_sheet`, String(m4));
                                   setValue(`materials.${index}.divide_by`, divBy);
-                                  if (coverLogic.print_size) {
-                                    setValue(`materials.${index}.print_size`, coverLogic.print_size);
+                                  if (coverLogic.printSize || coverLogic.print_size) {
+                                    setValue(`materials.${index}.print_size`, coverLogic.printSize || coverLogic.print_size);
                                   }
                                 }
                               } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
