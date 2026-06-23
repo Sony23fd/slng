@@ -70,6 +70,9 @@ export default function MyOrdersPage() {
                   <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
                     Хуулах
                   </button>
+                  <button onClick={() => router.push(`/sales/orders/${o.id}/quote`)} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                    Үнийн санал
+                  </button>
                 </td>
               </tr>
             ))}
