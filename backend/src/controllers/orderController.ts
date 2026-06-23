@@ -65,18 +65,37 @@ export const createOrder = async (req: Request, res: Response) => {
             cover_color: data.cover_color,
             inner_color: data.inner_color,
             has_bookmark: data.has_bookmark,
-            total_pages: data.total_pages,
+            total_pages: data.total_pages ? Number(data.total_pages) : null,
             print_cost: data.print_cost ? Number(data.print_cost) : 0
           }
         },
         materials: {
-          create: data.materials
+          create: (data.materials || []).map((m: any) => ({
+            ...m,
+            base_qty: m.base_qty ? Number(m.base_qty) : null,
+            extra_qty: m.extra_qty ? Number(m.extra_qty) : null,
+            total_qty: m.total_qty ? Number(m.total_qty) : 0,
+            divide_by: m.divide_by ? Number(m.divide_by) : 1,
+            unit_cost: m.unit_cost ? Number(m.unit_cost) : 0,
+            sheet_qty: m.sheet_qty ? Number(m.sheet_qty) : null,
+            total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0)
+          }))
         },
         operations: {
-          create: data.operations
+          create: (data.operations || []).map((o: any) => ({
+            ...o,
+            qty: o.qty ? Number(o.qty) : 0,
+            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+          }))
         },
         outsourcedJobs: {
-          create: data.outsourcedJobs
+          create: (data.outsourcedJobs || []).map((o: any) => ({
+            ...o,
+            qty: o.qty ? Number(o.qty) : 0,
+            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+          }))
         }
       }
     });
@@ -203,13 +222,38 @@ export const updateOrder = async (req: Request, res: Response) => {
               cover_color: data.cover_color,
               inner_color: data.inner_color,
               has_bookmark: data.has_bookmark,
-              total_pages: data.total_pages,
+              total_pages: data.total_pages ? Number(data.total_pages) : null,
               print_cost: data.print_cost ? Number(data.print_cost) : 0
             }
           },
-          materials: { create: data.materials },
-          operations: { create: data.operations },
-          outsourcedJobs: { create: data.outsourcedJobs }
+          materials: {
+          create: (data.materials || []).map((m: any) => ({
+            ...m,
+            base_qty: m.base_qty ? Number(m.base_qty) : null,
+            extra_qty: m.extra_qty ? Number(m.extra_qty) : null,
+            total_qty: m.total_qty ? Number(m.total_qty) : 0,
+            divide_by: m.divide_by ? Number(m.divide_by) : 1,
+            unit_cost: m.unit_cost ? Number(m.unit_cost) : 0,
+            sheet_qty: m.sheet_qty ? Number(m.sheet_qty) : null,
+            total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0)
+          }))
+        },
+          operations: {
+          create: (data.operations || []).map((o: any) => ({
+            ...o,
+            qty: o.qty ? Number(o.qty) : 0,
+            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+          }))
+        },
+          outsourcedJobs: {
+          create: (data.outsourcedJobs || []).map((o: any) => ({
+            ...o,
+            qty: o.qty ? Number(o.qty) : 0,
+            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+          }))
+        }
         }
       })
     ]);
