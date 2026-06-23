@@ -768,9 +768,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const a7 = getValues('size') || '';
                               
                               let coverLogic = null;
-                              let m4 = 0;
+                              let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
                               let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
 
+                              const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
                               if (categoryConfig.calc_mode === 'BOOK_MODE' && isCov) {
                                 coverLogic = coverRules.find((r: any) => r.size?.toUpperCase() === a7?.toUpperCase() && r.binding?.toLowerCase() === bt?.toLowerCase());
                                 if (coverLogic) {
@@ -783,7 +784,6 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                   }
                                 }
                               } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
-                                // Энгийн бодолт
                                 divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
                               } else {
                                 const targetPages = isCov ? 4 : b4;
@@ -797,14 +797,15 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 }
                               }
 
-                              if (m4 > 0) {
-                                const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
-                                const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
-                                const divs = calculatePaperDivision(getValues(`materials.${index}.print_size`) || 'A2', a7);
-                                const setups = calculateSetups(m4, divs);
-                                const total = (base * m4) + (extra * setups);
-                                setValue(`materials.${index}.total_qty`, total);
-                                if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                              const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
+                              const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
+                              const divs = calculatePaperDivision(getValues(`materials.${index}.print_size`) || 'A2', a7);
+                              const setups = calculateSetups(m4, divs);
+                              const total = (base * m4) + (extra * setups);
+                              setValue(`materials.${index}.total_qty`, total);
+                              
+                              if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) { 
+                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
                               }
                             }
                           })} />
