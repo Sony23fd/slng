@@ -1134,7 +1134,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
               <div className="form-group mt-4">
                 <label>[F3] Ашгийн хувь (%)</label>
-                <input type="number" step="any" readOnly {...register("profit_margin")} style={{background: '#f1f5f9'}} />
+                <input type="number" step="any" {...register("profit_margin")} style={{background: 'white'}} />
               </div>
               <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
                 <input type="checkbox" {...register("has_vat")} style={{ width: '1.2rem', height: '1.2rem' }} />
@@ -1159,7 +1159,12 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 </div>
                 <div className="form-group" style={{width: '80px'}}>
                   <label>Хувь (%)</label>
-                  <input type="number" step="any" {...register("payment_percent_1")} style={{background: 'white'}} />
+                  <input type="number" step="any" {...register("payment_percent_1", {
+                    onChange: (e) => {
+                      const val = Number(e.target.value) || 0;
+                      setValue('payment_percent_2', 100 - val);
+                    }
+                  })} style={{background: 'white'}} />
                 </div>
               </div>
 
@@ -1208,7 +1213,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '1.25rem', padding: '1rem' }}>
-          Захиалга баталгаажуулах
+          Захиалга бүртгэх
         </button>
       </form>
     </div>
