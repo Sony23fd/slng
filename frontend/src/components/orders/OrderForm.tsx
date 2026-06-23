@@ -746,7 +746,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                     setValue(`materials.${index}.unit_cost`, singleSize.unit_cost);
                                     const printSize = formValues.materials?.[index]?.print_size || '';
                                     const ratio = calculatePaperDivision(singleSize.sizeName, printSize);
-                                    if (ratio > 1) {
+                                    const isCover = formValues.materials?.[index]?.is_cover;
+                                    const bt = formValues.binding_type || '';
+                                    const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                                    const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
+                                    if (ratio > 1 && !coverLogic) {
                                       setValue(`materials.${index}.divide_by`, ratio);
                                     }
                                   } else {
@@ -836,7 +840,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                   const printSize = formValues.materials?.[index]?.print_size || '';
                                   let finalDivBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                                   const ratio = calculatePaperDivision(val, printSize);
-                                  if (ratio > 1) {
+                                  const isCover = formValues.materials?.[index]?.is_cover;
+                                  const bt = formValues.binding_type || '';
+                                  const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                                  const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
+                                  if (ratio > 1 && !coverLogic) {
                                     setValue(`materials.${index}.divide_by`, ratio);
                                     finalDivBy = ratio;
                                   }
@@ -860,7 +868,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const val = e.target.value;
                             const sourceSize = formValues.materials?.[index]?.size || '';
                             const ratio = calculatePaperDivision(sourceSize, val);
-                            if (ratio > 1) {
+                            const isCover = formValues.materials?.[index]?.is_cover;
+                            const bt = formValues.binding_type || '';
+                            const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                            const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
+                            if (ratio > 1 && !coverLogic) {
                               setValue(`materials.${index}.divide_by`, ratio);
                             }
                             
