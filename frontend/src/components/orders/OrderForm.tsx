@@ -868,10 +868,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const val = e.target.value;
                             const sourceSize = formValues.materials?.[index]?.size || '';
                             const ratio = calculatePaperDivision(sourceSize, val);
-                            const isCover = formValues.materials?.[index]?.is_cover;
+                            const _isCov = formValues.materials?.[index]?.is_cover;
                             const bt = formValues.binding_type || '';
                             const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                            const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
+                            const coverLogic = (_isCov && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
                             if (ratio > 1 && !coverLogic) {
                               setValue(`materials.${index}.divide_by`, ratio);
                             }
