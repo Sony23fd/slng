@@ -1,5 +1,6 @@
 "use client";
 
+import { evaluate } from 'mathjs';
 import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { usePriceCalculator } from '../../hooks/usePriceCalculator';
@@ -107,6 +108,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const [masterPrices, setMasterPrices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [formulas, setFormulas] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
@@ -163,6 +165,15 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       })
       .catch(console.error);
 
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/formulas`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setFormulas(data);
+      })
+      .catch(console.error);
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
@@ -199,6 +210,37 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const { fields: opFields, append: appendOp, remove: removeOp } = useFieldArray({ control, name: 'operations' });
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
+
+  const evaluateDynamicFormula = (index: number, mOverrides: any = {}, globalOverrides: any = {}) => {
+    const currentM = getValues(`materials.${index}`) || {};
+    const m = { ...currentM, ...mOverrides };
+    if (!m.formula_id) return false;
+    const f = formulas.find(x => x.id === Number(m.formula_id));
+    if (!f) return false;
+    try {
+      const a7 = globalOverrides.size !== undefined ? globalOverrides.size : (getValues('size') || 'A5');
+      const b4 = globalOverrides.total_pages !== undefined ? globalOverrides.total_pages : (getValues('total_pages') || 0);
+      const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+      const press = Number(m.press_sheet) || 1;
+      const setups = calculateSetups(press, divs);
+      const scope = {
+        base_qty: Number(m.base_qty) || 0,
+        extra_qty: Number(m.extra_qty) || 0,
+        divide_by: Number(m.divide_by) || 1,
+        press_sheet: press,
+        total_pages: Number(b4) || 0,
+        setups: setups
+      };
+      const total = evaluate(f.expression, scope);
+      setValue(`materials.${index}.total_qty`, total);
+      const divBy = Number(m.divide_by) || 1;
+      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+      return true;
+    } catch(e) {
+      console.error("Formula eval error", e);
+      return false;
+    }
+  };
   const formValues = watch();
 
   const pricingParams = {
