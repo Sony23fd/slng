@@ -37,8 +37,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link href="/admin/users" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600 }}>👥 Хэрэглэгчид</Link>
               <Link href="/admin/customers" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem' }}>🤝 Харилцагчид</Link>
               <Link href="/admin/templates" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem' }}>📄 Бэлэн загвар</Link>
-              <Link href="/admin/product-categories" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem' }}>📦 Бүтээгдэхүүний төрөл</Link>
-              <Link href="/admin/cover-rules" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem' }}>📐 Хавтасны дүрмүүд</Link>
+              <Link href="/admin/product-categories" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem', display: 'block' }}>📦 Бүтээгдэхүүний төрөл</Link>
+              <Link href="/admin/cover-rules" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem', display: 'block' }}>📐 Хавтасны дүрмүүд</Link>
+              <Link href="/admin/formulas" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem', display: 'block' }}>🧮 Тооцооллын томъёо</Link>
               <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f8fafc', fontWeight: 600, marginTop: '0.5rem' }}>⚙️ Динамик жагсаалт</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '1.5rem', marginTop: '-0.25rem' }}>
                 <Link href="/admin/settings?type=CATEGORY" style={{ padding: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Бүтээгдэхүүний ангилал</Link>
