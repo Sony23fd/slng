@@ -436,7 +436,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const total = (a6 * press) + (extra * setups);
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
-                    if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                    if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                   });
                 }
               })} />
@@ -491,7 +491,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
-                              if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                              if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                             }
 
                         });
@@ -531,7 +531,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                       const setups = calculateSetups(m4, divs);
                       const total = (base * m4) + (extra * setups);
                       setValue(`materials.${index}.total_qty`, total);
-                      if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                      if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                     }
                   });
                 }
@@ -619,7 +619,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
-                              if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                              if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                             }
 
                   });
@@ -762,7 +762,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 const setups = calculateSetups(m4, divs);
                                 const total = (base * m4) + (extra * setups);
                                 setValue(`materials.${index}.total_qty`, total);
-                                if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                               }
                             }
                           })} />
@@ -830,7 +830,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 const total = (base * m4) + (extra * setups);
                                 setValue(`materials.${index}.total_qty`, total);
                                 const divBy = ratio > 1 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
-                                if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                               }
                             } else if (ratio > 1) {
                               // If M4 calculation didn't run, still update sheet_qty based on ratio
@@ -852,7 +852,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                           }
                         })} />
                       </td>
@@ -868,7 +868,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                           }
                         })} />
                       </td>
@@ -884,7 +884,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const total = (base * press) + (extra * setups);
                             setValue(`materials.${index}.total_qty`, total);
                             const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                           }
                         })} />
                       </td>
@@ -896,7 +896,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           onChange: (e) => {
                             const divBy = Number(e.target.value) || 1;
                             const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                            if (divBy > 0) if (!evaluateDynamicFormula(index)) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            if (divBy > 0) if (!evaluateDynamicFormula(index, { [e.target.name.split('.').pop()]: e.target.value })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                           }
                         })} />
                       </td>
