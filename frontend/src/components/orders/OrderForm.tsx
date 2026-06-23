@@ -565,10 +565,12 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const isCover = m.is_cover || false;
                     if (!isCover) return;
                     
+                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+                    if (categoryConfig.calc_mode === 'STANDARD_MODE') return;
                     const coverLogic = getCoverLogic(a7, bt, coverRules);
                     if (coverLogic) {
-                      const m4 = coverLogic.pressSheet;
-                      const divBy = coverLogic.divideBy;
+                      const m4 = coverLogic.pressSheet || coverLogic.press_sheet;
+                      const divBy = coverLogic.divideBy || coverLogic.divide_by;
                       setValue(`materials.${index}.press_sheet`, String(m4));
                       setValue(`materials.${index}.divide_by`, divBy);
                       
@@ -639,13 +641,14 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const isCover = m.is_cover || false;
 
                             const bt = getValues('binding_type') || '';
-                            const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+                            const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+                            const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
                             let m4 = 0;
                             let divBy = Number(m.divide_by) || 1;
 
                             if (coverLogic) {
-                              m4 = coverLogic.pressSheet;
-                              divBy = coverLogic.divideBy;
+                              m4 = coverLogic.pressSheet || coverLogic.press_sheet;
+                              divBy = coverLogic.divideBy || coverLogic.divide_by;
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               setValue(`materials.${index}.divide_by`, divBy);
                             } else {
@@ -777,7 +780,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
 
                               const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                              if (categoryConfig.calc_mode === 'BOOK_MODE' && isCov) {
+                              if ((categoryConfig.calc_mode === 'BOOK_MODE' || !categoryConfig.calc_mode || categoryConfig.calc_mode === 'null') && isCov) {
                                 coverLogic = getCoverLogic(a7, bt, coverRules);
                                 if (coverLogic) {
                                   m4 = coverLogic.pressSheet || coverLogic.press_sheet;
