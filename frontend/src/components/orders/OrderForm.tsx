@@ -567,6 +567,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               divBy = coverLogic.divideBy;
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               setValue(`materials.${index}.divide_by`, divBy);
+                              if (coverLogic?.printSize) {
+                                setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                              }
                             } else {
                               const targetPages = isCover ? 4 : b4;
                               if (m.print_size && val && targetPages > 0) {
@@ -581,7 +584,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             if (m4 > 0) {
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const divs = calculatePaperDivision(m.print_size || 'A2', val);
+                              const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', val);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
@@ -620,10 +623,13 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                       const divBy = coverLogic.divideBy;
                       setValue(`materials.${index}.press_sheet`, String(m4));
                       setValue(`materials.${index}.divide_by`, divBy);
+                      if (coverLogic?.printSize) {
+                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                      }
                       
                       const base = Number(m.base_qty) || 0;
                       const extra = Number(m.extra_qty) || 0;
-                      const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                      const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
                       const setups = calculateSetups(m4, divs);
                       const total = (base * m4) + (extra * setups);
                       setValue(`materials.${index}.total_qty`, total);
@@ -698,6 +704,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               divBy = coverLogic.divideBy;
                               setValue(`materials.${index}.press_sheet`, String(m4));
                               setValue(`materials.${index}.divide_by`, divBy);
+                              if (coverLogic?.printSize) {
+                                setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                              }
                             } else {
                               const targetPages = isCover ? 4 : b4;
                               if (m.print_size && a7 && targetPages > 0) {
@@ -712,7 +721,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             if (m4 > 0) {
                               const base = Number(m.base_qty) || 0;
                               const extra = Number(m.extra_qty) || 0;
-                              const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                              const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
@@ -838,6 +847,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                   divBy = coverLogic.divideBy;
                                   setValue(`materials.${index}.press_sheet`, String(m4));
                                   setValue(`materials.${index}.divide_by`, divBy);
+                                  if (coverLogic?.printSize) {
+                                    setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                                  }
                                   if (coverLogic.printSize) {
                                     setValue(`materials.${index}.print_size`, coverLogic.printSize);
                                   }
