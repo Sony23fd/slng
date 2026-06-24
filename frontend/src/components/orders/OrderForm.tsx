@@ -548,7 +548,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
-                              if (!evaluateDynamicFormula(index, { size: sizeStr })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                              if (!evaluateDynamicFormula(index, { size: val })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                             }
 
                         });
