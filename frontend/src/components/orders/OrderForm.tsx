@@ -356,16 +356,26 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   useEffect(() => {
     let cost = 0;
     if (formValues.cover_color) {
-      const p = masterPrices.find((x: any) => x.category === 'Хавтасны өнгө' && x.item_name === formValues.cover_color);
-      if (p) cost += p.unit_cost;
+      const c = groupedConstants['COVER_COLOR']?.find((x: any) => x.value === formValues.cover_color);
+      if (c && c.description && !isNaN(Number(c.description))) {
+        cost += Number(c.description);
+      } else {
+        const p = masterPrices.find((x: any) => x.category === 'Хавтасны өнгө' && x.item_name === formValues.cover_color);
+        if (p) cost += p.unit_cost;
+      }
     }
     if (formValues.inner_color) {
-      const p = masterPrices.find((x: any) => x.category === 'Дотор өнгө' && x.item_name === formValues.inner_color);
-      if (p) cost += p.unit_cost;
+      const c = groupedConstants['INNER_COLOR']?.find((x: any) => x.value === formValues.inner_color);
+      if (c && c.description && !isNaN(Number(c.description))) {
+        cost += Number(c.description);
+      } else {
+        const p = masterPrices.find((x: any) => x.category === 'Дотор өнгө' && x.item_name === formValues.inner_color);
+        if (p) cost += p.unit_cost;
+      }
     }
     const finalCost = cost * (Number(formValues.total_qty) || 0);
     setValue('print_cost', finalCost);
-  }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, masterPrices, setValue]);
+  }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, masterPrices, setValue, groupedConstants]);
 
   const onSubmit = (data: OrderFormValues) => {
     const payload = { ...data, ...prices };

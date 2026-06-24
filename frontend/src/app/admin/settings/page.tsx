@@ -112,8 +112,17 @@ function SettingsContent() {
               <input type="text" required value={formData.value} onChange={e => setFormData({...formData, value: e.target.value})} className="input" />
             </div>
             <div>
-              <label className="label">Тайлбар (Заавал биш)</label>
-              <input type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="input" />
+              <label className="label">
+                {(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'Үнэ (₮)' : 'Тайлбар (Заавал биш)'}
+              </label>
+              <input 
+                type={(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'number' : 'text'} 
+                step="any"
+                value={formData.description} 
+                onChange={e => setFormData({...formData, description: e.target.value})} 
+                className="input" 
+                placeholder={(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'Жишээ нь: 15000' : ''}
+              />
             </div>
             <button type="submit" className="btn btn-primary">Хадгалах</button>
           </form>
@@ -125,7 +134,7 @@ function SettingsContent() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
               <th style={{ padding: '0.5rem' }}>Утга</th>
-              <th style={{ padding: '0.5rem' }}>Тайлбар</th>
+              <th style={{ padding: '0.5rem' }}>{(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'Үнэ (₮)' : 'Тайлбар'}</th>
               <th style={{ padding: '0.5rem', width: '100px' }}>Үйлдэл</th>
             </tr>
           </thead>
@@ -133,7 +142,11 @@ function SettingsContent() {
             {filteredConstants.length > 0 ? filteredConstants.map((c: any) => (
               <tr key={c.id} style={{ borderBottom: '1px dashed var(--border-color)' }}>
                 <td style={{ padding: '0.5rem' }}>{c.value}</td>
-                <td style={{ padding: '0.5rem', color: 'var(--text-muted)' }}>{c.description}</td>
+                <td style={{ padding: '0.5rem', color: 'var(--text-muted)' }}>
+                  {(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') && c.description 
+                    ? `${Number(c.description).toLocaleString()} ₮` 
+                    : c.description}
+                </td>
                 <td style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
                   <button onClick={() => handleEdit(c)} style={{ color: 'var(--primary-color)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                     Засах
