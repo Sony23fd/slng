@@ -363,6 +363,15 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       return isNaN(num) ? NaN : num;
     };
 
+    const getColorsCount = (colorStr: string) => {
+      if (!colorStr) return 0;
+      const match = colorStr.match(/(\d+)\s*\+\s*(\d+)/);
+      if (match) return Number(match[1]) + Number(match[2]);
+      const single = colorStr.match(/(\d+)/);
+      if (single) return Number(single[1]);
+      return 1;
+    };
+
     if (formValues.cover_color) {
       const c = groupedConstants['COVER_COLOR']?.find((x: any) => x.value === formValues.cover_color);
       const parsedPrice = c ? parsePrice(c.description) : NaN;
@@ -375,7 +384,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
           totalCoverSetups += calculateSetups(m4, divs);
         });
         if (totalCoverSetups === 0) totalCoverSetups = 1;
-        fixedCtpCost += parsedPrice * totalCoverSetups;
+        fixedCtpCost += parsedPrice * totalCoverSetups * getColorsCount(formValues.cover_color);
       } else {
         const p = masterPrices.find((x: any) => x.category === 'Хавтасны өнгө' && x.item_name === formValues.cover_color);
         if (p) perUnitCost += p.unit_cost;
@@ -394,7 +403,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
           totalInnerSetups += calculateSetups(m4, divs);
         });
         if (totalInnerSetups === 0) totalInnerSetups = 1;
-        fixedCtpCost += parsedPrice * totalInnerSetups;
+        fixedCtpCost += parsedPrice * totalInnerSetups * getColorsCount(formValues.inner_color);
       } else {
         const p = masterPrices.find((x: any) => x.category === 'Дотор өнгө' && x.item_name === formValues.inner_color);
         if (p) perUnitCost += p.unit_cost;
