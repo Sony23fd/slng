@@ -354,28 +354,56 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   }, [prices.unitPrice, displayUnitPrice]);
 
   useEffect(() => {
-    let cost = 0;
+    let perUnitCost = 0;
+    let fixedCtpCost = 0;
+    
+    const parsePrice = (str: any) => {
+      if (!str) return NaN;
+      const num = Number(String(str).replace(/[^0-9.-]+/g, ""));
+      return isNaN(num) ? NaN : num;
+    };
+
     if (formValues.cover_color) {
       const c = groupedConstants['COVER_COLOR']?.find((x: any) => x.value === formValues.cover_color);
-      if (c && c.description && !isNaN(Number(c.description))) {
-        cost += Number(c.description);
+      const parsedPrice = c ? parsePrice(c.description) : NaN;
+      if (!isNaN(parsedPrice) && parsedPrice > 0) {
+        const coverMats = formValues.materials?.filter((m: any) => m.is_cover) || [];
+        let totalCoverSetups = 0;
+        coverMats.forEach((m: any) => {
+          const m4 = Number(m.press_sheet) || 0;
+          const divs = Number(m.divide_by) || 1;
+          totalCoverSetups += calculateSetups(m4, divs);
+        });
+        if (totalCoverSetups === 0) totalCoverSetups = 1;
+        fixedCtpCost += parsedPrice * totalCoverSetups;
       } else {
         const p = masterPrices.find((x: any) => x.category === 'Хавтасны өнгө' && x.item_name === formValues.cover_color);
-        if (p) cost += p.unit_cost;
+        if (p) perUnitCost += p.unit_cost;
       }
     }
+    
     if (formValues.inner_color) {
       const c = groupedConstants['INNER_COLOR']?.find((x: any) => x.value === formValues.inner_color);
-      if (c && c.description && !isNaN(Number(c.description))) {
-        cost += Number(c.description);
+      const parsedPrice = c ? parsePrice(c.description) : NaN;
+      if (!isNaN(parsedPrice) && parsedPrice > 0) {
+        const innerMats = formValues.materials?.filter((m: any) => !m.is_cover) || [];
+        let totalInnerSetups = 0;
+        innerMats.forEach((m: any) => {
+          const m4 = Number(m.press_sheet) || 0;
+          const divs = Number(m.divide_by) || 1;
+          totalInnerSetups += calculateSetups(m4, divs);
+        });
+        if (totalInnerSetups === 0) totalInnerSetups = 1;
+        fixedCtpCost += parsedPrice * totalInnerSetups;
       } else {
         const p = masterPrices.find((x: any) => x.category === 'Дотор өнгө' && x.item_name === formValues.inner_color);
-        if (p) cost += p.unit_cost;
+        if (p) perUnitCost += p.unit_cost;
       }
     }
-    const finalCost = cost * (Number(formValues.total_qty) || 0);
+    
+    const finalCost = (perUnitCost * (Number(formValues.total_qty) || 0)) + fixedCtpCost;
     setValue('print_cost', finalCost);
-  }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, masterPrices, setValue, groupedConstants]);
+  }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, formValues.materials, masterPrices, setValue, groupedConstants]);
 
   const onSubmit = (data: OrderFormValues) => {
     const payload = { ...data, ...prices };
