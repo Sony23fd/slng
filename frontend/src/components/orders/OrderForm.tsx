@@ -1195,6 +1195,26 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   }}
                 />
               </div>
+              {(o?.operation_name === 'Бүрэлт' || o?.operation_name?.startsWith('Бүрэлт')) && (
+                <div className="form-group" style={{ width: '90px' }}>
+                  <label style={{ color: '#d97706', fontWeight: 'bold' }}>Хадаас</label>
+                  <input
+                    type="number"
+                    style={{ padding: '0.5rem', border: '1px solid #f59e0b', borderRadius: '0.375rem', width: '100%', backgroundColor: '#fffbeb' }}
+                    placeholder="0"
+                    {...register(`operations.${index}.extra_qty` as any, {
+                      onChange: (e) => {
+                        const extra = Number(e.target.value) || 0;
+                        const coat = calculateCoatingOperation(extra);
+                        if (coat) {
+                          setValue(`operations.${index}.qty`, coat.qty);
+                          setValue(`operations.${index}.notes`, coat.notes);
+                        }
+                      }
+                    })}
+                  />
+                </div>
+              )}
               <div className="form-group"><label>Тоо</label><input type="number" step="any" {...register(`operations.${index}.qty`)} /></div>
               <div className="form-group"><label>[O3] Нэгж өртөг</label><input type="number" step="any" {...register(`operations.${index}.unit_cost`)} /></div>
               <div className="form-group" style={{width: '100px'}}><label>[O4] Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem'}}>{tCost.toLocaleString()}</div></div>
