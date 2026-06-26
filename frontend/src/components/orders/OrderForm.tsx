@@ -512,6 +512,31 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     }
   }, [formValues.materials, formValues.total_qty, formValues.total_pages, formValues.cover_color, formValues.inner_color, formValues.category, masterPrices, setValue]);
 
+  useEffect(() => {
+    if (formValues.category === 'Брошур') {
+      const a6 = Number(formValues.total_qty) || 0;
+      const a7 = formValues.size || 'A4';
+      const mats = getValues('materials') || [];
+      mats.forEach((m: any, index: number) => {
+        const m3 = m.print_size || 'A2';
+        const div = calculatePaperDivision(m3, a7) || 1;
+        const m5 = Math.ceil(a6 / div);
+        const m4 = '1';
+
+        if (String(m.press_sheet) !== m4) setValue(`materials.${index}.press_sheet`, m4);
+        if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
+
+        const extra = Number(m.extra_qty) || 0;
+        const setups = calculateSetups(1, div);
+        const total = (m5 * 1) + (extra * setups);
+        if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
+        const divBy = Number(m.divide_by) || 1;
+        const sQty = Math.ceil(total / divBy);
+        if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+      });
+    }
+  }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, setValue, getValues]);
+
   const onSubmit = (data: OrderFormValues) => {
     const payload = { ...data, ...prices };
     const method = isEdit ? 'PUT' : 'POST';
