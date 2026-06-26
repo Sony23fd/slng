@@ -415,24 +415,24 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, formValues.materials, masterPrices, setValue, groupedConstants]);
 
   
-  const calculateCoatingOperation = () => {
+  const calculateCoatingOperation = (customExtra?: number) => {
     const materials = getValues('materials') || [];
     let coverMat = materials.find((m: any) => m.is_cover);
     if (!coverMat && materials.length > 0) coverMat = materials[0];
-    
+
     const totalOrderQty = Number(getValues('total_qty')) || 0;
     if (!coverMat) {
+      const extra = customExtra !== undefined ? customExtra : 0;
       return {
-        qty: Number((totalOrderQty * 0.004).toFixed(2)),
+        qty: Number(((totalOrderQty + extra) * 0.004).toFixed(2)),
         notes: `36см хэмжээтэй бүрэлтийн хуулга`,
       };
     }
     const m3 = coverMat.print_size || 'A3';
     let m5 = Number(coverMat.base_qty) || 0;
-    let m6 = Number(coverMat.extra_qty) || 0;
-    if (m5 + m6 === 0) {
-      m5 = Number(coverMat.total_qty) || totalOrderQty;
-    }
+    if (m5 === 0) m5 = Number(coverMat.total_qty) || totalOrderQty;
+    const m6 = customExtra !== undefined ? customExtra : (Number(coverMat.extra_qty) || 0);
+
     let coef = 0.004;
     let fSize = '36см';
     if (m3 === 'A2') { coef = 0.006; fSize = '44см'; }
@@ -486,7 +486,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       if (!op.operation_name) return op;
 
       if (op.operation_name === 'Бүрэлт' || op.operation_name.startsWith('Бүрэлт')) {
-        const coat = calculateCoatingOperation();
+        const coat = calculateCoatingOperation(Number((op as any).extra_qty));
         if (coat) {
           if (Number(op.qty) !== coat.qty || op.notes !== coat.notes) {
             changed = true;
