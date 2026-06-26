@@ -417,11 +417,22 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   
   const calculateCoatingOperation = () => {
     const materials = getValues('materials') || [];
-    const coverMat = materials.find((m: any) => m.is_cover);
-    if (!coverMat) return null;
-    const m3 = coverMat.print_size || '';
-    const m5 = Number(coverMat.base_qty) || 0;
-    const m6 = Number(coverMat.extra_qty) || 0;
+    let coverMat = materials.find((m: any) => m.is_cover);
+    if (!coverMat && materials.length > 0) coverMat = materials[0];
+    
+    const totalOrderQty = Number(getValues('total_qty')) || 0;
+    if (!coverMat) {
+      return {
+        qty: Number((totalOrderQty * 0.004).toFixed(2)),
+        notes: `36см хэмжээтэй бүрэлтийн хуулга`,
+      };
+    }
+    const m3 = coverMat.print_size || 'A3';
+    let m5 = Number(coverMat.base_qty) || 0;
+    let m6 = Number(coverMat.extra_qty) || 0;
+    if (m5 + m6 === 0) {
+      m5 = Number(coverMat.total_qty) || totalOrderQty;
+    }
     let coef = 0.004;
     let fSize = '36см';
     if (m3 === 'A2') { coef = 0.006; fSize = '44см'; }
@@ -1162,6 +1173,17 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           field.onChange(opName);
                           if (selected && selected.cost) {
                             setValue(`operations.${index}.unit_cost`, selected.cost);
+                          }
+                          if (selected && selected.formula && selected.formula.expression) {
+                            const newQty = evaluateOperationFormula(selected.formula.expression);
+                            setValue(`operations.${index}.qty`, newQty);
+                          }
+                          if (opName === 'Бүрэлт' || opName.startsWith('Бүрэлт')) {
+                            const coat = calculateCoatingOperation();
+                            if (coat) {
+                              setValue(`operations.${index}.qty`, coat.qty);
+                              setValue(`operations.${index}.notes`, coat.notes);
+                            }
                           }
                         }}
                         value={field.value ? { value: field.value, label: field.value } : null}
