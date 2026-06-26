@@ -414,6 +414,93 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     setValue('print_cost', finalCost);
   }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, formValues.materials, masterPrices, setValue, groupedConstants]);
 
+  
+  const calculateCoatingOperation = () => {
+    const materials = getValues('materials') || [];
+    const coverMat = materials.find((m: any) => m.is_cover);
+    if (!coverMat) return null;
+    const m3 = coverMat.print_size || '';
+    const m5 = Number(coverMat.base_qty) || 0;
+    const m6 = Number(coverMat.extra_qty) || 0;
+    let coef = 0.004;
+    let fSize = '36см';
+    if (m3 === 'A2') { coef = 0.006; fSize = '44см'; }
+    else if (m3 === 'B2') { coef = 0.007; fSize = '54см'; }
+    else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; fSize = '36см'; }
+
+    return {
+      qty: Number(((m5 + m6) * coef).toFixed(2)),
+      notes: `${fSize} хэмжээтэй бүрэлтийн хуулга`,
+    };
+  };
+
+  const evaluateOperationFormula = (expression: string) => {
+    try {
+      const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+      const getColorsCount = (colorStr: string) => {
+        if (!colorStr) return 0;
+        const match = colorStr.match(/(\d+)\s*\+\s*(\d+)/);
+        if (match) return Number(match[1]) + Number(match[2]);
+        const single = colorStr.match(/(\d+)/);
+        if (single) return Number(single[1]);
+        return 1;
+      };
+
+      const materials = getValues('materials') || [];
+      const press_sheet = materials.reduce((acc: number, m: any) => acc + (Number(m.press_sheet) || 0), 0);
+      const coverMat: any = materials.find((m: any) => m.is_cover) || {};
+      const cover_sheets = (Number(coverMat.base_qty) || 0) + (Number(coverMat.extra_qty) || 0);
+
+      const scope = {
+        total_qty: Number(getValues('total_qty')) || 0,
+        total_pages: Number(getValues('total_pages')) || 0,
+        waste_qty: Number(categoryConfig.waste_qty) || 0,
+        cover_colors: getColorsCount(getValues('cover_color') || ''),
+        inner_colors: getColorsCount(getValues('inner_color') || ''),
+        press_sheet,
+        cover_sheets,
+      };
+      const res = evaluate(expression, scope);
+      return Math.max(0, Math.ceil(res));
+    } catch (e) {
+      console.error('Operation formula error:', e);
+      return 0;
+    }
+  };
+
+  useEffect(() => {
+    const ops = getValues('operations') || [];
+    let changed = false;
+    const newOps = ops.map(op => {
+      if (!op.operation_name) return op;
+
+      if (op.operation_name === 'Бүрэлт' || op.operation_name.startsWith('Бүрэлт')) {
+        const coat = calculateCoatingOperation();
+        if (coat) {
+          if (Number(op.qty) !== coat.qty || op.notes !== coat.notes) {
+            changed = true;
+            return { ...op, qty: coat.qty, notes: coat.notes };
+          }
+        }
+        return op;
+      }
+
+      const mp = masterPrices.find(p => p.item_name === op.operation_name);
+      if (mp && mp.formula && mp.formula.expression) {
+        const newQty = evaluateOperationFormula(mp.formula.expression);
+        if (newQty !== Number(op.qty)) {
+          changed = true;
+          return { ...op, qty: newQty };
+        }
+      }
+      return op;
+    });
+
+    if (changed) {
+      setValue('operations', newOps);
+    }
+  }, [formValues.materials, formValues.total_qty, formValues.total_pages, formValues.cover_color, formValues.inner_color, formValues.category, masterPrices, setValue]);
+
   const onSubmit = (data: OrderFormValues) => {
     const payload = { ...data, ...prices };
     const method = isEdit ? 'PUT' : 'POST';
@@ -1065,7 +1152,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     const opOptions = masterPrices.filter(p => {
                       const c = (p.category || '').toLowerCase();
                       return c.includes('ажилбар') || c.includes('ажиллагаа') || c.includes('operation');
-                    }).map(p => ({ value: p.name, label: p.name, cost: p.cost }));
+                    }).map(p => ({ value: p.item_name, label: p.item_name, cost: p.unit_cost, formula: p.formula }));
                     return (
                       <CreatableSelect
                         {...field}

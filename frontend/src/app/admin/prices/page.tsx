@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 
 export default function AdminPrices() {
   const [prices, setPrices] = useState<any[]>([]);
+const [formulas, setFormulas] = useState<any[]>([]);
   const { token, user } = useAuthStore();
   const router = useRouter();
   
   const [showAdd, setShowAdd] = useState(false);
-  const [formData, setFormData] = useState({ category: 'Цаас', item_name: '', unit_cost: '' });
+  const [formData, setFormData] = useState({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '' });
 
   useEffect(() => {
     if (user && user.role !== 'ADMIN' && user.role !== 'FINANCE') {
@@ -18,10 +19,23 @@ export default function AdminPrices() {
       return;
     } else if (token) {
       fetchPrices();
+fetchFormulas();
     }
   }, [user, router, token]);
 
-  const fetchPrices = async () => {
+  
+const fetchFormulas = async () => {
+try {
+const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/formulas`, {
+headers: { 'Authorization': `Bearer ${token}` }
+});
+if (res.ok) setFormulas(await res.json());
+} catch (e) {
+console.error(e);
+}
+};
+
+const fetchPrices = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -32,7 +46,7 @@ export default function AdminPrices() {
     }
   };
 
-  const handleUpdate = async (id: number, newCost: number) => {
+  const handleUpdate = async (id: number, newCost: number, formula_id?: number | null) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/${id}`, {
         method: 'PUT',
@@ -40,7 +54,7 @@ export default function AdminPrices() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ unit_cost: newCost })
+        body: JSON.stringify({ unit_cost: newCost, formula_id })
       });
       if (res.ok) {
         alert('Амжилттай хадгаллаа');
@@ -62,7 +76,7 @@ export default function AdminPrices() {
     });
     if (res.ok) {
       setShowAdd(false);
-      setFormData({ category: 'Цаас', item_name: '', unit_cost: '' });
+      setFormData({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '' });
       fetchPrices();
       alert("Шинэ үнэ амжилттай нэмэгдлээ");
     } else {
@@ -95,7 +109,14 @@ export default function AdminPrices() {
               <label className="label">Нэгж өртөг (₮)</label>
               <input type="number" required value={formData.unit_cost} onChange={e => setFormData({...formData, unit_cost: e.target.value})} className="input" />
             </div>
-            <button type="submit" className="btn btn-primary">Хадгалах</button>
+            <div>
+<label className="label">Томьёо холбох (Сонголттой)</label>
+<select value={formData.formula_id} onChange={e => setFormData({...formData, formula_id: e.target.value})} className="input">
+<option value="">Сонгохгүй...</option>
+{formulas.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+</select>
+</div>
+<button type="submit" className="btn btn-primary">Хадгалах</button>
           </form>
         </div>
       )}
@@ -109,6 +130,7 @@ export default function AdminPrices() {
               <th style={{ padding: '1rem' }}>Ангилал</th>
               <th style={{ padding: '1rem' }}>Нэр</th>
               <th style={{ padding: '1rem' }}>Нэгж өртөг (₮)</th>
+<th style={{ padding: '1rem' }}>Томьёо</th>
               <th style={{ padding: '1rem' }}>Үйлдэл</th>
             </tr>
           </thead>
@@ -127,10 +149,23 @@ export default function AdminPrices() {
                   />
                 </td>
                 <td style={{ padding: '1rem' }}>
+                  <select
+                    defaultValue={p.formula_id || ''}
+                    id={`formula-${p.id}`}
+                    className="input"
+                    style={{ width: '150px' }}
+                  >
+                    <option value="">Байхгүй</option>
+                    {formulas.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </td>
+                <td style={{ padding: '1rem' }}>
                   <button 
                     onClick={() => {
                       const el = document.getElementById(`price-${p.id}`) as HTMLInputElement;
-                      if (el) handleUpdate(p.id, Number(el.value));
+                      const formEl = document.getElementById(`formula-${p.id}`) as HTMLSelectElement;
+                      const fVal = formEl && formEl.value ? Number(formEl.value) : null;
+                      if (el) handleUpdate(p.id, Number(el.value), fVal);
                     }}
                     className="btn btn-primary"
                     style={{ padding: '0.5rem 1rem' }}
@@ -141,7 +176,7 @@ export default function AdminPrices() {
               </tr>
             ))}
             {prices.length === 0 && (
-              <tr><td colSpan={4} style={{ padding: '1rem', textAlign: 'center' }}>Мастер үнэ олдсонгүй (Дээрх товчоор шинээр нэмнэ үү)</td></tr>
+              <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center' }}>Мастер үнэ олдсонгүй (Дээрх товчоор шинээр нэмнэ үү)</td></tr>
             )}
           </tbody>
         </table>
