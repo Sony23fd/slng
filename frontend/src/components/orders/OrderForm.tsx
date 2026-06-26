@@ -1196,11 +1196,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 />
               </div>
               {(o?.operation_name === 'Бүрэлт' || o?.operation_name?.startsWith('Бүрэлт')) && (
-                <div className="form-group" style={{ width: '90px' }}>
-                  <label style={{ color: '#d97706', fontWeight: 'bold' }}>Хадаас</label>
+                <div className="form-group" style={{ width: '80px' }}>
+                  <label>Хадаас</label>
                   <input
                     type="number"
-                    style={{ padding: '0.5rem', border: '1px solid #f59e0b', borderRadius: '0.375rem', width: '100%', backgroundColor: '#fffbeb' }}
+                    step="any"
                     placeholder="0"
                     {...register(`operations.${index}.extra_qty` as any, {
                       onChange: (e) => {
