@@ -28,13 +28,15 @@ model customer {
 }
 
 model masterprice {
-  id             Int              @id @default(autoincrement())
+  id             Int                  @id @default(autoincrement())
   category       String
   item_name      String
   unit_cost      Float
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  formula_id     Int?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
   masterpricelog masterpricelog[]
+  formula        calculation_formula? @relation(fields: [formula_id], references: [id])
 }
 
 model masterpricelog {
@@ -221,10 +223,11 @@ model product_category {
 }
 
 model calculation_formula {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
   expression  String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  masterprices masterprice[]
 }

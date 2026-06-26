@@ -3,7 +3,9 @@ import prisma from '../db';
 
 export const getPrices = async (req: Request, res: Response) => {
   try {
-    const prices = await prisma.masterprice.findMany();
+    const prices = await prisma.masterprice.findMany({
+      include: { formula: true }
+    });
     res.json(prices);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch prices' });
@@ -12,7 +14,7 @@ export const getPrices = async (req: Request, res: Response) => {
 
 export const updatePrice = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { unit_cost } = req.body;
+  const { unit_cost, formula_id } = req.body;
   const userId = (req as any).user?.id; // from auth middleware
 
   try {
@@ -23,17 +25,22 @@ export const updatePrice = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Price not found' });
     }
 
+    const dataToUpdate: any = { unit_cost: Number(unit_cost) };
+    if (formula_id !== undefined) {
+      dataToUpdate.formula_id = formula_id ? Number(formula_id) : null;
+    }
+
     const result = await prisma.$transaction([
       prisma.masterprice.update({
         where: { id: priceId },
-        data: { unit_cost }
+        data: dataToUpdate
       }),
       prisma.masterpricelog.create({
         data: {
           masterPriceId: priceId,
           changed_by: userId,
           old_cost: oldPrice.unit_cost,
-          new_cost: unit_cost
+          new_cost: Number(unit_cost)
         }
       })
     ]);
@@ -45,16 +52,21 @@ export const updatePrice = async (req: Request, res: Response) => {
 };
 
 export const createPrice = async (req: Request, res: Response) => {
-  const { category, item_name, unit_cost } = req.body;
+  const { category, item_name, unit_cost, formula_id } = req.body;
   const userId = (req as any).user?.id;
 
   try {
+    const dataToCreate: any = {
+      category,
+      item_name,
+      unit_cost: Number(unit_cost)
+    };
+    if (formula_id) {
+      dataToCreate.formula_id = Number(formula_id);
+    }
+
     const price = await prisma.masterprice.create({
-      data: {
-        category,
-        item_name,
-        unit_cost: Number(unit_cost)
-      }
+      data: dataToCreate
     });
 
     // Create an initial log
