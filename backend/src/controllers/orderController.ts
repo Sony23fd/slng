@@ -117,10 +117,27 @@ export const createOrder = async (req: Request, res: Response) => {
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { new_status, changed_by, notes } = req.body;
+  const { new_status, status, changed_by, notes } = req.body;
 
   try {
     const orderId = parseInt(id as string);
+    const targetStatus = new_status || status;
+    if (!targetStatus) {
+      return res.status(400).json({ error: 'New status is required' });
+    }
+
+    // Resolve userId to Int
+    let userId = (req as any).user?.id;
+    if (!userId && changed_by !== undefined && !isNaN(Number(changed_by))) {
+      userId = Number(changed_by);
+    }
+    if (!userId && typeof changed_by === 'string') {
+      const foundUser = await prisma.user.findFirst({ where: { name: changed_by } });
+      if (foundUser) userId = foundUser.id;
+    }
+    if (!userId) {
+      userId = 1; // Fallback to ID 1
+    }
 
     // Fetch the current order to get the old status
     const order = await prisma.order.findUnique({
@@ -137,15 +154,15 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const result = await prisma.$transaction([
       prisma.order.update({
         where: { id: orderId },
-        data: { current_status: new_status }
+        data: { current_status: targetStatus }
       }),
       prisma.orderstatuslog.create({
         data: {
           order_id: orderId,
-          changed_by: changed_by, // This should come from req.user (JWT)
+          changed_by: userId,
           old_status,
-          new_status,
-          notes
+          new_status: targetStatus,
+          notes: notes || null
         }
       })
     ]);
