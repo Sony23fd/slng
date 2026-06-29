@@ -589,8 +589,41 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       <form onSubmit={handleSubmit(onSubmit)}>
         
         {/* Бэлэн загвар сонгох */}
-        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '0.5rem' }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#0f172a' }}>📄 Бэлэн загвараас сонгох (Автоматаар бөглөгдөнө)</label>
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'linear-gradient(to right, #eff6ff, #f8fafc)', border: '1px solid #bfdbfe', borderRadius: '0.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.75rem' }}>
+            <label style={{ fontWeight: 600, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+              ⚡ <span>Хурдан загвар (1 товчоор бөглөх)</span>
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Брошур');
+                  setValue('product_name', 'Түгээмэл 1000ш Брошур');
+                  setValue('size', 'A4');
+                  setValue('total_qty', 1000);
+                  setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
+                }}
+                style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                📄 1000ш Брошур
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Тор');
+                  setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
+                  setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+                  setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
+                  setValue('total_qty', 1000);
+                  setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
+                }}
+                style={{ background: '#6366f1', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🛍️ 1000ш Цаасан тор
+              </button>
+            </div>
+          </div>
           <Select
             options={templates.map(t => ({ value: t.id, label: t.template_name, template: t }))}
             onChange={(selected: any) => {
@@ -605,7 +638,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 if (t.needs_design) setValue('needs_design', t.needs_design);
               }
             }}
-            placeholder="Загвар хайх..."
+            placeholder="Эсвэл хадгалсан загваруудаас хайх..."
             isClearable
             styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
           />
@@ -1533,9 +1566,56 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
           </div>
         </section>
 
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '1.25rem', padding: '1rem' }}>
-          Захиалга бүртгэх
-        </button>
+        {/* Наалдамхай хураангуй мөр (Sticky Summary Bar) */}
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          background: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '2px solid #3b82f6',
+          padding: '1rem 1.5rem',
+          margin: '2rem -1rem -1rem -1rem',
+          boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          zIndex: 50
+        }}>
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Захиалгын тоо:</span>
+              <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Нэгжийн үнэ:</span>
+              <strong style={{ fontSize: '1.1rem', color: '#2563eb' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Ашгийн маржин:</span>
+              <span style={{
+                display: 'inline-block',
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                backgroundColor: (Number(formValues.profit_margin) || 0) >= 20 ? '#d1fae5' : (Number(formValues.profit_margin) || 0) >= 10 ? '#fef3c7' : '#fee2e2',
+                color: (Number(formValues.profit_margin) || 0) >= 20 ? '#065f46' : (Number(formValues.profit_margin) || 0) >= 10 ? '#92400e' : '#991b1b'
+              }}>
+                {Number(formValues.profit_margin || 0)}%
+              </span>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>НИЙТ ДҮН:</span>
+              <strong style={{ fontSize: '1.35rem', color: '#1e3a8a' }}>{(prices.finalPrice || 0).toLocaleString()} ₮</strong>
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
+            💾 {isEdit ? 'Захиалга шинэчлэх' : 'Захиалга бүртгэх'}
+          </button>
+        </div>
       </form>
     </div>
   );
