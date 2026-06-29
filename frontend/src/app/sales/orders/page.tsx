@@ -5,7 +5,7 @@ import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 
 export default function MyOrdersPage() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const router = useRouter();
 
@@ -46,18 +46,34 @@ export default function MyOrdersPage() {
               <th style={{ padding: '1rem' }}>Харилцагч</th>
               <th style={{ padding: '1rem' }}>Бүтээгдэхүүн</th>
               <th style={{ padding: '1rem' }}>Тоо ширхэг</th>
+              <th style={{ padding: '1rem' }}>Үйлдвэрлэлийн явц</th>
               <th style={{ padding: '1rem' }}>Төлөв</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Үйлдэл</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map(o => (
+            {orders.map(o => {
+              const stages = o.production_stages || {};
+              const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
+              const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
+              const progress = Math.round(totalVal / stageKeys.length);
+
+              return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
                 <td style={{ padding: '1rem' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
                 <td style={{ padding: '1rem' }}>{o.customer_name}</td>
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
+                <td style={{ padding: '1rem', minWidth: '130px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem', fontWeight: 600 }}>
+                    <span>{progress === 100 ? '✅ Дууссан' : '⚙️ Явагдаж буй'}</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
+                    <div style={{ background: progress === 100 ? '#22c55e' : 'var(--primary-color)', width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
+                  </div>
+                </td>
                 <td style={{ padding: '1rem' }}>
                   <select 
                     value={o.current_status} 
@@ -106,10 +122,10 @@ export default function MyOrdersPage() {
                   </button>
                 </td>
               </tr>
-            ))}
+            ); })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Захиалга байхгүй байна.
                 </td>
               </tr>

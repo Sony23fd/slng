@@ -47,7 +47,7 @@ export default function ProfilePage() {
         const updatedUser = await updateRes.json();
         setProfile(updatedUser);
         // Sync zustand store
-        login(token!, updatedUser);
+        login(updatedUser, token!);
         alert('Тамга амжилттай солигдлоо!');
       }
     } catch (err) {

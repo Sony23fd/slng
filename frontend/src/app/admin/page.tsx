@@ -60,7 +60,7 @@ export default function AdminDashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val / 1000}к ₮`} />
-                <RechartsTooltip formatter={(value: number) => [`${value.toLocaleString()} ₮`, 'Орлого']} />
+                <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} ₮`, 'Орлого']} />
                 <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <RechartsTooltip formatter={(value: number) => [`${value} ш`, 'Захиалга']} />
+                <RechartsTooltip formatter={(value: any) => [`${value} ш`, 'Захиалга']} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val / 1000}к ₮`} />
-                <RechartsTooltip formatter={(value: number) => [`${value.toLocaleString()} ₮`, 'Орлого']} cursor={{ fill: '#f1f5f9' }} />
+                <RechartsTooltip formatter={(value: any) => [`${Number(value || 0).toLocaleString()} ₮`, 'Орлого']} cursor={{ fill: '#f1f5f9' }} />
                 <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
