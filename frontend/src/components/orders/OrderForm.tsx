@@ -114,6 +114,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const [customers, setCustomers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [formulas, setFormulas] = useState<any[]>([]);
+  const [bagDims, setBagDims] = useState({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
@@ -513,29 +514,49 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   }, [formValues.materials, formValues.total_qty, formValues.total_pages, formValues.cover_color, formValues.inner_color, formValues.category, masterPrices, setValue]);
 
   useEffect(() => {
-    if (formValues.category === 'Брошур') {
+    const cat = formValues.category;
+    const isBag = cat === 'Тор' || cat === 'Цаасан тор';
+    const isBrochure = cat === 'Брошур';
+
+    if (isBag || isBrochure) {
       const a6 = Number(formValues.total_qty) || 0;
       const a7 = formValues.size || 'A4';
       const mats = getValues('materials') || [];
+
+      if (isBag && (!formValues.size || !formValues.size.startsWith('Тор'))) {
+        const fw = (bagDims.width + bagDims.gusset) * 2;
+        const fh = bagDims.height + bagDims.topFold + bagDims.bottomFold;
+        setValue('size', `Тор ${bagDims.width}х${bagDims.height}х${bagDims.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+      }
+
       mats.forEach((m: any, index: number) => {
-        const m3 = m.print_size || 'A2';
-        const div = calculatePaperDivision(m3, a7) || 1;
-        const m5 = Math.ceil(a6 / div);
+        const m3 = m.print_size || 'B2';
+        let div = 1;
+        let m5 = a6;
+        if (isBag) {
+          div = 1;
+          m5 = a6;
+          if (!m.print_size) setValue(`materials.${index}.print_size`, 'B2');
+        } else {
+          div = calculatePaperDivision(m3, a7) || 1;
+          m5 = Math.ceil(a6 / div);
+        }
         const m4 = '1';
 
         if (String(m.press_sheet) !== m4) setValue(`materials.${index}.press_sheet`, m4);
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
         const extra = Number(m.extra_qty) || 0;
-        const setups = calculateSetups(1, div);
-        const total = (m5 * 1) + (extra * setups);
+        const setups = isBag ? extra : calculateSetups(1, div);
+        const total = (m5 * 1) + setups;
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
-        const divBy = Number(m.divide_by) || 1;
+        const divBy = Number(m.divide_by) || (isBag ? 2 : 1);
+        if (isBag && Number(m.divide_by) !== divBy) setValue(`materials.${index}.divide_by`, divBy);
         const sQty = Math.ceil(total / divBy);
         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
       });
     }
-  }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, setValue, getValues]);
+  }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
 
   const onSubmit = (data: OrderFormValues) => {
     const payload = { ...data, ...prices };
@@ -627,6 +648,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <label>Бүтээгдэхүүний ангилал</label>
               <select {...register("category")}>
                 <option value="">Сонгох...</option>
+                <option value="Тор">Тор (Цаасан тор)</option>
                 {groupedConstants['CATEGORY']?.map((c: any) => (
                   <option key={c.id} value={c.value}>{c.value}</option>
                 )) || (
@@ -778,6 +800,92 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             <div className="form-group"><label>Борлуулагчийн нэр</label><input {...register("sales_person_name")} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} /></div>
             <div className="form-group"><label>Тайлбар</label><input {...register("notes")} /></div>
           </div>
+
+          {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
+            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
+              <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Өндөр (см)</label>
+                  <input
+                    type="number"
+                    value={bagDims.height}
+                    onChange={(e) => {
+                      const h = Number(e.target.value) || 0;
+                      const next = { ...bagDims, height: h };
+                      setBagDims(next);
+                      const fw = (next.width + next.gusset) * 2;
+                      const fh = next.height + next.topFold + next.bottomFold;
+                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                    }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Өргөн (см)</label>
+                  <input
+                    type="number"
+                    value={bagDims.width}
+                    onChange={(e) => {
+                      const w = Number(e.target.value) || 0;
+                      const next = { ...bagDims, width: w };
+                      setBagDims(next);
+                      const fw = (next.width + next.gusset) * 2;
+                      const fh = next.height + next.topFold + next.bottomFold;
+                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                    }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Хажуу (см)</label>
+                  <input
+                    type="number"
+                    value={bagDims.gusset}
+                    onChange={(e) => {
+                      const g = Number(e.target.value) || 0;
+                      const next = { ...bagDims, gusset: g };
+                      setBagDims(next);
+                      const fw = (next.width + next.gusset) * 2;
+                      const fh = next.height + next.topFold + next.bottomFold;
+                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                    }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Амсар нугалаа (см)</label>
+                  <input
+                    type="number"
+                    value={bagDims.topFold}
+                    onChange={(e) => {
+                      const tf = Number(e.target.value) || 0;
+                      const next = { ...bagDims, topFold: tf };
+                      setBagDims(next);
+                      const fw = (next.width + next.gusset) * 2;
+                      const fh = next.height + next.topFold + next.bottomFold;
+                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                    }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Ёроол нугалаа (см)</label>
+                  <input
+                    type="number"
+                    value={bagDims.bottomFold}
+                    onChange={(e) => {
+                      const bf = Number(e.target.value) || 0;
+                      const next = { ...bagDims, bottomFold: bf };
+                      setBagDims(next);
+                      const fw = (next.width + next.gusset) * 2;
+                      const fh = next.height + next.topFold + next.bottomFold;
+                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#eff6ff', borderLeft: '4px solid #3b82f6', color: '#1e3a8a', fontWeight: '500' }}>
+                💡 Автомат бодогдсон Дэлгээс хэмжээ: <strong>Өргөн {((bagDims.width + bagDims.gusset) * 2)} см х Өндөр {(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см</strong> ({((bagDims.width + bagDims.gusset) * 2) * 10}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold) * 10} мм) — B2 эсвэл А2 хэвлэлийн хуудсанд 1 ш багтана.
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
