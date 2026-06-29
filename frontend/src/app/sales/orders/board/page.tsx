@@ -37,7 +37,7 @@ export default function OrdersBoardPage() {
     })
       .then(res => res.json())
       .then(data => {
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй') : []);
         setLoading(false);
       })
       .catch(console.error);

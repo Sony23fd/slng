@@ -30,7 +30,7 @@ export default function ProductionPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
       }
     } catch (e) {
       console.error("Failed to load orders:", e);

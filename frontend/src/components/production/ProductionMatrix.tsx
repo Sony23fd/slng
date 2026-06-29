@@ -81,6 +81,7 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
   };
 
   const filteredOrders = orders.filter(o => {
+    if (o.current_status === 'Хүлээгдэж буй') return false;
     const matchesSearch = 
       (o.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
