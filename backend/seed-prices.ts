@@ -82,6 +82,7 @@ const operationsData = [
   { name: 'Хэсэгчилсэн УФ лак (Spot UV)', expr: 'total_qty', desc: 'Гялбаатай лак', cost: 150 },
   { name: 'Фольго дардас (Foil Stamp)', expr: 'total_qty', desc: 'Алтлаг мөнгөлөг товгор дардас', cost: 250 },
   { name: 'Бүрэлт', expr: '', desc: 'Хавтасны бүрэлтийн хуулга', cost: 1500 },
+  { name: 'Оосор (Торны оосор)', expr: 'total_qty * 2', desc: '1 торонд 2 ш оосор орно', cost: 80 },
 ];
 
 export async function seedPrices(prisma: PrismaClient) {
