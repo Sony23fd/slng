@@ -68,7 +68,7 @@ export default function OrdersBoardPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ status: newStatus, notes: `Чирж зөөсөн: ${newStatus}` })
+        body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: `Чирж зөөсөн: ${newStatus}` })
       });
     } catch (e) {
       console.error(e);

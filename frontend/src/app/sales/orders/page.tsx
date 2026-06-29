@@ -87,7 +87,7 @@ export default function MyOrdersPage() {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                           },
-                          body: JSON.stringify({ new_status: newStatus, changed_by: user?.name, notes: 'Жагсаалтаас өөрчлөв' })
+                          body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: 'Жагсаалтаас өөрчлөв' })
                         });
                         if (res.ok) {
                           setOrders(orders.map(order => order.id === o.id ? { ...order, current_status: newStatus } : order));
