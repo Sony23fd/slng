@@ -38,63 +38,71 @@ export const createOrder = async (req: Request, res: Response) => {
     const order = await prisma.order.create({
       data: {
         order_number,
-        customer_name: data.customer_name,
-        phone: data.phone,
+        customer_name: data.customer_name || '',
+        phone: data.phone || null,
         deadline: data.deadline ? new Date(data.deadline) : null,
-        product_name: data.product_name,
-        category: data.category,
+        product_name: data.product_name || '',
+        category: data.category || null,
+        binding_type: data.binding_type || null,
         total_qty: data.total_qty ? Number(data.total_qty) : 0,
-        size: data.size,
-        sub_size: data.sub_size,
-        needs_design: data.needs_design,
-        is_urgent: data.is_urgent,
-        sales_person_name: data.sales_person_name,
-        sales_person_id: userId,
-        notes: data.notes,
+        size: data.size || null,
+        sub_size: data.sub_size || null,
+        needs_design: Boolean(data.needs_design),
+        is_urgent: Boolean(data.is_urgent),
+        sales_person_name: data.sales_person_name || null,
+        sales_person_id: userId || null,
+        notes: data.notes || null,
         profit_margin: data.profit_margin ? Number(data.profit_margin) : 0,
-        has_vat: data.has_vat,
+        has_vat: Boolean(data.has_vat),
         final_price: data.final_price ? Number(data.final_price) : 0,
-        payment_method_1: data.payment_method_1,
+        payment_method_1: data.payment_method_1 || null,
         payment_percent_1: data.payment_percent_1 ? Number(data.payment_percent_1) : null,
-        payment_method_2: data.payment_method_2,
+        payment_method_2: data.payment_method_2 || null,
         payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
-        finance_notes: data.finance_notes,
+        finance_notes: data.finance_notes || null,
         
         specifications: {
           create: {
-            cover_color: data.cover_color,
-            inner_color: data.inner_color,
-            has_bookmark: data.has_bookmark,
+            cover_color: data.cover_color || null,
+            inner_color: data.inner_color || null,
+            has_bookmark: data.has_bookmark || null,
             total_pages: data.total_pages ? Number(data.total_pages) : null,
             print_cost: data.print_cost ? Number(data.print_cost) : 0
           }
         },
         materials: {
           create: (data.materials || []).map((m: any) => ({
-            ...m,
+            material_name: m.material_name || '',
+            size: m.size || null,
+            print_size: m.print_size || null,
+            press_sheet: m.press_sheet != null ? String(m.press_sheet) : null,
             base_qty: m.base_qty ? Number(m.base_qty) : null,
             extra_qty: m.extra_qty ? Number(m.extra_qty) : null,
+            is_cover: Boolean(m.is_cover),
             total_qty: m.total_qty ? Number(m.total_qty) : 0,
             divide_by: m.divide_by ? Number(m.divide_by) : 1,
             unit_cost: m.unit_cost ? Number(m.unit_cost) : 0,
             sheet_qty: m.sheet_qty ? Number(m.sheet_qty) : null,
-            total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0)
+            total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0),
+            notes: m.notes || null
           }))
         },
         operations: {
           create: (data.operations || []).map((o: any) => ({
-            ...o,
+            operation_name: o.operation_name || '',
             qty: o.qty ? Number(o.qty) : 0,
             unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
+            notes: o.notes || null
           }))
         },
         outsourcedJobs: {
-          create: (data.outsourcedJobs || []).map((o: any) => ({
-            ...o,
+          create: (data.outsourcedJobs || data.outsourced || []).map((o: any) => ({
+            job_name: o.job_name || o.contractor_name || '',
             qty: o.qty ? Number(o.qty) : 0,
             unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
+            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
+            notes: [o.contractor_name ? `Гүйцэтгэгч: ${o.contractor_name}` : null, o.notes].filter(Boolean).join(' - ') || null
           }))
         }
       }
@@ -233,63 +241,71 @@ export const updateOrder = async (req: Request, res: Response) => {
       prisma.order.update({
         where: { id: orderId },
         data: {
-          customer_name: data.customer_name,
-          phone: data.phone,
+          customer_name: data.customer_name || '',
+          phone: data.phone || null,
           deadline: data.deadline ? new Date(data.deadline) : null,
-          product_name: data.product_name,
-          category: data.category,
+          product_name: data.product_name || '',
+          category: data.category || null,
+          binding_type: data.binding_type || null,
           total_qty: data.total_qty ? Number(data.total_qty) : 0,
-          size: data.size,
-          sub_size: data.sub_size,
-          needs_design: data.needs_design,
-          is_urgent: data.is_urgent,
-          notes: data.notes,
+          size: data.size || null,
+          sub_size: data.sub_size || null,
+          needs_design: Boolean(data.needs_design),
+          is_urgent: Boolean(data.is_urgent),
+          notes: data.notes || null,
           profit_margin: data.profit_margin ? Number(data.profit_margin) : 0,
-          has_vat: data.has_vat,
+          has_vat: Boolean(data.has_vat),
           final_price: data.final_price ? Number(data.final_price) : 0,
-          payment_method_1: data.payment_method_1,
+          payment_method_1: data.payment_method_1 || null,
           payment_percent_1: data.payment_percent_1 ? Number(data.payment_percent_1) : null,
-          payment_method_2: data.payment_method_2,
+          payment_method_2: data.payment_method_2 || null,
           payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
-          finance_notes: data.finance_notes,
+          finance_notes: data.finance_notes || null,
           
           specifications: {
             create: {
-              cover_color: data.cover_color,
-              inner_color: data.inner_color,
-              has_bookmark: data.has_bookmark,
+              cover_color: data.cover_color || null,
+              inner_color: data.inner_color || null,
+              has_bookmark: data.has_bookmark || null,
               total_pages: data.total_pages ? Number(data.total_pages) : null,
               print_cost: data.print_cost ? Number(data.print_cost) : 0
             }
           },
           materials: {
-          create: (data.materials || []).map((m: any) => ({
-            ...m,
-            base_qty: m.base_qty ? Number(m.base_qty) : null,
-            extra_qty: m.extra_qty ? Number(m.extra_qty) : null,
-            total_qty: m.total_qty ? Number(m.total_qty) : 0,
-            divide_by: m.divide_by ? Number(m.divide_by) : 1,
-            unit_cost: m.unit_cost ? Number(m.unit_cost) : 0,
-            sheet_qty: m.sheet_qty ? Number(m.sheet_qty) : null,
-            total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0)
-          }))
-        },
+            create: (data.materials || []).map((m: any) => ({
+              material_name: m.material_name || '',
+              size: m.size || null,
+              print_size: m.print_size || null,
+              press_sheet: m.press_sheet != null ? String(m.press_sheet) : null,
+              base_qty: m.base_qty ? Number(m.base_qty) : null,
+              extra_qty: m.extra_qty ? Number(m.extra_qty) : null,
+              is_cover: Boolean(m.is_cover),
+              total_qty: m.total_qty ? Number(m.total_qty) : 0,
+              divide_by: m.divide_by ? Number(m.divide_by) : 1,
+              unit_cost: m.unit_cost ? Number(m.unit_cost) : 0,
+              sheet_qty: m.sheet_qty ? Number(m.sheet_qty) : null,
+              total_cost: (m.sheet_qty ? Number(m.sheet_qty) : 0) * (m.unit_cost ? Number(m.unit_cost) : 0),
+              notes: m.notes || null
+            }))
+          },
           operations: {
-          create: (data.operations || []).map((o: any) => ({
-            ...o,
-            qty: o.qty ? Number(o.qty) : 0,
-            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
-          }))
-        },
+            create: (data.operations || []).map((o: any) => ({
+              operation_name: o.operation_name || '',
+              qty: o.qty ? Number(o.qty) : 0,
+              unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+              total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
+              notes: o.notes || null
+            }))
+          },
           outsourcedJobs: {
-          create: (data.outsourcedJobs || []).map((o: any) => ({
-            ...o,
-            qty: o.qty ? Number(o.qty) : 0,
-            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0)
-          }))
-        }
+            create: (data.outsourcedJobs || data.outsourced || []).map((o: any) => ({
+              job_name: o.job_name || o.contractor_name || '',
+              qty: o.qty ? Number(o.qty) : 0,
+              unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
+              total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
+              notes: [o.contractor_name ? `Гүйцэтгэгч: ${o.contractor_name}` : null, o.notes].filter(Boolean).join(' - ') || null
+            }))
+          }
         }
       })
     ]);
