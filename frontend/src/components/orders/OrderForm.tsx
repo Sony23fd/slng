@@ -697,7 +697,54 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             <div className="form-group"><label>Бүтээгдэхүүний нэр</label><input {...register("product_name")} /></div>
             <div className="form-group">
               <label>Бүтээгдэхүүний ангилал</label>
-              <select {...register("category")}>
+              <select {...register("category", {
+                onChange: (e) => {
+                  const newCat = e.target.value;
+                  setValue('category', newCat);
+                  const currentMats = getValues('materials') || [];
+                  const catConfig = productCategories.find((c: any) => c.name === newCat) || {};
+                  const isBookMode = catConfig.calc_mode === 'BOOK_MODE' || newCat === 'Ном' || newCat === 'Сэтгүүл' || newCat === 'Меню';
+                  const isBagMode = newCat === 'Тор' || newCat === 'Цаасан тор';
+                  const isBrochureMode = newCat === 'Брошур' || newCat === 'Флаер';
+
+                  if (isBookMode && newCat !== 'Брошур') {
+                    const hasCover = currentMats.some((m: any) => m.is_cover);
+                    if (!hasCover || currentMats.length < 2) {
+                      const a6 = Number(getValues('total_qty')) || 1000;
+                      const a7 = getValues('size') || 'A5';
+                      if (!getValues('total_pages') || Number(getValues('total_pages')) === 0) {
+                        setValue('total_pages', 160);
+                      }
+                      if (!getValues('binding_type')) {
+                        setValue('binding_type', 'Наалттай');
+                      }
+                      setValue('materials', [
+                        { material_name: 'Шохойтой 250гр', size: a7, print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: a6, extra_qty: 100, press_sheet: '0.5', total_qty: Math.ceil(a6 * 0.5) + 100, divide_by: 2, sheet_qty: Math.ceil((Math.ceil(a6 * 0.5) + 100)/2), is_cover: true },
+                        { material_name: 'Офсет 80гр', size: a7, print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: a6, extra_qty: 200, press_sheet: '10', total_qty: (a6 * 10) + 200, divide_by: 1, sheet_qty: (a6 * 10) + 200, is_cover: false }
+                      ]);
+                    }
+                  } else if (isBrochureMode) {
+                    const hasCover = currentMats.some((m: any) => m.is_cover);
+                    if (hasCover || currentMats.length > 1) {
+                      const a6 = Number(getValues('total_qty')) || 1000;
+                      const a7 = getValues('size') || 'A4';
+                      setValue('materials', [
+                        { material_name: 'Шохойтой 150гр', size: a7, print_size: 'A2', unit_cost: 150, notes: '', base_qty: a6, extra_qty: 50, press_sheet: '1', total_qty: a6 + 50, divide_by: 1, sheet_qty: a6 + 50, is_cover: false }
+                      ]);
+                    }
+                  } else if (isBagMode) {
+                    const hasCover = currentMats.some((m: any) => m.is_cover);
+                    if (hasCover || currentMats.length > 1) {
+                      const a6 = Number(getValues('total_qty')) || 1000;
+                      setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
+                      setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+                      setValue('materials', [
+                        { material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: a6, extra_qty: 100, press_sheet: '1', total_qty: a6 + 100, divide_by: 2, sheet_qty: Math.ceil((a6 + 100)/2), is_cover: false }
+                      ]);
+                    }
+                  }
+                }
+              })}>
                 <option value="">Сонгох...</option>
                 <option value="Тор">Тор (Цаасан тор)</option>
                 {groupedConstants['CATEGORY']?.map((c: any) => (
