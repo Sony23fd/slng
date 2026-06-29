@@ -622,6 +622,24 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               >
                 🛍️ 1000ш Цаасан тор
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Ном');
+                  setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
+                  setValue('size', 'A5');
+                  setValue('total_pages', 160);
+                  setValue('binding_type', 'Наалттай');
+                  setValue('total_qty', 1000);
+                  setValue('materials', [
+                    { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
+                    { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                  ]);
+                }}
+                style={{ background: '#8b5cf6', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                📚 1000ш Ном
+              </button>
             </div>
           </div>
           <Select
