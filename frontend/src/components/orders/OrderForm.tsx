@@ -1022,26 +1022,26 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         <section style={{ marginBottom: '2rem' }}>
           <h3 className="section-title">5. Шаардлагатай материал</h3>
           <div style={{ overflowX: 'auto', border: '1px solid #cbd5e1', borderRadius: '0.5rem', marginBottom: '1rem', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px', backgroundColor: 'white' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '950px', backgroundColor: 'white' }}>
               <thead style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
                 <tr>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '200px' }}>[M1] Материалын нэр</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>[M2] Хэмжээ</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '80px' }}>[M3] Хэв. хэмжээ</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '80px' }}>[M4] Хэвлэлийн хуудас</th>
-                  <th colSpan={3} style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Хэвлэгдэх тоо</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '60px' }}>[M8] Хуваалт</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M9] Тоо</th>
-                  <th colSpan={2} style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '120px' }}>[MC] Тэмдэглэл</th>
-                  <th rowSpan={2} style={{ padding: '0.75rem 0.5rem', width: '40px' }}></th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>[M1] Материалын нэр</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '130px' }}>[M2] Хэмжээ</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M3] Хэв. хэмжээ</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M4] Хэвлэлийн хуудас</th>
+                  <th colSpan={3} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Хэвлэгдэх тоо</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '55px' }}>[M8] Хуваалт</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '60px' }}>[M9] Тоо</th>
+                  <th colSpan={2} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>[MC] Тэмдэглэл</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '35px' }}></th>
                 </tr>
                 <tr>
-                  <th style={{ padding: '0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '60px', background: '#f8fafc' }}>[M5] Үндсэн</th>
-                  <th style={{ padding: '0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '60px', background: '#f8fafc' }}>[M6] Хадаас</th>
-                  <th style={{ padding: '0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>[M7] Нийт</th>
-                  <th style={{ padding: '0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[MA] Нэгж</th>
-                  <th style={{ padding: '0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '90px', background: '#f8fafc' }}>[MB] Нийт</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '55px', background: '#f8fafc' }}>[M5] Үндсэн</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '55px', background: '#f8fafc' }}>[M6] Хадаас</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '60px', background: '#f8fafc' }}>[M7] Нийт</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>[MA] Нэгж</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[MB] Нийт</th>
                 </tr>
               </thead>
               <tbody>
@@ -1061,11 +1061,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   const uniqueBaseNames = Array.from(new Set(parsedMasterPrices.map(p => p.baseName)));
                   const availableSizes = parsedMasterPrices.filter(p => p.baseName === currentMaterialName);
 
-                  const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.4rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
+                  const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.25rem 0.35rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <Controller
                           name={`materials.${index}.material_name`}
                           control={control}
@@ -1165,7 +1165,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           <label style={{ fontSize: '0.75rem', color: '#475569', cursor: 'pointer', margin: 0 }}>Хавтас</label>
                         </div>
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <Controller
                           name={`materials.${index}.size`}
                           control={control}
@@ -1203,7 +1203,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           )}
                         />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input style={inputStyle} {...register(`materials.${index}.print_size`, {
                           onChange: (e) => {
                             const val = e.target.value;
@@ -1244,7 +1244,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           }
                         })} placeholder="A2" />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input style={{...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
                           onChange: (e) => {
                             const press = Number(e.target.value) || 1;
@@ -1260,7 +1260,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           }
                         })} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={inputStyle} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
                             const base = Number(e.target.value) || 0;
@@ -1276,7 +1276,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           }
                         })} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={inputStyle} {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
                             const extra = Number(e.target.value) || 0;
@@ -1292,10 +1292,10 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           }
                         })} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc' }} readOnly {...register(`materials.${index}.total_qty`)} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={inputStyle} {...register(`materials.${index}.divide_by`, {
                           onChange: (e) => {
                             const divBy = Number(e.target.value) || 1;
@@ -1304,19 +1304,19 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                           }
                         })} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.sheet_qty`)} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.unit_cost`)} />
                       </td>
-                      <td style={{ padding: '0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.9rem' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem' }}>
                         {tCost.toLocaleString()}
                       </td>
-                      <td style={{ padding: '0.5rem', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top' }}>
                         <input style={inputStyle} {...register(`materials.${index}.notes`)} />
                       </td>
-                      <td style={{ padding: '0.5rem', verticalAlign: 'top', textAlign: 'center' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', textAlign: 'center' }}>
                         <button type="button" onClick={() => removeMaterial(index)} style={{ width: '28px', height: '28px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>X</button>
                       </td>
                     </tr>
