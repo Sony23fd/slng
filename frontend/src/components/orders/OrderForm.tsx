@@ -798,7 +798,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 }}
               />
             </div>
-            <div className="form-group"><label>Дэд хэмжээ</label><input {...register("sub_size")} /></div>
+            <div className="form-group"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
             <div className="form-group">
               <label>[A8] Хавтасны төрөл</label>
               <select {...register("binding_type", {
@@ -1014,7 +1014,85 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 }
               })} />
             </div>
-            <div className="form-group"><label style={{ color: 'var(--primary-hover)', fontWeight: 'bold' }}>[B5] Хэвлэлийн өртөг (₮)</label><input type="number" step="any" readOnly {...register("print_cost")} style={{ border: '1px solid var(--primary-hover)', background: '#f1f5f9' }} /></div>
+            <input type="hidden" {...register("print_cost")} />
+          </div>
+
+          {/* ⚡ Түгээмэл ажиллагаанууд (Хурдан сонголт) */}
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px dashed #cbd5e1' }}>
+            <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              ⚡ Түгээмэл ажиллагаанууд (Хурдан сонголт)
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem' }}>
+              {masterPrices
+                .filter(p => {
+                  const c = (p.category || '').toLowerCase();
+                  return c.includes('ажилбар') || c.includes('ажиллагаа') || c.includes('operation');
+                })
+                .map((op: any) => {
+                  const isChecked = formValues.operations?.some((o: any) => o.operation_name === op.item_name) || false;
+                  return (
+                    <label
+                      key={op.id || op.item_name}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.5rem 0.75rem',
+                        border: `1px solid ${isChecked ? 'var(--primary-color)' : '#cbd5e1'}`,
+                        borderRadius: '0.375rem',
+                        backgroundColor: isChecked ? '#f0fdf4' : 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontSize: '0.85rem',
+                        userSelect: 'none',
+                        boxShadow: isChecked ? '0 1px 2px 0 rgba(16, 185, 129, 0.1)' : 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              let calcQty = 1;
+                              let calcNotes = '';
+                              if (op.item_name === 'Бүрэлт' || op.item_name.startsWith('Бүрэлт')) {
+                                const coat = calculateCoatingOperation();
+                                if (coat) {
+                                  calcQty = coat.qty;
+                                  calcNotes = coat.notes;
+                                }
+                              } else if (op.formula && op.formula.expression) {
+                                calcQty = evaluateOperationFormula(op.formula.expression);
+                              }
+                              appendOp({
+                                operation_name: op.item_name,
+                                qty: calcQty,
+                                unit_cost: op.unit_cost || 0,
+                                notes: calcNotes
+                              });
+                            } else {
+                              const idx = formValues.operations?.findIndex((o: any) => o.operation_name === op.item_name);
+                              if (idx !== undefined && idx >= 0) {
+                                removeOp(idx);
+                              }
+                            }
+                          }}
+                          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color)', flexShrink: 0 }}
+                        />
+                        <span style={{ fontWeight: isChecked ? 600 : 400, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={op.item_name}>
+                          {op.item_name}
+                        </span>
+                      </div>
+                      {op.unit_cost > 0 && (
+                        <span style={{ fontSize: '0.75rem', background: isChecked ? 'var(--primary-color)' : '#f1f5f9', color: isChecked ? 'white' : '#475569', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 500, flexShrink: 0, marginLeft: '0.5rem' }}>
+                          {op.unit_cost.toLocaleString()} ₮
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+            </div>
           </div>
         </section>
 
