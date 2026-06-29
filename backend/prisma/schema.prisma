@@ -78,6 +78,7 @@ model order {
   payment_percent_2 Float?
   finance_notes     String?
   current_status    String              @default("Хүлээгдэж буй")
+  production_stages Json?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   order_number      String?             @unique

@@ -149,6 +149,42 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: true,
+        materials: true,
+        operations: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch all orders' });
+  }
+};
+
+export const updateOrderStages = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { production_stages, current_status } = req.body;
+  try {
+    const orderId = parseInt(id as string);
+    const updateData: any = {};
+    if (production_stages !== undefined) updateData.production_stages = production_stages;
+    if (current_status !== undefined) updateData.current_status = current_status;
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: updateData
+    });
+    res.json({ message: 'Production stages updated successfully', order: updatedOrder });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update production stages' });
+  }
+};
+
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
