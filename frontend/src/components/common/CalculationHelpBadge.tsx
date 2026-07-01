@@ -22,7 +22,7 @@ export default function CalculationHelpBadge({
 }: CalculationHelpBadgeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number }>({ left: 0 });
+  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: -9999, left: -9999 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -31,45 +31,59 @@ export default function CalculationHelpBadge({
   }, []);
 
   const updatePosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const tooltipWidth = 280;
-      let left = rect.left + rect.width / 2;
+    if (!buttonRef.current || typeof window === 'undefined') return;
 
-      if (typeof window !== 'undefined') {
-        const halfWidth = tooltipWidth / 2;
-        if (left - halfWidth < 12) {
-          left = halfWidth + 12;
-        } else if (left + halfWidth > window.innerWidth - 12) {
-          left = window.innerWidth - halfWidth - 12;
-        }
+    const rect = buttonRef.current.getBoundingClientRect();
+    const tooltipWidth = 280;
+    const halfWidth = tooltipWidth / 2;
 
-        // If button is near top of screen (< 260px), show tooltip below button
-        if (rect.top > 260) {
-          setCoords({
-            bottom: window.innerHeight - rect.top + 8,
-            left
-          });
-        } else {
-          setCoords({
-            top: rect.bottom + 8,
-            left
-          });
-        }
+    // Horizontal alignment
+    let left = rect.left + rect.width / 2;
+    if (left - halfWidth < 12) {
+      left = halfWidth + 12;
+    } else if (left + halfWidth > window.innerWidth - 12) {
+      left = window.innerWidth - halfWidth - 12;
+    }
+
+    // Get real popup height or estimate 310px
+    const popupHeight = popupRef.current?.offsetHeight || 310;
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    let top: number;
+    // If there's enough space below, or if space below is greater than space above, place BELOW the button
+    if (spaceBelow >= popupHeight + 12 || spaceBelow >= spaceAbove) {
+      top = rect.bottom + 8;
+      // Clamp to screen bottom
+      if (top + popupHeight > window.innerHeight - 12) {
+        top = Math.max(12, window.innerHeight - popupHeight - 12);
+      }
+    } else {
+      // Place ABOVE the button
+      top = rect.top - popupHeight - 8;
+      // Clamp to screen top
+      if (top < 12) {
+        top = 12;
       }
     }
+
+    setCoords({ top, left });
   };
 
   useEffect(() => {
     if (isOpen) {
       updatePosition();
+      const rafId = requestAnimationFrame(() => {
+        updatePosition();
+      });
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
+      return () => {
+        cancelAnimationFrame(rafId);
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
     }
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -94,16 +108,17 @@ export default function CalculationHelpBadge({
       ref={popupRef}
       style={{
         position: 'fixed',
-        ...(coords.top !== undefined ? { top: `${coords.top}px` } : {}),
-        ...(coords.bottom !== undefined ? { bottom: `${coords.bottom}px` } : {}),
+        top: `${coords.top}px`,
         left: `${coords.left}px`,
         transform: 'translateX(-50%)',
         width: '280px',
+        maxHeight: 'calc(100vh - 24px)',
+        overflowY: 'auto',
         background: 'var(--surface-color, #ffffff)',
         border: '1px solid var(--border-color, #cbd5e1)',
         borderRadius: '0.75rem',
         padding: '1rem',
-        boxShadow: '0 15px 30px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15)',
+        boxShadow: '0 15px 35px -5px rgba(0, 0, 0, 0.3), 0 8px 15px -6px rgba(0, 0, 0, 0.2)',
         zIndex: 9999999,
         color: 'var(--text-primary, #1e293b)',
         fontSize: '0.825rem',
