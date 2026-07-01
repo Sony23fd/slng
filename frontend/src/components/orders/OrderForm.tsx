@@ -10,6 +10,7 @@ import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { parseMaterial } from '../../utils/parseMaterial';
 import { calculatePaperDivision } from '../../utils/paperSizes';
+import CalculationHelpBadge from '../common/CalculationHelpBadge';
 
 interface OrderFormValues {
   // 1. Үндсэн
@@ -858,7 +859,18 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-              <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
+                <CalculationHelpBadge
+                  title="Цаасан торны дэлгээс хэмжээ"
+                  formula="Дэлгээс Өргөн = (Өргөн + Хажуу) × 2 | Дэлгээс Өндөр = Өндөр + Амсар (6см) + Ёроол (6см)"
+                  liveCalculation={`Дэлгээс: ${((bagDims.width + bagDims.gusset) * 2)}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см`}
+                  details={[
+                    "3 хэмжээст торыг хэвлэлийн цаасан дээр дэлгэхэд хажуу болон нугалааснууд нэмэгдэн тооцогдоно.",
+                    "Амсар болон Ёроол нугалааг стандартаар тус бүр 6 см гэж авна."
+                  ]}
+                />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Өндөр (см)</label>
@@ -1110,16 +1122,64 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>[M1] Материалын нэр</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>[M2] Хэмжээ</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M3] Хэв. хэмжээ</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M4] Хэвлэлийн хуудас</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span>[M4] Хэв. хуудас</span>
+                      <CalculationHelpBadge
+                        title="[M4] Хэвлэлийн хуудас (Press Sheet)"
+                        formula="Брошур, Тор зэрэгт стандарт дүрмээр автоматаар тохируулагдана"
+                        details={[
+                          "Брошур (Brochure) дээр 1 хуудсаар албадан тохируулагдана.",
+                          "Цаасан тор (Paper bag) дээр дэлгээс 1 ширхгээр тооцогдоно."
+                        ]}
+                      />
+                    </div>
+                  </th>
                   <th colSpan={3} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Хэвлэгдэх тоо</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '55px' }}>[M8] Хуваалт</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '60px' }}>[M9] Тоо</th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span>[M8] Хуваалт</span>
+                      <CalculationHelpBadge
+                        title="[M8] Цаасны хуваалт (Division)"
+                        formula="Том цааснаас хэвлэлийн хэмжээгээр зүсэх тоо"
+                        details={[
+                          "B1 цааснаас B2 зүсэхэд 2, A1 цааснаас A2 зүсэхэд 2 гэх мэт зүсэлтээр бодогдоно.",
+                          "Цаасан торонд B1-ээс B2 зүсэх тул хуваалт 2 байх стандарттай."
+                        ]}
+                      />
+                    </div>
+                  </th>
+                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span>[M9] Тоо</span>
+                      <CalculationHelpBadge
+                        title="[M9] Нийт хэрэгцээт том цаасны тоо"
+                        formula="⌈ (Үндсэн тоо [M5] + Хадаас [M6]) / Хуваалт [M8] ⌉"
+                        details={[
+                          "Хэвлэлтэд орох нийт жижиг хуудсыг том цаасны хуваалтад хувааж агуулахын орц гаргана."
+                        ]}
+                      />
+                    </div>
+                  </th>
                   <th colSpan={2} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>[MC] Тэмдэглэл</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '35px' }}></th>
                 </tr>
                 <tr>
-                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[M5] Үндсэн</th>
+                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '90px', background: '#f8fafc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span>[M5] Үндсэн</span>
+                      <CalculationHelpBadge
+                        title="[M5] Үндсэн хэвлэх тоо"
+                        formula="Брошур: ⌈ Захиалга / Хуваалт ⌉ | Тор: Захиалгын нийт тоо"
+                        liveCalculation={`Захиалгын тоо: ${formValues.total_qty || 0}`}
+                        details={[
+                          "Брошур үед цаасны хуваалтаас хамаарна.",
+                          "Цаасан торонд дэлгээс 1 ширхэг багтах тул Захиалгын тоотой тэнцэнэ."
+                        ]}
+                      />
+                    </div>
+                  </th>
                   <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[M6] Хадаас</th>
                   <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '85px', background: '#f8fafc' }}>[M7] Нийт</th>
                   <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>[MA] Нэгж</th>
@@ -1418,6 +1478,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
           {opFields.map((field, index) => {
             const o = formValues.operations?.[index];
             const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
+            const isCoating = o?.operation_name === 'Бүрэлт' || o?.operation_name?.startsWith('Бүрэлт');
+            const isStrap = o?.operation_name?.toLowerCase().includes('оосор');
+            const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
             return (
             <div key={field.id} className="row-item">
               <div className="form-group" style={{ flex: 1 }}>
@@ -1481,7 +1544,43 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   />
                 </div>
               )}
-              <div className="form-group"><label>Тоо</label><input type="number" step="any" {...register(`operations.${index}.qty`)} /></div>
+               <div className="form-group">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <label style={{ margin: 0 }}>Тоо</label>
+                  {isCoating && (
+                    <CalculationHelpBadge
+                      title="Бүрэлтийн хуулганы тооцоо"
+                      formula="(Үндсэн тоо [M5] + Хадаас) × Коэффициент"
+                      liveCalculation={`Бодолт: ${o?.qty || 0} (Коэффициент B2=0.007, A2=0.006, A3=0.004)`}
+                      details={[
+                        "Хавтасны хэвлэлийн хэмжээнээс хамааран хуулганы өргөн болон коэффициент тодорхойлогдоно.",
+                        "Хадаас талбарт оруулсан нэмэлт тоог Үндсэн тоотой нэмж үржүүлнэ."
+                      ]}
+                    />
+                  )}
+                  {isStrap && (
+                    <CalculationHelpBadge
+                      title="Цаасан торны оосор"
+                      formula="Захиалгын нийт тоо × 2"
+                      liveCalculation={`${formValues.total_qty || 0} × 2 = ${(formValues.total_qty || 0) * 2} ш`}
+                      details={[
+                        "1 ширхэг цаасан торонд 2 ширхэг оосор орох стандарттай."
+                      ]}
+                    />
+                  )}
+                  {!isCoating && !isStrap && mpFormula && (
+                    <CalculationHelpBadge
+                      title="Мастер үнийн сангийн томьёо"
+                      formula={mpFormula}
+                      liveCalculation={`Үр дүн: ${o?.qty || 0}`}
+                      details={[
+                        "Энэхүү ажиллагааны тоог Мастер үнийн санд тохируулсан динамик томьёогоор бодож байна."
+                      ]}
+                    />
+                  )}
+                </div>
+                <input type="number" step="any" {...register(`operations.${index}.qty`)} />
+              </div>
               <div className="form-group"><label>[O3] Нэгж өртөг</label><input type="number" step="any" {...register(`operations.${index}.unit_cost`)} /></div>
               <div className="form-group" style={{width: '100px'}}><label>[O4] Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem'}}>{tCost.toLocaleString()}</div></div>
               <div className="form-group" style={{ flex: 1 }}><label>[O5] Тэмдэглэл</label><input {...register(`operations.${index}.notes`)} /></div>
