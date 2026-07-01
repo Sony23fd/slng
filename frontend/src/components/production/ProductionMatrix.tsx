@@ -81,20 +81,19 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
     return diffHours <= 24;
   };
 
-  const activeCount = orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Бэлэн' && o.current_status !== 'Олгосон' && getOverallProgress(o.production_stages) < 100).length;
-  const completedCount = orders.filter(o => o.current_status === 'Бэлэн' || (getOverallProgress(o.production_stages) >= 100 && o.current_status !== 'Олгосон')).length;
-  const deliveredCount = orders.filter(o => o.current_status === 'Олгосон').length;
+  const isDeliveredOrder = (o: Order) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
+  const isReadyOrder = (o: Order) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOverallProgress(o.production_stages) >= 100);
+  const isActiveOrder = (o: Order) => o.current_status !== 'Хүлээгдэж буй' && !isReadyOrder(o) && !isDeliveredOrder(o);
+
+  const activeCount = orders.filter(isActiveOrder).length;
+  const completedCount = orders.filter(isReadyOrder).length;
+  const deliveredCount = orders.filter(isDeliveredOrder).length;
 
   const filteredOrders = orders.filter(o => {
     if (o.current_status === 'Хүлээгдэж буй') return false;
-    const progress = getOverallProgress(o.production_stages);
-    if (statusTab === 'ACTIVE') {
-      if (o.current_status === 'Бэлэн' || o.current_status === 'Олгосон' || progress >= 100) return false;
-    } else if (statusTab === 'COMPLETED') {
-      if (!(o.current_status === 'Бэлэн' || (progress >= 100 && o.current_status !== 'Олгосон'))) return false;
-    } else if (statusTab === 'DELIVERED') {
-      if (o.current_status !== 'Олгосон') return false;
-    }
+    if (statusTab === 'ACTIVE' && !isActiveOrder(o)) return false;
+    if (statusTab === 'COMPLETED' && !isReadyOrder(o)) return false;
+    if (statusTab === 'DELIVERED' && !isDeliveredOrder(o)) return false;
 
     const matchesSearch = 
       (o.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||

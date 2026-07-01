@@ -22,11 +22,23 @@ export default function MyOrdersPage() {
       .catch(console.error);
   }, [token]);
 
+  const getOrderProgress = (o: any) => {
+    const stages = o.production_stages || {};
+    const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
+    const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
+    return Math.round(totalVal / stageKeys.length);
+  };
+
+  const isDeliveredOrder = (o: any) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
+  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOrderProgress(o) >= 100);
+  const isPendingOrder = (o: any) => o.current_status === 'Хүлээгдэж буй';
+  const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o);
+
   const filteredOrders = orders.filter(o => {
-    if (filterTab === 'PENDING' && o.current_status !== 'Хүлээгдэж буй') return false;
-    if (filterTab === 'IN_PRODUCTION' && (o.current_status === 'Хүлээгдэж буй' || o.current_status === 'Бэлэн' || o.current_status === 'Олгосон')) return false;
-    if (filterTab === 'READY' && o.current_status !== 'Бэлэн') return false;
-    if (filterTab === 'DELIVERED' && o.current_status !== 'Олгосон') return false;
+    if (filterTab === 'PENDING' && !isPendingOrder(o)) return false;
+    if (filterTab === 'IN_PRODUCTION' && !isInProductionOrder(o)) return false;
+    if (filterTab === 'READY' && !isReadyOrder(o)) return false;
+    if (filterTab === 'DELIVERED' && !isDeliveredOrder(o)) return false;
 
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
@@ -60,10 +72,10 @@ export default function MyOrdersPage() {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {[
               { key: 'ALL', label: 'Бүгд', count: orders.length, color: '#64748b' },
-              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(o => o.current_status === 'Хүлээгдэж буй').length, color: '#f59e0b' },
-              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Бэлэн' && o.current_status !== 'Олгосон').length, color: '#3b82f6' },
-              { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(o => o.current_status === 'Бэлэн').length, color: '#10b981' },
-              { key: 'DELIVERED', label: '🤝 Олгосон', count: orders.filter(o => o.current_status === 'Олгосон').length, color: '#475569' }
+              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(isPendingOrder).length, color: '#f59e0b' },
+              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(isInProductionOrder).length, color: '#3b82f6' },
+              { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(isReadyOrder).length, color: '#10b981' },
+              { key: 'DELIVERED', label: '🤝 Олгосон', count: orders.filter(isDeliveredOrder).length, color: '#475569' }
             ].map((t: any) => (
               <button
                 key={t.key}

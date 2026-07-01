@@ -43,6 +43,13 @@ export default function OrdersBoardPage() {
       .catch(console.error);
   }, [token]);
 
+  const getOrderProgress = (o: any) => {
+    const stages = o.production_stages || {};
+    const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
+    const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
+    return Math.round(totalVal / stageKeys.length);
+  };
+
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
@@ -58,21 +65,19 @@ export default function OrdersBoardPage() {
     if (orderIndex > -1) {
       newOrders[orderIndex].current_status = newStatus;
       setOrders(newOrders);
-    }
 
-    // API Call
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}/status`, {
+      // Call API
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: `Чирж зөөсөн: ${newStatus}` })
+        body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: 'Самбараас өөрчлөв' })
+      }).catch(err => {
+        console.error(err);
+        // revert on failure
       });
-    } catch (e) {
-      console.error(e);
-      // Fallback
     }
   };
 
@@ -80,13 +85,17 @@ export default function OrdersBoardPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 className="title">📋 Үйлдвэрлэлийн Самбар</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <Link href="/sales/orders" className="btn btn-outline">Жагсаалтаар харах</Link>
-          <Link href="/sales/orders/new" className="btn btn-primary">+ Шинэ захиалга</Link>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="title">Захиалгын Самбар (Kanban)</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Захиалгыг чирэх (drag & drop) байдлаар шат дамжлага шилжүүлэх</p>
         </div>
-      </div>
+        <div>
+          <Link href="/sales/orders" className="btn btn-outline">
+            ← Жагсаалт руу буцах
+          </Link>
+        </div>
+      </header>
 
       {loading ? (
         <p>Уншиж байна...</p>
@@ -94,7 +103,18 @@ export default function OrdersBoardPage() {
         <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', minHeight: '70vh' }}>
           <DragDropContext onDragEnd={onDragEnd}>
             {statuses.map(status => {
-              const columnOrders = orders.filter(o => o.current_status === status);
+              const columnOrders = orders.filter(o => {
+                const progress = getOrderProgress(o);
+                const isDelivered = o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
+                const isReady = !isDelivered && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || progress >= 100);
+                if (status === 'Бэлэн' || status === 'Бэлэн болсон') {
+                  return isReady;
+                }
+                if (status === 'Олгосон' || status === 'Хүлээлгэж өгсөн') {
+                  return isDelivered;
+                }
+                return o.current_status === status && !isReady && !isDelivered;
+              });
               return (
                 <div key={status} style={{ minWidth: '300px', maxWidth: '300px', background: '#f8fafc', borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ padding: '1rem', borderBottom: '2px solid #e2e8f0', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
