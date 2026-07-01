@@ -54,7 +54,7 @@ export const createOrder = async (req: Request, res: Response) => {
         notes: data.notes || null,
         profit_margin: data.profit_margin ? Number(data.profit_margin) : 0,
         has_vat: Boolean(data.has_vat),
-        final_price: data.final_price ? Number(data.final_price) : 0,
+        final_price: (data.final_price ?? data.finalPrice) ? Number(data.final_price ?? data.finalPrice) : 0,
         payment_method_1: data.payment_method_1 || null,
         payment_percent_1: data.payment_percent_1 ? Number(data.payment_percent_1) : null,
         payment_method_2: data.payment_method_2 || null,
@@ -280,6 +280,7 @@ export const getOrderById = async (req: Request, res: Response) => {
         materials: true,
         operations: true,
         outsourcedJobs: true,
+        user: true,
       }
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -319,7 +320,7 @@ export const updateOrder = async (req: Request, res: Response) => {
           notes: data.notes || null,
           profit_margin: data.profit_margin ? Number(data.profit_margin) : 0,
           has_vat: Boolean(data.has_vat),
-          final_price: data.final_price ? Number(data.final_price) : 0,
+          final_price: (data.final_price ?? data.finalPrice) ? Number(data.final_price ?? data.finalPrice) : 0,
           payment_method_1: data.payment_method_1 || null,
           payment_percent_1: data.payment_percent_1 ? Number(data.payment_percent_1) : null,
           payment_method_2: data.payment_method_2 || null,

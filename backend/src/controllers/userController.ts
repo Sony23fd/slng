@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, role: true, createdAt: true }
+      select: { id: true, name: true, role: true, phone: true, createdAt: true }
     });
     res.json(users);
   } catch (error) {
@@ -14,7 +14,7 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 export const createUser = async (req: Request, res: Response) => {
-  const { name, password, role } = req.body;
+  const { name, password, role, phone } = req.body;
   try {
     const existing = await prisma.user.findFirst({ where: { name } });
     if (existing) {
@@ -22,9 +22,9 @@ export const createUser = async (req: Request, res: Response) => {
     }
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, password: hash, role }
+      data: { name, password: hash, role, phone: phone || null }
     });
-    res.json({ id: user.id, name: user.name, role: user.role });
+    res.json({ id: user.id, name: user.name, role: user.role, phone: user.phone });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create user' });
   }

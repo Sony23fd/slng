@@ -188,6 +188,7 @@ model user {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   stamp_url      String?
+  phone          String?
   masterpricelog masterpricelog[]
   order          order[]
   orderstatuslog orderstatuslog[]
