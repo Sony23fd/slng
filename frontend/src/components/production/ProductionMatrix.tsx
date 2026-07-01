@@ -55,6 +55,7 @@ interface Props {
 export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUrgent, setFilterUrgent] = useState(false);
+  const [statusTab, setStatusTab] = useState<'ACTIVE' | 'COMPLETED' | 'DELIVERED'>('ACTIVE');
   const [activeModal, setActiveModal] = useState<{ orderId: number; stageKey: string; data: OrderStageData } | null>(null);
 
   // Helper to calculate overall % of an order
@@ -80,8 +81,21 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
     return diffHours <= 24;
   };
 
+  const activeCount = orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Бэлэн' && o.current_status !== 'Олгосон' && getOverallProgress(o.production_stages) < 100).length;
+  const completedCount = orders.filter(o => o.current_status === 'Бэлэн' || (getOverallProgress(o.production_stages) >= 100 && o.current_status !== 'Олгосон')).length;
+  const deliveredCount = orders.filter(o => o.current_status === 'Олгосон').length;
+
   const filteredOrders = orders.filter(o => {
     if (o.current_status === 'Хүлээгдэж буй') return false;
+    const progress = getOverallProgress(o.production_stages);
+    if (statusTab === 'ACTIVE') {
+      if (o.current_status === 'Бэлэн' || o.current_status === 'Олгосон' || progress >= 100) return false;
+    } else if (statusTab === 'COMPLETED') {
+      if (!(o.current_status === 'Бэлэн' || (progress >= 100 && o.current_status !== 'Олгосон'))) return false;
+    } else if (statusTab === 'DELIVERED') {
+      if (o.current_status !== 'Олгосон') return false;
+    }
+
     const matchesSearch = 
       (o.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,6 +122,69 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
 
   return (
     <div className="production-matrix">
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setStatusTab('ACTIVE')}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            background: statusTab === 'ACTIVE' ? 'var(--primary-color)' : 'var(--surface-color)',
+            color: statusTab === 'ACTIVE' ? '#fff' : 'var(--text-primary)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.2s',
+            boxShadow: statusTab === 'ACTIVE' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+          }}
+        >
+          🟢 Идэвхтэй үйлдвэрлэл <span style={{ background: statusTab === 'ACTIVE' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)', padding: '0.1rem 0.5rem', borderRadius: '12px', fontSize: '0.8rem' }}>{activeCount}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatusTab('COMPLETED')}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            background: statusTab === 'COMPLETED' ? '#10b981' : 'var(--surface-color)',
+            color: statusTab === 'COMPLETED' ? '#fff' : 'var(--text-primary)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.2s',
+            boxShadow: statusTab === 'COMPLETED' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+          }}
+        >
+          ✅ Бэлэн болсон <span style={{ background: statusTab === 'COMPLETED' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)', padding: '0.1rem 0.5rem', borderRadius: '12px', fontSize: '0.8rem' }}>{completedCount}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatusTab('DELIVERED')}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            background: statusTab === 'DELIVERED' ? '#64748b' : 'var(--surface-color)',
+            color: statusTab === 'DELIVERED' ? '#fff' : 'var(--text-primary)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.2s',
+            boxShadow: statusTab === 'DELIVERED' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+          }}
+        >
+          📦 Олгосон <span style={{ background: statusTab === 'DELIVERED' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)', padding: '0.1rem 0.5rem', borderRadius: '12px', fontSize: '0.8rem' }}>{deliveredCount}</span>
+        </button>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1, minWidth: '300px' }}>
           <input

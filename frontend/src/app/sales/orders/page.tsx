@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 export default function MyOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +21,22 @@ export default function MyOrdersPage() {
       })
       .catch(console.error);
   }, [token]);
+
+  const filteredOrders = orders.filter(o => {
+    if (filterTab === 'PENDING' && o.current_status !== 'Хүлээгдэж буй') return false;
+    if (filterTab === 'IN_PRODUCTION' && (o.current_status === 'Хүлээгдэж буй' || o.current_status === 'Бэлэн' || o.current_status === 'Олгосон')) return false;
+    if (filterTab === 'READY' && o.current_status !== 'Бэлэн') return false;
+    if (filterTab === 'DELIVERED' && o.current_status !== 'Олгосон') return false;
+
+    if (searchTerm) {
+      const s = searchTerm.toLowerCase();
+      const matchNo = (o.order_number || '').toLowerCase().includes(s);
+      const matchCust = (o.customer_name || '').toLowerCase().includes(s);
+      const matchProd = (o.product_name || '').toLowerCase().includes(s);
+      if (!matchNo && !matchCust && !matchProd) return false;
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -38,6 +56,48 @@ export default function MyOrdersPage() {
       </header>
 
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {[
+              { key: 'ALL', label: 'Бүгд', count: orders.length, color: '#64748b' },
+              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(o => o.current_status === 'Хүлээгдэж буй').length, color: '#f59e0b' },
+              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Бэлэн' && o.current_status !== 'Олгосон').length, color: '#3b82f6' },
+              { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(o => o.current_status === 'Бэлэн').length, color: '#10b981' },
+              { key: 'DELIVERED', label: '🤝 Олгосон', count: orders.filter(o => o.current_status === 'Олгосон').length, color: '#475569' }
+            ].map((t: any) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setFilterTab(t.key)}
+                style={{
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '0.375rem',
+                  border: '1px solid #cbd5e1',
+                  background: filterTab === t.key ? t.color : '#f8fafc',
+                  color: filterTab === t.key ? '#fff' : '#334155',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {t.label} <span style={{ background: filterTab === t.key ? 'rgba(255,255,255,0.25)' : '#e2e8f0', padding: '0.05rem 0.4rem', borderRadius: '10px', fontSize: '0.75rem' }}>{t.count}</span>
+              </button>
+            ))}
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="🔍 Хайх (дугаар, харилцагч...)"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem', width: '220px' }}
+            />
+          </div>
+        </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
@@ -52,7 +112,7 @@ export default function MyOrdersPage() {
             </tr>
           </thead>
           <tbody>
-            {orders.map(o => {
+            {filteredOrders.map(o => {
               const stages = o.production_stages || {};
               const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
               const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
