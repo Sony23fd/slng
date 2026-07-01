@@ -12,6 +12,7 @@ export default function QuotationPage() {
 
   const [order, setOrder] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [companyLogo, setCompanyLogo] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   // Live customizer states
@@ -68,8 +69,16 @@ export default function QuotationPage() {
         setCustomOps(opsDesc);
         setCustomQty(data.total_qty || 0);
         
-        const total = data.final_price || 0;
-        setCustomTotal(total);
+        let total = data.final_price || data.finalPrice || 0;
+        if (total === 0 && matArray.length > 0) {
+          const matCost = matArray.reduce((acc: number, m: any) => acc + ((Number(m.sheet_qty) || 0) * (Number(m.unit_cost) || 0)), 0);
+          const opCost = opArray.reduce((acc: number, o: any) => acc + ((Number(o.qty) || 0) * (Number(o.unit_cost) || 0)), 0);
+          const factoryCost = matCost + opCost + (Number(data.print_cost) || 0);
+          const margin = Number(data.profit_margin) || 0;
+          const net = factoryCost * ((100 + margin) / 100);
+          total = data.has_vat !== false ? net * 1.1 : net;
+        }
+        setCustomTotal(Math.round(total));
         setCustomUnitPrice(data.total_qty > 0 ? Math.round(total / data.total_qty) : 0);
         setShowVat(data.has_vat !== false);
         setCustomDate(new Date().toISOString().slice(0, 10));
@@ -83,6 +92,19 @@ export default function QuotationPage() {
     })
       .then(res => res.json())
       .then(data => setProfile(data))
+      .catch(console.error);
+
+    // Fetch constants for COMPANY_LOGO
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(constants => {
+        if (Array.isArray(constants)) {
+          const logoConst = constants.find((c: any) => c.type === 'COMPANY_LOGO');
+          if (logoConst?.value) setCompanyLogo(logoConst.value);
+        }
+      })
       .catch(console.error);
   }, [token, id]);
 
@@ -279,22 +301,30 @@ export default function QuotationPage() {
           <div>
             {/* SP Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.8rem' }}>
-              <div style={{
-                border: '2.5px solid #2563eb',
-                borderRadius: '50%',
-                width: '54px',
-                height: '34px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 900,
-                fontStyle: 'italic',
-                fontSize: '1.3rem',
-                letterSpacing: '-1px'
-              }}>
-                <span style={{ color: '#2563eb' }}>S</span>
-                <span style={{ color: '#f97316' }}>P</span>
-              </div>
+              {companyLogo ? (
+                <img 
+                  src={companyLogo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${companyLogo}` : companyLogo} 
+                  alt="Company Logo" 
+                  style={{ maxHeight: '60px', objectFit: 'contain' }} 
+                />
+              ) : (
+                <div style={{
+                  border: '2.5px solid #2563eb',
+                  borderRadius: '50%',
+                  width: '54px',
+                  height: '34px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 900,
+                  fontStyle: 'italic',
+                  fontSize: '1.3rem',
+                  letterSpacing: '-1px'
+                }}>
+                  <span style={{ color: '#2563eb' }}>S</span>
+                  <span style={{ color: '#f97316' }}>P</span>
+                </div>
+              )}
             </div>
 
             <h1 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '0 0 0.4rem', color: '#000000', letterSpacing: '0.5px' }}>
@@ -382,8 +412,8 @@ export default function QuotationPage() {
           </div>
 
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {profile?.stamp_url ? (
-              <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${profile.stamp_url}`} alt="Stamp" style={{ width: '170px', objectFit: 'contain' }} />
+            {(order?.user?.stamp_url || profile?.stamp_url) ? (
+              <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${order?.user?.stamp_url || profile?.stamp_url}`} alt="Stamp" style={{ width: '170px', objectFit: 'contain' }} />
             ) : (
               <div style={{
                 border: '2px solid #1d4ed8',
@@ -404,8 +434,18 @@ export default function QuotationPage() {
           </div>
 
           <div style={{ fontSize: '0.95rem', color: '#000000', textAlign: 'right' }}>
-            <div>Менежер {user?.name || 'Э.Мөнх-Эрдэнэ'}</div>
-            <div style={{ marginTop: '0.3rem' }}>Утас: {(user as any)?.phone || profile?.phone || '88992238'}</div>
+            <div>Менежер {order?.user?.name || order?.sales_person_name || user?.name || 'Э.Мөнх-Эрдэнэ'}</div>
+            <div style={{ marginTop: '0.3rem' }}>Утас: {order?.user?.phone || profile?.phone || (user as any)?.phone || '88992238'}</div>
+          </div>
+        </div>
+
+        {/* Bonus: Digital Quote Verification Badge */}
+        <div style={{ marginTop: '3.5rem', borderTop: '1px solid #cbd5e1', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: '#64748b', pageBreakInside: 'avoid' }}>
+          <div>
+            <strong>Баталгаажуулах дугаар:</strong> SP-QUOTE-{order?.id || id}-{new Date().getFullYear()} &nbsp;|&nbsp; <strong>Хэвлэсэн:</strong> {new Date().toLocaleDateString('mn-MN')}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #cbd5e1', padding: '0.25rem 0.6rem', borderRadius: '4px', background: '#f8fafc', color: '#334155', fontWeight: 600 }}>
+            <span>🔒 Цахим баталгаажилттай албан үнийн санал</span>
           </div>
         </div>
 

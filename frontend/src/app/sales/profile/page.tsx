@@ -7,7 +7,9 @@ import Image from 'next/image';
 export default function ProfilePage() {
   const { token, user, login } = useAuthStore();
   const [profile, setProfile] = useState<any>(null);
+  const [phoneInput, setPhoneInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -15,10 +17,33 @@ export default function ProfilePage() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
-        .then(data => setProfile(data))
+        .then(data => {
+          setProfile(data);
+          setPhoneInput(data?.phone || '');
+        })
         .catch(console.error);
     }
   }, [token]);
+
+  const handleSavePhone = async () => {
+    setSavingPhone(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone: phoneInput })
+      });
+      const updatedUser = await res.json();
+      setProfile(updatedUser);
+      login(updatedUser, token!);
+      alert('Утасны дугаар шинэчлэгдлээ!');
+    } catch (err) {
+      alert('Алдаа гарлаа');
+      console.error(err);
+    } finally {
+      setSavingPhone(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,6 +97,27 @@ export default function ProfilePage() {
         <div>
           <label className="label">Эрх</label>
           <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>{profile.role}</div>
+        </div>
+
+        <div>
+          <label className="label">Утасны дугаар (Үнийн санал дээр хэвлэгдэнэ)</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input 
+              type="text" 
+              className="input" 
+              value={phoneInput} 
+              onChange={e => setPhoneInput(e.target.value)} 
+              placeholder="Жишээ: 88992238"
+            />
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={handleSavePhone}
+              disabled={savingPhone}
+            >
+              {savingPhone ? 'Хадгалж байна...' : 'Хадгалах'}
+            </button>
+          </div>
         </div>
         
         <div>

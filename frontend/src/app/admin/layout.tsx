@@ -108,6 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/admin/settings?type=ORDER_START_SEQ" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Эхлэх дугаар</Link>
                     <Link href="/admin/settings?type=DEFAULT_PROFIT_MARGIN" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Үндсэн ашиг (%)</Link>
                     <Link href="/admin/settings?type=DEFAULT_DEPOSIT_PERCENT" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Урьдчилгаа (%)</Link>
+                    <Link href="/admin/settings?type=COMPANY_LOGO" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Компанийн Лого</Link>
                   </div>
                 </>
               )}

@@ -560,7 +560,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
 
   const onSubmit = (data: OrderFormValues) => {
-    const payload = { ...data, ...prices };
+    const payload = { ...data, ...prices, final_price: prices?.finalPrice || 0 };
     const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}` : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`;
     
