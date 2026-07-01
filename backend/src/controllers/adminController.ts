@@ -11,11 +11,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
     const totalRevenue = orders.reduce((sum, order) => sum + (order.final_price || 0), 0);
 
-    // Pending jobs (status not 'Бэлэн болсон' or 'Хүлээлгэж өгсөн')
+    // Pending jobs (status not 'Бэлэн', 'Олгосон', 'Бэлэн болсон' or 'Хүлээлгэж өгсөн')
     const pendingJobs = await prisma.order.count({
       where: {
         current_status: {
-          notIn: ['Бэлэн болсон', 'Хүлээлгэж өгсөн']
+          notIn: ['Бэлэн', 'Олгосон', 'Бэлэн болсон', 'Хүлээлгэж өгсөн']
         }
       }
     });

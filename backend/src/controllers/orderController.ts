@@ -193,17 +193,64 @@ export const getAllOrders = async (req: Request, res: Response) => {
 export const updateOrderStages = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { production_stages, current_status } = req.body;
+  const userId = (req as any).user?.id || 1;
   try {
     const orderId = parseInt(id as string);
+    const existingOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!existingOrder) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
     const updateData: any = {};
     if (production_stages !== undefined) updateData.production_stages = production_stages;
     if (current_status !== undefined) updateData.current_status = current_status;
 
-    const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
-      data: updateData
-    });
-    res.json({ message: 'Production stages updated successfully', order: updatedOrder });
+    let targetStatus = current_status !== undefined ? current_status : existingOrder.current_status;
+    let autoCompleted = false;
+
+    if (production_stages !== undefined) {
+      const standardKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
+      let stagesToCheck = production_stages;
+      if (typeof stagesToCheck === 'string') {
+        try { stagesToCheck = JSON.parse(stagesToCheck); } catch (e) {}
+      }
+      if (stagesToCheck && typeof stagesToCheck === 'object') {
+        const allCompleted = standardKeys.every(k => Number(stagesToCheck[k]?.status) === 100);
+        if (allCompleted && targetStatus !== 'Бэлэн' && targetStatus !== 'Олгосон') {
+          targetStatus = 'Бэлэн';
+          updateData.current_status = 'Бэлэн';
+          autoCompleted = true;
+        }
+      }
+    }
+
+    const oldStatus = existingOrder.current_status;
+    const statusChanged = targetStatus !== oldStatus && targetStatus !== undefined;
+
+    if (statusChanged) {
+      const result = await prisma.$transaction([
+        prisma.order.update({
+          where: { id: orderId },
+          data: updateData
+        }),
+        prisma.orderstatuslog.create({
+          data: {
+            order_id: orderId,
+            changed_by: userId,
+            old_status: oldStatus,
+            new_status: targetStatus,
+            notes: autoCompleted ? 'Үйлдвэрлэлийн бүх шат 100% дууссан тул автоматаар Бэлэн төлөвт шилжив' : null
+          }
+        })
+      ]);
+      return res.json({ message: 'Production stages updated successfully', order: result[0], autoCompleted });
+    } else {
+      const updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: updateData
+      });
+      return res.json({ message: 'Production stages updated successfully', order: updatedOrder, autoCompleted: false });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to update production stages' });
