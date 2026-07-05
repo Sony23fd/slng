@@ -15,10 +15,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setMounted(true);
     if (!token || !user) {
       router.push('/login');
+    } else if (user.role === 'SALES') {
+      router.push('/sales');
     }
   }, [token, user, router]);
 
-  if (!mounted || !user) return null;
+  if (!mounted || !user || user.role === 'SALES') return null;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)' }}>
@@ -56,18 +58,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {!collapsed && <span>Үйлдвэрлэл хяналт</span>}
           </Link>
           
-          {(user.role === 'ADMIN' || user.role === 'FINANCE') && (
-            <Link href="/admin/prices" title="Мастер үнэ" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-              <span style={{ fontSize: '1.1rem' }}>💰</span>
-              {!collapsed && <span>Мастер үнэ</span>}
+          {user.role === 'ADMIN' && (
+            <Link href="/admin/users" title="Хэрэглэгчид" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', marginTop: '0.25rem' }}>
+              <span style={{ fontSize: '1.1rem' }}>👥</span>
+              {!collapsed && <span>Хэрэглэгчид</span>}
             </Link>
           )}
-          
-          {user.role === 'ADMIN' && (
+
+          {(user.role === 'ADMIN' || user.role === 'FINANCE') && (
             <>
-              <Link href="/admin/users" title="Хэрэглэгчид" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-                <span style={{ fontSize: '1.1rem' }}>👥</span>
-                {!collapsed && <span>Хэрэглэгчид</span>}
+              <Link href="/admin/prices" title="Мастер үнэ" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', marginTop: '0.25rem' }}>
+                <span style={{ fontSize: '1.1rem' }}>💰</span>
+                {!collapsed && <span>Мастер үнэ</span>}
               </Link>
               <Link href="/admin/customers" title="Харилцагчид" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', marginTop: '0.25rem' }}>
                 <span style={{ fontSize: '1.1rem' }}>🤝</span>

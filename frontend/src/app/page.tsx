@@ -16,6 +16,8 @@ export default function Home() {
     } else {
       if (user.role === 'SALES') {
         router.push('/sales');
+      } else if (user.role === 'PRODUCTION') {
+        router.push('/admin/production');
       } else {
         router.push('/admin');
       }

@@ -13,12 +13,14 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     setMounted(true);
-    if (!token || !user || user.role !== 'SALES') {
+    if (!token || !user) {
       router.push('/login');
+    } else if (user.role === 'PRODUCTION') {
+      router.push('/admin/production');
     }
   }, [token, user, router]);
 
-  if (!mounted || !user || user.role !== 'SALES') return null;
+  if (!mounted || !user || user.role === 'PRODUCTION') return null;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)' }}>

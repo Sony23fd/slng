@@ -1,9 +1,13 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: number;
   name: string;
-  role: string;
+  role: 'ADMIN' | 'FINANCE' | 'SALES' | 'PRODUCTION' | string;
+  stamp_url?: string;
+  phone?: string;
+  email?: string;
 }
 
 interface AuthState {
@@ -11,32 +15,41 @@ interface AuthState {
   token: string | null;
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (updatedData: Partial<User>) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  login: (user, token) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('token', token);
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      login: (user, token) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('token', token);
+        }
+        set({ user, token });
+      },
+      logout: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+        set({ user: null, token: null });
+      },
+      updateUser: (updatedData) =>
+        set((state) => {
+          const newUser = state.user ? { ...state.user, ...updatedData } : null;
+          if (typeof window !== 'undefined' && newUser) {
+            localStorage.setItem('user', JSON.stringify(newUser));
+          }
+          return { user: newUser };
+        }),
+    }),
+    {
+      name: 'selenge-auth-storage',
+      storage: createJSONStorage(() => localStorage),
     }
-    set({ user, token });
-  },
-  logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    }
-    set({ user: null, token: null });
-  }
-}));
+  )
+);
 
-// Hydrate state after creation
-if (typeof window !== 'undefined') {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  const token = localStorage.getItem('token');
-  if (user && token) {
-    useAuthStore.setState({ user, token });
-  }
-}
