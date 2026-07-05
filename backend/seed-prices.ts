@@ -84,8 +84,10 @@ const operationsData = [
   { name: 'Фольго дардас (Foil Stamp)', expr: 'total_qty', desc: 'Алтлаг мөнгөлөг товгор дардас', cost: 250 },
   { name: 'Бүрэлт', expr: '', desc: 'Хавтасны бүрэлтийн хуулга', cost: 1500 },
   { name: 'Оосор (Торны оосор)', expr: 'total_qty * 2', desc: '1 торонд 2 ш оосор орно', cost: 80 },
-  { name: 'Нуруу (Спирал үдээс)', expr: 'total_qty * 24', desc: 'А5 ширээний календарт 24 ш спирал гогцоо орно', cost: 20 },
-  { name: 'Суурь хийх', expr: 'total_qty', desc: 'Ширээний календарын хатуу картон суурь наах, угсрах', cost: 1500 },
+  { name: 'Нуруу (Спирал үдээс А5)', expr: 'total_qty * 24', desc: 'А5 ширээний календарт 24 ш спирал гогцоо орно', cost: 20 },
+  { name: 'Нуруу (Спирал үдээс B5)', expr: 'total_qty * 28', desc: 'B5 ширээний календарт 28 ш спирал гогцоо орно', cost: 20 },
+  { name: 'Суурь хийх (А5)', expr: 'total_qty', desc: 'А5 ширээний календарын хатуу картон суурь наах, угсрах', cost: 1500 },
+  { name: 'Суурь хийх (B5)', expr: 'total_qty', desc: 'B5 ширээний календарын хатуу картон суурь наах, угсрах', cost: 1800 },
 ];
 
 export async function seedPrices(prisma: PrismaClient) {
