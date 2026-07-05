@@ -424,14 +424,25 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
     const totalOrderQty = Number(getValues('total_qty')) || 0;
     if (getValues('category') === 'Календарь') {
-      // Ширээний болон ханын календарьт эхний 1 хуудсыг бүрнэ (1 хуудас = 0.125 хэвлэлийн хуудас, А2 хэмжээ)
-      const m5 = totalOrderQty * 0.125;
-      const m6 = customExtra !== undefined ? customExtra : 20; // 20 хадаас
-      const coef = 0.006; // А2 хэмжээтэй тул 0.006 (44см хуулга)
-      return {
-        qty: Number(((m5 + m6) * coef).toFixed(2)),
-        notes: `Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)`,
-      };
+      if (getValues('size') === 'B5' || getValues('product_name')?.includes('B5')) {
+        // B5 календарьт Хавтас (A2 400ш * 0.006 = 2.40) болон эхний 1 хуудас (B2 57.5ш * 0.007 = 0.40) хоёулаа бүрэгдэнэ -> 2.80
+        const coverCoating = (totalOrderQty + 100) * 0.006;
+        const innerFirstPageCoating = ((totalOrderQty * 0.125) + 20) * 0.007;
+        const totalCoating = coverCoating + innerFirstPageCoating;
+        return {
+          qty: Number(totalCoating.toFixed(2)),
+          notes: `Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ`,
+        };
+      } else {
+        // А5 ширээний болон ханын календарьт эхний 1 хуудсыг бүрнэ (1 хуудас = 0.125 хэвлэлийн хуудас, А2 хэмжээ)
+        const m5 = totalOrderQty * 0.125;
+        const m6 = customExtra !== undefined ? customExtra : 20; // 20 хадаас
+        const coef = 0.006; // А2 хэмжээтэй тул 0.006 (44см хуулга)
+        return {
+          qty: Number(((m5 + m6) * coef).toFixed(2)),
+          notes: `Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)`,
+        };
+      }
     }
     if (!coverMat) {
       const extra = customExtra !== undefined ? customExtra : 0;
@@ -666,13 +677,36 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                   ]);
                   setValue('operations', [
                     { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                    { operation_name: 'Нуруу (Спирал үдээс)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
-                    { operation_name: 'Суурь хийх', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
+                    { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
+                    { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
                   ]);
                 }}
                 style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
               >
-                🗓️ 300ш Ширээний Календарь
+                🗓️ 300ш Календарь (A5)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Календарь');
+                  setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
+                  setValue('size', 'B5');
+                  setValue('total_pages', 26);
+                  setValue('total_qty', 300);
+                  setValue('materials', [
+                    { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
+                    { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
+                    { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
+                  ]);
+                  setValue('operations', [
+                    { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
+                    { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
+                    { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
+                  ]);
+                }}
+                style={{ background: '#ea580c', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🗓️ 300ш Календарь (B5)
               </button>
             </div>
           </div>
