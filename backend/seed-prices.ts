@@ -60,6 +60,7 @@ const prices = [
   // Картон
   { category: 'Цаас', item_name: 'Картон 2 A0 (889x1194)', unit_cost: 6300 },
   { category: 'Цаас', item_name: 'Картон 2.5 A0 (889x1194)', unit_cost: 6950 },
+  { category: 'Цаас', item_name: 'Картон 3.0 A0 (889x1194)', unit_cost: 7600 },
 
   // Кай цаас
   { category: 'Цаас', item_name: 'Кай цаас 250 A0 (889x1194)', unit_cost: 1300 },
@@ -83,6 +84,8 @@ const operationsData = [
   { name: 'Фольго дардас (Foil Stamp)', expr: 'total_qty', desc: 'Алтлаг мөнгөлөг товгор дардас', cost: 250 },
   { name: 'Бүрэлт', expr: '', desc: 'Хавтасны бүрэлтийн хуулга', cost: 1500 },
   { name: 'Оосор (Торны оосор)', expr: 'total_qty * 2', desc: '1 торонд 2 ш оосор орно', cost: 80 },
+  { name: 'Нуруу (Спирал үдээс)', expr: 'total_qty * 24', desc: 'А5 ширээний календарт 24 ш спирал гогцоо орно', cost: 20 },
+  { name: 'Суурь хийх', expr: 'total_qty', desc: 'Ширээний календарын хатуу картон суурь наах, угсрах', cost: 1500 },
 ];
 
 export async function seedPrices(prisma: PrismaClient) {
@@ -183,4 +186,11 @@ export async function seedPrices(prisma: PrismaClient) {
   }
 
   console.log('Done seeding prices and operations!');
+}
+
+if (require.main === module) {
+  const prisma = new PrismaClient();
+  seedPrices(prisma)
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());
 }
