@@ -423,6 +423,16 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     if (!coverMat && materials.length > 0) coverMat = materials[0];
 
     const totalOrderQty = Number(getValues('total_qty')) || 0;
+    if (getValues('category') === 'Календарь') {
+      // Ширээний болон ханын календарьт эхний 1 хуудсыг бүрнэ (1 хуудас = 0.125 хэвлэлийн хуудас, А2 хэмжээ)
+      const m5 = totalOrderQty * 0.125;
+      const m6 = customExtra !== undefined ? customExtra : 20; // 20 хадаас
+      const coef = 0.006; // А2 хэмжээтэй тул 0.006 (44см хуулга)
+      return {
+        qty: Number(((m5 + m6) * coef).toFixed(2)),
+        notes: `Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)`,
+      };
+    }
     if (!coverMat) {
       const extra = customExtra !== undefined ? customExtra : 0;
       return {
@@ -640,6 +650,29 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 style={{ background: '#8b5cf6', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
               >
                 📚 1000ш Ном
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Календарь');
+                  setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
+                  setValue('size', 'A5');
+                  setValue('total_pages', 26);
+                  setValue('total_qty', 300);
+                  setValue('materials', [
+                    { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
+                    { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
+                    { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
+                  ]);
+                  setValue('operations', [
+                    { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                    { operation_name: 'Нуруу (Спирал үдээс)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
+                    { operation_name: 'Суурь хийх', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
+                  ]);
+                }}
+                style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🗓️ 300ш Ширээний Календарь
               </button>
             </div>
           </div>
