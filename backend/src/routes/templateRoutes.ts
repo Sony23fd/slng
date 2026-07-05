@@ -5,8 +5,8 @@ import { authMiddleware } from '../middleware/authMiddleware';
 const router = Router();
 
 router.get('/', authMiddleware(), getTemplates);
-router.post('/', authMiddleware(['ADMIN']), createTemplate);
-router.put('/:id', authMiddleware(['ADMIN']), updateTemplate);
-router.delete('/:id', authMiddleware(['ADMIN']), deleteTemplate);
+router.post('/', authMiddleware(['ADMIN', 'FINANCE']), createTemplate);
+router.put('/:id', authMiddleware(['ADMIN', 'FINANCE']), updateTemplate);
+router.delete('/:id', authMiddleware(['ADMIN', 'FINANCE']), deleteTemplate);
 
 export default router;
