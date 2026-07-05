@@ -708,6 +708,26 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               >
                 🗓️ 300ш Календарь (B5)
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('category', 'Календарь');
+                  setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
+                  setValue('size', 'A2');
+                  setValue('total_pages', 14);
+                  setValue('total_qty', 500);
+                  setValue('materials', [
+                    { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
+                  ]);
+                  setValue('operations', [
+                    { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                    { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
+                  ]);
+                }}
+                style={{ background: '#059669', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                🗓️ 500ш Ханын Календарь (A2)
+              </button>
             </div>
           </div>
           <Select
