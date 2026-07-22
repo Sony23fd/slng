@@ -176,6 +176,7 @@ model producttemplate {
   total_pages   Int?
   needs_design  Boolean  @default(false)
   notes         String?
+  order_data    Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
