@@ -794,7 +794,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </div>
 
         {/* 1. Захиалгын мэдээлэл */}
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="card">
           <h3 className="section-title">1. Захиалагчийн мэдээлэл</h3>
           <div className="form-grid">
             <div className="form-group">
@@ -1096,7 +1096,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="card">
           <h3 className="section-title">2-4. Технологийн мэдээлэл</h3>
           <div className="form-grid">
             <div className="form-group">
@@ -1253,11 +1253,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         {/* 5. Материал */}
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="card">
           <h3 className="section-title">5. Шаардлагатай материал</h3>
-          <div style={{ overflowX: 'auto', border: '1px solid #cbd5e1', borderRadius: '0.5rem', marginBottom: '1rem', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '950px', backgroundColor: 'white' }}>
-              <thead style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
+          <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+            <table className="smart-table" style={{ minWidth: '950px' }}>
+              <thead>
                 <tr>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>[M1] Материалын нэр</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>[M2] Хэмжээ</th>
@@ -1612,7 +1612,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         {/* 6. Ажиллагаа */}
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="card">
           <h3 className="section-title">6. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)</h3>
           {opFields.map((field, index) => {
             const o = formValues.operations?.[index];
@@ -1730,7 +1730,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         {/* 7. Гадуур ажил */}
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="card">
           <h3 className="section-title">7. Гадуур ажил</h3>
           {outFields.map((field, index) => {
             const out = formValues.outsourced?.[index];
@@ -1905,48 +1905,38 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         </section>
 
         {/* Наалдамхай хураангуй мөр (Sticky Summary Bar) */}
-        <div style={{
-          position: 'sticky',
-          bottom: 0,
-          background: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(10px)',
-          borderTop: '2px solid #3b82f6',
-          padding: '1rem 1.5rem',
-          margin: '2rem -1rem -1rem -1rem',
-          boxShadow: '0 -4px 15px rgba(0, 0, 0, 0.08)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          zIndex: 50
-        }}>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Захиалгын тоо:</span>
-              <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</strong>
+        <div className="sticky-summary">
+          <div className="sticky-summary-content">
+            <div className="summary-stat">
+              <span className="label">Захиалгын тоо</span>
+              <span className="value">{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
             </div>
-            <div>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Нэгжийн үнэ:</span>
-              <strong style={{ fontSize: '1.1rem', color: '#2563eb' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</strong>
+            <div className="summary-stat">
+              <span className="label">Нэгжийн өртөг</span>
+              <span className="value" style={{ color: '#64748b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</span>
             </div>
-            <div>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>Ашгийн маржин:</span>
+            <div className="summary-stat">
+              <span className="label">Нэгжийн үнэ</span>
+              <span className="value" style={{ color: 'var(--primary-color)' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</span>
+            </div>
+            <div className="summary-stat">
+              <span className="label">Ашгийн маржин</span>
               <span style={{
                 display: 'inline-block',
-                padding: '0.2rem 0.6rem',
+                padding: '0.25rem 0.75rem',
                 borderRadius: '9999px',
                 fontSize: '0.85rem',
-                fontWeight: 600,
+                fontWeight: 700,
+                marginTop: '0.25rem',
                 backgroundColor: (Number(formValues.profit_margin) || 0) >= 20 ? '#d1fae5' : (Number(formValues.profit_margin) || 0) >= 10 ? '#fef3c7' : '#fee2e2',
                 color: (Number(formValues.profit_margin) || 0) >= 20 ? '#065f46' : (Number(formValues.profit_margin) || 0) >= 10 ? '#92400e' : '#991b1b'
               }}>
                 {Number(formValues.profit_margin || 0)}%
               </span>
             </div>
-            <div>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', display: 'block' }}>НИЙТ ДҮН:</span>
-              <strong style={{ fontSize: '1.35rem', color: '#1e3a8a' }}>{(prices.finalPrice || 0).toLocaleString()} ₮</strong>
+            <div className="summary-stat">
+              <span className="label">НИЙТ ДҮН</span>
+              <span className="value success">{(prices.finalPrice || 0).toLocaleString()} ₮</span>
             </div>
           </div>
 

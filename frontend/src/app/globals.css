@@ -222,3 +222,100 @@ input:focus, select:focus {
 .mt-4 { margin-top: 1rem; }
 .mb-4 { margin-bottom: 1rem; }
 
+/* Sticky Summary Panel */
+.sticky-summary {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: white;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+  margin-bottom: -1.25rem;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.sticky-summary-content {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-stat .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.summary-stat .value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.summary-stat .value.success {
+  color: var(--success-color);
+  font-size: 1.5rem;
+}
+
+/* Smart Table */
+.smart-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.smart-table th {
+  background-color: #f8fafc;
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.smart-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+.smart-table td:last-child {
+  border-right: none;
+}
+
+.smart-table tr:last-child td {
+  border-bottom: none;
+}
+
+.input-readonly {
+  background-color: #f1f5f9;
+  color: var(--text-secondary);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+.input-readonly:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
