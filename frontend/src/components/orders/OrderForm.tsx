@@ -730,8 +730,17 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               </button>
             </div>
           </div>
-          <Select
-            options={templates.map(t => ({ value: t.id, label: t.template_name, template: t }))}
+          {(() => {
+            const groupedOptions = Object.values(templates.reduce((acc, t) => {
+              const cat = t.category || 'Бусад';
+              if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
+              acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
+              return acc;
+            }, {} as Record<string, { label: string, options: any[] }>));
+            
+            return (
+              <Select
+                options={groupedOptions}
             onChange={(selected: any) => {
               if (selected && selected.template) {
                 const t = selected.template;
@@ -742,12 +751,46 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 if (t.inner_color) setValue('inner_color', t.inner_color);
                 if (t.total_pages) setValue('total_pages', t.total_pages);
                 if (t.needs_design) setValue('needs_design', t.needs_design);
+
+                if (t.order_data) {
+                  const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
+                  if (od.sub_size) setValue('sub_size', od.sub_size);
+                  
+                  if (od.materials && Array.isArray(od.materials)) {
+                    const smartMaterials = od.materials.map((m: any) => {
+                      const mp = masterPrices.find(p => p.item_name === m.material_name);
+                      return {
+                        ...m,
+                        unit_cost: mp ? mp.unit_cost : m.unit_cost
+                      };
+                    });
+                    setValue('materials', smartMaterials);
+                  }
+                  
+                  if (od.operations && Array.isArray(od.operations)) {
+                    const smartOperations = od.operations.map((o: any) => {
+                      const mp = masterPrices.find(p => p.item_name === o.operation_name);
+                      return {
+                        ...o,
+                        unit_cost: mp ? mp.unit_cost : o.unit_cost
+                      };
+                    });
+                    setValue('operations', smartOperations);
+                  }
+                  
+                  if (od.specifications) {
+                    if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
+                    if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
+                  }
+                }
               }
             }}
-            placeholder="Эсвэл хадгалсан загваруудаас хайх..."
-            isClearable
-            styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
-          />
+                placeholder="Эсвэл хадгалсан загваруудаас хайх..."
+                isClearable
+                styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+              />
+            );
+          })()}
         </div>
 
         {/* 1. Захиалгын мэдээлэл */}

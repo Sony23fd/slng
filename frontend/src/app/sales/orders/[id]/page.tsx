@@ -49,9 +49,39 @@ export default function EditOrderPage() {
           </p>
         </div>
         {!isDuplicate && (
-          <button className="btn btn-outline" onClick={() => window.open(`/sales/orders/${id}/quote`, '_blank')} style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
-            📄 Үнийн санал (PDF)
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button 
+              className="btn btn-outline" 
+              onClick={async () => {
+                const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
+                if (!name) return;
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${id}`, {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ template_name: name })
+                  });
+                  if (res.ok) {
+                    alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
+                  } else {
+                    const data = await res.json();
+                    alert("Алдаа гарлаа: " + (data.error || "Тодорхойгүй алдаа"));
+                  }
+                } catch (e) {
+                  alert("Сүлжээний алдаа гарлаа.");
+                }
+              }}
+              style={{ borderColor: '#10b981', color: '#10b981', background: '#ecfdf5' }}
+            >
+              💾 Загвар болгож хадгалах
+            </button>
+            <button className="btn btn-outline" onClick={() => window.open(`/sales/orders/${id}/quote`, '_blank')} style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+              📄 Үнийн санал (PDF)
+            </button>
+          </div>
         )}
       </header>
       <div className="card">
