@@ -831,9 +831,19 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <select {...register("category", {
                 onChange: (e) => {
                   setValue('category', e.target.value);
+                  if (e.target.value === 'Түргэн хэвлэл') {
+                    // Force all existing materials to A3
+                    const materials = getValues('materials') || [];
+                    materials.forEach((m: any, index: number) => {
+                      setValue(`materials.${index}.print_size`, 'A3');
+                      // Also reset extra_qty to 0
+                      setValue(`materials.${index}.extra_qty`, 0);
+                    });
+                  }
                 }
               })}>
                 <option value="">Сонгох...</option>
+                <option value="Түргэн хэвлэл">Түргэн хэвлэл (Quick Print)</option>
                 <option value="Тор">Тор (Цаасан тор)</option>
                 {groupedConstants['CATEGORY']?.map((c: any) => (
                   <option key={c.id} value={c.value}>{c.value}</option>
@@ -1476,7 +1486,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                         />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input style={inputStyle} {...register(`materials.${index}.print_size`, {
+                        <input style={inputStyle} readOnly={formValues.category === 'Түргэн хэвлэл'} title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''} {...register(`materials.${index}.print_size`, {
                           onChange: (e) => {
                             const val = e.target.value;
                             const sourceSize = formValues.materials?.[index]?.size || '';
@@ -1500,8 +1510,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                 setValue(`materials.${index}.press_sheet`, String(m4));
                                 const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                                 const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                const a7 = formValues.size || 'A5';
-                                const divs = calculatePaperDivision(e.target.value || 'A2', a7);
+                                const divs = calculatePaperDivision(val || 'A2', a7);
                                 const setups = calculateSetups(m4, divs);
                                 const total = (base * m4) + (extra * setups);
                                 setValue(`materials.${index}.total_qty`, total);
@@ -1597,7 +1606,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
+          <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
             + Материал нэмэх
           </button>
         </section>
