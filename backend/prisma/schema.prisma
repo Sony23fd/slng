@@ -65,6 +65,8 @@ model order {
   size              String?
   sub_size          String?
   needs_design      Boolean             @default(false)
+  design_status     String              @default("Эх бэлэн")
+  design_cost       Float               @default(0)
   is_urgent         Boolean             @default(false)
   sales_person_name String?
   sales_person_id   Int?
@@ -175,6 +177,8 @@ model producttemplate {
   inner_color   String?
   total_pages   Int?
   needs_design  Boolean  @default(false)
+  design_status String?
+  design_cost   Float?
   notes         String?
   order_data    Json?
   createdAt     DateTime @default(now())

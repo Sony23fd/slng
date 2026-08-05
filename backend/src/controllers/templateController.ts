@@ -78,6 +78,8 @@ export const createTemplateFromOrder = async (req: Request, res: Response) => {
       cover_color: order.specifications?.cover_color || null,
       inner_color: order.specifications?.inner_color || null,
       needs_design: order.needs_design,
+      design_status: order.design_status,
+      design_cost: order.design_cost,
       notes: order.notes,
       order_data: {
         materials: order.materials.map(m => ({
