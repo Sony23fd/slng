@@ -78,11 +78,11 @@ function popcount(n: number) {
 
 
 function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []) {
-  const s = size?.toUpperCase() || '';
-  const bt = bindingType?.toLowerCase() || '';
+  const s = size?.trim().toUpperCase() || '';
+  const bt = bindingType?.trim().toLowerCase() || '';
 
   if (coverRules && coverRules.length > 0) {
-    const rule = coverRules.find((r: any) => r.size?.toUpperCase() === s && r.binding?.toLowerCase() === bt);
+    const rule = coverRules.find((r: any) => r.size?.trim().toUpperCase() === s && r.binding?.trim().toLowerCase() === bt);
     if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
   }
 
@@ -1414,9 +1414,6 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                   if (coverLogic?.printSize) {
                                     setValue(`materials.${index}.print_size`, coverLogic.printSize);
                                   }
-                                  if (coverLogic.printSize) {
-                                    setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                                  }
                                 }
                               } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
                                 divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
@@ -1434,7 +1431,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
                               const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
                               const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
-                              const divs = calculatePaperDivision(getValues(`materials.${index}.print_size`) || 'A2', a7);
+                              const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
+                              const divs = calculatePaperDivision(currentPrintSize, a7);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
                               setValue(`materials.${index}.total_qty`, total);
@@ -1463,11 +1461,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                                   const printSize = formValues.materials?.[index]?.print_size || '';
                                   let finalDivBy = Number(formValues.materials?.[index]?.divide_by) || 1;
                                   const ratio = calculatePaperDivision(val, printSize);
-                                  const isCover = formValues.materials?.[index]?.is_cover;
-                                  const bt = formValues.binding_type || '';
-                                  const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                                  const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
-                                  if (ratio > 1 && !coverLogic) {
+                                  if (ratio > 0) {
                                     setValue(`materials.${index}.divide_by`, ratio);
                                     finalDivBy = ratio;
                                   }
@@ -1493,9 +1487,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const ratio = calculatePaperDivision(sourceSize, val);
                             const _isCov = formValues.materials?.[index]?.is_cover;
                             const bt = formValues.binding_type || '';
-                            const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                            const coverLogic = (_isCov && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
-                            if (ratio > 1 && !coverLogic) {
+                            if (ratio > 0) {
                               setValue(`materials.${index}.divide_by`, ratio);
                             }
                             
