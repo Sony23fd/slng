@@ -25,6 +25,7 @@ export interface PricingParams {
   profit_margin: number;
   has_vat: boolean;
   print_cost?: number;
+  design_cost?: number;
 }
 
 export function usePriceCalculator(params: PricingParams) {
@@ -46,7 +47,7 @@ export function usePriceCalculator(params: PricingParams) {
     }, 0);
 
     // 4. Үйлдвэрийн нийт өртөг
-    const factoryTotalCost = totalMaterialCost + totalOperationCost + totalOutsourcedCost + (params.print_cost || 0);
+    const factoryTotalCost = totalMaterialCost + totalOperationCost + totalOutsourcedCost + (params.print_cost || 0) + (params.design_cost || 0);
 
     // 5. Нэгжийн өртөг
     const qty = params.total_product_qty > 0 ? params.total_product_qty : 1;

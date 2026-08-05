@@ -23,6 +23,8 @@ interface OrderFormValues {
   size: string;
   sub_size: string;
   needs_design: boolean;
+  design_status: string;
+  design_cost: number;
   is_urgent: boolean;
   sales_person_name: string;
   notes: string;
@@ -203,7 +205,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const { register, control, watch, handleSubmit, setValue, getValues } = useForm<OrderFormValues>({
     defaultValues: initialData ? { ...initialData, deadline: defaultDeadline } : {
       customer_name: '', phone: '', deadline: '', product_name: '', category: '', total_qty: 0,
-      size: '', sub_size: '', needs_design: false, is_urgent: false, sales_person_name: user?.name || '', notes: '',
+      size: '', sub_size: '', needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.name || '', notes: '',
       cover_color: '', inner_color: '', has_bookmark: '', total_pages: 0, print_cost: 0,
       materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
       operations: [],
@@ -258,6 +260,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     profit_margin: Number(formValues.profit_margin) || 0,
     has_vat: formValues.has_vat || false,
     print_cost: Number(formValues.print_cost) || 0,
+    design_cost: Number(formValues.design_cost) || 0,
   };
 
   const prices = usePriceCalculator(pricingParams);
@@ -750,7 +753,9 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 if (t.cover_color) setValue('cover_color', t.cover_color);
                 if (t.inner_color) setValue('inner_color', t.inner_color);
                 if (t.total_pages) setValue('total_pages', t.total_pages);
-                if (t.needs_design) setValue('needs_design', t.needs_design);
+                if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
+                if (t.design_status) setValue('design_status', t.design_status);
+                if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
 
                 if (t.order_data) {
                   const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
@@ -985,10 +990,32 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
               </select>
             </div>
-            <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
-              <input type="checkbox" {...register("needs_design")} style={{ width: '1.2rem', height: '1.2rem' }} />
-              <label style={{ margin: 0 }}>Эх бэлтгэл хийх шаардлагатай</label>
+            <div className="form-group">
+              <label>Эх бэлтгэлийн төлөв</label>
+              <select {...register("design_status", {
+                onChange: (e) => {
+                  const val = e.target.value;
+                  setValue('needs_design', val !== 'Эх бэлэн');
+                  if (val === 'Эх бэлтгэл хийх') {
+                    setValue('design_cost', 20000);
+                  } else if (val === 'Засварлах шаардлагатай') {
+                    setValue('design_cost', 10000);
+                  } else {
+                    setValue('design_cost', 0);
+                  }
+                }
+              })}>
+                <option value="Эх бэлэн">Эх бэлэн</option>
+                <option value="Эх бэлтгэл хийх">Эх бэлтгэл хийх</option>
+                <option value="Засварлах шаардлагатай">Засварлах шаардлагатай</option>
+              </select>
             </div>
+            {formValues.design_status !== 'Эх бэлэн' && (
+              <div className="form-group">
+                <label>Эх бэлтгэлийн үнэ (₮)</label>
+                <input type="number" {...register("design_cost", { valueAsNumber: true })} />
+              </div>
+            )}
             <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
               <input type="checkbox" {...register("is_urgent")} style={{ width: '1.2rem', height: '1.2rem' }} />
               <label style={{ margin: 0, color: 'red' }}>[AA] Яаралтай эсэх</label>
@@ -1907,6 +1934,12 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <span className="label">Нэгжийн өртөг</span>
               <span className="value" style={{ color: '#64748b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</span>
             </div>
+            {formValues.design_cost ? (
+              <div className="summary-stat">
+                <span className="label">Эх бэлтгэлийн үнэ</span>
+                <span className="value" style={{ color: '#8b5cf6' }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+              </div>
+            ) : null}
             <div className="summary-stat">
               <span className="label">Нэгжийн үнэ</span>
               <span className="value" style={{ color: 'var(--primary-color)' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</span>

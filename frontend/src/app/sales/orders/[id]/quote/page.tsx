@@ -27,6 +27,7 @@ export default function QuotationPage() {
   const [customQty, setCustomQty] = useState(0);
   const [customUnitPrice, setCustomUnitPrice] = useState(0);
   const [customTotal, setCustomTotal] = useState(0);
+  const [customDesignCost, setCustomDesignCost] = useState(0);
   const [validityDays, setValidityDays] = useState(30);
   const [productionDays, setProductionDays] = useState('5-7');
   const [showVat, setShowVat] = useState(true);
@@ -68,6 +69,7 @@ export default function QuotationPage() {
         setCustomCover(coverDesc);
         setCustomOps(opsDesc);
         setCustomQty(data.total_qty || 0);
+        setCustomDesignCost(data.design_cost || 0);
         
         let total = data.final_price || data.finalPrice || 0;
         if (total === 0 && matArray.length > 0) {
@@ -260,6 +262,15 @@ export default function QuotationPage() {
                   onChange={e => setCustomTotal(Number(e.target.value))}
                 />
               </div>
+              <div>
+                <label className="label">Эх бэлтгэлийн үнэ (₮):</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={customDesignCost}
+                  onChange={e => setCustomDesignCost(Number(e.target.value))}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
@@ -393,6 +404,22 @@ export default function QuotationPage() {
                 {customTotal?.toLocaleString()}₮
               </td>
             </tr>
+            {customDesignCost > 0 && (
+              <tr>
+                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', fontWeight: 600, verticalAlign: 'middle', fontSize: '0.95rem' }}>
+                  Эх бэлтгэл / Засвар
+                </td>
+                <td style={{ border: '1px solid #000000', padding: '1.25rem 1rem', verticalAlign: 'top', fontSize: '0.92rem', lineHeight: 1.6 }} colSpan={2}>
+                  Эх бэлтгэлийн үйлчилгээ
+                </td>
+                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
+                  {customDesignCost?.toLocaleString()}₮
+                </td>
+                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, fontSize: '0.95rem' }}>
+                  {customDesignCost?.toLocaleString()}₮
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 
