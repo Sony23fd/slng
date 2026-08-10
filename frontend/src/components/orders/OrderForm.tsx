@@ -973,8 +973,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               />
             </div>
             {formValues.size === 'Custom' && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+              <>
+                <div className="form-group">
                   <label>Өргөн (мм)</label>
                   <input type="number" placeholder="Өргөн" {...register("custom_width", {
                     valueAsNumber: true,
@@ -984,7 +984,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     }
                   })} />
                 </div>
-                <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                <div className="form-group">
                   <label>Өндөр (мм)</label>
                   <input type="number" placeholder="Өндөр" {...register("custom_height", {
                     valueAsNumber: true,
@@ -994,7 +994,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     }
                   })} />
                 </div>
-              </div>
+              </>
             )}
             <div className="form-group"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
             <div className="form-group">
