@@ -32,6 +32,10 @@ export interface Order {
   sales_person_name?: string;
   current_status: string;
   production_stages?: ProductionStages;
+  notes?: string;
+  materials?: any[];
+  operations?: any[];
+  outsourcedJobs?: any[];
 }
 
 const STAGES = [
@@ -241,112 +245,137 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
                 <td colSpan={11} style={{ padding: '2rem', color: 'var(--text-muted)' }}>Одоохондоо захиалга эсвэл хайлтад тохирох ажил байхгүй байна.</td>
               </tr>
             ) : (
-              filteredOrders.map(order => {
+              filteredOrders.map((order, index) => {
                 const bottleneck = isBottleneck(order);
                 const progress = getOverallProgress(order.production_stages);
+                const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
+
                 return (
-                  <tr key={order.id} style={{ borderBottom: '1px solid var(--border-color)', background: bottleneck ? 'rgba(254, 226, 226, 0.3)' : 'inherit' }}>
-                    <td style={{ padding: '0.6rem 0.4rem', fontWeight: 700, color: 'var(--primary-color)', borderRight: '1px solid var(--border-color)' }}>
-                      {order.order_number || `#${order.id}`}
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.6rem 0.4rem', textAlign: 'left', borderRight: '1px solid var(--border-color)', fontWeight: 600 }}>
-                      {order.customer_name}
-                      {order.sales_person_name && (
+                  <React.Fragment key={order.id}>
+                    <tr style={{ background: index % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s', borderBottom: hasNotes ? 'none' : '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.6rem 0.4rem', fontWeight: 700, color: 'var(--primary-color)', borderRight: '1px solid var(--border-color)' }}>
+                        {order.order_number || `#${order.id}`}
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>
-                          👤 {order.sales_person_name}
+                          {new Date(order.createdAt).toLocaleDateString()}
                         </div>
-                      )}
-                    </td>
-                    <td style={{ padding: '0.6rem 0.4rem', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>
-                      <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        {order.is_urgent && <span title="Яаралтай захиалга" style={{ color: '#e11d48' }}>🔥</span>}
-                        {order.product_name}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Тоо: <b>{order.total_qty.toLocaleString()} ш</b>
-                      </div>
-                    </td>
-
-                    {/* Render 7 Stages */}
-                    {STAGES.map(stage => {
-                      const stData = order.production_stages?.[stage.key] || { status: 0 };
-                      let bgColor = '#ef4444'; // Red 0%
-                      let textColor = '#fff';
-                      if (stData.status === 100) {
-                        bgColor = '#22c55e'; // Green 100%
-                      } else if (stData.status > 0) {
-                        bgColor = '#eab308'; // Yellow/Orange in progress
-                        textColor = '#000';
-                      }
-
-                      return (
-                        <td key={stage.key} style={{ padding: '0.3rem', borderRight: '1px solid var(--border-color)' }}>
-                          <div
-                            onClick={() => handleCellClick(order, stage.key)}
-                            title="Дээр нь дарж төлөв солино (0% -> 100% -> 50%)"
-                            style={{
-                              background: bgColor,
-                              color: textColor,
-                              padding: '0.4rem 0.2rem',
-                              borderRadius: '0.375rem',
-                              cursor: 'pointer',
-                              fontWeight: 700,
-                              fontSize: '0.8rem',
-                              transition: 'transform 0.1s ease',
-                              position: 'relative',
-                              minHeight: '44px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                            }}
-                          >
-                            <div>{stData.status}%</div>
-                            {(stData.operator || stData.machine) && (
-                              <div style={{ fontSize: '0.65rem', fontWeight: 500, lineHeight: 1.1, marginTop: '2px', opacity: 0.9 }}>
-                                {stData.machine || stData.operator}
-                              </div>
-                            )}
+                      </td>
+                      <td style={{ padding: '0.6rem 0.4rem', textAlign: 'left', borderRight: '1px solid var(--border-color)', fontWeight: 600 }}>
+                        {order.customer_name}
+                        {order.sales_person_name && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>
+                            👤 {order.sales_person_name}
                           </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveModal({ orderId: order.id, stageKey: stage.key, data: stData });
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              fontSize: '0.7rem',
-                              color: 'var(--text-muted)',
-                              cursor: 'pointer',
-                              marginTop: '2px',
-                              textDecoration: 'underline'
-                            }}
-                          >
-                            ✏️ Тохируулах
-                          </button>
-                        </td>
-                      );
-                    })}
+                        )}
+                      </td>
+                      <td style={{ padding: '0.6rem 0.4rem', textAlign: 'left', borderRight: '1px solid var(--border-color)' }}>
+                        <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          {order.is_urgent && <span title="Яаралтай захиалга" style={{ color: '#e11d48' }}>🔥</span>}
+                          {order.product_name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Тоо: <b>{order.total_qty.toLocaleString()} ш</b>
+                        </div>
+                      </td>
 
-                    <td style={{ padding: '0.6rem 0.4rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: bottleneck ? 700 : 500, color: bottleneck ? '#e11d48' : 'inherit' }}>
-                        {bottleneck && <span title="Хугацаа тулсан эсвэл яаралтай!">🚨</span>}
-                        {order.deadline ? new Date(order.deadline).toLocaleDateString() : 'Тодорхойгүй'}
-                      </div>
-                      <div style={{ marginTop: '0.3rem', background: '#e2e8f0', borderRadius: '999px', height: '6px', width: '80%', margin: '0.3rem auto 0' }}>
-                        <div style={{ background: progress === 100 ? '#22c55e' : 'var(--primary-color)', height: '100%', borderRadius: '999px', width: `${progress}%` }}></div>
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Явц: <b>{progress}%</b>
-                      </div>
-                    </td>
-                  </tr>
+                      {/* Render 7 Stages */}
+                      {STAGES.map(stage => {
+                        const stData = order.production_stages?.[stage.key] || { status: 0 };
+                        let bgColor = '#ef4444'; // Red 0%
+                        let textColor = '#fff';
+                        if (stData.status === 100) {
+                          bgColor = '#22c55e'; // Green 100%
+                        } else if (stData.status > 0) {
+                          bgColor = '#eab308'; // Yellow/Orange in progress
+                          textColor = '#000';
+                        }
+
+                        return (
+                          <td key={stage.key} style={{ padding: '0.3rem', borderRight: '1px solid var(--border-color)' }}>
+                            <div
+                              onClick={() => handleCellClick(order, stage.key)}
+                              title="Дээр нь дарж төлөв солино (0% -> 100% -> 50%)"
+                              style={{
+                                background: bgColor,
+                                color: textColor,
+                                padding: '0.4rem 0.2rem',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                                fontSize: '0.8rem',
+                                transition: 'transform 0.1s ease',
+                                position: 'relative',
+                                minHeight: '44px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                              }}
+                            >
+                              <div>{stData.status}%</div>
+                              {(stData.operator || stData.machine) && (
+                                <div style={{ fontSize: '0.65rem', fontWeight: 500, lineHeight: 1.1, marginTop: '2px', opacity: 0.9 }}>
+                                  {stData.machine || stData.operator}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveModal({ orderId: order.id, stageKey: stage.key, data: stData });
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '0.7rem',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                marginTop: '2px',
+                                textDecoration: 'underline'
+                              }}
+                            >
+                              ✏️ Тохируулах
+                            </button>
+                          </td>
+                        );
+                      })}
+
+                      <td style={{ padding: '0.6rem 0.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: bottleneck ? 700 : 500, color: bottleneck ? '#e11d48' : 'inherit' }}>
+                          {bottleneck && <span title="Хугацаа тулсан эсвэл яаралтай!">🚨</span>}
+                          {order.deadline ? new Date(order.deadline).toLocaleDateString() : 'Тодорхойгүй'}
+                        </div>
+                        <div style={{ marginTop: '0.3rem', background: '#e2e8f0', borderRadius: '999px', height: '6px', width: '80%', margin: '0.3rem auto 0' }}>
+                          <div style={{ background: progress === 100 ? '#22c55e' : 'var(--primary-color)', height: '100%', borderRadius: '999px', width: `${progress}%` }}></div>
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Явц: <b>{progress}%</b>
+                        </div>
+                      </td>
+                    </tr>
+                    {hasNotes && (
+                      <tr style={{ background: '#fef3c7', borderBottom: '2px solid var(--border-color)' }}>
+                        <td colSpan={11} style={{ padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#92400e', fontWeight: 500 }}>
+                          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <span>⚠️</span> ОНЦГОЙ АНХААРАХ:
+                            </div>
+                            {order.notes && <div><b>Ерөнхий:</b> {order.notes}</div>}
+                            {order.materials?.filter(m => m.notes).map((m, i) => (
+                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> {m.notes}</div>
+                            ))}
+                            {order.operations?.filter(o => o.notes).map((o, i) => (
+                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> {o.notes}</div>
+                            ))}
+                            {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
+                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> {oj.notes}</div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })
             )}

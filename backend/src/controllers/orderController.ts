@@ -183,6 +183,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
         user: true,
         materials: true,
         operations: true,
+        outsourcedJobs: true,
       },
       orderBy: { createdAt: 'desc' }
     });

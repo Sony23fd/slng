@@ -52,6 +52,31 @@ export default function KanbanBoard({ orders, onMoveStatus }: Props) {
                       👤 {order.customer_name} | {order.total_qty} ш
                     </div>
 
+                    {/* Notes Warning Block */}
+                    {(() => {
+                      const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
+                      if (!hasNotes) return null;
+                      return (
+                        <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.375rem', padding: '0.5rem', marginBottom: '0.5rem', fontSize: '0.75rem', color: '#92400e' }}>
+                          <div style={{ fontWeight: 700, marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <span>⚠️</span> ОНЦГОЙ АНХААРАХ
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            {order.notes && <div><b>Ерөнхий:</b> {order.notes}</div>}
+                            {order.materials?.filter(m => m.notes).map((m, i) => (
+                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> {m.notes}</div>
+                            ))}
+                            {order.operations?.filter(o => o.notes).map((o, i) => (
+                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> {o.notes}</div>
+                            ))}
+                            {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
+                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> {oj.notes}</div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
                       <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Төлөв шилжүүлэх:</label>
                       <select 
