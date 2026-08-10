@@ -118,7 +118,7 @@ export default function QuotationPage() {
       margin:       [15, 15, 15, 15],
       filename:     `Үнийн_санал_${order?.order_number || id}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, windowWidth: 850 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
@@ -372,50 +372,50 @@ export default function QuotationPage() {
         </p>
 
         {/* Specs Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', marginBottom: '2.5rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', marginBottom: '2.5rem', tableLayout: 'fixed' }}>
           <thead>
             <tr style={{ background: '#f8fafc' }}>
-              <th style={{ border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Бүтээгдэхүүний нэр</th>
-              <th style={{ border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Үзүүлэлт</th>
-              <th style={{ border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Тоо ширхэг</th>
-              <th style={{ border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Нэгж үнэ</th>
-              <th style={{ border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Нийт үнэ</th>
+              <th style={{ width: '20%', border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Бүтээгдэхүүний нэр</th>
+              <th style={{ width: '40%', border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Үзүүлэлт</th>
+              <th style={{ width: '12%', border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Тоо ширхэг</th>
+              <th style={{ width: '14%', border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Нэгж үнэ</th>
+              <th style={{ width: '14%', border: '1px solid #000000', padding: '0.75rem', textAlign: 'center', fontSize: '0.95rem', fontWeight: 700 }}>Нийт үнэ</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', fontWeight: 600, verticalAlign: 'middle', fontSize: '0.95rem' }}>
+              <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', fontWeight: 600, verticalAlign: 'middle', fontSize: '0.95rem' }}>
                 {customProduct}
               </td>
-              <td style={{ border: '1px solid #000000', padding: '1.25rem 1rem', verticalAlign: 'top', fontSize: '0.92rem', lineHeight: 1.6 }}>
+              <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 1rem', verticalAlign: 'top', fontSize: '0.92rem', lineHeight: 1.6 }}>
                 <div><strong>Хэмжээ:</strong> {customSize}</div>
                 {customColors && <div><strong>Өнгө:</strong> {customColors}</div>}
                 {customInner && <div><strong>Дотор цаас:</strong> {customInner}</div>}
                 {customCover && customCover !== '-' && <div><strong>Хавтас цаас:</strong> {customCover}</div>}
                 {customOps && customOps !== '-' && <div><strong>Нэмэлт:</strong> {customOps}</div>}
               </td>
-              <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
+              <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
                 {customQty?.toLocaleString()}ш
               </td>
-              <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
+              <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
                 {customUnitPrice?.toLocaleString()}₮
               </td>
-              <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, fontSize: '0.95rem' }}>
+              <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, fontSize: '0.95rem' }}>
                 {customTotal?.toLocaleString()}₮
               </td>
             </tr>
             {customDesignCost > 0 && (
               <tr>
-                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', fontWeight: 600, verticalAlign: 'middle', fontSize: '0.95rem' }}>
+                <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', fontWeight: 600, verticalAlign: 'middle', fontSize: '0.95rem' }}>
                   Эх бэлтгэл / Засвар
                 </td>
-                <td style={{ border: '1px solid #000000', padding: '1.25rem 1rem', verticalAlign: 'top', fontSize: '0.92rem', lineHeight: 1.6 }} colSpan={2}>
+                <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 1rem', verticalAlign: 'top', fontSize: '0.92rem', lineHeight: 1.6 }} colSpan={2}>
                   Эх бэлтгэлийн үйлчилгээ
                 </td>
-                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
+                <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontSize: '0.95rem' }}>
                   {customDesignCost?.toLocaleString()}₮
                 </td>
-                <td style={{ border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, fontSize: '0.95rem' }}>
+                <td style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', border: '1px solid #000000', padding: '1.25rem 0.75rem', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, fontSize: '0.95rem' }}>
                   {customDesignCost?.toLocaleString()}₮
                 </td>
               </tr>
