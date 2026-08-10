@@ -22,6 +22,8 @@ interface OrderFormValues {
   total_qty: number;
   size: string;
   sub_size: string;
+  custom_width?: number;
+  custom_height?: number;
   needs_design: boolean;
   design_status: string;
   design_cost: number;
@@ -205,7 +207,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const { register, control, watch, handleSubmit, setValue, getValues } = useForm<OrderFormValues>({
     defaultValues: initialData ? { ...initialData, deadline: defaultDeadline } : {
       customer_name: '', phone: '', deadline: '', product_name: '', category: '', total_qty: 0,
-      size: '', sub_size: '', needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.name || '', notes: '',
+      size: '', sub_size: '', custom_width: 0, custom_height: 0, needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.name || '', notes: '',
       cover_color: '', inner_color: '', has_bookmark: '', total_pages: 0, print_cost: 0,
       materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
       operations: [],
@@ -220,6 +222,11 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
 
+  const getA7Size = () => {
+    const s = getValues('size');
+    return s === 'Custom' ? `${getValues('custom_width') || 0}x${getValues('custom_height') || 0}` : (s || 'A5');
+  };
+
   const evaluateDynamicFormula = (index: number, mOverrides: any = {}, globalOverrides: any = {}) => {
     const currentM = getValues(`materials.${index}`) || {};
     const m = { ...currentM, ...mOverrides };
@@ -227,7 +234,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     const f = formulas.find(x => x.id === Number(m.formula_id));
     if (!f) return false;
     try {
-      const a7 = globalOverrides.size !== undefined ? globalOverrides.size : (getValues('size') || 'A5');
+      const a7 = globalOverrides.size !== undefined ? globalOverrides.size : getA7Size();
       const b4 = globalOverrides.total_pages !== undefined ? globalOverrides.total_pages : (getValues('total_pages') || 0);
       const divs = calculatePaperDivision(m.print_size || 'A2', a7);
       const press = Number(m.press_sheet) || 1;
@@ -303,7 +310,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     mats.forEach((m, i) => {
       const isCover = m.is_cover || false;
       const colorToUse = isCover ? b1 : b2;
-      const a7 = formValues.size || 'A5';
+      const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
+      const a7 = currentA7Size;
       const divisions = calculatePaperDivision(m.print_size || 'A2', a7);
       const plates = calcPlates(colorToUse, Number(m.press_sheet) || 0, divisions);
       if (plates > 0) {
@@ -419,7 +427,62 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     setValue('print_cost', finalCost);
   }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, formValues.materials, masterPrices, setValue, groupedConstants]);
 
-  
+  const recalculateMaterialsOnSizeChange = (newSize: string, w?: number, h?: number) => {
+    let a7 = newSize;
+    if (newSize === 'Custom' && w && h) {
+      a7 = `${w}x${h}`;
+    }
+    const b4 = Number(getValues('total_pages')) || 0;
+    const a6 = Number(getValues('total_qty')) || 0;
+    const bt = getValues('binding_type') || '';
+    const materials = getValues('materials') || [];
+    
+    materials.forEach((m, index) => {
+      const isCover = m.is_cover || false;
+      const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+      let m4 = 0;
+      let divBy = Number(m.divide_by) || 1;
+
+      if (coverLogic) {
+        m4 = coverLogic.pressSheet;
+        divBy = coverLogic.divideBy;
+        setValue(`materials.${index}.press_sheet`, String(m4));
+        setValue(`materials.${index}.divide_by`, divBy);
+        if (coverLogic.printSize) {
+          setValue(`materials.${index}.print_size`, coverLogic.printSize);
+        }
+      } else {
+        const targetPages = isCover ? 4 : b4;
+        if (m.print_size && a7) {
+          const newDivs = calculatePaperDivision(m.print_size, a7);
+          if (newDivs > 0) {
+            setValue(`materials.${index}.divide_by`, newDivs);
+            divBy = newDivs;
+          }
+          if (targetPages > 0) {
+            const pagesPerSheet = newDivs * 2;
+            if (pagesPerSheet > 0) {
+              m4 = targetPages / pagesPerSheet;
+              setValue(`materials.${index}.press_sheet`, String(m4));
+            }
+          }
+        }
+      }
+
+      if (m4 > 0) {
+        const base = Number(m.base_qty) || a6;
+        const extra = Number(m.extra_qty) || 0;
+        const divs = divBy;
+        const setups = calculateSetups(m4, divs);
+        const total = (base * m4) + (extra * setups);
+        setValue(`materials.${index}.total_qty`, total);
+        if (!evaluateDynamicFormula(index, { size: a7 })) {
+          setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+        }
+      }
+    });
+  };
+
   const calculateCoatingOperation = (customExtra?: number) => {
     const materials = getValues('materials') || [];
     let coverMat = materials.find((m: any) => m.is_cover);
@@ -545,7 +608,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
 
     if (isBag || isBrochure) {
       const a6 = Number(formValues.total_qty) || 0;
-      const a7 = formValues.size || 'A4';
+      const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A4');
+      const a7 = currentA7Size;
       const mats = getValues('materials') || [];
 
       if (isBag && (!formValues.size || !formValues.size.startsWith('Тор'))) {
@@ -870,7 +934,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                     setValue(`materials.${index}.base_qty`, a6);
                     const press = Number(m.press_sheet) || 1;
                     const extra = Number(m.extra_qty) || 0;
-                    const a7 = formValues.size || 'A5';
+                    const a7 = getA7Size();
                     const divs = calculatePaperDivision(m.print_size || 'A2', a7);
                     const setups = calculateSetups(press, divs);
                     const total = (a6 * press) + (extra * setups);
@@ -897,47 +961,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                       onChange={(selected: any) => {
                         const val = selected ? selected.value : '';
                         field.onChange(val);
-                        // Trigger press_sheet calculation (M4 = B4 / (M3 / A7 * 2))
-                        const b4 = Number(getValues('total_pages')) || 0;
-                        const materials = getValues('materials') || [];
-                        materials.forEach((m, index) => {
-                          const isCover = m.is_cover || false;
-
-                            const bt = getValues('binding_type') || '';
-                            const coverLogic = isCover ? getCoverLogic(val, bt, coverRules) : null;
-                            let m4 = 0;
-                            let divBy = Number(m.divide_by) || 1;
-
-                            if (coverLogic) {
-                              m4 = coverLogic.pressSheet;
-                              divBy = coverLogic.divideBy;
-                              setValue(`materials.${index}.press_sheet`, String(m4));
-                              setValue(`materials.${index}.divide_by`, divBy);
-                              if (coverLogic?.printSize) {
-                                setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                              }
-                            } else {
-                              const targetPages = isCover ? 4 : b4;
-                              if (m.print_size && val && targetPages > 0) {
-                                const pagesPerSheet = calculatePaperDivision(m.print_size, val) * 2;
-                                if (pagesPerSheet > 0) {
-                                  m4 = targetPages / pagesPerSheet;
-                                  setValue(`materials.${index}.press_sheet`, String(m4));
-                                }
-                              }
-                            }
-
-                            if (m4 > 0) {
-                              const base = Number(m.base_qty) || 0;
-                              const extra = Number(m.extra_qty) || 0;
-                              const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', val);
-                              const setups = calculateSetups(m4, divs);
-                              const total = (base * m4) + (extra * setups);
-                              setValue(`materials.${index}.total_qty`, total);
-                              if (!evaluateDynamicFormula(index, { size: val })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                            }
-
-                        });
+                        recalculateMaterialsOnSizeChange(val, formValues.custom_width, formValues.custom_height);
                       }}
                       value={field.value ? { value: field.value, label: field.value } : null}
                       placeholder="Сонгох эсвэл бичих..."
@@ -948,6 +972,30 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 }}
               />
             </div>
+            {formValues.size === 'Custom' && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                  <label>Өргөн (мм)</label>
+                  <input type="number" placeholder="Өргөн" {...register("custom_width", {
+                    valueAsNumber: true,
+                    onChange: (e) => {
+                      const w = Number(e.target.value) || 0;
+                      recalculateMaterialsOnSizeChange('Custom', w, formValues.custom_height);
+                    }
+                  })} />
+                </div>
+                <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                  <label>Өндөр (мм)</label>
+                  <input type="number" placeholder="Өндөр" {...register("custom_height", {
+                    valueAsNumber: true,
+                    onChange: (e) => {
+                      const h = Number(e.target.value) || 0;
+                      recalculateMaterialsOnSizeChange('Custom', formValues.custom_width, h);
+                    }
+                  })} />
+                </div>
+              </div>
+            )}
             <div className="form-group"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
             <div className="form-group">
               <label>[A8] Хавтасны төрөл</label>
@@ -955,7 +1003,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                 onChange: (e) => {
                   const bt = e.target.value;
                   const b4 = Number(getValues('total_pages')) || 0;
-                  const a7 = getValues('size') || '';
+                  const a7 = getA7Size();
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
                     const isCover = m.is_cover || false;
@@ -1153,7 +1201,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
               <input type="number" {...register("total_pages", {
                 onChange: (e) => {
                   const b4 = Number(e.target.value) || 0;
-                  const a7 = getValues('size') || '';
+                  const a7 = getA7Size();
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
                     const isCover = m.is_cover || false;
@@ -1424,7 +1472,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                               const isCov = e.target.checked;
                               const bt = getValues('binding_type') || '';
                               const b4 = Number(getValues('total_pages')) || 0;
-                              const a7 = getValues('size') || '';
+                              const a7 = getA7Size();
                               
                               let coverLogic = null;
                               let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
@@ -1519,7 +1567,8 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             }
                             
                             // Trigger M4 calculation
-                            const a7 = formValues.size || '';
+                            const a7Raw = formValues.size || '';
+                            const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
                             const isCover = formValues.materials?.[index]?.is_cover || false;
                             const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
                             if (val && a7 && b4 > 0) {
@@ -1550,7 +1599,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const press = Number(e.target.value) || 1;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                            const a7 = formValues.size || 'A5';
+                            const a7 = getA7Size();
                             const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
                             const setups = calculateSetups(press, divs);
                             const total = (base * press) + (extra * setups);
@@ -1566,7 +1615,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const base = Number(e.target.value) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const a7 = formValues.size || 'A5';
+                            const a7 = getA7Size();
                             const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
                             const setups = calculateSetups(press, divs);
                             const total = (base * press) + (extra * setups);
@@ -1582,7 +1631,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const a7 = formValues.size || 'A5';
+                            const a7 = getA7Size();
                             const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
                             const setups = calculateSetups(press, divs);
                             const total = (base * press) + (extra * setups);
