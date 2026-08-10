@@ -113,6 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/admin/settings?type=INNER_COLOR" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Дотор өнгө</Link>
                     <Link href="/admin/settings?type=PAYMENT_METHOD" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Төлбөр хэлбэр</Link>
                     <Link href="/admin/settings?type=NEXT_PROCESS" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Дараагийн процесс</Link>
+                    <Link href="/admin/settings?type=ORDER_STATUS" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Захиалгын төлөв</Link>
                     <Link href="/admin/settings?type=OUTSOURCED_JOB" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Гадуур ажил</Link>
                     <Link href="/admin/settings?type=OUTSOURCED_CONTRACTOR" style={{ padding: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none' }}>- Гүйцэтгэгч</Link>
                   </div>
