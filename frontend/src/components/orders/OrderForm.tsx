@@ -897,32 +897,44 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             <div className="form-group"><label>Бүтээгдэхүүний нэр</label><input {...register("product_name")} /></div>
             <div className="form-group">
               <label>Бүтээгдэхүүний ангилал</label>
-              <select {...register("category", {
-                onChange: (e) => {
-                  setValue('category', e.target.value);
-                  if (e.target.value === 'Түргэн хэвлэл') {
-                    // Force all existing materials to A3
-                    const materials = getValues('materials') || [];
-                    materials.forEach((m: any, index: number) => {
-                      setValue(`materials.${index}.print_size`, 'A3');
-                      // Also reset extra_qty to 0
-                      setValue(`materials.${index}.extra_qty`, 0);
-                    });
-                  }
-                }
-              })}>
-                <option value="">Сонгох...</option>
-                <option value="Түргэн хэвлэл">Түргэн хэвлэл (Quick Print)</option>
-                <option value="Тор">Тор (Цаасан тор)</option>
-                {groupedConstants['CATEGORY']?.map((c: any) => (
-                  <option key={c.id} value={c.value}>{c.value}</option>
-                )) || (
-                  <>
-                    <option value="Ном">Ном</option><option value="Сэтгүүл">Сэтгүүл</option>
-                    <option value="Брошур">Брошур</option><option value="Календарь">Календарь</option>
-                  </>
-                )}
-              </select>
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => {
+                  const dbCategories = groupedConstants['CATEGORY']?.map((c: any) => ({ value: c.value, label: c.value })) || [
+                    { value: 'Ном', label: 'Ном' }, { value: 'Сэтгүүл', label: 'Сэтгүүл' },
+                    { value: 'Брошур', label: 'Брошур' }, { value: 'Календарь', label: 'Календарь' }
+                  ];
+                  const categoryOptions = [
+                    { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл (Quick Print)' },
+                    { value: 'Тор', label: 'Тор (Цаасан тор)' },
+                    ...dbCategories
+                  ];
+                  return (
+                    <CreatableSelect
+                      {...field}
+                      options={categoryOptions}
+                      onChange={(selected: any) => {
+                        const val = selected ? selected.value : '';
+                        field.onChange(val);
+                        setValue('category', val);
+                        if (val === 'Түргэн хэвлэл') {
+                          // Force all existing materials to A3
+                          const materials = getValues('materials') || [];
+                          materials.forEach((m: any, index: number) => {
+                            setValue(`materials.${index}.print_size`, 'A3');
+                            setValue(`materials.${index}.extra_qty`, 0);
+                          });
+                        }
+                      }}
+                      value={field.value ? { value: field.value, label: field.value } : null}
+                      placeholder="Сонгох эсвэл бичих..."
+                      isClearable
+                      styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+                    />
+                  );
+                }}
+              />
             </div>
             <div className="form-group">
               <label>[A6] Хэвлэгдэх тоо нийт</label>
