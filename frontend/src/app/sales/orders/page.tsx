@@ -7,11 +7,26 @@ import { useRouter } from 'next/navigation';
 export default function MyOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
+  const [statusOptions, setStatusOptions] = useState<string[]>(['Хүлээгдэж буй', 'Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон']);
   const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
+    if (!token) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const list = data.filter(c => c.type === 'ORDER_STATUS').map(c => c.value);
+          if (list.length > 0) setStatusOptions(list);
+        }
+      })
+      .catch(console.error);
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/my`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -173,13 +188,9 @@ export default function MyOrdersPage() {
                     }}
                     style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
                   >
-                    <option value="Хүлээгдэж буй">Хүлээгдэж буй</option>
-                    <option value="Шинэ захиалга">Шинэ захиалга</option>
-                    <option value="Эх бэлтгэл">Эх бэлтгэл</option>
-                    <option value="Хэвлэл">Хэвлэл</option>
-                    <option value="Дардас">Дардас</option>
-                    <option value="Бэлэн">Бэлэн</option>
-                    <option value="Олгосон">Олгосон</option>
+                    {Array.from(new Set([...statusOptions, o.current_status])).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
