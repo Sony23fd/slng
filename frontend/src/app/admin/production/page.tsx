@@ -7,7 +7,7 @@ import ProductionMatrix, { Order, OrderStageData } from '../../../components/pro
 import KanbanBoard from '../../../components/production/KanbanBoard';
 
 export default function ProductionPage() {
-  const { user, token } = useAuthStore();
+  const { user, token, hasHydrated } = useAuthStore();
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,12 +15,14 @@ export default function ProductionPage() {
   const [activeTab, setActiveTab] = useState<'MATRIX' | 'KANBAN'>('MATRIX');
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login');
-    } else {
-      fetchOrders();
+    if (hasHydrated) {
+      if (!token) {
+        router.push('/login');
+      } else {
+        fetchOrders();
+      }
     }
-  }, [token]);
+  }, [token, hasHydrated, router]);
 
   const fetchOrders = async () => {
     setLoading(true);

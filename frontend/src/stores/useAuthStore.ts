@@ -13,6 +13,8 @@ export interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   login: (user: User, token: string) => void;
   logout: () => void;
   updateUser: (updatedData: Partial<User>) => void;
@@ -23,6 +25,8 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      hasHydrated: false,
+      setHasHydrated: (state) => set({ hasHydrated: state }),
       login: (user, token) => {
         if (typeof window !== 'undefined') {
           localStorage.setItem('user', JSON.stringify(user));
@@ -49,6 +53,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'selenge-auth-storage',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
     }
   )
 );

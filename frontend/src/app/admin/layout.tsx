@@ -6,21 +6,32 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../stores/useAuthStore';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, hasHydrated } = useAuthStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (!token || !user) {
-      router.push('/login');
-    } else if (user.role === 'SALES') {
-      router.push('/sales');
+    if (hasHydrated) {
+      if (!token || !user) {
+        router.push('/login');
+      } else if (user.role === 'SALES') {
+        router.push('/sales');
+      }
     }
-  }, [token, user, router]);
+  }, [token, user, router, hasHydrated]);
 
-  if (!mounted || !user || user.role === 'SALES') return null;
+  if (!mounted || !hasHydrated || !user || user.role === 'SALES') {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc', color: '#64748b' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🔄</div>
+          <h2>Мэдээлэл шалгаж байна...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)' }}>
