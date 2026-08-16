@@ -547,9 +547,22 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       };
 
       const materials = getValues('materials') || [];
-      const press_sheet = materials.reduce((acc: number, m: any) => acc + (Number(m.press_sheet) || 0), 0);
-      const coverMat: any = materials.find((m: any) => m.is_cover) || {};
-      const cover_sheets = (Number(coverMat.base_qty) || 0) + (Number(coverMat.extra_qty) || 0);
+      const innerMats = materials.filter((m: any) => !m.is_cover);
+      const coverMats = materials.filter((m: any) => m.is_cover);
+
+      const inner_press_sheet = innerMats.reduce((acc: number, m: any) => acc + (Number(m.press_sheet) || 0), 0);
+      const cover_press_sheet = coverMats.reduce((acc: number, m: any) => acc + (Number(m.press_sheet) || 0), 0);
+      const press_sheet = inner_press_sheet + cover_press_sheet;
+
+      const inner_base_sheets = innerMats.reduce((acc: number, m: any) => acc + ((Number(m.base_qty) || 0) * (Number(m.press_sheet) || 0)), 0);
+      const cover_base_sheets = coverMats.reduce((acc: number, m: any) => acc + ((Number(m.base_qty) || 0) * (Number(m.press_sheet) || 0)), 0);
+      const total_base_sheets = inner_base_sheets + cover_base_sheets;
+
+      const inner_printed_sheets = innerMats.reduce((acc: number, m: any) => acc + (Number(m.total_qty) || 0), 0);
+      const cover_printed_sheets = coverMats.reduce((acc: number, m: any) => acc + (Number(m.total_qty) || 0), 0);
+      const total_printed_sheets = inner_printed_sheets + cover_printed_sheets;
+
+      const cover_sheets = coverMats.reduce((acc: number, m: any) => acc + (Number(m.base_qty) || 0) + (Number(m.extra_qty) || 0), 0);
 
       const scope = {
         total_qty: Number(getValues('total_qty')) || 0,
@@ -559,6 +572,14 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         inner_colors: getColorsCount(getValues('inner_color') || ''),
         press_sheet,
         cover_sheets,
+        inner_base_sheets,
+        cover_base_sheets,
+        total_base_sheets,
+        inner_printed_sheets,
+        cover_printed_sheets,
+        total_printed_sheets,
+        inner_press_sheet,
+        cover_press_sheet,
       };
       const res = evaluate(expression, scope);
       return Math.max(0, Math.ceil(res));
