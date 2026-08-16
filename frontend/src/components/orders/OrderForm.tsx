@@ -259,6 +259,51 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   };
   const formValues = watch();
 
+  const [prevCategory, setPrevCategory] = useState(initialData?.category || '');
+
+  useEffect(() => {
+    if (!formValues.category) return;
+    if (formValues.category !== prevCategory) {
+      setPrevCategory(formValues.category);
+      // Find the category config
+      const catConfig = productCategories.find(c => c.name === formValues.category);
+      if (catConfig && catConfig.default_operations) {
+        try {
+          const defaults = Array.isArray(catConfig.default_operations) 
+            ? catConfig.default_operations 
+            : JSON.parse(catConfig.default_operations);
+          
+          if (Array.isArray(defaults) && defaults.length > 0) {
+            const currentOps = getValues('operations') || [];
+            let newOps = [...currentOps];
+            let changed = false;
+
+            defaults.forEach((opName: string) => {
+              // Check if it already exists to prevent duplicates
+              if (!newOps.find(o => o.operation_name === opName)) {
+                // Find master price for this operation
+                const mp = masterPrices.find(m => m.category === 'Ажиллагаа' && m.item_name === opName);
+                newOps.push({
+                  operation_name: opName,
+                  qty: 0, // will be auto-calculated later by evaluateOperationFormula
+                  unit_cost: mp ? mp.unit_cost : 0,
+                  notes: 'Үндсэн ажиллагаа'
+                });
+                changed = true;
+              }
+            });
+
+            if (changed) {
+              setValue('operations', newOps);
+            }
+          }
+        } catch(e) {
+          console.error("Failed to parse default operations", e);
+        }
+      }
+    }
+  }, [formValues.category, prevCategory, productCategories, masterPrices, getValues, setValue]);
+
   const pricingParams = {
     total_product_qty: Number(formValues.total_qty) || 0,
     materials: formValues.materials || [],

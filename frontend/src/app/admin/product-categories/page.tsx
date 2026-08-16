@@ -14,6 +14,7 @@ interface ProductCategory {
   has_pages: boolean;
   has_bookmark: boolean;
   waste_qty: number;
+  default_operations?: any;
 }
 
 export default function ProductCategoriesPage() {
@@ -21,6 +22,7 @@ export default function ProductCategoriesPage() {
   const router = useRouter();
 
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [operations, setOperations] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
@@ -32,7 +34,8 @@ export default function ProductCategoriesPage() {
     has_binding: true,
     has_pages: true,
     has_bookmark: false,
-    waste_qty: 100
+    waste_qty: 100,
+    default_operations: [] as string[]
   });
 
   useEffect(() => {
@@ -40,8 +43,20 @@ export default function ProductCategoriesPage() {
       router.push('/admin');
     } else if (token) {
       fetchCategories();
+      fetchOperations();
     }
   }, [user, router, token]);
+
+  const fetchOperations = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices?category=Ажиллагаа`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) setOperations(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -69,7 +84,7 @@ export default function ProductCategoriesPage() {
       if (res.ok) {
         setShowAdd(false);
         setEditingId(null);
-        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 });
+        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [] });
         fetchCategories();
       } else {
         alert("Алдаа гарлаа. Нэр давхардсан байж болзошгүй.");
@@ -90,7 +105,8 @@ export default function ProductCategoriesPage() {
       has_binding: c.has_binding,
       has_pages: c.has_pages,
       has_bookmark: c.has_bookmark,
-      waste_qty: c.waste_qty
+      waste_qty: c.waste_qty,
+      default_operations: c.default_operations ? (Array.isArray(c.default_operations) ? c.default_operations : JSON.parse(c.default_operations)) : []
     });
     setShowAdd(true);
   };
@@ -115,7 +131,7 @@ export default function ProductCategoriesPage() {
         <button className="btn btn-primary" onClick={() => {
           setShowAdd(!showAdd);
           setEditingId(null);
-          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 });
+          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [] });
         }}>
           {showAdd ? 'Буцах' : '+ Төрөл нэмэх'}
         </button>
@@ -165,6 +181,26 @@ export default function ProductCategoriesPage() {
                 <input type="checkbox" checked={formData.has_bookmark} onChange={e => setFormData({...formData, has_bookmark: e.target.checked})} />
                 Хавчуургатай юу?
               </label>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="label">Үндсэн ажиллагаанууд (Олон сонгож болно)</label>
+              <select 
+                multiple 
+                className="input" 
+                style={{ height: '150px' }}
+                value={formData.default_operations} 
+                onChange={e => {
+                  const options = Array.from(e.target.options);
+                  const selectedValues = options.filter(opt => opt.selected).map(opt => opt.value);
+                  setFormData({...formData, default_operations: selectedValues});
+                }}
+              >
+                {operations.map(op => (
+                  <option key={op.id} value={op.item_name}>{op.item_name}</option>
+                ))}
+              </select>
+              <small style={{ color: '#64748b' }}>Энэ ангиллыг сонгох үед доорх ажиллагаанууд автоматаар нэмэгдэх болно. Ctrl дарж олон ажиллагаа сонгоно уу.</small>
             </div>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
