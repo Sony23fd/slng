@@ -4,12 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 
-export default function MyOrdersPage() {
+export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [statusOptions, setStatusOptions] = useState<string[]>(['Хүлээгдэж буй', 'Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон']);
   const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function MyOrdersPage() {
       })
       .catch(console.error);
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/my`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -50,6 +51,8 @@ export default function MyOrdersPage() {
   const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o);
 
   const filteredOrders = orders.filter(o => {
+    if (showOnlyMine && o.sales_person_id !== user?.id) return false;
+    
     if (filterTab === 'PENDING' && !isPendingOrder(o)) return false;
     if (filterTab === 'IN_PRODUCTION' && !isInProductionOrder(o)) return false;
     if (filterTab === 'READY' && !isReadyOrder(o)) return false;
@@ -60,7 +63,8 @@ export default function MyOrdersPage() {
       const matchNo = (o.order_number || '').toLowerCase().includes(s);
       const matchCust = (o.customer_name || '').toLowerCase().includes(s);
       const matchProd = (o.product_name || '').toLowerCase().includes(s);
-      if (!matchNo && !matchCust && !matchProd) return false;
+      const matchSales = (o.user?.name || o.sales_person_name || '').toLowerCase().includes(s);
+      if (!matchNo && !matchCust && !matchProd && !matchSales) return false;
     }
     return true;
   });
@@ -69,8 +73,8 @@ export default function MyOrdersPage() {
     <div>
       <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="title">Миний захиалгууд</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Таны үүсгэсэн бүх захиалгын жагсаалт</p>
+          <h1 className="title">Бүх захиалгууд</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Компанийн бүх захиалгын жагсаалт</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={() => router.push('/sales/orders/board')} className="btn btn-outline">
@@ -115,10 +119,19 @@ export default function MyOrdersPage() {
               </button>
             ))}
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginRight: '0.5rem' }}>
+              <input 
+                type="checkbox" 
+                checked={showOnlyMine} 
+                onChange={e => setShowOnlyMine(e.target.checked)} 
+                style={{ cursor: 'pointer', accentColor: 'var(--primary-color)' }}
+              />
+              Зөвхөн минийхийг харах
+            </label>
             <input
               type="text"
-              placeholder="🔍 Хайх (дугаар, харилцагч...)"
+              placeholder="🔍 Хайх (дугаар, нэр...)"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem', width: '220px' }}
@@ -131,6 +144,7 @@ export default function MyOrdersPage() {
               <th style={{ padding: '1rem' }}>Дугаар</th>
               <th style={{ padding: '1rem' }}>Огноо</th>
               <th style={{ padding: '1rem' }}>Харилцагч</th>
+              <th style={{ padding: '1rem' }}>Борлуулагч</th>
               <th style={{ padding: '1rem' }}>Бүтээгдэхүүн</th>
               <th style={{ padding: '1rem' }}>Тоо ширхэг</th>
               <th style={{ padding: '1rem' }}>Үйлдвэрлэлийн явц</th>
@@ -150,6 +164,11 @@ export default function MyOrdersPage() {
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
                 <td style={{ padding: '1rem' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
                 <td style={{ padding: '1rem' }}>{o.customer_name}</td>
+                <td style={{ padding: '1rem' }}>
+                  <span style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.8rem', color: '#475569' }}>
+                    {o.user?.name || o.sales_person_name || '-'}
+                  </span>
+                </td>
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
                 <td style={{ padding: '1rem', minWidth: '130px' }}>
@@ -208,7 +227,7 @@ export default function MyOrdersPage() {
             ); })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Захиалга байхгүй байна.
                 </td>
               </tr>

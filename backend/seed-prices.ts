@@ -47,12 +47,6 @@ const prices = [
   { category: 'Цаас', item_name: 'Хортой цаас III өнгө шар 48гр Ao (889x1194)', unit_cost: 510 },
   { category: 'Цаас', item_name: 'Хортой цаас III өнгө Ягаан 48гр Ao (889x1194)', unit_cost: 510 },
 
-  // Будаг
-  { category: 'Материал', item_name: 'Будаг Dalhan ink Cyan 1кг', unit_cost: 35000 },
-  { category: 'Материал', item_name: 'Будаг Dalhan ink Magenta 1кг', unit_cost: 35000 },
-  { category: 'Материал', item_name: 'Будаг Dalhan ink Yellow 1кг', unit_cost: 35000 },
-  { category: 'Материал', item_name: 'Будаг Dalhan ink Black 1кг', unit_cost: 30000 },
-
   // Стикер
   { category: 'Цаас', item_name: 'Стикер A2 (594x440)', unit_cost: 380 },
   { category: 'Цаас', item_name: 'Стикер A3 (300x440)', unit_cost: 190 },
@@ -65,8 +59,6 @@ const prices = [
   // Кай цаас
   { category: 'Цаас', item_name: 'Кай цаас 250 A0 (889x1194)', unit_cost: 1300 },
 
-  // Цавуу
-  { category: 'Материал', item_name: 'Цавуу /хажуу болон шил наана/ 20кг', unit_cost: 480000 },
 ];
 
 const operationsData = [
