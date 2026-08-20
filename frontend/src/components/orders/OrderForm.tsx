@@ -754,9 +754,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
   const onSubmit = (data: OrderFormValues) => {
     // Calculator mode default values for required fields
-    if (isCalculatorMode && submitType === 'Үнийн санал') {
+    if (submitType === 'Үнийн санал') {
       if (!data.customer_name) data.customer_name = 'Үнийн санал (Хадгалсан)';
       if (!data.product_name) data.product_name = 'Үнийн санал - бүтээгдэхүүн';
+    } else {
+      if (!data.customer_name?.trim() || !data.product_name?.trim()) {
+        alert("Захиалга үүсгэхийн тулд 'Захиалагчийн нэр' болон 'Бүтээгдэхүүний нэр'-ийг заавал оруулна уу!");
+        return;
+      }
     }
     
     const payload = { 
@@ -983,7 +988,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           <h3 className="section-title">1. Захиалагчийн мэдээлэл</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Захиалагчийн нэр</label>
+              <label>Захиалагчийн нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
               <Controller
                 name="customer_name"
                 control={control}
@@ -1010,7 +1015,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             </div>
             <div className="form-group"><label>[A2] Утас</label><input {...register("phone")} /></div>
             <div className="form-group"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
-            <div className="form-group"><label>Бүтээгдэхүүний нэр</label><input {...register("product_name")} /></div>
+            <div className="form-group"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
             <div className="form-group">
               <label>Бүтээгдэхүүний ангилал</label>
               <Controller

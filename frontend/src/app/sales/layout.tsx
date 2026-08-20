@@ -63,11 +63,7 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
             <span style={{ fontSize: '1.1rem' }}>📊</span>
             {!collapsed && <span>Хянах самбар</span>}
           </Link>
-          <Link href="/sales/calculator" title="Үнэ бодох" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>🧮</span>
-            {!collapsed && <span>Үнэ бодох</span>}
-          </Link>
-          <Link href="/sales/orders/new" title="Шинэ захиалга" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          <Link href="/sales/orders/new" title="Шинэ захиалга / Үнэ бодох" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
             <span style={{ fontSize: '1.1rem' }}>📝</span>
             {!collapsed && <span>Шинэ захиалга</span>}
           </Link>
