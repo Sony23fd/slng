@@ -23,7 +23,7 @@ export default function OrdersBoardPage() {
     })
       .then(res => res.json())
       .then(data => {
-        const statusList = data.filter((c: any) => c.type === 'ORDER_STATUS').map((c: any) => c.value);
+        const statusList = data.filter((c: any) => c.type === 'ORDER_STATUS' && c.value !== 'Үнийн санал').map((c: any) => c.value);
         if (statusList.length === 0) {
           statusList.push('Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон');
         }
@@ -37,7 +37,7 @@ export default function OrdersBoardPage() {
     })
       .then(res => res.json())
       .then(data => {
-        setOrders(Array.isArray(data) ? data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй') : []);
+        setOrders(Array.isArray(data) ? data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал') : []);
         setLoading(false);
       })
       .catch(console.error);

@@ -109,7 +109,7 @@ function calculateSetups(pressSheet: number, divisions: number) {
   return fullSheets + fractionalSetups;
 }
 
-export default function OrderForm({ initialData, isEdit, orderId }: { initialData?: any, isEdit?: boolean, orderId?: number }) {
+export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isCalculatorMode?: boolean }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
   const [constants, setConstants] = useState<any[]>([]);
@@ -750,8 +750,21 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
     }
   }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
 
+  const [submitType, setSubmitType] = useState<string>('');
+
   const onSubmit = (data: OrderFormValues) => {
-    const payload = { ...data, ...prices, final_price: prices?.finalPrice || 0 };
+    // Calculator mode default values for required fields
+    if (isCalculatorMode && submitType === 'Үнийн санал') {
+      if (!data.customer_name) data.customer_name = 'Үнийн санал (Хадгалсан)';
+      if (!data.product_name) data.product_name = 'Үнийн санал - бүтээгдэхүүн';
+    }
+    
+    const payload = { 
+      ...data, 
+      ...prices, 
+      final_price: prices?.finalPrice || 0,
+      current_status: submitType === 'Үнийн санал' ? 'Үнийн санал' : (data.status || 'Шинэ захиалга')
+    };
     const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}` : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`;
     
@@ -2060,6 +2073,29 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
           </div>
         </section>
 
+        {/* 9. Өртөг болон Ашгийн задаргаа (Cost Breakdown) */}
+        <section className="card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderLeft: '4px solid #3b82f6' }}>
+          <h3 className="section-title">📊 Өртөг болон Ашгийн задаргаа</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
+            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Материалын өртөг</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>{Math.round(prices.totalMaterialCost || 0).toLocaleString()} ₮</div>
+            </div>
+            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Ажиллагааны өртөг</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>{Math.round(prices.totalOperationCost || 0).toLocaleString()} ₮</div>
+            </div>
+            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Нийт өртөг</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#334155' }}>{Math.round(prices.factoryTotalCost || 0).toLocaleString()} ₮</div>
+            </div>
+            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #d1fae5' }}>
+              <div style={{ fontSize: '0.85rem', color: '#059669', marginBottom: '0.5rem', fontWeight: 600 }}>Цэвэр ашиг</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>{Math.round((prices.finalPrice || 0) - (prices.factoryTotalCost || 0)).toLocaleString()} ₮</div>
+            </div>
+          </div>
+        </section>
+
         {/* Наалдамхай хураангуй мөр (Sticky Summary Bar) */}
         <div className="sticky-summary">
           <div className="sticky-summary-content">
@@ -2102,9 +2138,39 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
-            💾 {isEdit ? 'Захиалга шинэчлэх' : 'Захиалга бүртгэх'}
-          </button>
+          {isCalculatorMode ? (
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                type="submit" 
+                onClick={() => setSubmitType('Үнийн санал')}
+                className="btn btn-outline" 
+                style={{ padding: '0.75rem 1.5rem', fontSize: '1.05rem', fontWeight: 600, borderRadius: '0.5rem', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+                📄 Үнийн санал хадгалах
+              </button>
+              <button 
+                type="submit" 
+                onClick={() => setSubmitType('Шинэ захиалга')}
+                className="btn btn-primary" 
+                style={{ padding: '0.75rem 1.5rem', fontSize: '1.05rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
+                📦 Захиалга үүсгэх
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="submit" className="btn btn-outline" style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+                {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
+              </button>
+              {isEdit && initialData?.current_status === 'Үнийн санал' && (
+                <button 
+                  type="submit" 
+                  onClick={() => setSubmitType('Шинэ захиалга')}
+                  className="btn btn-primary" 
+                  style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
+                  📦 Захиалга болгож батлах
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </form>
     </div>

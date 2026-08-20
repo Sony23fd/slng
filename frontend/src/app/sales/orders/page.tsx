@@ -8,7 +8,7 @@ export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [statusOptions, setStatusOptions] = useState<string[]>(['Хүлээгдэж буй', 'Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон']);
-  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
+  const [filterTab, setFilterTab] = useState<'ALL' | 'QUOTE' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const router = useRouter();
@@ -47,12 +47,14 @@ export default function AllOrdersPage() {
 
   const isDeliveredOrder = (o: any) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
   const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOrderProgress(o) >= 100);
+  const isQuoteOrder = (o: any) => o.current_status === 'Үнийн санал';
   const isPendingOrder = (o: any) => o.current_status === 'Хүлээгдэж буй';
-  const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o);
+  const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o) && !isQuoteOrder(o);
 
   const filteredOrders = orders.filter(o => {
     if (showOnlyMine && o.sales_person_id !== user?.id) return false;
     
+    if (filterTab === 'QUOTE' && !isQuoteOrder(o)) return false;
     if (filterTab === 'PENDING' && !isPendingOrder(o)) return false;
     if (filterTab === 'IN_PRODUCTION' && !isInProductionOrder(o)) return false;
     if (filterTab === 'READY' && !isReadyOrder(o)) return false;
@@ -91,6 +93,7 @@ export default function AllOrdersPage() {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {[
               { key: 'ALL', label: 'Бүгд', count: orders.length, color: '#64748b' },
+              { key: 'QUOTE', label: '📄 Үнийн санал', count: orders.filter(isQuoteOrder).length, color: '#8b5cf6' },
               { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(isPendingOrder).length, color: '#f59e0b' },
               { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(isInProductionOrder).length, color: '#3b82f6' },
               { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(isReadyOrder).length, color: '#10b981' },
