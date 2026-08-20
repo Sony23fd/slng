@@ -62,7 +62,7 @@ body {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
@@ -79,12 +79,14 @@ label {
 }
 
 input, select {
-  padding: 0.5rem 0.6rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   font-size: 0.95rem;
   transition: border-color 0.2s, box-shadow 0.2s;
   background: #fdfdfd;
+  min-height: 40px;
+  box-sizing: border-box;
 }
 
 input:focus, select:focus {

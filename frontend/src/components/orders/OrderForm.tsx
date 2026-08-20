@@ -1013,7 +1013,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 )}
               />
             </div>
-            <div className="form-group"><label>[A2] Утас</label><input {...register("phone")} /></div>
+            <div className="form-group"><label title="[A2]">Утас</label><input {...register("phone")} /></div>
             <div className="form-group"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
             <div className="form-group"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
             <div className="form-group">
@@ -1058,7 +1058,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               />
             </div>
             <div className="form-group">
-              <label>[A6] Хэвлэгдэх тоо нийт</label>
+              <label title="[A6]">Хэвлэгдэх тоо нийт</label>
               <input type="number" {...register("total_qty", {
                 onChange: (e) => {
                   const a6 = Number(e.target.value) || 0;
@@ -1079,7 +1079,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               })} />
             </div>
             <div className="form-group">
-              <label>[A7] Бүтээгдэхүүний хэмжээ</label>
+              <label title="[A7]">Бүтээгдэхүүний хэмжээ</label>
               <Controller
                 name="size"
                 control={control}
@@ -1131,7 +1131,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             )}
             <div className="form-group"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
             <div className="form-group">
-              <label>[A8] Хавтасны төрөл</label>
+              <label title="[A8]">Хавтасны төрөл</label>
               <select {...register("binding_type", {
                 onChange: (e) => {
                   const bt = e.target.value;
@@ -1391,12 +1391,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             <table className="smart-table" style={{ minWidth: '950px' }}>
               <thead>
                 <tr>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>[M1] Материалын нэр</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>[M2] Хэмжээ</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>[M3] Хэв. хэмжээ</th>
+                  <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>Материал</th>
+                  <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>Хэмжээ</th>
+                  <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>Хэв. хэмжээ</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span>[M4] Хэв. хуудас</span>
+                      <span title="[M4] Хэв. хуудас">Хэв. хуудас</span>
                       <CalculationHelpBadge
                         title="[M4] Хэвлэлийн хуудас (Press Sheet)"
                         formula="Брошур, Тор зэрэгт стандарт дүрмээр автоматаар тохируулагдана"
@@ -1410,7 +1410,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                   <th colSpan={3} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Хэвлэгдэх тоо</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span>[M8] Хуваалт</span>
+                      <span title="[M8] Хуваалт">Хуваалт</span>
                       <CalculationHelpBadge
                         title="[M8] Цаасны хуваалт (Division)"
                         formula="Том цааснаас хэвлэлийн хэмжээгээр зүсэх тоо"
@@ -1423,7 +1423,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                   </th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span>[M9] Тоо</span>
+                      <span title="[M9] Тоо">Нийт (ш)</span>
                       <CalculationHelpBadge
                         title="[M9] Нийт хэрэгцээт том цаасны тоо"
                         formula="⌈ (Үндсэн тоо [M5] + Хадаас [M6]) / Хуваалт [M8] ⌉"
@@ -1434,13 +1434,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     </div>
                   </th>
                   <th colSpan={2} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>[MC] Тэмдэглэл</th>
+                  <th rowSpan={2} title="[MC] Тэмдэглэл" style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>Тэмдэглэл</th>
                   <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '35px' }}></th>
                 </tr>
                 <tr>
                   <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '90px', background: '#f8fafc' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span>[M5] Үндсэн</span>
+                      <span title="[M5] Үндсэн">Үндсэн</span>
                       <CalculationHelpBadge
                         title="[M5] Үндсэн хэвлэх тоо"
                         formula="Брошур: ⌈ Захиалга / Хуваалт ⌉ | Тор: Захиалгын нийт тоо"
@@ -1452,10 +1452,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                       />
                     </div>
                   </th>
-                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[M6] Хадаас</th>
-                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '85px', background: '#f8fafc' }}>[M7] Нийт</th>
-                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>[MA] Нэгж</th>
-                  <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>[MB] Нийт</th>
+                  <th title="[M6] Хадаас" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Хадаас</th>
+                  <th title="[M7] Нийт" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '85px', background: '#f8fafc' }}>Бүгд</th>
+                  <th title="[MA] Нэгж" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Нэгж</th>
+                  <th title="[MB] Нийт" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Нийт</th>
                 </tr>
               </thead>
               <tbody>
@@ -1748,7 +1748,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             return (
             <div key={field.id} className="row-item">
               <div className="form-group" style={{ flex: 1 }}>
-                <label>[O1] Ажиллагааны нэр</label>
+                <label title="[O1]">Ажиллагааны нэр</label>
                 <Controller
                   name={`operations.${index}.operation_name`}
                   control={control}
@@ -1845,10 +1845,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 </div>
                 <input type="number" step="any" {...register(`operations.${index}.qty`)} />
               </div>
-              <div className="form-group"><label>[O3] Нэгж өртөг</label><input type="number" step="any" {...register(`operations.${index}.unit_cost`)} /></div>
-              <div className="form-group" style={{width: '100px'}}><label>[O4] Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem'}}>{tCost.toLocaleString()}</div></div>
-              <div className="form-group" style={{ flex: 1 }}><label>[O5] Тэмдэглэл</label><input {...register(`operations.${index}.notes`)} /></div>
-              <button type="button" onClick={() => removeOp(index)} className="btn btn-danger" style={{height: '42px'}}>X</button>
+              <div className="form-group"><label title="[O3]">Нэгж өртөг</label><input type="number" step="any" {...register(`operations.${index}.unit_cost`)} /></div>
+              <div className="form-group" style={{width: '100px'}}><label title="[O4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
+              <div className="form-group" style={{ flex: 1 }}><label title="[O5]">Тэмдэглэл</label><input {...register(`operations.${index}.notes`)} /></div>
+              <button type="button" onClick={() => removeOp(index)} className="btn btn-danger" style={{height: '40px'}}>X</button>
             </div>
           )})}
           <button type="button" onClick={() => appendOp({ operation_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Ажиллагаа нэмэх</button>
@@ -1912,7 +1912,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             return (
             <div key={field.id} className="row-item">
               <div className="form-group" style={{ flex: 1 }}>
-                <label>[A4] Ажлын нэр</label>
+                <label title="[A4]">Ажлын нэр</label>
                 <Controller
                   name={`outsourced.${index}.job_name`}
                   control={control}
@@ -1954,10 +1954,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 />
               </div>
               <div className="form-group"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
-              <div className="form-group"><label>[X3] Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
-              <div className="form-group" style={{width: '100px'}}><label>[X4] Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem'}}>{tCost.toLocaleString()}</div></div>
-              <div className="form-group" style={{ flex: 1 }}><label>[X5] Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
-              <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '42px'}}>X</button>
+              <div className="form-group"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
+              <div className="form-group" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
+              <div className="form-group" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
+              <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '40px'}}>X</button>
             </div>
           )})}
           <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
@@ -1999,7 +1999,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               </div>
 
               <div className="form-group mt-4">
-                <label>[F3] Ашгийн хувь (%)</label>
+                <label title="[F3]">Ашгийн хувь (%)</label>
                 <input type="number" step="any" {...register("profit_margin")} style={{background: 'white'}} />
               </div>
               <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
