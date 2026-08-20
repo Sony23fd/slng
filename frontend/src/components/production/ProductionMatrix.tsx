@@ -355,22 +355,24 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
                       </td>
                     </tr>
                     {hasNotes && (
-                      <tr style={{ background: '#fef3c7', borderBottom: '2px solid var(--border-color)' }}>
-                        <td colSpan={11} style={{ padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.8rem', color: '#92400e', fontWeight: 500 }}>
-                          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                              <span>⚠️</span> ОНЦГОЙ АНХААРАХ:
+                      <tr style={{ background: '#fef2f2', borderBottom: '2px solid var(--border-color)', animation: 'pulse-light 2s infinite' }}>
+                        <td colSpan={11} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.9rem', color: '#b91c1c', borderLeft: '4px solid #ef4444' }}>
+                          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                            <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                              <span style={{ animation: 'bounce-light 1s infinite' }}>🚨</span> ОНЦГОЙ АНХААРАХ:
                             </div>
-                            {order.notes && <div><b>Ерөнхий:</b> {order.notes}</div>}
-                            {order.materials?.filter(m => m.notes).map((m, i) => (
-                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> {m.notes}</div>
-                            ))}
-                            {order.operations?.filter(o => o.notes).map((o, i) => (
-                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> {o.notes}</div>
-                            ))}
-                            {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
-                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> {oj.notes}</div>
-                            ))}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                              {order.notes && <div style={{ fontWeight: 600 }}><b>Ерөнхий:</b> {order.notes}</div>}
+                              {order.materials?.filter(m => m.notes).map((m, i) => (
+                                <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> <span style={{ fontWeight: 600 }}>{m.notes}</span></div>
+                              ))}
+                              {order.operations?.filter(o => o.notes).map((o, i) => (
+                                <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> <span style={{ fontWeight: 600 }}>{o.notes}</span></div>
+                              ))}
+                              {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
+                                <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> <span style={{ fontWeight: 600 }}>{oj.notes}</span></div>
+                              ))}
+                            </div>
                           </div>
                         </td>
                       </tr>

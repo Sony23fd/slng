@@ -319,3 +319,12 @@ input:focus, select:focus {
   border-color: transparent;
 }
 
+@keyframes pulse-light { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0.8; background: #fee2e2; } 
+} 
+
+@keyframes bounce-light { 
+  0%, 100% { transform: translateY(-10%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 
+  50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); } 
+}

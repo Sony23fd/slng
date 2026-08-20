@@ -57,20 +57,20 @@ export default function KanbanBoard({ orders, onMoveStatus }: Props) {
                       const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
                       if (!hasNotes) return null;
                       return (
-                        <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.375rem', padding: '0.5rem', marginBottom: '0.5rem', fontSize: '0.75rem', color: '#92400e' }}>
-                          <div style={{ fontWeight: 700, marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                            <span>⚠️</span> ОНЦГОЙ АНХААРАХ
+                        <div style={{ background: '#fef2f2', border: '2px solid #ef4444', borderRadius: '0.375rem', padding: '0.6rem', marginBottom: '0.75rem', fontSize: '0.8rem', color: '#b91c1c', animation: 'pulse-light 2s infinite' }}>
+                          <div style={{ fontWeight: 800, marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem' }}>
+                            <span style={{ animation: 'bounce-light 1s infinite' }}>🚨</span> ОНЦГОЙ АНХААРАХ
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                            {order.notes && <div><b>Ерөнхий:</b> {order.notes}</div>}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                            {order.notes && <div style={{ fontWeight: 600 }}><b>Ерөнхий:</b> {order.notes}</div>}
                             {order.materials?.filter(m => m.notes).map((m, i) => (
-                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> {m.notes}</div>
+                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> <span style={{ fontWeight: 600 }}>{m.notes}</span></div>
                             ))}
                             {order.operations?.filter(o => o.notes).map((o, i) => (
-                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> {o.notes}</div>
+                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> <span style={{ fontWeight: 600 }}>{o.notes}</span></div>
                             ))}
                             {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
-                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> {oj.notes}</div>
+                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> <span style={{ fontWeight: 600 }}>{oj.notes}</span></div>
                             ))}
                           </div>
                         </div>

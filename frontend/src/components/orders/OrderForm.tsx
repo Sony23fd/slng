@@ -121,6 +121,15 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
   const [formulas, setFormulas] = useState<any[]>([]);
   const [bagDims, setBagDims] = useState({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
 
+  const OP_CATEGORIES = [
+    { name: 'Хэвлэл', keywords: ['хэвлэгч', 'хэвлэл', 'хальс', 'эх бэлтгэл', 'cd'] },
+    { name: 'Угсралт / Оёдол', keywords: ['нугалаа', 'үдээ', 'наалт', 'оёо', 'дэвтэрлэгээ', 'шугамын', 'гараар'] },
+    { name: 'Хавтас / Гадаргуу', keywords: ['бүрэлт', 'лак', 'клише', 'хатуу хавтас', 'кальк'] },
+    { name: 'Зүсэлт / Хэлбэрт', keywords: ['огтлоо', 'хээлэгч', 'сприаль', 'бөгж', 'хэв дарагч', 'суурь', 'шалгах', 'нууцлал', 'тооцогч'] },
+    { name: 'Бусад', keywords: [] }
+  ];
+  const [activeOpCategory, setActiveOpCategory] = useState<string>('Хэвлэл');
+
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -500,10 +509,13 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
         const targetPages = isCover ? 4 : b4;
         if (m.print_size && a7) {
           const newDivs = calculatePaperDivision(m.print_size, a7);
-          if (newDivs > 0) {
-            setValue(`materials.${index}.divide_by`, newDivs);
-            divBy = newDivs;
+          
+          const matDivs = calculatePaperDivision(m.size || 'A0', m.print_size);
+          if (matDivs > 0) {
+            setValue(`materials.${index}.divide_by`, matDivs);
+            divBy = matDivs;
           }
+
           if (targetPages > 0) {
             const pagesPerSheet = newDivs * 2;
             if (pagesPerSheet > 0) {
@@ -577,6 +589,31 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
       qty: Number(((m5 + m6) * coef).toFixed(2)),
       notes: `${fSize} хэмжээтэй бүрэлтийн хуулга`,
     };
+  };
+
+  const isOpInCategory = (opName: string, categoryName: string) => {
+    const cat = OP_CATEGORIES.find(c => c.name === categoryName);
+    if (!cat) return false;
+    const lowerName = opName.toLowerCase();
+    if (categoryName === 'Бусад') {
+      const isAnyOther = OP_CATEGORIES.some(c => c.name !== 'Бусад' && c.keywords.some(kw => lowerName.includes(kw)));
+      return !isAnyOther;
+    }
+    return cat.keywords.some(kw => lowerName.includes(kw));
+  };
+
+  const addQuickOp = (op: any) => {
+    let calcQty = op.formula && op.formula.expression ? evaluateOperationFormula(op.formula.expression) : 0;
+    if (op.item_name === 'Бүрэлт' || op.item_name.startsWith('Бүрэлт')) {
+      const coat = calculateCoatingOperation();
+      if (coat) calcQty = coat.qty;
+    }
+    appendOp({
+      operation_name: op.item_name,
+      qty: calcQty,
+      unit_cost: op.unit_cost || 0,
+      notes: op.item_name.startsWith('Бүрэлт') ? 'Бүрэлтийн хуулга' : ''
+    });
   };
 
   const evaluateOperationFormula = (expression: string) => {
@@ -1326,83 +1363,7 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             <input type="hidden" {...register("print_cost")} />
           </div>
 
-          {/* ⚡ Түгээмэл ажиллагаанууд (Хурдан сонголт) */}
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px dashed #cbd5e1' }}>
-            <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              ⚡ Түгээмэл ажиллагаанууд (Хурдан сонголт)
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem' }}>
-              {masterPrices
-                .filter(p => {
-                  const c = (p.category || '').toLowerCase();
-                  return c.includes('ажилбар') || c.includes('ажиллагаа') || c.includes('operation');
-                })
-                .map((op: any) => {
-                  const isChecked = formValues.operations?.some((o: any) => o.operation_name === op.item_name) || false;
-                  return (
-                    <label
-                      key={op.id || op.item_name}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.5rem 0.75rem',
-                        border: `1px solid ${isChecked ? 'var(--primary-color)' : '#cbd5e1'}`,
-                        borderRadius: '0.375rem',
-                        backgroundColor: isChecked ? '#f0fdf4' : 'white',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        fontSize: '0.85rem',
-                        userSelect: 'none',
-                        boxShadow: isChecked ? '0 1px 2px 0 rgba(16, 185, 129, 0.1)' : 'none'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              let calcQty = 1;
-                              let calcNotes = '';
-                              if (op.item_name === 'Бүрэлт' || op.item_name.startsWith('Бүрэлт')) {
-                                const coat = calculateCoatingOperation();
-                                if (coat) {
-                                  calcQty = coat.qty;
-                                  calcNotes = coat.notes;
-                                }
-                              } else if (op.formula && op.formula.expression) {
-                                calcQty = evaluateOperationFormula(op.formula.expression);
-                              }
-                              appendOp({
-                                operation_name: op.item_name,
-                                qty: calcQty,
-                                unit_cost: op.unit_cost || 0,
-                                notes: calcNotes
-                              });
-                            } else {
-                              const idx = formValues.operations?.findIndex((o: any) => o.operation_name === op.item_name);
-                              if (idx !== undefined && idx >= 0) {
-                                removeOp(idx);
-                              }
-                            }
-                          }}
-                          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary-color)', flexShrink: 0 }}
-                        />
-                        <span style={{ fontWeight: isChecked ? 600 : 400, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={op.item_name}>
-                          {op.item_name}
-                        </span>
-                      </div>
-                      {op.unit_cost > 0 && (
-                        <span style={{ fontSize: '0.75rem', background: isChecked ? 'var(--primary-color)' : '#f1f5f9', color: isChecked ? 'white' : '#475569', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontWeight: 500, flexShrink: 0, marginLeft: '0.5rem' }}>
-                          {op.unit_cost.toLocaleString()} ₮
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-            </div>
-          </div>
+
         </section>
 
         {/* 5. Материал */}
@@ -1873,6 +1834,55 @@ export default function OrderForm({ initialData, isEdit, orderId }: { initialDat
             </div>
           )})}
           <button type="button" onClick={() => appendOp({ operation_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Ажиллагаа нэмэх</button>
+
+          {/* Quick Add Operations */}
+          <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Түгээмэл ажиллагаа хурдан нэмэх:</h4>
+            
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              {OP_CATEGORIES.map(cat => (
+                <button 
+                  key={cat.name} 
+                  type="button" 
+                  onClick={() => setActiveOpCategory(cat.name)} 
+                  className={`btn btn-sm ${activeOpCategory === cat.name ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ borderRadius: '9999px' }}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {masterPrices
+                .filter(op => op.category === 'Ажиллагаа' && isOpInCategory(op.item_name, activeOpCategory))
+                .map(op => {
+                  const isAdded = opFields.some((f: any) => f.operation_name === op.item_name);
+                  return (
+                    <button
+                      key={op.id}
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => addQuickOp(op)}
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        fontSize: '0.875rem',
+                        borderRadius: '9999px',
+                        border: '1px solid var(--border-color)',
+                        background: isAdded ? 'var(--bg-card)' : 'var(--bg-main)',
+                        color: isAdded ? 'var(--text-muted)' : 'var(--text-color)',
+                        cursor: isAdded ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => { if(!isAdded) e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
+                      onMouseLeave={(e) => { if(!isAdded) e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                    >
+                      {isAdded ? '✓ ' : '+ '}{op.item_name}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
         </section>
 
         {/* 7. Гадуур ажил */}

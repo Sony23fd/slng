@@ -28,31 +28,21 @@ export const useAuthStore = create<AuthState>()(
       hasHydrated: false,
       setHasHydrated: (state) => set({ hasHydrated: state }),
       login: (user, token) => {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(user));
-          localStorage.setItem('token', token);
-        }
         set({ user, token });
       },
       logout: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-        }
         set({ user: null, token: null });
       },
       updateUser: (updatedData) =>
         set((state) => {
           const newUser = state.user ? { ...state.user, ...updatedData } : null;
-          if (typeof window !== 'undefined' && newUser) {
-            localStorage.setItem('user', JSON.stringify(newUser));
-          }
           return { user: newUser };
         }),
     }),
     {
       name: 'selenge-auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => typeof window !== 'undefined' ? localStorage : (undefined as any)),
+      partialize: (state) => ({ user: state.user, token: state.token }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHasHydrated(true);
