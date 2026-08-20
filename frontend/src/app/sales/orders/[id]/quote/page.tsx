@@ -362,6 +362,10 @@ export default function QuotationPage() {
           {customDate}
         </div>
 
+        <div style={{ textAlign: 'center', fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', color: '#000000' }}>
+          № {order?.order_number || '          '}
+        </div>
+
         {/* Title & Intro */}
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, textAlign: 'center', margin: '0 0 1.5rem', color: '#000000' }}>
           Үнийн санал хүргүүлэх тухай
