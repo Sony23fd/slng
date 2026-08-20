@@ -160,7 +160,41 @@ export default function AllOrdersPage() {
               const stages = o.production_stages || {};
               const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
               const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
-              const progress = Math.round(totalVal / stageKeys.length);
+              const calculatedProgress = Math.round(totalVal / stageKeys.length);
+              
+              let progress = calculatedProgress;
+              let statusText = '⚙️ Явагдаж буй';
+              let statusColor = 'var(--primary-color)';
+              let hideBar = false;
+
+              if (o.current_status === 'Үнийн санал') {
+                progress = 0;
+                statusText = '📄 Үнийн санал';
+                statusColor = '#64748b'; 
+                hideBar = true;
+              } else if (o.current_status === 'Цуцлагдсан') {
+                progress = 0;
+                statusText = '❌ Цуцлагдсан';
+                statusColor = '#ef4444'; 
+                hideBar = true;
+              } else if (o.current_status === 'Хүлээгдэж буй' || o.current_status === 'Шинэ захиалга') {
+                progress = 0;
+                statusText = '⏳ Эхлээгүй';
+                statusColor = '#cbd5e1'; 
+              } else if (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон') {
+                progress = 100;
+                statusText = '✨ Бэлэн болсон';
+                statusColor = '#10b981'; 
+              } else if (o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн') {
+                progress = 100;
+                statusText = '🤝 Олгогдсон';
+                statusColor = '#475569'; 
+              } else {
+                if (progress === 100) {
+                  statusText = '✅ Дууссан';
+                  statusColor = '#22c55e';
+                }
+              }
 
               return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -175,13 +209,15 @@ export default function AllOrdersPage() {
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
                 <td style={{ padding: '1rem', minWidth: '130px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem', fontWeight: 600 }}>
-                    <span>{progress === 100 ? '✅ Дууссан' : '⚙️ Явагдаж буй'}</span>
-                    <span>{progress}%</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: hideBar ? '0' : '0.25rem', fontWeight: 600 }}>
+                    <span style={{ color: hideBar ? statusColor : '#334155' }}>{statusText}</span>
+                    {!hideBar && <span>{progress}%</span>}
                   </div>
-                  <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
-                    <div style={{ background: progress === 100 ? '#22c55e' : 'var(--primary-color)', width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
-                  </div>
+                  {!hideBar && (
+                    <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
+                      <div style={{ background: statusColor, width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <select 

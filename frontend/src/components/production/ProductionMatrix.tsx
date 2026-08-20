@@ -247,7 +247,11 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
             ) : (
               filteredOrders.map((order, index) => {
                 const bottleneck = isBottleneck(order);
-                const progress = getOverallProgress(order.production_stages);
+                const calculatedProgress = getOverallProgress(order.production_stages);
+                let progress = calculatedProgress;
+                if (order.current_status === 'Бэлэн' || order.current_status === 'Бэлэн болсон' || order.current_status === 'Олгосон' || order.current_status === 'Хүлээлгэж өгсөн') {
+                  progress = 100;
+                }
                 const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
 
                 return (
