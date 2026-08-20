@@ -62,6 +62,7 @@ export const createOrder = async (req: Request, res: Response) => {
         payment_method_2: data.payment_method_2 || null,
         payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
         finance_notes: data.finance_notes || null,
+        current_status: data.current_status || undefined,
         
         specifications: {
           create: {
