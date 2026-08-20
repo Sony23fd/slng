@@ -1,39 +1,43 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
 
+const generateOrderNumber = async (): Promise<string> => {
+  const today = new Date();
+  const yy = String(today.getFullYear()).slice(-2);
+  const prefix = `SP${yy}`;
+
+  const startSeqConstant = await prisma.constant.findFirst({
+    where: { type: 'ORDER_START_SEQ' }
+  });
+  const defaultStartSeq = startSeqConstant && !isNaN(parseInt(startSeqConstant.value)) 
+    ? parseInt(startSeqConstant.value) 
+    : 1;
+
+  const lastOrder = await prisma.order.findFirst({
+    where: { order_number: { startsWith: prefix } },
+    orderBy: { id: 'desc' }
+  });
+
+  let sequence = defaultStartSeq;
+  if (lastOrder && lastOrder.order_number) {
+    const lastSeqStr = lastOrder.order_number.slice(prefix.length);
+    const lastSeq = parseInt(lastSeqStr, 10);
+    if (!isNaN(lastSeq)) {
+      sequence = Math.max(lastSeq + 1, defaultStartSeq);
+    }
+  }
+  return `${prefix}${String(sequence).padStart(5, '0')}`;
+};
+
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const data = req.body;
     const userId = (req as any).user?.id;
 
-    // Generate Order Number
-    const today = new Date();
-    const yy = String(today.getFullYear()).slice(-2);
-    const prefix = `SP${yy}`;
-
-    // Get starting sequence from Constant
-    const startSeqConstant = await prisma.constant.findFirst({
-      where: { type: 'ORDER_START_SEQ' }
-    });
-    const defaultStartSeq = startSeqConstant && !isNaN(parseInt(startSeqConstant.value)) 
-      ? parseInt(startSeqConstant.value) 
-      : 1;
-
-    // Get last order of this year
-    const lastOrder = await prisma.order.findFirst({
-      where: { order_number: { startsWith: prefix } },
-      orderBy: { id: 'desc' }
-    });
-
-    let sequence = defaultStartSeq;
-    if (lastOrder && lastOrder.order_number) {
-      const lastSeqStr = lastOrder.order_number.slice(prefix.length);
-      const lastSeq = parseInt(lastSeqStr, 10);
-      if (!isNaN(lastSeq)) {
-        sequence = Math.max(lastSeq + 1, defaultStartSeq);
-      }
+    let order_number = null;
+    if (data.current_status !== 'Үнийн санал') {
+      order_number = await generateOrderNumber();
     }
-    const order_number = `${prefix}${String(sequence).padStart(5, '0')}`;
 
     const order = await prisma.order.create({
       data: {
@@ -153,11 +157,16 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     const old_status = order.current_status;
 
+    let order_number = order.order_number;
+    if (targetStatus && targetStatus !== 'Үнийн санал' && !order_number) {
+      order_number = await generateOrderNumber();
+    }
+
     // Use Prisma Transaction
     const result = await prisma.$transaction([
       prisma.order.update({
         where: { id: orderId },
-        data: { current_status: targetStatus }
+        data: { current_status: targetStatus, order_number }
       }),
       prisma.orderstatuslog.create({
         data: {
@@ -211,6 +220,10 @@ export const updateOrderStages = async (req: Request, res: Response) => {
 
     let targetStatus = current_status !== undefined ? current_status : existingOrder.current_status;
     let autoCompleted = false;
+
+    if (targetStatus && targetStatus !== 'Үнийн санал' && !existingOrder.order_number) {
+      updateData.order_number = await generateOrderNumber();
+    }
 
     if (production_stages !== undefined) {
       const standardKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
@@ -300,6 +313,14 @@ export const updateOrder = async (req: Request, res: Response) => {
   try {
     const orderId = parseInt(id as string);
     
+    const existingOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!existingOrder) return res.status(404).json({ error: 'Order not found' });
+
+    let order_number = existingOrder.order_number;
+    if (data.current_status && data.current_status !== 'Үнийн санал' && !order_number) {
+      order_number = await generateOrderNumber();
+    }
+
     // We need to delete old relations and recreate them for simplicity
     await prisma.$transaction([
       prisma.orderspecification.deleteMany({ where: { order_id: orderId } }),
@@ -310,6 +331,8 @@ export const updateOrder = async (req: Request, res: Response) => {
       prisma.order.update({
         where: { id: orderId },
         data: {
+          order_number,
+          current_status: data.current_status || undefined,
           customer_name: data.customer_name || '',
           phone: data.phone || null,
           deadline: data.deadline ? new Date(data.deadline) : null,
