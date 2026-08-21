@@ -59,28 +59,50 @@ const prices = [
   // Кай цаас
   { category: 'Цаас', item_name: 'Кай цаас 250 A0 (889x1194)', unit_cost: 1300 },
 
+  // Нэмэлт материалууд
+  { category: 'Материал', item_name: 'Бүрэлт (Гялгар)', unit_cost: 1500 },
+  { category: 'Материал', item_name: 'Бүрэлт (Матт)', unit_cost: 1500 },
+  { category: 'Материал', item_name: 'Оосор (Торны оосор)', unit_cost: 80 },
 ];
 
 const operationsData = [
-  { name: 'Нугалаа (Стандарт)', expr: 'total_qty', desc: 'Флаер, брошур нугалах', cost: 10 },
-  { name: 'Нугалаа (Хэв. хуудсаар)', expr: 'ceil(total_pages / 16) * total_qty', desc: 'Ном, сэтгүүл нугалах', cost: 15 },
-  { name: 'Үдээ (Хавтас үдэх)', expr: 'total_qty', desc: 'Нуруугаар үдэх', cost: 50 },
-  { name: 'Цавуун наалт (Perfect Bind)', expr: 'total_qty', desc: 'Халуун цавуугаар наах', cost: 200 },
-  { name: 'Утасан оёдол', expr: 'ceil(total_pages / 16) * total_qty', desc: 'Дэвтэрлэн оёх', cost: 100 },
-  { name: 'Цаас зүсэлт (Trimming)', expr: 'ceil(total_qty / 500)', desc: 'Цаас огтлох (боодлоор)', cost: 1500 },
-  { name: 'Перфораци (Таслах шугам)', expr: 'total_qty', desc: 'Таслах цэгэн шугам', cost: 20 },
-  { name: 'Дугаарлалт (Numbering)', expr: 'total_qty', desc: 'Дараалсан дугаар дарах', cost: 15 },
-  { name: 'Нэгтгэл (Collating)', expr: 'total_pages * total_qty', desc: 'Хуудас өрөх', cost: 5 },
-  { name: 'Булан дугуйлах', expr: 'total_qty', desc: 'Булан огтлох', cost: 25 },
-  { name: 'Хэсэгчилсэн УФ лак (Spot UV)', expr: 'total_qty', desc: 'Гялбаатай лак', cost: 150 },
-  { name: 'Фольго дардас (Foil Stamp)', expr: 'total_qty', desc: 'Алтлаг мөнгөлөг товгор дардас', cost: 250 },
-  { name: 'Бүрэлт', expr: '', desc: 'Хавтасны бүрэлтийн хуулга', cost: 1500 },
-  { name: 'Оосор (Торны оосор)', expr: 'total_qty * 2', desc: '1 торонд 2 ш оосор орно', cost: 80 },
-  { name: 'Нуруу (Спирал үдээс А5)', expr: 'total_qty * 24', desc: 'А5 ширээний календарт 24 ш спирал гогцоо орно', cost: 20 },
-  { name: 'Нуруу (Спирал үдээс B5)', expr: 'total_qty * 28', desc: 'B5 ширээний календарт 28 ш спирал гогцоо орно', cost: 20 },
-  { name: 'Нуруу (Спирал үдээс Ханын А2)', expr: 'total_qty * 56', desc: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш спирал гогцоо орно', cost: 5 },
-  { name: 'Суурь хийх (А5)', expr: 'total_qty', desc: 'А5 ширээний календарын хатуу картон суурь наах, угсрах', cost: 1500 },
-  { name: 'Суурь хийх (B5)', expr: 'total_qty', desc: 'B5 ширээний календарын хатуу картон суурь наах, угсрах', cost: 1800 },
+  { name: 'Нугалаа', expr: 'total_qty', desc: 'Нугалаа', cost: 10 },
+  { name: 'Шалгах', expr: 'total_qty', desc: 'Шалгах', cost: 10 },
+  { name: 'Цуглуулга', expr: 'total_qty', desc: 'Цуглуулга', cost: 10 },
+  
+  { name: 'Хэвлэгч (1 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 1 өнгө', cost: 10 },
+  { name: 'Хэвлэгч (2 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 2 өнгө', cost: 20 },
+  { name: 'Хэвлэгч (4 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 4 өнгө', cost: 40 },
+  { name: 'Хэвлэгч (5 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 5 өнгө', cost: 50 },
+
+  { name: 'Үдээ (Унаа үдээ)', expr: 'total_qty', desc: 'Унаа үдээ', cost: 50 },
+  { name: 'Үдээ (Шугамын үдээ)', expr: 'total_qty', desc: 'Шугамын үдээ', cost: 50 },
+
+  { name: 'Лак (Хэсэгчилсэн)', expr: 'total_qty', desc: 'Хэсэгчилсэн лак', cost: 150 },
+  { name: 'Лак (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн лак', cost: 200 },
+  { name: 'Лак (Барзгар)', expr: 'total_qty', desc: 'Барзгар лак', cost: 250 },
+
+  { name: 'Блокон оёо', expr: 'ceil(total_pages / 16) * total_qty', desc: 'Блокон оёо', cost: 100 },
+  { name: 'Наалт', expr: 'total_qty', desc: 'Наалт', cost: 150 },
+
+  { name: 'Огтлоо (Жижиг)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Жижиг', cost: 1000 },
+  { name: 'Огтлоо (Дунд)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Дунд', cost: 1500 },
+  { name: 'Огтлоо (Том)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Том', cost: 2000 },
+
+  { name: 'Хатуу хавтас (A5)', expr: 'total_qty', desc: 'Хатуу хавтас A5', cost: 2000 },
+  { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000 },
+  { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500 },
+  { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500 },
+
+  { name: 'Бөгж цоологч', expr: 'total_qty', desc: 'Бөгж цоологч', cost: 20 },
+  { name: 'Гараар хийх ажил', expr: 'total_qty', desc: 'Гараар хийх ажил', cost: 100 },
+  { name: 'Нууцлал наах', expr: 'total_qty', desc: 'Нууцлал наах', cost: 50 },
+
+  { name: 'Хэв дарах (A5)', expr: 'total_qty', desc: 'Хэв дарах A5', cost: 150 },
+  { name: 'Хэв дарах (A4)', expr: 'total_qty', desc: 'Хэв дарах A4', cost: 250 },
+  { name: 'Хэв дарах (A3)', expr: 'total_qty', desc: 'Хэв дарах A3', cost: 350 },
+
+  { name: 'Спираль дарагч', expr: 'total_qty', desc: 'Спираль дарагч', cost: 50 },
 ];
 
 export async function seedPrices(prisma: PrismaClient) {
@@ -158,7 +180,7 @@ export async function seedPrices(prisma: PrismaClient) {
         }
       });
     } else {
-      const createdOp = await prisma.masterprice.create({
+      const newOp = await prisma.masterprice.create({
         data: {
           category: 'Ажиллагаа',
           item_name: op.name,
@@ -169,7 +191,7 @@ export async function seedPrices(prisma: PrismaClient) {
       if (admin) {
         await prisma.masterpricelog.create({
           data: {
-            masterPriceId: createdOp.id,
+            masterPriceId: newOp.id,
             changed_by: admin.id,
             old_cost: 0,
             new_cost: op.cost
@@ -180,7 +202,22 @@ export async function seedPrices(prisma: PrismaClient) {
     }
   }
 
-  console.log('Done seeding prices and operations!');
+  // Cleanup old operations that are no longer in the list
+  const opNames = operationsData.map(o => o.name);
+  const oldOps = await prisma.masterprice.findMany({
+    where: {
+      category: 'Ажиллагаа',
+      item_name: { notIn: opNames }
+    }
+  });
+
+  for (const oldOp of oldOps) {
+    await prisma.masterpricelog.deleteMany({ where: { masterPriceId: oldOp.id } });
+    await prisma.masterprice.delete({ where: { id: oldOp.id } });
+    console.log(`Deleted obsolete operation: ${oldOp.item_name}`);
+  }
+
+  console.log('Seed completed.');
 }
 
 if (require.main === module) {
