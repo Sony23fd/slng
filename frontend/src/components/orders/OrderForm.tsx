@@ -540,57 +540,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
     });
   };
 
-  const calculateCoatingOperation = (customExtra?: number) => {
-    const materials = getValues('materials') || [];
-    let coverMat = materials.find((m: any) => m.is_cover);
-    if (!coverMat && materials.length > 0) coverMat = materials[0];
-
-    const totalOrderQty = Number(getValues('total_qty')) || 0;
-    if (getValues('category') === 'Календарь') {
-      if (getValues('size') === 'B5' || getValues('product_name')?.includes('B5')) {
-        // B5 календарьт Хавтас (A2 400ш * 0.006 = 2.40) болон эхний 1 хуудас (B2 57.5ш * 0.007 = 0.40) хоёулаа бүрэгдэнэ -> 2.80
-        const coverCoating = (totalOrderQty + 100) * 0.006;
-        const innerFirstPageCoating = ((totalOrderQty * 0.125) + 20) * 0.007;
-        const totalCoating = coverCoating + innerFirstPageCoating;
-        return {
-          qty: Number(totalCoating.toFixed(2)),
-          notes: `Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ`,
-        };
-      } else {
-        // А5 ширээний болон ханын календарьт эхний 1 хуудсыг бүрнэ (1 хуудас = 0.125 хэвлэлийн хуудас, А2 хэмжээ)
-        const m5 = totalOrderQty * 0.125;
-        const m6 = customExtra !== undefined ? customExtra : 20; // 20 хадаас
-        const coef = 0.006; // А2 хэмжээтэй тул 0.006 (44см хуулга)
-        return {
-          qty: Number(((m5 + m6) * coef).toFixed(2)),
-          notes: `Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)`,
-        };
-      }
-    }
-    if (!coverMat) {
-      const extra = customExtra !== undefined ? customExtra : 0;
-      return {
-        qty: Number(((totalOrderQty + extra) * 0.004).toFixed(2)),
-        notes: `36см хэмжээтэй бүрэлтийн хуулга`,
-      };
-    }
-    const m3 = coverMat.print_size || 'A3';
-    let m5 = Number(coverMat.base_qty) || 0;
-    if (m5 === 0) m5 = Number(coverMat.total_qty) || totalOrderQty;
-    const m6 = customExtra !== undefined ? customExtra : (Number(coverMat.extra_qty) || 0);
-
-    let coef = 0.004;
-    let fSize = '36см';
-    if (m3 === 'A2') { coef = 0.006; fSize = '44см'; }
-    else if (m3 === 'B2') { coef = 0.007; fSize = '54см'; }
-    else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; fSize = '36см'; }
-
-    return {
-      qty: Number(((m5 + m6) * coef).toFixed(2)),
-      notes: `${fSize} хэмжээтэй бүрэлтийн хуулга`,
-    };
-  };
-
   const isOpInCategory = (opName: string, categoryName: string) => {
     const cat = OP_CATEGORIES.find(c => c.name === categoryName);
     if (!cat) return false;
@@ -604,10 +553,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
   const addQuickOp = (op: any) => {
     let calcQty = op.formula && op.formula.expression ? evaluateOperationFormula(op.formula.expression) : 0;
-    if (op.item_name === 'Бүрэлт' || op.item_name.startsWith('Бүрэлт')) {
-      const coat = calculateCoatingOperation();
-      if (coat) calcQty = coat.qty;
-    }
     appendOp({
       operation_name: op.item_name,
       qty: calcQty,
@@ -677,17 +622,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
     const newOps = ops.map(op => {
       if (!op.operation_name) return op;
 
-      if (op.operation_name === 'Бүрэлт' || op.operation_name.startsWith('Бүрэлт')) {
-        const coat = calculateCoatingOperation(Number((op as any).extra_qty));
-        if (coat) {
-          if (Number(op.qty) !== coat.qty || op.notes !== coat.notes) {
-            changed = true;
-            return { ...op, qty: coat.qty, notes: coat.notes };
-          }
-        }
-        return op;
-      }
-
       const mp = masterPrices.find(p => p.item_name === op.operation_name);
       if (mp && mp.formula && mp.formula.expression) {
         const newQty = evaluateOperationFormula(mp.formula.expression);
@@ -709,19 +643,51 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
     const isBag = cat === 'Тор' || cat === 'Цаасан тор';
     const isBrochure = cat === 'Брошур';
 
-    if (isBag || isBrochure) {
-      const a6 = Number(formValues.total_qty) || 0;
-      const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A4');
-      const a7 = currentA7Size;
-      const mats = getValues('materials') || [];
+    const a6 = Number(formValues.total_qty) || 0;
+    const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A4');
+    const a7 = currentA7Size;
+    const mats = getValues('materials') || [];
 
-      if (isBag && (!formValues.size || !formValues.size.startsWith('Тор'))) {
-        const fw = (bagDims.width + bagDims.gusset) * 2;
-        const fh = bagDims.height + bagDims.topFold + bagDims.bottomFold;
-        setValue('size', `Тор ${bagDims.width}х${bagDims.height}х${bagDims.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+    if (isBag && (!formValues.size || !formValues.size.startsWith('Тор'))) {
+      const fw = (bagDims.width + bagDims.gusset) * 2;
+      const fh = bagDims.height + bagDims.topFold + bagDims.bottomFold;
+      setValue('size', `Тор ${bagDims.width}х${bagDims.height}х${bagDims.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+    }
+
+    mats.forEach((m: any, index: number) => {
+      const matName = m.material_name || '';
+      
+      // Special logic for Бүрэлт
+      if (matName.includes('Бүрэлт')) {
+         const m3 = m.print_size || 'A3';
+         let coef = 0.004;
+         if (m3 === 'A2') { coef = 0.006; }
+         else if (m3 === 'B2') { coef = 0.007; }
+         else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
+
+         const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
+         const extra = Number(m.extra_qty) || 0;
+         const tQty = base + extra;
+         
+         if (Number(m.total_qty) !== tQty) setValue(`materials.${index}.total_qty`, tQty);
+         const sQty = Number((tQty * coef).toFixed(2));
+         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+         if (Number(m.base_qty) !== base) setValue(`materials.${index}.base_qty`, base);
+         if (Number(m.divide_by) !== 1) setValue(`materials.${index}.divide_by`, 1);
+         return;
+      }
+      
+      // Special logic for Оосор
+      if (matName.includes('Оосор')) {
+         const sQty = a6 * 2;
+         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+         if (Number(m.total_qty) !== sQty) setValue(`materials.${index}.total_qty`, sQty);
+         if (Number(m.base_qty) !== sQty) setValue(`materials.${index}.base_qty`, sQty);
+         if (Number(m.divide_by) !== 1) setValue(`materials.${index}.divide_by`, 1);
+         return;
       }
 
-      mats.forEach((m: any, index: number) => {
+      if (isBag || isBrochure) {
         const m3 = m.print_size || 'B2';
         let div = 1;
         let m5 = a6;
@@ -746,8 +712,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
         if (isBag && Number(m.divide_by) !== divBy) setValue(`materials.${index}.divide_by`, divBy);
         const sQty = Math.ceil(total / divBy);
         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
-      });
-    }
+      }
+    });
   }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
 
   const [submitType, setSubmitType] = useState<string>('');
@@ -796,7 +762,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
   return (
     <div>
       {!initialData && <h2 className="title">Шинэ захиалга үүсгэх</h2>}
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }}>
         
         {/* Бэлэн загвар сонгох */}
         <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'linear-gradient(to right, #eff6ff, #f8fafc)', border: '1px solid #bfdbfe', borderRadius: '0.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -983,9 +953,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           })()}
         </div>
 
+        <div className="form-layout-container">
+          <div className="form-main-col">
+
         {/* 1. Захиалгын мэдээлэл */}
-        <section className="card">
-          <h3 className="section-title">1. Захиалагчийн мэдээлэл</h3>
+        <section className="form-section">
+          <h3 className="form-section-header">1. Захиалагчийн мэдээлэл</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>Захиалагчийн нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
@@ -1477,8 +1450,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
                   const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.25rem 0.35rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
 
+                  const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
+                  const isSpecialStrap = currentMaterialName.includes('Оосор');
+                  const isSpecialMat = isSpecialCoating || isSpecialStrap;
+                  const disabledStyle = { ...inputStyle, backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' };
+
                   return (
-                    <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
+                    <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <Controller
                           name={`materials.${index}.material_name`}
@@ -1523,6 +1501,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                             />
                           )}
                         />
+                        {!isSpecialMat && (
                         <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <input type="checkbox" {...register(`materials.${index}.is_cover`, {
                             onChange: (e) => {
@@ -1576,6 +1555,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                           })} />
                           <label style={{ fontSize: '0.75rem', color: '#475569', cursor: 'pointer', margin: 0 }}>Хавтас</label>
                         </div>
+                        )}
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <Controller
@@ -1603,17 +1583,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                               value={field.value ? { value: field.value, label: field.value || (field.value === '' && availableSizes.length > 0 && availableSizes[0].sizeName === '' ? 'Үндсэн (Хэмжээгүй)' : '') } : null}
                               placeholder="Жин, Формат..."
                               isClearable
-                              isDisabled={!currentMaterialName}
+                              isDisabled={!currentMaterialName || isSpecialMat}
                               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                               menuPosition="fixed"
-                              styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.25rem', borderColor: '#cbd5e1', minHeight: '34px', fontSize: '0.85rem' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                              styles={{ control: (base) => ({ ...base, background: isSpecialMat ? '#f1f5f9' : 'white', borderRadius: '0.25rem', borderColor: '#cbd5e1', minHeight: '34px', fontSize: '0.85rem' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                           )}
                         />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input style={inputStyle} readOnly={formValues.category === 'Түргэн хэвлэл'} title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''} {...register(`materials.${index}.print_size`, {
+                        <input style={isSpecialStrap ? disabledStyle : inputStyle} readOnly={formValues.category === 'Түргэн хэвлэл' || isSpecialStrap} title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''} {...register(`materials.${index}.print_size`, {
                           onChange: (e) => {
+                            if (isSpecialMat) return;
                             const val = e.target.value;
                             const sourceSize = formValues.materials?.[index]?.size || '';
                             const ratio = calculatePaperDivision(sourceSize, val);
@@ -1648,11 +1629,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                               setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
                             }
                           }
-                        })} placeholder="A2" />
+                        })} placeholder={isSpecialMat ? "" : "A2"} />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input style={{...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
+                        <input style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
                           onChange: (e) => {
+                            if (isSpecialMat) return;
                             const press = Number(e.target.value) || 1;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
@@ -1667,8 +1649,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                         })} />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={inputStyle} {...register(`materials.${index}.base_qty`, {
+                        <input type="number" style={isSpecialStrap ? disabledStyle : inputStyle} readOnly={isSpecialStrap} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
+                            if (isSpecialMat) return;
                             const base = Number(e.target.value) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
@@ -1683,8 +1666,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                         })} />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={inputStyle} {...register(`materials.${index}.extra_qty`, {
+                        <input type="number" style={isSpecialStrap ? disabledStyle : inputStyle} readOnly={isSpecialStrap} {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
+                            if (isSpecialMat) return;
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
@@ -1702,8 +1686,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                         <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc' }} readOnly {...register(`materials.${index}.total_qty`)} />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={inputStyle} {...register(`materials.${index}.divide_by`, {
+                        <input type="number" style={isSpecialMat ? disabledStyle : inputStyle} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
                           onChange: (e) => {
+                            if (isSpecialMat) return;
                             const divBy = Number(e.target.value) || 1;
                             const total = Number(formValues.materials?.[index]?.total_qty) || 0;
                             if (divBy > 0) if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
@@ -1739,168 +1724,92 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
         {/* 6. Ажиллагаа */}
         <section className="card">
           <h3 className="section-title">6. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)</h3>
-          {opFields.map((field, index) => {
-            const o = formValues.operations?.[index];
-            const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
-            const isCoating = o?.operation_name === 'Бүрэлт' || o?.operation_name?.startsWith('Бүрэлт');
-            const isStrap = o?.operation_name?.toLowerCase().includes('оосор');
-            const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
-            return (
-            <div key={field.id} className="row-item">
-              <div className="form-group" style={{ flex: 1 }}>
-                <label title="[O1]">Ажиллагааны нэр</label>
-                <Controller
-                  name={`operations.${index}.operation_name`}
-                  control={control}
-                  render={({ field }) => {
-                    const opOptions = masterPrices.filter(p => {
-                      const c = (p.category || '').toLowerCase();
-                      return c.includes('ажилбар') || c.includes('ажиллагаа') || c.includes('operation');
-                    }).map(p => ({ value: p.item_name, label: p.item_name, cost: p.unit_cost, formula: p.formula }));
-                    return (
-                      <CreatableSelect
-                        {...field}
-                        options={opOptions}
-                        onChange={(selected: any) => {
-                          const opName = selected ? selected.value : '';
-                          field.onChange(opName);
-                          if (selected && selected.cost) {
-                            setValue(`operations.${index}.unit_cost`, selected.cost);
-                          }
-                          if (selected && selected.formula && selected.formula.expression) {
-                            const newQty = evaluateOperationFormula(selected.formula.expression);
-                            setValue(`operations.${index}.qty`, newQty);
-                          }
-                          if (opName === 'Бүрэлт' || opName.startsWith('Бүрэлт')) {
-                            const coat = calculateCoatingOperation();
-                            if (coat) {
-                              setValue(`operations.${index}.qty`, coat.qty);
-                              setValue(`operations.${index}.notes`, coat.notes);
-                            }
-                          }
-                        }}
-                        value={field.value ? { value: field.value, label: field.value } : null}
-                        placeholder="Сонгох эсвэл бичих..."
-                        isClearable
-                        styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
-                      />
-                    );
-                  }}
-                />
-              </div>
-              {(o?.operation_name === 'Бүрэлт' || o?.operation_name?.startsWith('Бүрэлт')) && (
-                <div className="form-group" style={{ width: '80px' }}>
-                  <label>Хадаас</label>
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="0"
-                    {...register(`operations.${index}.extra_qty` as any, {
-                      onChange: (e) => {
-                        const extra = Number(e.target.value) || 0;
-                        const coat = calculateCoatingOperation(extra);
-                        if (coat) {
-                          setValue(`operations.${index}.qty`, coat.qty);
-                          setValue(`operations.${index}.notes`, coat.notes);
-                        }
-                      }
-                    })}
-                  />
-                </div>
-              )}
-               <div className="form-group">
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <label style={{ margin: 0 }}>Тоо</label>
-                  {isCoating && (
-                    <CalculationHelpBadge
-                      title="Бүрэлтийн хуулганы тооцоо"
-                      formula="(Үндсэн тоо [M5] + Хадаас) × Коэффициент"
-                      liveCalculation={`Бодолт: ${o?.qty || 0} (Коэффициент B2=0.007, A2=0.006, A3=0.004)`}
-                      details={[
-                        "Хавтасны хэвлэлийн хэмжээнээс хамааран хуулганы өргөн болон коэффициент тодорхойлогдоно.",
-                        "Хадаас талбарт оруулсан нэмэлт тоог Үндсэн тоотой нэмж үржүүлнэ."
-                      ]}
-                    />
-                  )}
-                  {isStrap && (
-                    <CalculationHelpBadge
-                      title="Цаасан торны оосор"
-                      formula="Захиалгын нийт тоо × 2"
-                      liveCalculation={`${formValues.total_qty || 0} × 2 = ${(formValues.total_qty || 0) * 2} ш`}
-                      details={[
-                        "1 ширхэг цаасан торонд 2 ширхэг оосор орох стандарттай."
-                      ]}
-                    />
-                  )}
-                  {!isCoating && !isStrap && mpFormula && (
-                    <CalculationHelpBadge
-                      title="Мастер үнийн сангийн томьёо"
-                      formula={mpFormula}
-                      liveCalculation={`Үр дүн: ${o?.qty || 0}`}
-                      details={[
-                        "Энэхүү ажиллагааны тоог Мастер үнийн санд тохируулсан динамик томьёогоор бодож байна."
-                      ]}
-                    />
-                  )}
-                </div>
-                <input type="number" step="any" {...register(`operations.${index}.qty`)} />
-              </div>
-              <div className="form-group"><label title="[O3]">Нэгж өртөг</label><input type="number" step="any" {...register(`operations.${index}.unit_cost`)} /></div>
-              <div className="form-group" style={{width: '100px'}}><label title="[O4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
-              <div className="form-group" style={{ flex: 1 }}><label title="[O5]">Тэмдэглэл</label><input {...register(`operations.${index}.notes`)} /></div>
-              <button type="button" onClick={() => removeOp(index)} className="btn btn-danger" style={{height: '40px'}}>X</button>
-            </div>
-          )})}
-          <button type="button" onClick={() => appendOp({ operation_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Ажиллагаа нэмэх</button>
-
-          {/* Quick Add Operations */}
-          <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
-            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Түгээмэл ажиллагаа хурдан нэмэх:</h4>
+          
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Боломжит ажиллагаанууд:</h4>
             
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              {OP_CATEGORIES.map(cat => (
-                <button 
-                  key={cat.name} 
-                  type="button" 
-                  onClick={() => setActiveOpCategory(cat.name)} 
-                  className={`btn btn-sm ${activeOpCategory === cat.name ? 'btn-primary' : 'btn-outline'}`}
-                  style={{ borderRadius: '9999px' }}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
               {masterPrices
-                .filter(op => op.category === 'Ажиллагаа' && isOpInCategory(op.item_name, activeOpCategory))
+                .filter(op => op.category === 'Ажиллагаа')
                 .map(op => {
                   const isAdded = opFields.some((f: any) => f.operation_name === op.item_name);
                   return (
-                    <button
-                      key={op.id}
-                      type="button"
-                      disabled={isAdded}
-                      onClick={() => addQuickOp(op)}
-                      style={{
-                        padding: '0.25rem 0.75rem',
-                        fontSize: '0.875rem',
-                        borderRadius: '9999px',
-                        border: '1px solid var(--border-color)',
-                        background: isAdded ? 'var(--bg-card)' : 'var(--bg-main)',
-                        color: isAdded ? 'var(--text-muted)' : 'var(--text-color)',
-                        cursor: isAdded ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => { if(!isAdded) e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
-                      onMouseLeave={(e) => { if(!isAdded) e.currentTarget.style.borderColor = 'var(--border-color)'; }}
-                    >
-                      {isAdded ? '✓ ' : '+ '}{op.item_name}
-                    </button>
+                    <label key={op.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={isAdded}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            addQuickOp(op);
+                          } else {
+                            const idx = opFields.findIndex((f: any) => f.operation_name === op.item_name);
+                            if (idx !== -1) removeOp(idx);
+                          }
+                        }}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                      />
+                      <span style={{ color: isAdded ? '#0f172a' : '#475569', fontWeight: isAdded ? 600 : 400 }}>{op.item_name}</span>
+                    </label>
                   );
                 })}
             </div>
           </div>
+
+          {opFields.length > 0 && (
+            <div className="table-responsive">
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Ажиллагааны нэр</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Тоо</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Нэгж өртөг</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Нийт өртөг</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Тайлбар</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {opFields.map((field, index) => {
+                    const o = formValues.operations?.[index];
+                    const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
+                    const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
+                    const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.25rem 0.35rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
+                    return (
+                      <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: '#f8fafc' }}>
+                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
+                          {o?.operation_name}
+                          {mpFormula && (
+                            <div style={{ display: 'inline-block', marginLeft: '0.5rem' }}>
+                              <CalculationHelpBadge
+                                title="Мастер үнийн сангийн томьёо"
+                                formula={mpFormula}
+                                liveCalculation={`Үр дүн: ${o?.qty || 0}`}
+                                details={[
+                                  "Энэхүү ажиллагааны тоог Мастер үнийн санд тохируулсан динамик томьёогоор бодож байна."
+                                ]}
+                              />
+                            </div>
+                          )}
+                          <input type="hidden" {...register(`operations.${index}.operation_name`)} />
+                        </td>
+                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
+                          <input type="number" step="any" style={inputStyle} {...register(`operations.${index}.qty`)} />
+                        </td>
+                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
+                          <input type="number" step="any" style={inputStyle} {...register(`operations.${index}.unit_cost`)} />
+                        </td>
+                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '120px' }}>
+                          {tCost.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top' }}>
+                          <input style={inputStyle} {...register(`operations.${index}.notes`)} placeholder="Тэмдэглэл..." />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* 7. Гадуур ажил */}
@@ -2078,105 +1987,104 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           </div>
         </section>
 
-        {/* 9. Өртөг болон Ашгийн задаргаа (Cost Breakdown) */}
-        <section className="card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderLeft: '4px solid #3b82f6' }}>
-          <h3 className="section-title">📊 Өртөг болон Ашгийн задаргаа</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Материалын өртөг</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>{Math.round(prices.totalMaterialCost || 0).toLocaleString()} ₮</div>
-            </div>
-            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Ажиллагааны өртөг</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b' }}>{Math.round(prices.totalOperationCost || 0).toLocaleString()} ₮</div>
-            </div>
-            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>Нийт өртөг</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#334155' }}>{Math.round(prices.factoryTotalCost || 0).toLocaleString()} ₮</div>
-            </div>
-            <div style={{ padding: '1rem', background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #d1fae5' }}>
-              <div style={{ fontSize: '0.85rem', color: '#059669', marginBottom: '0.5rem', fontWeight: 600 }}>Цэвэр ашиг</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>{Math.round((prices.finalPrice || 0) - (prices.factoryTotalCost || 0)).toLocaleString()} ₮</div>
-            </div>
-          </div>
-        </section>
+        </div> {/* End of form-main-col */}
 
-        {/* Наалдамхай хураангуй мөр (Sticky Summary Bar) */}
-        <div className="sticky-summary">
-          <div className="sticky-summary-content">
-            <div className="summary-stat">
-              <span className="label">Захиалгын тоо</span>
-              <span className="value">{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
+        <div className="form-sidebar">
+          <div className="summary-card">
+            <div style={{ padding: '1.25rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 600, color: '#1e293b', fontSize: '1.1rem' }}>
+              📊 Захиалгын хураангуй
             </div>
-            <div className="summary-stat">
-              <span className="label">Нэгжийн өртөг</span>
-              <span className="value" style={{ color: '#64748b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</span>
-            </div>
-            {formValues.design_cost ? (
-              <div className="summary-stat">
-                <span className="label">Эх бэлтгэлийн үнэ</span>
-                <span className="value" style={{ color: '#8b5cf6' }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Захиалгын тоо</span>
+                <span style={{ fontWeight: 600, color: '#1e293b' }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
               </div>
-            ) : null}
-            <div className="summary-stat">
-              <span className="label">Нэгжийн үнэ</span>
-              <span className="value" style={{ color: 'var(--primary-color)' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</span>
-            </div>
-            <div className="summary-stat">
-              <span className="label">Ашгийн маржин</span>
-              <span style={{
-                display: 'inline-block',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '9999px',
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                marginTop: '0.25rem',
-                backgroundColor: (Number(formValues.profit_margin) || 0) >= 20 ? '#d1fae5' : (Number(formValues.profit_margin) || 0) >= 10 ? '#fef3c7' : '#fee2e2',
-                color: (Number(formValues.profit_margin) || 0) >= 20 ? '#065f46' : (Number(formValues.profit_margin) || 0) >= 10 ? '#92400e' : '#991b1b'
-              }}>
-                {Number(formValues.profit_margin || 0)}%
-              </span>
-            </div>
-            <div className="summary-stat">
-              <span className="label">НИЙТ ДҮН</span>
-              <span className="value success">{(prices.finalPrice || 0).toLocaleString()} ₮</span>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нэгжийн өртөг</span>
+                <span style={{ fontWeight: 600, color: '#64748b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</span>
+              </div>
+
+              {formValues.design_cost ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#8b5cf6' }}>Эх бэлтгэлийн үнэ</span>
+                  <span style={{ fontWeight: 600, color: '#8b5cf6' }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+                </div>
+              ) : null}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px dashed #cbd5e1' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нэгжийн үнэ</span>
+                <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нийт өртөг</span>
+                <span style={{ fontWeight: 600, color: '#334155' }}>{Math.round(prices.factoryTotalCost || 0).toLocaleString()} ₮</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Цэвэр ашиг</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    backgroundColor: (Number(formValues.profit_margin) || 0) >= 20 ? '#d1fae5' : (Number(formValues.profit_margin) || 0) >= 10 ? '#fef3c7' : '#fee2e2',
+                    color: (Number(formValues.profit_margin) || 0) >= 20 ? '#065f46' : (Number(formValues.profit_margin) || 0) >= 10 ? '#92400e' : '#991b1b'
+                  }}>
+                    {Number(formValues.profit_margin || 0)}%
+                  </span>
+                  <span style={{ fontWeight: 600, color: '#10b981' }}>{Math.round((prices.finalPrice || 0) - (prices.factoryTotalCost || 0)).toLocaleString()} ₮</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '2px solid #e2e8f0', marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>НИЙТ ДҮН</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>{(prices.finalPrice || 0).toLocaleString()} ₮</span>
+              </div>
+              
+              <div style={{ marginTop: '1.5rem' }}>
+                {isCalculatorMode ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button 
+                      type="submit" 
+                      onClick={() => setSubmitType('Шинэ захиалга')}
+                      className="btn btn-primary" 
+                      style={{ padding: '0.85rem', fontSize: '1.05rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
+                      📦 Захиалга үүсгэх
+                    </button>
+                    <button 
+                      type="submit" 
+                      onClick={() => setSubmitType('Үнийн санал')}
+                      className="btn btn-outline" 
+                      style={{ padding: '0.85rem', fontSize: '1.05rem', width: '100%' }}>
+                      📄 Үнийн санал хадгалах
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button type="submit" className="btn btn-primary" style={{ padding: '0.85rem', fontSize: '1.1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
+                      {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
+                    </button>
+                    {isEdit && initialData?.current_status === 'Үнийн санал' && (
+                      <button 
+                        type="submit" 
+                        onClick={() => setSubmitType('Шинэ захиалга')}
+                        className="btn btn-outline" 
+                        style={{ padding: '0.85rem', fontSize: '1.1rem', width: '100%' }}>
+                        📦 Захиалга болгож батлах
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
-
-          {isCalculatorMode ? (
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                type="submit" 
-                onClick={() => setSubmitType('Үнийн санал')}
-                className="btn btn-outline" 
-                style={{ padding: '0.75rem 1.5rem', fontSize: '1.05rem', fontWeight: 600, borderRadius: '0.5rem', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
-                📄 Үнийн санал хадгалах
-              </button>
-              <button 
-                type="submit" 
-                onClick={() => setSubmitType('Шинэ захиалга')}
-                className="btn btn-primary" 
-                style={{ padding: '0.75rem 1.5rem', fontSize: '1.05rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
-                📦 Захиалга үүсгэх
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button type="submit" className="btn btn-outline" style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
-                {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
-              </button>
-              {isEdit && initialData?.current_status === 'Үнийн санал' && (
-                <button 
-                  type="submit" 
-                  onClick={() => setSubmitType('Шинэ захиалга')}
-                  className="btn btn-primary" 
-                  style={{ padding: '0.75rem 2rem', fontSize: '1.15rem', fontWeight: 600, borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
-                  📦 Захиалга болгож батлах
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        </div> {/* End of form-sidebar */}
+      </div> {/* End of form-layout-container */}
       </form>
     </div>
   );
