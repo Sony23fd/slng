@@ -1417,7 +1417,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
         {/* 5. Материал */}
         <SectionCard id="sec6" step="6" title="6. Шаардлагатай материал">
           
-          <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+          <div className="table-responsive" style={{ marginBottom: '1rem' }}>
             <table className="smart-table" style={{ minWidth: '950px' }}>
               <thead>
                 <tr>
