@@ -109,6 +109,27 @@ function calculateSetups(pressSheet: number, divisions: number) {
   return fullSheets + fractionalSetups;
 }
 
+const SectionCard = ({ id, step, title, sub, children }: any) => {
+  const [collapsed, setCollapsed] = React.useState(false);
+  return (
+    <SectionCard id="sec" step="*" title="Мэдээлэл">
+      <div className="erp-card-head" onClick={() => setCollapsed(!collapsed)}>
+        <div className="erp-left">
+          <div className="step-badge">{step}</div>
+          <div>
+            <h2 style={{margin:0, fontSize:'15.2px', fontWeight:700}}>{title}</h2>
+            {sub && <div className="sub" style={{fontSize:'12.2px', color:'var(--muted-2)', fontWeight:500, marginTop:'1px'}}>{sub}</div>}
+          </div>
+        </div>
+        <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div className="erp-card-body">
+        {children}
+      </div>
+    </SectionCard>
+  );
+};
+
 export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isCalculatorMode?: boolean }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
@@ -760,8 +781,37 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
   };
 
   return (
-    <div>
-      {!initialData && <h2 className="title">Шинэ захиалга үүсгэх</h2>}
+    <div className="erp-shell">
+
+    <div className="erp-main">
+      <div className="erp-topbar">
+        <div className="erp-topbar-row">
+          <div>
+            <h1 style={{margin:0, fontSize:'22px', fontWeight:700, display:'flex', alignItems:'center', gap:'10px'}}>
+              <span className="erp-ic" style={{width:'30px', height:'30px', borderRadius:'8px', background:'var(--teal-tint)', color:'var(--teal-dark)', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:'20px', height:'20px'}}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
+              </span> 
+              {!initialData ? 'Шинэ захиалга / Үнэ бодох' : 'Захиалга засах'}
+            </h1>
+            <p style={{margin:'5px 0 0', color:'var(--muted)', fontSize:'13.6px', maxWidth:'560px'}}>
+              Доорх алхмуудыг дараалан бөглөнө үү — баруун талд нийт үнэ, ашиг шууд шинэчлэгдэж харагдана.
+            </p>
+          </div>
+          <div className="erp-progress-pill">
+            <div className="erp-ring" style={{'--pct': 30} as React.CSSProperties}><i style={{width:'23px', height:'23px', borderRadius:'50%', background:'#fff', display:'block'}}></i></div>
+            <span><b>Тооцоолол</b></span>
+          </div>
+        </div>
+        <div className="erp-jumpnav" id="jumpnav">
+          <a href="#sec1" className="erp-on">1. Захиалагч</a>
+          <a href="#sec2">2. Захиалга</a>
+          <a href="#sec3">3-5. Тех. мэдээлэл</a>
+          <a href="#sec*">6. Материал</a>
+          <a href="#sec*">7. Ажиллагаа</a>
+          <a href="#sec*">8. Гадуур ажил</a>
+          <a href="#rail-summary">Санхүү / Нийт үнэ</a>
+        </div>
+      </div>
       <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
         if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
           e.preventDefault();
@@ -953,14 +1003,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           })()}
         </div>
 
-        <div className="form-layout-container">
-          <div className="form-main-col">
+        <div className="erp-layout">
+          <div className="form-col">
 
         {/* 1. Захиалгын мэдээлэл */}
-        <section className="form-section">
-          <h3 className="form-section-header">1. Захиалагчийн мэдээлэл</h3>
-          <div className="form-grid">
-            <div className="form-group">
+        <SectionCard id="sec1" step="1" title="1. Захиалагчийн мэдээлэл">
+          
+          <div className="erp-grid erp-grid-3">
+            <div className="erp-field">
               <label>Захиалагчийн нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
               <Controller
                 name="customer_name"
@@ -986,17 +1036,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 )}
               />
             </div>
-            <div className="form-group"><label title="[A2]">Утас</label><input {...register("phone")} /></div>
-            <div className="form-group"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
+            <div className="erp-field"><label title="[A2]">Утас</label><input {...register("phone")} /></div>
+            <div className="erp-field"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
           </div>
-        </section>
+        </SectionCard>
 
         {/* 2. Захиалгын мэдээлэл */}
-        <section className="form-section">
-          <h3 className="form-section-header">2. Захиалгын мэдээлэл</h3>
-          <div className="form-grid">
-            <div className="form-group"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
-            <div className="form-group">
+        <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
+          
+          <div className="erp-grid erp-grid-3">
+            <div className="erp-field"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
+            <div className="erp-field">
               <label>Бүтээгдэхүүний ангилал</label>
               <Controller
                 name="category"
@@ -1037,7 +1087,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 }}
               />
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label title="[A6]">Хэвлэгдэх тоо нийт</label>
               <input type="number" {...register("total_qty", {
                 onChange: (e) => {
@@ -1058,7 +1108,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 }
               })} />
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label title="[A7]">Бүтээгдэхүүний хэмжээ</label>
               <Controller
                 name="size"
@@ -1087,7 +1137,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             </div>
             {formValues.size === 'Custom' && (
               <>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Өргөн (мм)</label>
                   <input type="number" placeholder="Өргөн" {...register("custom_width", {
                     valueAsNumber: true,
@@ -1097,7 +1147,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     }
                   })} />
                 </div>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Өндөр (мм)</label>
                   <input type="number" placeholder="Өндөр" {...register("custom_height", {
                     valueAsNumber: true,
@@ -1109,8 +1159,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 </div>
               </>
             )}
-            <div className="form-group"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
-            <div className="form-group">
+            <div className="erp-field"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
+            <div className="erp-field">
               <label title="[A8]">Хавтасны төрөл</label>
               <select {...register("binding_type", {
                 onChange: (e) => {
@@ -1151,7 +1201,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
               </select>
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label>Эх бэлтгэлийн төлөв</label>
               <select {...register("design_status", {
                 onChange: (e) => {
@@ -1172,17 +1222,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               </select>
             </div>
             {formValues.design_status !== 'Эх бэлэн' && (
-              <div className="form-group">
+              <div className="erp-field">
                 <label>Эх бэлтгэлийн үнэ (₮)</label>
                 <input type="number" {...register("design_cost", { valueAsNumber: true })} />
               </div>
             )}
-            <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+            <div className="erp-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
               <input type="checkbox" {...register("is_urgent")} style={{ width: '1.2rem', height: '1.2rem' }} />
               <label style={{ margin: 0, color: 'red' }}>[AA] Яаралтай эсэх</label>
             </div>
-            <div className="form-group"><label>Борлуулагчийн нэр</label><input {...register("sales_person_name")} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} /></div>
-            <div className="form-group"><label>Тайлбар</label><input {...register("notes")} /></div>
+            <div className="erp-field"><label>Борлуулагчийн нэр</label><input {...register("sales_person_name")} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} /></div>
+            <div className="erp-field"><label>Тайлбар</label><input {...register("notes")} /></div>
           </div>
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
@@ -1200,7 +1250,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Өндөр (см)</label>
                   <input
                     type="number"
@@ -1215,7 +1265,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     }}
                   />
                 </div>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Өргөн (см)</label>
                   <input
                     type="number"
@@ -1230,7 +1280,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     }}
                   />
                 </div>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Хажуу (см)</label>
                   <input
                     type="number"
@@ -1245,7 +1295,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     }}
                   />
                 </div>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Амсар нугалаа (см)</label>
                   <input
                     type="number"
@@ -1260,7 +1310,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     }}
                   />
                 </div>
-                <div className="form-group">
+                <div className="erp-field">
                   <label>Ёроол нугалаа (см)</label>
                   <input
                     type="number"
@@ -1281,13 +1331,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               </div>
             </div>
           )}
-        </section>
+        </SectionCard>
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
-        <section className="card">
-          <h3 className="section-title">3-5. Технологийн мэдээлэл</h3>
-          <div className="form-grid">
-            <div className="form-group">
+        <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл">
+          
+          <div className="erp-grid erp-grid-3">
+            <div className="erp-field">
               <label>[B1] Хавтасны өнгө (Гадна)</label>
               <select {...register("cover_color")}>
                 <option value="">Сонгох...</option>
@@ -1296,7 +1346,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 ))}
               </select>
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label>[B2] Хавтасны дотор өнгө/хэвлэл</label>
               <select {...register("inner_color")}>
                 <option value="">Сонгох...</option>
@@ -1305,11 +1355,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 ))}
               </select>
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label>[B3] Хавчуурга</label>
               <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
             </div>
-            <div className="form-group">
+            <div className="erp-field">
               <label>[B4] Нийт нүүр (Хавтас орохгүй)</label>
               <input type="number" {...register("total_pages", {
                 onChange: (e) => {
@@ -1362,11 +1412,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           </div>
 
 
-        </section>
+        </SectionCard>
 
         {/* 5. Материал */}
-        <section className="card">
-          <h3 className="section-title">6. Шаардлагатай материал</h3>
+        <SectionCard id="sec6" step="6" title="6. Шаардлагатай материал">
+          
           <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
             <table className="smart-table" style={{ minWidth: '950px' }}>
               <thead>
@@ -1726,11 +1776,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
             + Материал нэмэх
           </button>
-        </section>
+        </SectionCard>
 
         {/* 6. Ажиллагаа */}
-        <section className="card">
-          <h3 className="section-title">7. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)</h3>
+        <SectionCard id="sec7" step="7" title="7. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)">
+          
           
           <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
             <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Боломжит ажиллагаанууд:</h4>
@@ -1817,17 +1867,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               </table>
             </div>
           )}
-        </section>
+        </SectionCard>
 
         {/* 8. Гадуур ажил */}
-        <section className="card">
-          <h3 className="section-title">8. Гадуур ажил</h3>
+        <SectionCard id="sec8" step="8" title="8. Гадуур ажил">
+          
           {outFields.map((field, index) => {
             const out = formValues.outsourced?.[index];
             const tCost = (out?.qty || 0) * (out?.unit_cost || 0);
             return (
             <div key={field.id} className="row-item">
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className="erp-field" style={{ flex: 1 }}>
                 <label title="[A4]">Ажлын нэр</label>
                 <Controller
                   name={`outsourced.${index}.job_name`}
@@ -1848,7 +1898,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                   }}
                 />
               </div>
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className="erp-field" style={{ flex: 1 }}>
                 <label>Гүйцэтгэгч</label>
                 <Controller
                   name={`outsourced.${index}.contractor_name` as any}
@@ -1869,209 +1919,125 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                   }}
                 />
               </div>
-              <div className="form-group"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
-              <div className="form-group"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
-              <div className="form-group" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
-              <div className="form-group" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
+              <div className="erp-field"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
+              <div className="erp-field"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
+              <div className="erp-field" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
+              <div className="erp-field" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
               <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '40px'}}>X</button>
             </div>
           )})}
           <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
-        </section>
+        </SectionCard>
 
         </div> {/* End of form-main-col */}
 
-        <div className="form-sidebar">
-          {/* Санхүүгийн нэгтгэл (Sidebar-д) */}
-          <div className="summary-card">
-            <div style={{ padding: '1rem', background: '#2a4365', color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>
-              💰 Санхүүгийн нэгтгэл
+                <div className="rail" id="rail-summary">
+          <div className="erp-summary-card">
+            <div className="erp-summary-top">
+              <div className="erp-lbl">Нийт үнэ (харилцагчид)</div>
+              <div className="erp-big"><span className="erp-cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
+              <div className="erp-margin-badge">📈 Ашгийн маржин {formValues.profit_margin || 20}%</div>
             </div>
-            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Нэгжийн өртөг:</span>
-                <strong style={{ color: '#1e293b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Нийт өртөг:</span>
-                <strong style={{ color: '#1e293b' }}>{prices.factoryTotalCost.toLocaleString()} ₮</strong>
-              </div>
-              
-              <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600 }}>Нэгжийн үнэ (Ашигтай):</span> 
-                </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                  <input
-                    type="number"
-                    step="any"
-                    value={displayUnitPrice}
-                    onChange={(e) => {
-                      setDisplayUnitPrice(e.target.value);
-                      const newUnitPrice = Number(e.target.value) || 0;
-                      const totalQty = Number(formValues.total_qty) || 1;
-                      const newFinalPrice = newUnitPrice * totalQty;
-                      const hasVat = formValues.has_vat || false;
-                      const newNetPrice = hasVat ? newFinalPrice / 1.1 : newFinalPrice;
-                      const factoryCost = prices.factoryTotalCost || 1;
-                      let newMargin = ((newNetPrice - factoryCost) / factoryCost) * 100;
-                      setValue('profit_margin', Number(newMargin.toFixed(2)));
-                    }}
-                    style={{width: '100%', padding: '0.4rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', textAlign: 'right'}}
-                  />
-                  <strong>₮</strong>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-                  <label title="[F3]" style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Ашгийн хувь (%):</label>
-                  <input type="number" step="any" {...register("profit_margin")} style={{width: '60px', padding: '0.2rem', textAlign: 'right'}} />
-                </div>
+
+            <div className="erp-summary-body">
+              <div className="erp-stat-grid">
+                <div className="erp-stat"><div className="erp-l">Материалын өртөг</div><div className="erp-v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
+                <div className="erp-stat"><div className="erp-l">Ажиллагааны өртөг</div><div className="erp-v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
+                <div className="erp-stat"><div className="erp-l">Нийт өртөг</div><div className="erp-v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
+                <div className="erp-stat erp-profit"><div className="erp-l">Цэвэр ашиг</div><div className="erp-v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderTop: '2px dashed #cbd5e1', borderBottom: '2px solid #e2e8f0' }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>НИЙТ ҮНЭ:</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#059669' }}>{prices.finalPrice.toLocaleString()} ₮</span>
+              <div className="erp-row-line"><span className="erp-l">Нэгжийн өртөг</span><span className="erp-v">{prices.unitCost.toLocaleString()} ₮</span></div>
+              <div className="erp-field-inline">
+                <label>Ашгийн хувь (%)</label>
+                <div className="erp-mini-input"><input type="number" step="any" {...register("profit_margin")} /></div>
+              </div>
+              <div className="erp-field-inline">
+                <label>Нэгжийн үнэ (ашигтай)</label>
+                <div className="erp-mini-input"><input type="text" value={`${prices.unitPrice.toLocaleString()} ₮`} readOnly /></div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input type="checkbox" {...register("has_vat")} style={{ width: '1rem', height: '1rem' }} />
-                  <label style={{ margin: 0, fontSize: '0.9rem' }}>НӨАТ бодох (10%)</label>
-                </div>
-                
-                <div>
-                  <label style={{ fontSize: '0.85rem' }}>Төлбөр 1 (Урьдчилгаа)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <select {...register("payment_method_1")} style={{ flex: 1, padding: '0.3rem', fontSize: '0.85rem' }}>
-                      <option value="">Сонгох...</option>
-                      {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
-                        <option key={c.id} value={c.value}>{c.value}</option>
-                      ))}
-                    </select>
-                    <input type="number" step="any" placeholder="%" {...register("payment_percent_1", {
-                      onChange: (e) => setValue('payment_percent_2', 100 - (Number(e.target.value) || 0))
-                    })} style={{ width: '60px', padding: '0.3rem', fontSize: '0.85rem' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.85rem' }}>Төлбөр 2 (Үлдэгдэл)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <select {...register("payment_method_2")} style={{ flex: 1, padding: '0.3rem', fontSize: '0.85rem' }}>
-                      <option value="">Сонгох...</option>
-                      {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
-                        <option key={c.id} value={c.value}>{c.value}</option>
-                      ))}
-                    </select>
-                    <input type="number" step="any" placeholder="%" {...register("payment_percent_2")} style={{ width: '60px', padding: '0.3rem', fontSize: '0.85rem' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.85rem' }}>Санхүүгийн тайлбар</label>
-                  <input {...register("finance_notes")} style={{ width: '100%', padding: '0.3rem', fontSize: '0.85rem' }} />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Багцалсан статус болон товчнууд */}
-          <div className="summary-card" style={{ padding: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.85rem' }}>Төлөв</label>
-                <input {...register("status")} readOnly style={{ padding: '0.4rem', fontSize: '0.85rem', background: '#f1f5f9' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '0.85rem' }}>Дараагийн процесс</label>
-                <select {...register("next_process")} style={{ padding: '0.4rem', fontSize: '0.85rem' }}>
-                  <option value="">Сонгох...</option>
-                  {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
-                    <option key={c.id} value={c.value}>{c.value}</option>
-                  ))}
+              <div className="erp-summary-sub">Төлбөрийн хэлбэр & хувь</div>
+              <div className="erp-pay-row">
+                <select {...register("payment_method_1")} style={{flex: 1}}>
+                  <option value="Урьдчилгаа">Урьдчилгаа</option>
+                  <option value="Бэлэн">Бэлэн</option>
+                  <option value="Дансаар">Дансаар</option>
                 </select>
+                <div style={{width:'64px'}}><input type="number" step="any" className="erp-pct erp-mono" {...register("payment_percent_1")} style={{width: '100%', padding: '7px 9px'}} /></div>
               </div>
+              <div className="erp-pay-bar"><div className="erp-a" style={{width: `${formValues.payment_percent_1 || 0}%`}}></div><div className="erp-b" style={{width: `${100 - (formValues.payment_percent_1 || 0)}%`}}></div></div>
+
+              <div className="erp-field" style={{marginBottom:'10px'}}>
+                <label>Санхүүгийн тайлбар, тэмдэглэл</label>
+                <textarea {...register("finance_notes")} style={{minHeight:'44px'}}></textarea>
+              </div>
+
+              <div className="erp-grid erp-grid-2 erp-status-select">
+                <div className="erp-field">
+                  <label>Төлөв</label>
+                  <select {...register("status")}>
+                    {groupedConstants['ORDER_STATUS']?.map((c: any) => (
+                      <option key={c.id} value={c.value}>{c.value}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="erp-field">
+                  <label>Дараагийн процесс</label>
+                  <select {...register("next_process")}>
+                    <option value="">Сонгох...</option>
+                    {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
+                      <option key={c.id} value={c.value}>{c.value}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
+              <div style={{ marginTop: '12px', fontSize: '11.5px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '9px', padding: '10px' }}>
+                <div style={{ fontWeight: 600, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Задаргаа</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ color: 'var(--muted)' }}>Захиалгын тоо:</span>
+                  <span style={{ fontWeight: 600 }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
+                </div>
+                {formValues.design_cost ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: 'var(--muted)' }}>Эх бэлтгэл:</span>
+                    <span style={{ fontWeight: 600 }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+                  </div>
+                ) : null}
+              </div>
+
             </div>
 
-            {isCalculatorMode ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <button 
-                  type="submit" 
-                  onClick={() => setSubmitType('Шинэ захиалга')}
-                  className="btn btn-primary" 
-                  style={{ padding: '0.75rem', fontSize: '1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
-                  📦 Захиалга үүсгэх
-                </button>
-                <button 
-                  type="submit" 
-                  onClick={() => setSubmitType('Үнийн санал')}
-                  className="btn btn-outline" 
-                  style={{ padding: '0.75rem', fontSize: '1rem', width: '100%' }}>
-                  📄 Үнийн санал хадгалах
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem', fontSize: '1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
-                  {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
-                </button>
-                {isEdit && initialData?.current_status === 'Үнийн санал' && (
-                  <button 
-                    type="submit" 
-                    onClick={() => setSubmitType('Шинэ захиалга')}
-                    className="btn btn-outline" 
-                    style={{ padding: '0.75rem', fontSize: '1rem', width: '100%' }}>
-                    📦 Захиалга болгож батлах
+            <div className="erp-summary-actions">
+              {isCalculatorMode ? (
+                <>
+                  <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-primary erp-btn-block">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> Захиалга үүсгэх
                   </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
-          <div className="summary-card" style={{ fontSize: '0.75rem' }}>
-            <div style={{ padding: '0.5rem 0.75rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 600, color: '#475569' }}>
-              📊 Захиалгын хураангуй (Задаргаа)
-            </div>
-            <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Захиалгын тоо:</span>
-                <span style={{ fontWeight: 600 }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
-              </div>
-              
-              {formValues.design_cost ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Эх бэлтгэл:</span>
-                  <span style={{ fontWeight: 600 }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
-                </div>
-              ) : null}
-
-              {prices.totalMaterialCost > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Материал & Хэвлэл:</span>
-                  <span style={{ fontWeight: 600 }}>{prices.totalMaterialCost.toLocaleString()} ₮</span>
-                </div>
-              )}
-              
-              {prices.totalOperationCost > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Ажиллагаа:</span>
-                  <span style={{ fontWeight: 600 }}>{prices.totalOperationCost.toLocaleString()} ₮</span>
-                </div>
-              )}
-
-              {prices.totalOutsourcedCost > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Гадуур ажил:</span>
-                  <span style={{ fontWeight: 600 }}>{prices.totalOutsourcedCost.toLocaleString()} ₮</span>
-                </div>
+                  <button type="submit" onClick={() => setSubmitType('Үнийн санал')} className="erp-btn erp-btn-ghost erp-btn-block">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Үнийн санал хадгалах
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="submit" className="erp-btn erp-btn-primary erp-btn-block">
+                    {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
+                  </button>
+                  {isEdit && initialData?.current_status === 'Үнийн санал' && (
+                    <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block">
+                      📦 Захиалга болгож батлах
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
-
-        </div> {/* End of form-sidebar */}
-      </div> {/* End of form-layout-container */}
+        </div>
+      </div>
       </form>
+    </div>
     </div>
   );
 }

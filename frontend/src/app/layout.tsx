@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "./erp-design.css";
 import GlobalFetchInterceptor from "../components/GlobalFetchInterceptor";
 
 const inter = Inter({
