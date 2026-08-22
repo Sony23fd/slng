@@ -107,7 +107,7 @@
   /* ---------- layout: form + summary rail ---------- */
   .erp-layout{display:flex;gap:24px;align-items:flex-start;padding:16px 24px 60px;max-width:100%;}
   .form-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:18px;}
-  .rail{width:320px;flex:none;position:sticky;top:126px;}
+  .rail{width:320px;flex:none;position:sticky;top:100px;}
 
   /* ---------- Quick templates ---------- */
   .templates{

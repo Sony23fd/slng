@@ -34,7 +34,7 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-color)' }}>
       {/* Sidebar */}
       <aside style={{
         width: collapsed ? '65px' : '210px',
