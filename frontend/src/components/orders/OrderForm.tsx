@@ -797,9 +797,33 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               Доорх алхмуудыг дараалан бөглөнө үү — баруун талд нийт үнэ, ашиг шууд шинэчлэгдэж харагдана.
             </p>
           </div>
-          <div className="erp-progress-pill">
-            <div className="erp-ring" style={{'--pct': 30} as React.CSSProperties}><i style={{width:'23px', height:'23px', borderRadius:'50%', background:'#fff', display:'block'}}></i></div>
-            <span><b>Тооцоолол</b></span>
+          <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
+            {isEdit && orderId && (
+              <div style={{display:'flex', gap:'8px'}}>
+                <button type="button" className="erp-btn erp-btn-ghost" style={{borderColor:'#10b981', color:'#10b981', background:'#ecfdf5', padding:'8px 12px', fontSize:'13px'}} onClick={async () => {
+                  const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
+                  if (!name) return;
+                  try {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${orderId}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                      body: JSON.stringify({ template_name: name })
+                    });
+                    if (res.ok) alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
+                    else alert("Алдаа гарлаа");
+                  } catch(e) { console.error(e); }
+                }}>
+                  💾 Загвар болгож хадгалах
+                </button>
+                <button type="button" className="erp-btn erp-btn-ghost" style={{borderColor:'var(--primary-color)', color:'var(--primary-color)', padding:'8px 12px', fontSize:'13px'}} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
+                  📄 Үнийн санал (PDF)
+                </button>
+              </div>
+            )}
+            <div className="erp-progress-pill">
+              <div className="erp-ring" style={{'--pct': 30} as React.CSSProperties}><i style={{width:'23px', height:'23px', borderRadius:'50%', background:'#fff', display:'block'}}></i></div>
+              <span><b>Тооцоолол</b></span>
+            </div>
           </div>
         </div>
         <div className="jumpnav" id="jumpnav">
