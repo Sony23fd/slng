@@ -784,58 +784,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
     <div className="erp-shell">
 
     <div className="erp-main">
-      <div className="erp-topbar">
-        <div className="erp-topbar-row">
-          <div>
-            <h1 style={{margin:0, fontSize:'22px', fontWeight:700, display:'flex', alignItems:'center', gap:'10px'}}>
-              <span className="erp-ic" style={{width:'30px', height:'30px', borderRadius:'8px', background:'var(--teal-tint)', color:'var(--teal-dark)', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:'20px', height:'20px'}}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
-              </span> 
-              {!initialData ? 'Шинэ захиалга / Үнэ бодох' : 'Захиалга засах'}
-            </h1>
-            <p style={{margin:'5px 0 0', color:'var(--muted)', fontSize:'13.6px', maxWidth:'560px'}}>
-              Доорх алхмуудыг дараалан бөглөнө үү — баруун талд нийт үнэ, ашиг шууд шинэчлэгдэж харагдана.
-            </p>
-          </div>
-          <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
-            {isEdit && orderId && (
-              <div style={{display:'flex', gap:'8px'}}>
-                <button type="button" className="erp-btn erp-btn-ghost" style={{borderColor:'#10b981', color:'#10b981', background:'#ecfdf5', padding:'8px 12px', fontSize:'13px'}} onClick={async () => {
-                  const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
-                  if (!name) return;
-                  try {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${orderId}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                      body: JSON.stringify({ template_name: name })
-                    });
-                    if (res.ok) alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
-                    else alert("Алдаа гарлаа");
-                  } catch(e) { console.error(e); }
-                }}>
-                  💾 Загвар болгож хадгалах
-                </button>
-                <button type="button" className="erp-btn erp-btn-ghost" style={{borderColor:'var(--primary-color)', color:'var(--primary-color)', padding:'8px 12px', fontSize:'13px'}} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
-                  📄 Үнийн санал (PDF)
-                </button>
-              </div>
-            )}
-            <div className="erp-progress-pill">
-              <div className="erp-ring" style={{'--pct': 30} as React.CSSProperties}><i style={{width:'23px', height:'23px', borderRadius:'50%', background:'#fff', display:'block'}}></i></div>
-              <span><b>Тооцоолол</b></span>
-            </div>
-          </div>
-        </div>
-        <div className="jumpnav" id="jumpnav">
-          <a href="#sec1" className="on">1. Захиалагч</a>
-          <a href="#sec2">2. Захиалга</a>
-          <a href="#sec3">3-5. Тех. мэдээлэл</a>
-          <a href="#sec*">6. Материал</a>
-          <a href="#sec*">7. Ажиллагаа</a>
-          <a href="#sec*">8. Гадуур ажил</a>
-          <a href="#rail-summary">Санхүү / Нийт үнэ</a>
-        </div>
-      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
         if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
           e.preventDefault();
@@ -2053,6 +2002,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                     <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block">
                       📦 Захиалга болгож батлах
                     </button>
+                  )}
+                  {isEdit && orderId && (
+                    <>
+                      <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981'}} onClick={async () => {
+                        const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
+                        if (!name) return;
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${orderId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ template_name: name })
+                          });
+                          if (res.ok) alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
+                          else alert("Алдаа гарлаа");
+                        } catch(e) { console.error(e); }
+                      }}>
+                        💾 Загвар болгож хадгалах
+                      </button>
+                      <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'var(--primary-color)', borderColor:'var(--primary-color)'}} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
+                        📄 Үнийн санал (PDF)
+                      </button>
+                    </>
                   )}
                 </>
               )}
