@@ -1879,16 +1879,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
         </section>
 
-        {/* 9. Санхүүгийн нэгтгэл */}
-        <section className="summary-box" style={{ marginBottom: '2rem' }}>
-          <h3 className="section-title" style={{ color: '#2a4365', borderColor: '#90cdf4' }}>9. Санхүүгийн нэгтгэл</h3>
-          
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <div className="summary-row"><span>Нэгжийн өртөг:</span> <strong>{Math.round(prices.unitCost).toLocaleString()} ₮</strong></div>
-              <div className="summary-row"><span>Нийт өртөг:</span> <strong>{prices.factoryTotalCost.toLocaleString()} ₮</strong></div>
-              <div className="summary-row" style={{ marginTop: '1rem', color: 'var(--primary-hover)', alignItems: 'center' }}>
-                <span>Нэгжийн үнэ (Ашигтай):</span> 
+        </div> {/* End of form-main-col */}
+
+        <div className="form-sidebar">
+          {/* Санхүүгийн нэгтгэл (Sidebar-д) */}
+          <div className="summary-card">
+            <div style={{ padding: '1rem', background: '#2a4365', color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>
+              💰 Санхүүгийн нэгтгэл
+            </div>
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Нэгжийн өртөг:</span>
+                <strong style={{ color: '#1e293b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Нийт өртөг:</span>
+                <strong style={{ color: '#1e293b' }}>{prices.factoryTotalCost.toLocaleString()} ₮</strong>
+              </div>
+              
+              <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600 }}>Нэгжийн үнэ (Ашигтай):</span> 
+                </div>
                 <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                   <input
                     type="number"
@@ -1905,191 +1917,158 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                       let newMargin = ((newNetPrice - factoryCost) / factoryCost) * 100;
                       setValue('profit_margin', Number(newMargin.toFixed(2)));
                     }}
-                    style={{width: '120px', padding: '0.4rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', textAlign: 'right'}}
+                    style={{width: '100%', padding: '0.4rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', textAlign: 'right'}}
                   />
                   <strong>₮</strong>
                 </div>
-              </div>
-              <div className="summary-row summary-total">
-                <span>Нийт үнэ:</span> <span>{prices.finalPrice.toLocaleString()} ₮</span>
-              </div>
-
-              <div className="form-group mt-4">
-                <label title="[F3]">Ашгийн хувь (%)</label>
-                <input type="number" step="any" {...register("profit_margin")} style={{background: 'white'}} />
-              </div>
-              <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-                <input type="checkbox" {...register("has_vat")} style={{ width: '1.2rem', height: '1.2rem' }} />
-                <label style={{ margin: 0 }}>НӨАТ бодох эсэх (10%)</label>
-              </div>
-            </div>
-
-            <div style={{background: 'rgba(255,255,255,0.5)', padding: '1.5rem', borderRadius: '0.5rem'}}>
-              <h4 style={{fontWeight: 600, marginBottom: '1rem'}}>Төлбөрийн мэдээлэл & Төлөв</h4>
-              
-              <div className="flex" style={{gap: '1rem', marginBottom: '1rem'}}>
-                <div className="form-group" style={{flex: 1}}>
-                  <label>Төлбөрийн хэлбэр 1 (Урьдчилгаа)</label>
-                  <select {...register("payment_method_1")} style={{background: 'white'}}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
-                      <option key={c.id} value={c.value}>{c.value}</option>
-                    )) || (
-                      <><option value="Бэлэн">Бэлэн</option><option value="Данс">Данс</option><option value="Карт">Карт</option></>
-                    )}
-                  </select>
-                </div>
-                <div className="form-group" style={{width: '80px'}}>
-                  <label>Хувь (%)</label>
-                  <input type="number" step="any" {...register("payment_percent_1", {
-                    onChange: (e) => {
-                      const val = Number(e.target.value) || 0;
-                      setValue('payment_percent_2', 100 - val);
-                    }
-                  })} style={{background: 'white'}} />
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+                  <label title="[F3]" style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Ашгийн хувь (%):</label>
+                  <input type="number" step="any" {...register("profit_margin")} style={{width: '60px', padding: '0.2rem', textAlign: 'right'}} />
                 </div>
               </div>
 
-              <div className="flex" style={{gap: '1rem', marginBottom: '1rem'}}>
-                <div className="form-group" style={{flex: 1}}>
-                  <label>Төлбөрийн хэлбэр 2 (Үлдэгдэл)</label>
-                  <select {...register("payment_method_2")} style={{background: 'white'}}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
-                      <option key={c.id} value={c.value}>{c.value}</option>
-                    )) || (
-                      <><option value="Бэлэн">Бэлэн</option><option value="Данс">Данс</option><option value="Карт">Карт</option></>
-                    )}
-                  </select>
-                </div>
-                <div className="form-group" style={{width: '80px'}}>
-                  <label>Хувь (%)</label>
-                  <input type="number" step="any" {...register("payment_percent_2")} style={{background: 'white'}} />
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderTop: '2px dashed #cbd5e1', borderBottom: '2px solid #e2e8f0' }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>НИЙТ ҮНЭ:</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#059669' }}>{prices.finalPrice.toLocaleString()} ₮</span>
               </div>
 
-              <div className="form-group" style={{marginBottom: '1rem'}}>
-                <label>Санхүүгийн тайлбар, тэмдэглэл</label>
-                <input {...register("finance_notes")} style={{background: 'white'}} />
-              </div>
-
-              <div className="flex" style={{gap: '1rem'}}>
-                <div className="form-group" style={{flex: 1}}>
-                  <label>Төлөв</label>
-                  <input {...register("status")} readOnly style={{background: '#f1f5f9'}} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" {...register("has_vat")} style={{ width: '1rem', height: '1rem' }} />
+                  <label style={{ margin: 0, fontSize: '0.9rem' }}>НӨАТ бодох (10%)</label>
                 </div>
-                <div className="form-group" style={{flex: 1}}>
-                  <label>Дараагийн процесс</label>
-                  <select {...register("next_process")} style={{background: 'white'}}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
-                      <option key={c.id} value={c.value}>{c.value}</option>
-                    )) || (
-                      <><option value="Эх бэлтгэл">Эх бэлтгэл</option><option value="Түүхий эд бэлтгэх">Түүхий эд бэлтгэх</option></>
-                    )}
-                  </select>
+                
+                <div>
+                  <label style={{ fontSize: '0.85rem' }}>Төлбөр 1 (Урьдчилгаа)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select {...register("payment_method_1")} style={{ flex: 1, padding: '0.3rem', fontSize: '0.85rem' }}>
+                      <option value="">Сонгох...</option>
+                      {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
+                        <option key={c.id} value={c.value}>{c.value}</option>
+                      ))}
+                    </select>
+                    <input type="number" step="any" placeholder="%" {...register("payment_percent_1", {
+                      onChange: (e) => setValue('payment_percent_2', 100 - (Number(e.target.value) || 0))
+                    })} style={{ width: '60px', padding: '0.3rem', fontSize: '0.85rem' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.85rem' }}>Төлбөр 2 (Үлдэгдэл)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select {...register("payment_method_2")} style={{ flex: 1, padding: '0.3rem', fontSize: '0.85rem' }}>
+                      <option value="">Сонгох...</option>
+                      {groupedConstants['PAYMENT_METHOD']?.map((c: any) => (
+                        <option key={c.id} value={c.value}>{c.value}</option>
+                      ))}
+                    </select>
+                    <input type="number" step="any" placeholder="%" {...register("payment_percent_2")} style={{ width: '60px', padding: '0.3rem', fontSize: '0.85rem' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.85rem' }}>Санхүүгийн тайлбар</label>
+                  <input {...register("finance_notes")} style={{ width: '100%', padding: '0.3rem', fontSize: '0.85rem' }} />
                 </div>
               </div>
             </div>
           </div>
-        </section>
-
-        </div> {/* End of form-main-col */}
-
-        <div className="form-sidebar">
-          <div className="summary-card">
-            <div style={{ padding: '1.25rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 600, color: '#1e293b', fontSize: '1.1rem' }}>
-              📊 Захиалгын хураангуй
+          
+          {/* Багцалсан статус болон товчнууд */}
+          <div className="summary-card" style={{ padding: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.85rem' }}>Төлөв</label>
+                <input {...register("status")} readOnly style={{ padding: '0.4rem', fontSize: '0.85rem', background: '#f1f5f9' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.85rem' }}>Дараагийн процесс</label>
+                <select {...register("next_process")} style={{ padding: '0.4rem', fontSize: '0.85rem' }}>
+                  <option value="">Сонгох...</option>
+                  {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
+                    <option key={c.id} value={c.value}>{c.value}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Захиалгын тоо</span>
-                <span style={{ fontWeight: 600, color: '#1e293b' }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нэгжийн өртөг</span>
-                <span style={{ fontWeight: 600, color: '#64748b' }}>{Math.round(prices.unitCost).toLocaleString()} ₮</span>
-              </div>
 
+            {isCalculatorMode ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <button 
+                  type="submit" 
+                  onClick={() => setSubmitType('Шинэ захиалга')}
+                  className="btn btn-primary" 
+                  style={{ padding: '0.75rem', fontSize: '1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
+                  📦 Захиалга үүсгэх
+                </button>
+                <button 
+                  type="submit" 
+                  onClick={() => setSubmitType('Үнийн санал')}
+                  className="btn btn-outline" 
+                  style={{ padding: '0.75rem', fontSize: '1rem', width: '100%' }}>
+                  📄 Үнийн санал хадгалах
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem', fontSize: '1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
+                  {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
+                </button>
+                {isEdit && initialData?.current_status === 'Үнийн санал' && (
+                  <button 
+                    type="submit" 
+                    onClick={() => setSubmitType('Шинэ захиалга')}
+                    className="btn btn-outline" 
+                    style={{ padding: '0.75rem', fontSize: '1rem', width: '100%' }}>
+                    📦 Захиалга болгож батлах
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
+          <div className="summary-card" style={{ fontSize: '0.75rem' }}>
+            <div style={{ padding: '0.5rem 0.75rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: 600, color: '#475569' }}>
+              📊 Захиалгын хураангуй (Задаргаа)
+            </div>
+            <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b' }}>Захиалгын тоо:</span>
+                <span style={{ fontWeight: 600 }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
+              </div>
+              
               {formValues.design_cost ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', color: '#8b5cf6' }}>Эх бэлтгэлийн үнэ</span>
-                  <span style={{ fontWeight: 600, color: '#8b5cf6' }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Эх бэлтгэл:</span>
+                  <span style={{ fontWeight: 600 }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
                 </div>
               ) : null}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1rem', borderBottom: '1px dashed #cbd5e1' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нэгжийн үнэ</span>
-                <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>{Math.round(Number(displayUnitPrice || prices.unitPrice || 0)).toLocaleString()} ₮</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Нийт өртөг</span>
-                <span style={{ fontWeight: 600, color: '#334155' }}>{Math.round(prices.factoryTotalCost || 0).toLocaleString()} ₮</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Цэвэр ашиг</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    backgroundColor: (Number(formValues.profit_margin) || 0) >= 20 ? '#d1fae5' : (Number(formValues.profit_margin) || 0) >= 10 ? '#fef3c7' : '#fee2e2',
-                    color: (Number(formValues.profit_margin) || 0) >= 20 ? '#065f46' : (Number(formValues.profit_margin) || 0) >= 10 ? '#92400e' : '#991b1b'
-                  }}>
-                    {Number(formValues.profit_margin || 0)}%
-                  </span>
-                  <span style={{ fontWeight: 600, color: '#10b981' }}>{Math.round((prices.finalPrice || 0) - (prices.factoryTotalCost || 0)).toLocaleString()} ₮</span>
+              {prices.totalMaterialCost > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Материал & Хэвлэл:</span>
+                  <span style={{ fontWeight: 600 }}>{prices.totalMaterialCost.toLocaleString()} ₮</span>
                 </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '2px solid #e2e8f0', marginTop: '0.5rem' }}>
-                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>НИЙТ ДҮН</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>{(prices.finalPrice || 0).toLocaleString()} ₮</span>
-              </div>
+              )}
               
-              <div style={{ marginTop: '1.5rem' }}>
-                {isCalculatorMode ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button 
-                      type="submit" 
-                      onClick={() => setSubmitType('Шинэ захиалга')}
-                      className="btn btn-primary" 
-                      style={{ padding: '0.85rem', fontSize: '1.05rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)' }}>
-                      📦 Захиалга үүсгэх
-                    </button>
-                    <button 
-                      type="submit" 
-                      onClick={() => setSubmitType('Үнийн санал')}
-                      className="btn btn-outline" 
-                      style={{ padding: '0.85rem', fontSize: '1.05rem', width: '100%' }}>
-                      📄 Үнийн санал хадгалах
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button type="submit" className="btn btn-primary" style={{ padding: '0.85rem', fontSize: '1.1rem', width: '100%', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}>
-                      {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
-                    </button>
-                    {isEdit && initialData?.current_status === 'Үнийн санал' && (
-                      <button 
-                        type="submit" 
-                        onClick={() => setSubmitType('Шинэ захиалга')}
-                        className="btn btn-outline" 
-                        style={{ padding: '0.85rem', fontSize: '1.1rem', width: '100%' }}>
-                        📦 Захиалга болгож батлах
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              {prices.totalOperationCost > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Ажиллагаа:</span>
+                  <span style={{ fontWeight: 600 }}>{prices.totalOperationCost.toLocaleString()} ₮</span>
+                </div>
+              )}
 
+              {prices.totalOutsourcedCost > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Гадуур ажил:</span>
+                  <span style={{ fontWeight: 600 }}>{prices.totalOutsourcedCost.toLocaleString()} ₮</span>
+                </div>
+              )}
             </div>
           </div>
+
         </div> {/* End of form-sidebar */}
       </div> {/* End of form-layout-container */}
       </form>
