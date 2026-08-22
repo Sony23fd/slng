@@ -1932,22 +1932,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
         </div> {/* End of form-main-col */}
 
                 <div className="rail" id="rail-summary">
-          <div className="erp-summary-card">
-            <div className="erp-summary-top">
-              <div className="erp-lbl">Нийт үнэ (харилцагчид)</div>
-              <div className="erp-big"><span className="erp-cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
-              <div className="erp-margin-badge">📈 Ашгийн маржин {formValues.profit_margin || 20}%</div>
+          <div className="summary-card">
+            <div className="summary-top">
+              <div className="lbl">Нийт үнэ (харилцагчид)</div>
+              <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
+              <div className="margin-badge">📈 Ашгийн маржин {formValues.profit_margin || 20}%</div>
             </div>
 
-            <div className="erp-summary-body">
-              <div className="erp-stat-grid">
-                <div className="erp-stat"><div className="erp-l">Материалын өртөг</div><div className="erp-v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
-                <div className="erp-stat"><div className="erp-l">Ажиллагааны өртөг</div><div className="erp-v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
-                <div className="erp-stat"><div className="erp-l">Нийт өртөг</div><div className="erp-v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
-                <div className="erp-stat erp-profit"><div className="erp-l">Цэвэр ашиг</div><div className="erp-v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
+            <div className="summary-body">
+              <div className="stat-grid">
+                <div className="stat"><div className="l">Материалын өртөг</div><div className="v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
+                <div className="stat"><div className="l">Ажиллагааны өртөг</div><div className="v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
+                <div className="stat"><div className="l">Нийт өртөг</div><div className="v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
+                <div className="stat profit"><div className="l">Цэвэр ашиг</div><div className="v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
               </div>
 
-              <div className="erp-row-line"><span className="erp-l">Нэгжийн өртөг</span><span className="erp-v">{prices.unitCost.toLocaleString()} ₮</span></div>
+              <div className="row-line"><span className="l">Нэгжийн өртөг:</span><span className="v">{prices.unitCost.toLocaleString()} ₮</span></div>
               <div className="erp-field-inline">
                 <label>Ашгийн хувь (%)</label>
                 <div className="erp-mini-input"><input type="number" step="any" {...register("profit_margin")} /></div>
@@ -1957,16 +1957,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                 <div className="erp-mini-input"><input type="text" value={`${prices.unitPrice.toLocaleString()} ₮`} readOnly /></div>
               </div>
 
-              <div className="erp-summary-sub">Төлбөрийн хэлбэр & хувь</div>
-              <div className="erp-pay-row">
+              <div className="summary-sub">Төлбөрийн хэлбэр & хувь</div>
+              <div className="pay-row">
                 <select {...register("payment_method_1")} style={{flex: 1}}>
                   <option value="Урьдчилгаа">Урьдчилгаа</option>
                   <option value="Бэлэн">Бэлэн</option>
                   <option value="Дансаар">Дансаар</option>
                 </select>
-                <div style={{width:'64px'}}><input type="number" step="any" className="erp-pct erp-mono" {...register("payment_percent_1")} style={{width: '100%', padding: '7px 9px'}} /></div>
+                <div style={{width:'64px'}}><input type="number" step="any" className="pct erp-mono" {...register("payment_percent_1")} style={{width: '100%', padding: '7px 9px'}} /></div>
               </div>
-              <div className="erp-pay-bar"><div className="erp-a" style={{width: `${formValues.payment_percent_1 || 0}%`}}></div><div className="erp-b" style={{width: `${100 - (formValues.payment_percent_1 || 0)}%`}}></div></div>
+              <div className="pay-bar"><div className="a" style={{width: `${formValues.payment_percent_1 || 0}%`}}></div><div className="b" style={{width: `${100 - (formValues.payment_percent_1 || 0)}%`}}></div></div>
 
               <div className="erp-field" style={{marginBottom:'10px'}}>
                 <label>Санхүүгийн тайлбар, тэмдэглэл</label>
@@ -2010,13 +2010,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
             </div>
 
-            <div className="erp-summary-actions">
+            <div className="summary-actions">
               {isCalculatorMode ? (
                 <>
-                  <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-primary erp-btn-block">
+                  <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> Захиалга үүсгэх
                   </button>
-                  <button type="submit" onClick={() => setSubmitType('Үнийн санал')} className="erp-btn erp-btn-ghost erp-btn-block">
+                  <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Үнийн санал хадгалах
                   </button>
                 </>
