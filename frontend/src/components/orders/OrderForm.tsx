@@ -112,7 +112,7 @@ function calculateSetups(pressSheet: number, divisions: number) {
 const SectionCard = ({ id, step, title, sub, children }: any) => {
   const [collapsed, setCollapsed] = React.useState(false);
   return (
-    <SectionCard id="sec" step="*" title="Мэдээлэл">
+    <section className={`erp-card ${collapsed ? 'collapsed' : ''}`} id={id}>
       <div className="erp-card-head" onClick={() => setCollapsed(!collapsed)}>
         <div className="erp-left">
           <div className="step-badge">{step}</div>
@@ -126,7 +126,7 @@ const SectionCard = ({ id, step, title, sub, children }: any) => {
       <div className="erp-card-body">
         {children}
       </div>
-    </SectionCard>
+    </section>
   );
 };
 

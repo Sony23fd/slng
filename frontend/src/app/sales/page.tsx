@@ -6,18 +6,28 @@ import { useAuthStore } from '../../stores/useAuthStore';
 export default function SalesDashboardPage() {
   const { user, token } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (token) {
       fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/analytics/sales`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-        .then(res => res.json())
-        .then(data => setStats(data))
-        .catch(console.error);
+        .then(res => {
+          if (!res.ok) throw new Error('Серверээс алдаатай хариу ирлээ');
+          return res.json();
+        })
+        .then(data => {
+          setStats(data);
+          setError(null);
+        })
+        .catch(err => {
+          setError('Сервертэй холбогдоход алдаа гарлаа. (Backend ажиллаж байгаа эсэхийг шалгана уу)');
+        });
     }
   }, [token]);
 
+  if (error) return <div style={{ padding: '2rem', color: '#ef4444' }}>{error}</div>;
   if (!stats) return <div style={{ padding: '2rem' }}>Уншиж байна...</div>;
 
   return (
