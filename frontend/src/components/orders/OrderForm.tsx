@@ -802,8 +802,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             <span><b>Тооцоолол</b></span>
           </div>
         </div>
-        <div className="erp-jumpnav" id="jumpnav">
-          <a href="#sec1" className="erp-on">1. Захиалагч</a>
+        <div className="jumpnav" id="jumpnav">
+          <a href="#sec1" className="on">1. Захиалагч</a>
           <a href="#sec2">2. Захиалга</a>
           <a href="#sec3">3-5. Тех. мэдээлэл</a>
           <a href="#sec*">6. Материал</a>
