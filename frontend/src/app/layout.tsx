@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import GlobalFetchInterceptor from "../components/GlobalFetchInterceptor";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="mn" className={`${inter.variable}`} suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <GlobalFetchInterceptor />
+        {children}
+      </body>
     </html>
   );
 }

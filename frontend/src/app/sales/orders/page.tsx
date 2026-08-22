@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
-  const [statusOptions, setStatusOptions] = useState<string[]>(['Хүлээгдэж буй', 'Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон']);
+  const [statusOptions, setStatusOptions] = useState<string[]>([]);
   const [filterTab, setFilterTab] = useState<'ALL' | 'QUOTE' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
@@ -163,37 +163,33 @@ export default function AllOrdersPage() {
               const calculatedProgress = Math.round(totalVal / stageKeys.length);
               
               let progress = calculatedProgress;
-              let statusText = '⚙️ Явагдаж буй';
-              let statusColor = 'var(--primary-color)';
+              let statusText = o.current_status || 'Тодорхойгүй';
+              let statusColor = '#3b82f6';
               let hideBar = false;
 
-              if (o.current_status === 'Үнийн санал') {
+              if (isQuoteOrder(o)) {
                 progress = 0;
-                statusText = '📄 Үнийн санал';
                 statusColor = '#64748b'; 
                 hideBar = true;
               } else if (o.current_status === 'Цуцлагдсан') {
                 progress = 0;
-                statusText = '❌ Цуцлагдсан';
                 statusColor = '#ef4444'; 
                 hideBar = true;
-              } else if (o.current_status === 'Хүлээгдэж буй' || o.current_status === 'Шинэ захиалга') {
+              } else if (isDeliveredOrder(o)) {
+                progress = 100;
+                statusColor = '#475569';
+                hideBar = true;
+              } else if (isReadyOrder(o)) {
+                progress = 100;
+                statusColor = '#10b981';
+                hideBar = true;
+              } else if (isPendingOrder(o)) {
                 progress = 0;
-                statusText = '⏳ Эхлээгүй';
-                statusColor = '#cbd5e1'; 
-              } else if (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон') {
-                progress = 100;
-                statusText = '✨ Бэлэн болсон';
-                statusColor = '#10b981'; 
-              } else if (o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн') {
-                progress = 100;
-                statusText = '🤝 Олгогдсон';
-                statusColor = '#475569'; 
+                statusColor = '#cbd5e1';
+                hideBar = true;
               } else {
-                if (progress === 100) {
-                  statusText = '✅ Дууссан';
-                  statusColor = '#22c55e';
-                }
+                statusColor = '#3b82f6';
+                hideBar = false;
               }
 
               return (

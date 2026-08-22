@@ -53,7 +53,7 @@ interface OrderFormValues {
   // 6. Ажиллагаа
   operations: { operation_name: string; qty: number; unit_cost: number; notes: string }[];
   
-  // 7. Гадуур ажил
+  // 8. Гадуур ажил
   outsourced: { job_name: string; contractor_name?: string; qty: number; unit_cost: number; notes: string }[];
   
   // 8. Санхүү
@@ -988,6 +988,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             </div>
             <div className="form-group"><label title="[A2]">Утас</label><input {...register("phone")} /></div>
             <div className="form-group"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
+          </div>
+        </section>
+
+        {/* 2. Захиалгын мэдээлэл */}
+        <section className="form-section">
+          <h3 className="form-section-header">2. Захиалгын мэдээлэл</h3>
+          <div className="form-grid">
             <div className="form-group"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
             <div className="form-group">
               <label>Бүтээгдэхүүний ангилал</label>
@@ -1278,7 +1285,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
         <section className="card">
-          <h3 className="section-title">2-4. Технологийн мэдээлэл</h3>
+          <h3 className="section-title">3-5. Технологийн мэдээлэл</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>[B1] Хавтасны өнгө (Гадна)</label>
@@ -1359,7 +1366,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
         {/* 5. Материал */}
         <section className="card">
-          <h3 className="section-title">5. Шаардлагатай материал</h3>
+          <h3 className="section-title">6. Шаардлагатай материал</h3>
           <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
             <table className="smart-table" style={{ minWidth: '950px' }}>
               <thead>
@@ -1723,7 +1730,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
 
         {/* 6. Ажиллагаа */}
         <section className="card">
-          <h3 className="section-title">6. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)</h3>
+          <h3 className="section-title">7. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)</h3>
           
           <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
             <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Боломжит ажиллагаанууд:</h4>
@@ -1812,9 +1819,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           )}
         </section>
 
-        {/* 7. Гадуур ажил */}
+        {/* 8. Гадуур ажил */}
         <section className="card">
-          <h3 className="section-title">7. Гадуур ажил</h3>
+          <h3 className="section-title">8. Гадуур ажил</h3>
           {outFields.map((field, index) => {
             const out = formValues.outsourced?.[index];
             const tCost = (out?.qty || 0) * (out?.unit_cost || 0);
@@ -1872,9 +1879,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
         </section>
 
-        {/* 8. Санхүүгийн нэгтгэл */}
+        {/* 9. Санхүүгийн нэгтгэл */}
         <section className="summary-box" style={{ marginBottom: '2rem' }}>
-          <h3 className="section-title" style={{ color: '#2a4365', borderColor: '#90cdf4' }}>8. Санхүүгийн нэгтгэл</h3>
+          <h3 className="section-title" style={{ color: '#2a4365', borderColor: '#90cdf4' }}>9. Санхүүгийн нэгтгэл</h3>
           
           <div className="grid grid-cols-2 gap-8">
             <div>
