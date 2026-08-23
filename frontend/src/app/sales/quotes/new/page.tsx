@@ -3,8 +3,8 @@
 import React from 'react';
 import OrderForm from '../../../../components/orders/OrderForm';
 
-export default function NewOrderPage() {
+export default function NewQuotePage() {
   return (
-    <OrderForm />
+    <OrderForm isQuoteMode={true} />
   );
 }

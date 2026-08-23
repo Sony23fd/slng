@@ -130,7 +130,7 @@ const SectionCard = ({ id, step, title, sub, children }: any) => {
   );
 };
 
-export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isCalculatorMode?: boolean }) {
+export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isQuoteMode?: boolean }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
   const [constants, setConstants] = useState<any[]>([]);
@@ -984,7 +984,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
           
           <div className="erp-grid erp-grid-3">
             <div className="erp-field">
-              <label>Захиалагчийн нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
+              <label>Захиалагчийн нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
               <Controller
                 name="customer_name"
                 control={control}
@@ -1018,7 +1018,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
         <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
           
           <div className="erp-grid erp-grid-3">
-            <div className="erp-field"><label>Бүтээгдэхүүний нэр {isCalculatorMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
+            <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
             <div className="erp-field">
               <label>Бүтээгдэхүүний ангилал</label>
               <Controller
@@ -1996,26 +1996,31 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
             </div>
 
             <div className="summary-actions">
-              {isCalculatorMode ? (
+              {!isEdit ? (
                 <>
-                  <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> Захиалга үүсгэх
-                  </button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Үнийн санал хадгалах
-                  </button>
+                  {isQuoteMode ? (
+                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Үнийн санал хадгалах (Draft)
+                    </button>
+                  ) : (
+                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> Захиалга үүсгэх
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
                   <button type="submit" className="erp-btn erp-btn-primary erp-btn-block">
-                    {submitType === 'Үнийн санал' ? '💾 Үнийн санал шинэчлэх' : (isEdit ? '💾 Захиалга шинэчлэх' : '💾 Захиалга бүртгэх')}
+                    {isQuoteMode ? '💾 Үнийн санал шинэчлэх' : '💾 Захиалга шинэчлэх'}
                   </button>
-                  {isEdit && initialData?.current_status === 'Үнийн санал' && (
-                    <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block">
+                  
+                  {isQuoteMode && (
+                    <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981', marginTop: '10px'}}>
                       📦 Захиалга болгож батлах
                     </button>
                   )}
-                  {isEdit && orderId && (
+
+                  {!isQuoteMode && orderId && (
                     <>
                       <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981'}} onClick={async () => {
                         const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
@@ -2033,7 +2038,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
                         💾 Загвар болгож хадгалах
                       </button>
                       <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'var(--primary-color)', borderColor:'var(--primary-color)'}} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
-                        📄 Үнийн санал (PDF)
+                        📄 Үнийн санал (PDF) хэвлэх
                       </button>
                     </>
                   )}

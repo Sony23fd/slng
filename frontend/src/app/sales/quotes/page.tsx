@@ -4,11 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 
-export default function AllOrdersPage() {
+export default function AllQuotesPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [statusOptions, setStatusOptions] = useState<string[]>([]);
-  const [filterTab, setFilterTab] = useState<'ALL' | 'QUOTE' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const router = useRouter();
@@ -45,20 +44,12 @@ export default function AllOrdersPage() {
     return Math.round(totalVal / stageKeys.length);
   };
 
-  const isDeliveredOrder = (o: any) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
-  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOrderProgress(o) >= 100);
   const isQuoteOrder = (o: any) => o.current_status === 'Үнийн санал';
-  const isPendingOrder = (o: any) => o.current_status === 'Хүлээгдэж буй';
-  const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o) && !isQuoteOrder(o);
 
   const filteredOrders = orders.filter(o => {
     if (showOnlyMine && o.sales_person_id !== user?.id) return false;
-    if (isQuoteOrder(o)) return false; // Hide quotes from orders list
     
-    if (filterTab === 'PENDING' && !isPendingOrder(o)) return false;
-    if (filterTab === 'IN_PRODUCTION' && !isInProductionOrder(o)) return false;
-    if (filterTab === 'READY' && !isReadyOrder(o)) return false;
-    if (filterTab === 'DELIVERED' && !isDeliveredOrder(o)) return false;
+    if (!isQuoteOrder(o)) return false;
 
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
@@ -75,15 +66,12 @@ export default function AllOrdersPage() {
     <div>
       <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="title">Бүх захиалгууд</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Компанийн бүх захиалгын жагсаалт</p>
+          <h1 className="title">Үнийн саналууд</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Хадгалсан үнийн саналуудын жагсаалт</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => router.push('/sales/orders/board')} className="btn btn-outline">
-            📋 Самбараар харах
-          </button>
-          <button onClick={() => router.push('/sales/orders/new')} className="btn btn-primary">
-            + Шинэ захиалга
+          <button onClick={() => router.push('/sales/quotes/new')} className="btn btn-primary">
+            + Шинэ үнийн санал
           </button>
         </div>
       </header>
@@ -91,35 +79,7 @@ export default function AllOrdersPage() {
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {[
-              { key: 'ALL', label: 'Бүгд', count: orders.filter(o => !isQuoteOrder(o)).length, color: '#64748b' },
-              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(isPendingOrder).length, color: '#f59e0b' },
-              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(isInProductionOrder).length, color: '#3b82f6' },
-              { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(isReadyOrder).length, color: '#10b981' },
-              { key: 'DELIVERED', label: '🤝 Олгосон', count: orders.filter(isDeliveredOrder).length, color: '#475569' }
-            ].map((t: any) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setFilterTab(t.key)}
-                style={{
-                  padding: '0.4rem 0.8rem',
-                  borderRadius: '0.375rem',
-                  border: '1px solid #cbd5e1',
-                  background: filterTab === t.key ? t.color : '#f8fafc',
-                  color: filterTab === t.key ? '#fff' : '#334155',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {t.label} <span style={{ background: filterTab === t.key ? 'rgba(255,255,255,0.25)' : '#e2e8f0', padding: '0.05rem 0.4rem', borderRadius: '10px', fontSize: '0.75rem' }}>{t.count}</span>
-              </button>
-            ))}
+            {/* Төлвийн табуудыг хассан */}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginRight: '0.5rem' }}>
@@ -247,11 +207,11 @@ export default function AllOrdersPage() {
                   </select>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                    Засах
+                  <button onClick={() => router.push(`/sales/quotes/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                    ✎ Үзэх
                   </button>
-                  <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                    Хуулах
+                  <button onClick={() => router.push(`/sales/quotes/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                    📋 Хувилах
                   </button>
                   <button onClick={() => router.push(`/sales/orders/${o.id}/quote`)} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
                     Үнийн санал
