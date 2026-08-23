@@ -35,8 +35,15 @@ export const createOrder = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     let order_number = null;
-    if (data.current_status !== 'Үнийн санал') {
+    let current_status = data.current_status || undefined;
+    if (current_status && current_status !== 'Үнийн санал') {
       order_number = await generateOrderNumber();
+      if (data.design_status === 'Эх бэлэн' && (current_status === 'Хүлээгдэж буй' || !current_status)) {
+        const firstActive = await prisma.order_status.findFirst({ where: { type: 'ACTIVE' }, orderBy: { sequence: 'asc' } });
+        if (firstActive) {
+          current_status = firstActive.name;
+        }
+      }
     }
 
     const order = await prisma.order.create({
@@ -66,7 +73,7 @@ export const createOrder = async (req: Request, res: Response) => {
         payment_method_2: data.payment_method_2 || null,
         payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
         finance_notes: data.finance_notes || null,
-        current_status: data.current_status || undefined,
+        current_status: current_status,
         
         specifications: {
           create: {
@@ -318,8 +325,19 @@ export const updateOrder = async (req: Request, res: Response) => {
     if (!existingOrder) return res.status(404).json({ error: 'Order not found' });
 
     let order_number = existingOrder.order_number;
-    if (data.current_status && data.current_status !== 'Үнийн санал' && !order_number) {
-      order_number = await generateOrderNumber();
+    let current_status = data.current_status || undefined;
+    if (current_status && current_status !== 'Үнийн санал') {
+      if (!order_number) {
+        order_number = await generateOrderNumber();
+      }
+      
+      const isPendingStatus = current_status === 'Хүлээгдэж буй' || existingOrder.current_status === 'Үнийн санал' || existingOrder.current_status === 'Хүлээгдэж буй';
+      if (data.design_status === 'Эх бэлэн' && isPendingStatus) {
+        const firstActive = await prisma.order_status.findFirst({ where: { type: 'ACTIVE' }, orderBy: { sequence: 'asc' } });
+        if (firstActive) {
+          current_status = firstActive.name;
+        }
+      }
     }
 
     // We need to delete old relations and recreate them for simplicity
@@ -333,7 +351,7 @@ export const updateOrder = async (req: Request, res: Response) => {
         where: { id: orderId },
         data: {
           order_number,
-          current_status: data.current_status || undefined,
+          current_status: current_status,
           customer_name: data.customer_name || '',
           phone: data.phone || null,
           deadline: data.deadline ? new Date(data.deadline) : null,

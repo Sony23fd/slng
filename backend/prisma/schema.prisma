@@ -189,6 +189,7 @@ model producttemplate {
 model user {
   id             Int              @id @default(autoincrement())
   name           String
+  full_name      String?
   role           user_role        @default(SALES)
   password       String
   createdAt      DateTime         @default(now())
@@ -240,4 +241,14 @@ model calculation_formula {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   masterprices masterprice[]
+}
+
+model order_status {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  color      String   @default("#cbd5e1")
+  sequence   Int      @default(0)
+  type       String   @default("ACTIVE") // QUOTE, PENDING, ACTIVE, READY, DELIVERED, CANCELLED
+  is_system  Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
