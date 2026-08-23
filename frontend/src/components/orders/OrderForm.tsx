@@ -324,6 +324,38 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         } catch(e) {
           console.error("Failed to parse default operations", e);
         }
+
+        try {
+          const defMats = catConfig.default_materials ? (Array.isArray(catConfig.default_materials) 
+            ? catConfig.default_materials 
+            : JSON.parse(catConfig.default_materials)) : [];
+          
+          const currentMats = getValues('materials') || [];
+          let newMats = currentMats.filter((m: any) => m.notes !== 'Үндсэн материал');
+
+          if (Array.isArray(defMats) && defMats.length > 0) {
+            defMats.forEach((matName: string) => {
+              const mp = masterPrices.find(m => m.category === 'Материал' && m.item_name === matName);
+              newMats.push({
+                material_name: matName,
+                is_cover: false, 
+                print_size: '',
+                size: '',
+                press_sheet: '',
+                base_qty: 0,
+                extra_qty: 0,
+                divide_by: 1,
+                sheet_qty: 0,
+                unit_cost: mp ? mp.unit_cost : 0,
+                total_qty: 0,
+                notes: 'Үндсэн материал'
+              });
+            });
+          }
+          setValue('materials', newMats);
+        } catch(e) {
+          console.error("Failed to parse default materials", e);
+        }
       }
     }
   }, [formValues.category, prevCategory, productCategories, masterPrices, getValues, setValue]);

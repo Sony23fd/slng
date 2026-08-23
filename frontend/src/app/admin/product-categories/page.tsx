@@ -15,6 +15,7 @@ interface ProductCategory {
   has_bookmark: boolean;
   waste_qty: number;
   default_operations?: any;
+  default_materials?: any;
 }
 
 export default function ProductCategoriesPage() {
@@ -23,6 +24,7 @@ export default function ProductCategoriesPage() {
 
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [operations, setOperations] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
@@ -35,7 +37,8 @@ export default function ProductCategoriesPage() {
     has_pages: true,
     has_bookmark: false,
     waste_qty: 100,
-    default_operations: [] as string[]
+    default_operations: [] as string[],
+    default_materials: [] as string[]
   });
 
   useEffect(() => {
@@ -44,6 +47,7 @@ export default function ProductCategoriesPage() {
     } else if (token) {
       fetchCategories();
       fetchOperations();
+      fetchMaterials();
     }
   }, [user, router, token]);
 
@@ -53,6 +57,17 @@ export default function ProductCategoriesPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setOperations(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchMaterials = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices?category=Материал`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) setMaterials(await res.json());
     } catch (e) {
       console.error(e);
     }
@@ -84,7 +99,7 @@ export default function ProductCategoriesPage() {
       if (res.ok) {
         setShowAdd(false);
         setEditingId(null);
-        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [] });
+        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [], default_materials: [] });
         fetchCategories();
       } else {
         alert("Алдаа гарлаа. Нэр давхардсан байж болзошгүй.");
@@ -106,7 +121,8 @@ export default function ProductCategoriesPage() {
       has_pages: c.has_pages,
       has_bookmark: c.has_bookmark,
       waste_qty: c.waste_qty,
-      default_operations: c.default_operations ? (Array.isArray(c.default_operations) ? c.default_operations : JSON.parse(c.default_operations)) : []
+      default_operations: c.default_operations ? (Array.isArray(c.default_operations) ? c.default_operations : JSON.parse(c.default_operations)) : [],
+      default_materials: c.default_materials ? (Array.isArray(c.default_materials) ? c.default_materials : JSON.parse(c.default_materials)) : []
     });
     setShowAdd(true);
   };
@@ -131,7 +147,7 @@ export default function ProductCategoriesPage() {
         <button className="btn btn-primary" onClick={() => {
           setShowAdd(!showAdd);
           setEditingId(null);
-          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [] });
+          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [], default_materials: [] });
         }}>
           {showAdd ? 'Буцах' : '+ Төрөл нэмэх'}
         </button>
@@ -232,6 +248,57 @@ export default function ProductCategoriesPage() {
                 </button>
               </div>
               <small style={{ color: '#64748b', display: 'block', marginTop: '0.5rem' }}>Энэ ангиллыг сонгох үед дээрх ажиллагаанууд яг энэ дарааллаар автоматаар нэмэгдэх болно.</small>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="label">Үндсэн материалууд (Дарааллаар нь оруулах)</label>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                {formData.default_materials.map((matName: string, i: number) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#fff', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}>
+                    <div style={{ fontWeight: 600, width: '30px', color: '#94a3b8' }}>{i + 1}.</div>
+                    <div style={{ flex: 1 }}>{matName}</div>
+                    <button type="button" onClick={() => {
+                      if (i === 0) return;
+                      const newMats = [...formData.default_materials];
+                      [newMats[i-1], newMats[i]] = [newMats[i], newMats[i-1]];
+                      setFormData({...formData, default_materials: newMats});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem' }} disabled={i === 0}>↑</button>
+                    <button type="button" onClick={() => {
+                      if (i === formData.default_materials.length - 1) return;
+                      const newMats = [...formData.default_materials];
+                      [newMats[i+1], newMats[i]] = [newMats[i], newMats[i+1]];
+                      setFormData({...formData, default_materials: newMats});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem' }} disabled={i === formData.default_materials.length - 1}>↓</button>
+                    <button type="button" onClick={() => {
+                      const newMats = formData.default_materials.filter((_: any, index: number) => index !== i);
+                      setFormData({...formData, default_materials: newMats});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', color: '#ef4444', borderColor: '#fee2e2' }}>✕</button>
+                  </div>
+                ))}
+                {formData.default_materials.length === 0 && (
+                  <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>Одоогоор үндсэн материал тохируулаагүй байна.</div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select id="new_material_select" className="input" style={{ flex: 1 }}>
+                  <option value="">-- Материал сонгож нэмэх --</option>
+                  {materials.filter((mat: any) => !formData.default_materials.includes(mat.item_name)).map((mat: any) => (
+                    <option key={mat.id} value={mat.item_name}>{mat.item_name}</option>
+                  ))}
+                </select>
+                <button type="button" className="btn btn-outline" onClick={() => {
+                  const select = document.getElementById('new_material_select') as HTMLSelectElement;
+                  if (select && select.value) {
+                    setFormData({...formData, default_materials: [...formData.default_materials, select.value]});
+                    select.value = '';
+                  }
+                }}>
+                  + Нэмэх
+                </button>
+              </div>
+              <small style={{ color: '#64748b', display: 'block', marginTop: '0.5rem' }}>Энэ ангиллыг сонгох үед дээрх материалууд яг энэ дарааллаар автоматаар нэмэгдэх болно.</small>
             </div>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>

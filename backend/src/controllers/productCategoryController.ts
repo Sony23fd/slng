@@ -16,7 +16,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, calc_mode, has_cover, has_inner, has_binding, has_pages, has_bookmark, waste_qty, default_operations } = req.body;
+    const { name, calc_mode, has_cover, has_inner, has_binding, has_pages, has_bookmark, waste_qty, default_operations, default_materials } = req.body;
     // @ts-ignore
     const category = await prisma.product_category.create({
       data: {
@@ -28,7 +28,8 @@ export const createCategory = async (req: Request, res: Response) => {
         has_pages: Boolean(has_pages),
         has_bookmark: Boolean(has_bookmark),
         waste_qty: Number(waste_qty),
-        default_operations: default_operations || null
+        default_operations: default_operations || null,
+        default_materials: default_materials || null
       }
     });
     res.status(201).json(category);
@@ -41,7 +42,7 @@ export const createCategory = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, calc_mode, has_cover, has_inner, has_binding, has_pages, has_bookmark, waste_qty, default_operations } = req.body;
+    const { name, calc_mode, has_cover, has_inner, has_binding, has_pages, has_bookmark, waste_qty, default_operations, default_materials } = req.body;
     // @ts-ignore
     const category = await prisma.product_category.update({
       where: { id: Number(id) },
@@ -54,7 +55,8 @@ export const updateCategory = async (req: Request, res: Response) => {
         has_pages: Boolean(has_pages),
         has_bookmark: Boolean(has_bookmark),
         waste_qty: Number(waste_qty),
-        default_operations: default_operations || null
+        default_operations: default_operations || null,
+        default_materials: default_materials || null
       }
     });
     res.json(category);

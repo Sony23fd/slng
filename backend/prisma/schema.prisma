@@ -229,6 +229,7 @@ model product_category {
   has_bookmark       Boolean @default(false)
   waste_qty          Int     @default(0)
   default_operations Json?
+  default_materials  Json?
 }
 
 model calculation_formula {
