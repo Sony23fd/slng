@@ -28,12 +28,16 @@ export default function OrdersBoardPage() {
       .catch(console.error);
 
     // Fetch active orders
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?kanbanLimit=true`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        setOrders(Array.isArray(data) ? data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал') : []);
+        if (data && data.data) {
+          setOrders(data.data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
+        } else if (Array.isArray(data)) {
+          setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
+        }
         setLoading(false);
       })
       .catch(console.error);

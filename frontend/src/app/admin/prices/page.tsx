@@ -3,15 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Pagination from '../../../components/Pagination';
 
 export default function AdminPrices() {
   const [prices, setPrices] = useState<any[]>([]);
-const [formulas, setFormulas] = useState<any[]>([]);
+  const [formulas, setFormulas] = useState<any[]>([]);
   const { token, user } = useAuthStore();
   const router = useRouter();
   
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '' });
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const limit = 20;
 
   useEffect(() => {
     if (user && user.role !== 'ADMIN' && user.role !== 'FINANCE') {
@@ -19,28 +26,42 @@ const [formulas, setFormulas] = useState<any[]>([]);
       return;
     } else if (token) {
       fetchPrices();
-fetchFormulas();
+      fetchFormulas();
     }
-  }, [user, router, token]);
+  }, [user, router, token, page, searchTerm]);
 
-  
-const fetchFormulas = async () => {
-try {
-const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/formulas`, {
-headers: { 'Authorization': `Bearer ${token}` }
-});
-if (res.ok) setFormulas(await res.json());
-} catch (e) {
-console.error(e);
-}
-};
-
-const fetchPrices = async () => {
+  const fetchFormulas = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/formulas`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setPrices(await res.json());
+      if (res.ok) setFormulas(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchPrices = async () => {
+    try {
+      const query = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        search: searchTerm
+      });
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices?${query}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.data) {
+          setPrices(data.data);
+          setTotalPages(data.meta?.totalPages || 1);
+          setTotalCount(data.meta?.total || 0);
+        } else if (Array.isArray(data)) {
+          setPrices(data);
+        }
+      }
     } catch (e) {
       console.error(e);
     }
@@ -86,11 +107,23 @@ const fetchPrices = async () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1 className="title">💰 Мастер үнэ тохиргоо</h1>
-        <button className="btn btn-primary" onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Буцах' : '+ Шинэ үнэ нэмэх'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="🔍 Хайх..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          />
+          <button className="btn btn-primary" onClick={() => setShowAdd(!showAdd)}>
+            {showAdd ? 'Буцах' : '+ Шинэ үнэ нэмэх'}
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -110,13 +143,13 @@ const fetchPrices = async () => {
               <input type="number" required value={formData.unit_cost} onChange={e => setFormData({...formData, unit_cost: e.target.value})} className="input" />
             </div>
             <div>
-<label className="label">Томьёо холбох (Сонголттой)</label>
-<select value={formData.formula_id} onChange={e => setFormData({...formData, formula_id: e.target.value})} className="input">
-<option value="">Сонгохгүй...</option>
-{formulas.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-</select>
-</div>
-<button type="submit" className="btn btn-primary">Хадгалах</button>
+              <label className="label">Томьёо холбох (Сонголттой)</label>
+              <select value={formData.formula_id} onChange={e => setFormData({...formData, formula_id: e.target.value})} className="input">
+                <option value="">Сонгохгүй...</option>
+                {formulas.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary">Хадгалах</button>
           </form>
         </div>
       )}
@@ -130,7 +163,7 @@ const fetchPrices = async () => {
               <th style={{ padding: '1rem' }}>Ангилал</th>
               <th style={{ padding: '1rem' }}>Нэр</th>
               <th style={{ padding: '1rem' }}>Нэгж өртөг (₮)</th>
-<th style={{ padding: '1rem' }}>Томьёо</th>
+              <th style={{ padding: '1rem' }}>Томьёо</th>
               <th style={{ padding: '1rem' }}>Үйлдэл</th>
             </tr>
           </thead>
@@ -180,6 +213,13 @@ const fetchPrices = async () => {
             )}
           </tbody>
         </table>
+        
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          totalCount={totalCount} 
+          onPageChange={(p) => setPage(p)} 
+        />
       </div>
     </div>
   );

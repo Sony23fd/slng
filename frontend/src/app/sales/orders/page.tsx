@@ -3,14 +3,20 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Pagination from '../../../components/Pagination';
 
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
-  const [filterTab, setFilterTab] = useState<'ALL' | 'QUOTE' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
+  const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 20;
+  
   const router = useRouter();
 
   useEffect(() => {
@@ -24,54 +30,48 @@ export default function AllOrdersPage() {
         if (Array.isArray(data)) setOrderStatuses(data);
       })
       .catch(console.error);
+  }, [token]);
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`, {
+  useEffect(() => {
+    if (!token) return;
+
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: searchTerm,
+      statusType: filterTab,
+      isMine: showOnlyMine.toString()
+    });
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?${query}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setOrders(data);
+        if (data && data.data) {
+          setOrders(data.data.filter((o:any) => o.current_status !== 'Үнийн санал')); 
+          setTotalPages(data.meta?.totalPages || 1);
+          setTotalCount(data.meta?.total || 0);
+        } else if (Array.isArray(data)) {
+          setOrders(data);
+        }
       })
       .catch(console.error);
-  }, [token]);
+  }, [token, page, filterTab, showOnlyMine, searchTerm]);
 
-  const getOrderProgress = (o: any) => {
-    const stages = o.production_stages || {};
-    const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
-    const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
-    return Math.round(totalVal / stageKeys.length);
-  };
+  useEffect(() => {
+    setPage(1);
+  }, [filterTab, showOnlyMine, searchTerm]);
 
+  // Color functions
   const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name) || ['Олгосон', 'Хүлээлгэж өгсөн'];
   const readyStatusNames = orderStatuses.filter(s => s.type === 'READY').map(s => s.name) || ['Бэлэн', 'Бэлэн болсон'];
   const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
   const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name) || ['Хүлээгдэж буй'];
-
   const isDeliveredOrder = (o: any) => deliveredStatusNames.includes(o.current_status || '');
-  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || getOrderProgress(o) >= 100);
+  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || (o.production_stages && Math.round(['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'].reduce((acc, k) => acc + (o.production_stages[k]?.status || 0), 0) / 7) >= 100));
   const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
   const isPendingOrder = (o: any) => pendingStatusNames.includes(o.current_status || '');
-  const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o) && !isQuoteOrder(o);
-
-  const filteredOrders = orders.filter(o => {
-    if (showOnlyMine && o.sales_person_id !== user?.id) return false;
-    if (isQuoteOrder(o)) return false; // Hide quotes from orders list
-    
-    if (filterTab === 'PENDING' && !isPendingOrder(o)) return false;
-    if (filterTab === 'IN_PRODUCTION' && !isInProductionOrder(o)) return false;
-    if (filterTab === 'READY' && !isReadyOrder(o)) return false;
-    if (filterTab === 'DELIVERED' && !isDeliveredOrder(o)) return false;
-
-    if (searchTerm) {
-      const s = searchTerm.toLowerCase();
-      const matchNo = (o.order_number || '').toLowerCase().includes(s);
-      const matchCust = (o.customer_name || '').toLowerCase().includes(s);
-      const matchProd = (o.product_name || '').toLowerCase().includes(s);
-      const matchSales = (o.user?.name || o.sales_person_name || '').toLowerCase().includes(s);
-      if (!matchNo && !matchCust && !matchProd && !matchSales) return false;
-    }
-    return true;
-  });
 
   return (
     <div>
@@ -94,11 +94,11 @@ export default function AllOrdersPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {[
-              { key: 'ALL', label: 'Бүгд', count: orders.filter(o => !isQuoteOrder(o)).length, color: '#64748b' },
-              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', count: orders.filter(isPendingOrder).length, color: '#f59e0b' },
-              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', count: orders.filter(isInProductionOrder).length, color: '#3b82f6' },
-              { key: 'READY', label: '✨ Бэлэн болсон', count: orders.filter(isReadyOrder).length, color: '#10b981' },
-              { key: 'DELIVERED', label: '🤝 Олгосон', count: orders.filter(isDeliveredOrder).length, color: '#475569' }
+              { key: 'ALL', label: 'Бүгд', color: '#64748b' },
+              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', color: '#f59e0b' },
+              { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', color: '#3b82f6' },
+              { key: 'READY', label: '✨ Бэлэн болсон', color: '#10b981' },
+              { key: 'DELIVERED', label: '🤝 Олгосон', color: '#475569' }
             ].map((t: any) => (
               <button
                 key={t.key}
@@ -119,7 +119,7 @@ export default function AllOrdersPage() {
                   transition: 'all 0.2s'
                 }}
               >
-                {t.label} <span style={{ background: filterTab === t.key ? 'rgba(255,255,255,0.25)' : '#e2e8f0', padding: '0.05rem 0.4rem', borderRadius: '10px', fontSize: '0.75rem' }}>{t.count}</span>
+                {t.label}
               </button>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default function AllOrdersPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map(o => {
+            {orders.map(o => {
               const stages = o.production_stages || {};
               const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
               const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
@@ -166,12 +166,10 @@ export default function AllOrdersPage() {
               let progress = calculatedProgress;
               let statusText = o.current_status || 'Тодорхойгүй';
               
-              // Determine color dynamically
               const statusObj = orderStatuses.find(s => s.name === o.current_status);
               let statusColor = statusObj?.color || '#3b82f6';
               let hideBar = false;
 
-              // Fallback color logic if missing
               if (!statusObj) {
                 if (isDeliveredOrder(o)) {
                   statusColor = '#64748b'; 
@@ -267,6 +265,13 @@ export default function AllOrdersPage() {
             )}
           </tbody>
         </table>
+        
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          totalCount={totalCount} 
+          onPageChange={(p) => setPage(p)} 
+        />
       </div>
     </div>
   );

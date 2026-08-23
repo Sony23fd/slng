@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Pagination from '../../../components/Pagination';
 
 export default function AllQuotesPage() {
   const { token, user } = useAuthStore();
@@ -10,6 +11,11 @@ export default function AllQuotesPage() {
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 20;
+  
   const router = useRouter();
 
   useEffect(() => {
@@ -23,42 +29,41 @@ export default function AllQuotesPage() {
         if (Array.isArray(data)) setOrderStatuses(data);
       })
       .catch(console.error);
+  }, [token]);
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`, {
+  useEffect(() => {
+    if (!token) return;
+
+    // QUOTE is the status type we want for quotes.
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: searchTerm,
+      statusType: 'QUOTE',
+      isMine: showOnlyMine.toString()
+    });
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?${query}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setOrders(data);
+        if (data && data.data) {
+          setOrders(data.data);
+          setTotalPages(data.meta?.totalPages || 1);
+          setTotalCount(data.meta?.total || 0);
+        } else if (Array.isArray(data)) {
+          // fallback
+          const quoteNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name);
+          setOrders(data.filter(o => quoteNames.includes(o.current_status) || o.current_status === 'Үнийн санал'));
+        }
       })
       .catch(console.error);
-  }, [token]);
+  }, [token, page, showOnlyMine, searchTerm]);
 
-  const getOrderProgress = (o: any) => {
-    const stages = o.production_stages || {};
-    const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
-    const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
-    return Math.round(totalVal / stageKeys.length);
-  };
-
-  const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
-  const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
-
-  const filteredOrders = orders.filter(o => {
-    if (showOnlyMine && o.sales_person_id !== user?.id) return false;
-    
-    if (!isQuoteOrder(o)) return false;
-
-    if (searchTerm) {
-      const s = searchTerm.toLowerCase();
-      const matchNo = (o.order_number || '').toLowerCase().includes(s);
-      const matchCust = (o.customer_name || '').toLowerCase().includes(s);
-      const matchProd = (o.product_name || '').toLowerCase().includes(s);
-      const matchSales = (o.user?.name || o.sales_person_name || '').toLowerCase().includes(s);
-      if (!matchNo && !matchCust && !matchProd && !matchSales) return false;
-    }
-    return true;
-  });
+  useEffect(() => {
+    setPage(1);
+  }, [showOnlyMine, searchTerm]);
 
   return (
     <div>
@@ -77,7 +82,6 @@ export default function AllQuotesPage() {
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {/* Төлвийн табуудыг хассан */}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginRight: '0.5rem' }}>
@@ -113,17 +117,7 @@ export default function AllQuotesPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map(o => {
-              const stages = o.production_stages || {};
-              const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
-              const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
-              const calculatedProgress = Math.round(totalVal / stageKeys.length);
-              
-              let progress = 0;
-              let statusText = 'Үнийн санал';
-              let statusColor = '#64748b'; 
-              let hideBar = true;
-
+            {orders.map(o => {
               return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
@@ -196,6 +190,13 @@ export default function AllQuotesPage() {
             )}
           </tbody>
         </table>
+        
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          totalCount={totalCount} 
+          onPageChange={(p) => setPage(p)} 
+        />
       </div>
     </div>
   );

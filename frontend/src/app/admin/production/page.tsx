@@ -29,12 +29,16 @@ export default function ProductionPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?kanbanLimit=true`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
+        if (data && data.data) {
+          setOrders(data.data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
+        } else if (Array.isArray(data)) {
+          setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
+        }
       }
     } catch (e) {
       console.error("Failed to load orders:", e);

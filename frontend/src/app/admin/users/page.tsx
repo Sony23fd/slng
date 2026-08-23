@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Pagination from '../../../components/Pagination';
 
 export default function AdminUsers() {
   const { user, token } = useAuthStore();
@@ -11,19 +12,40 @@ export default function AdminUsers() {
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({ name: '', full_name: '', role: 'SALES', password: '' });
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const limit = 20;
+
   useEffect(() => {
     if (user && user.role !== 'ADMIN') {
       router.push('/admin');
     } else if (token) {
       fetchUsers();
     }
-  }, [user, router, token]);
+  }, [user, router, token, page, searchTerm]);
 
   const fetchUsers = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/users`, {
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: searchTerm
+    });
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/users?${query}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    if (res.ok) setUsers(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.data) {
+        setUsers(data.data);
+        setTotalPages(data.meta?.totalPages || 1);
+        setTotalCount(data.meta?.total || 0);
+      } else if (Array.isArray(data)) {
+        setUsers(data);
+      }
+    }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -59,11 +81,23 @@ export default function AdminUsers() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1 className="title">👥 Хэрэглэгчид удирдах</h1>
-        <button className="btn btn-primary" onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Буцах' : '+ Шинэ хэрэглэгч'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="🔍 Хайх..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          />
+          <button className="btn btn-primary" onClick={() => setShowAdd(!showAdd)}>
+            {showAdd ? 'Буцах' : '+ Шинэ хэрэглэгч'}
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -125,6 +159,13 @@ export default function AdminUsers() {
             ))}
           </tbody>
         </table>
+
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          totalCount={totalCount} 
+          onPageChange={(p) => setPage(p)} 
+        />
       </div>
     </div>
   );

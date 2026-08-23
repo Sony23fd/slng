@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Pagination from '../../../components/Pagination';
 
 export default function CustomersPage() {
   const { user, token } = useAuthStore();
@@ -13,19 +14,40 @@ export default function CustomersPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', company_name: '', discount_margin: 20, notes: '' });
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const limit = 20;
+
   useEffect(() => {
     if (user && user.role !== 'ADMIN' && user.role !== 'FINANCE') {
       router.push('/');
     } else if (token) {
       fetchCustomers();
     }
-  }, [user, router, token]);
+  }, [user, router, token, page, searchTerm]);
 
   const fetchCustomers = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/customers`, {
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: searchTerm
+    });
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/customers?${query}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    if (res.ok) setCustomers(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.data) {
+        setCustomers(data.data);
+        setTotalPages(data.meta?.totalPages || 1);
+        setTotalCount(data.meta?.total || 0);
+      } else if (Array.isArray(data)) {
+        setCustomers(data);
+      }
+    }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -66,15 +88,27 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1 className="title">🤝 Харилцагчийн сан</h1>
-        <button className="btn btn-primary" onClick={() => {
-          setShowAdd(!showAdd);
-          setEditingId(null);
-          setFormData({ name: '', phone: '', email: '', company_name: '', discount_margin: 20, notes: '' });
-        }}>
-          {showAdd ? 'Буцах' : '+ Харилцагч нэмэх'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="🔍 Хайх..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          />
+          <button className="btn btn-primary" onClick={() => {
+            setShowAdd(!showAdd);
+            setEditingId(null);
+            setFormData({ name: '', phone: '', email: '', company_name: '', discount_margin: 20, notes: '' });
+          }}>
+            {showAdd ? 'Буцах' : '+ Харилцагч нэмэх'}
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -141,6 +175,13 @@ export default function CustomersPage() {
             )}
           </tbody>
         </table>
+        
+        <Pagination 
+          currentPage={page} 
+          totalPages={totalPages} 
+          totalCount={totalCount} 
+          onPageChange={(p) => setPage(p)} 
+        />
       </div>
     </div>
   );
