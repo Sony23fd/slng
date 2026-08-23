@@ -256,7 +256,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   });
 
   const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({ control, name: 'materials' });
-  const { fields: opFields, append: appendOp, remove: removeOp } = useFieldArray({ control, name: 'operations' });
+  const { fields: opFields, append: appendOp, remove: removeOp, update: updateOp } = useFieldArray({ control, name: 'operations' });
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
 
@@ -1820,31 +1820,83 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
             <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Боломжит ажиллагаанууд:</h4>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
-              {masterPrices
-                .filter(op => op.category === 'Ажиллагаа')
-                .map(op => {
-                  const isAdded = opFields.some((f: any) => f.operation_name === op.item_name);
-                  return (
-                    <label key={op.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={isAdded}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            addQuickOp(op);
-                          } else {
-                            const idx = opFields.findIndex((f: any) => f.operation_name === op.item_name);
-                            if (idx !== -1) removeOp(idx);
-                          }
-                        }}
-                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3b82f6' }}
-                      />
-                      <span style={{ color: isAdded ? '#0f172a' : '#475569', fontWeight: isAdded ? 600 : 400 }}>{op.item_name}</span>
-                    </label>
-                  );
-                })}
-            </div>
+            {(() => {
+              const ops = masterPrices.filter(op => op.category === 'Ажиллагаа');
+              const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
+              ops.forEach(op => {
+                const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
+                if (match) {
+                  const baseName = match[1].trim();
+                  const variantName = match[2].trim();
+                  let group = groups.find(g => g.baseName === baseName);
+                  if (!group) {
+                    group = { baseName, isGroup: true, options: [] };
+                    groups.push(group);
+                  }
+                  group.options.push({ ...op, variantName });
+                } else {
+                  groups.push({ baseName: op.item_name, isGroup: false, options: [{ ...op, variantName: op.item_name }] });
+                }
+              });
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
+                  {groups.map(group => {
+                    const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
+                    const isAdded = !!activeOpInGroup;
+
+                    return (
+                      <div key={group.baseName} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.75rem', background: isAdded ? '#eff6ff' : '#ffffff', border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0', borderRadius: '0.5rem', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#475569' }}>
+                          <input
+                            type="checkbox"
+                            checked={isAdded}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                addQuickOp(group.options[0]);
+                              } else {
+                                const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                if (idx !== -1) removeOp(idx);
+                              }
+                            }}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                          />
+                          {group.baseName}
+                        </label>
+
+                        {isAdded && group.isGroup && (
+                          <select
+                            value={activeOpInGroup?.item_name || ''}
+                            onChange={(e) => {
+                              const newOpName = e.target.value;
+                              const newOp = group.options.find(o => o.item_name === newOpName);
+                              if (newOp) {
+                                const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                if (idx !== -1) {
+                                  const currentOp = formValues.operations?.[idx];
+                                  updateOp(idx, { 
+                                    ...currentOp,
+                                    operation_name: newOp.item_name, 
+                                    unit_cost: newOp.unit_cost,
+                                    qty: currentOp?.qty || 0,
+                                    notes: currentOp?.notes || ''
+                                  } as any);
+                                }
+                              }
+                            }}
+                            style={{ padding: '0.35rem', fontSize: '0.8rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.2rem' }}
+                          >
+                            {group.options.map(opt => (
+                              <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {opFields.length > 0 && (
