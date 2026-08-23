@@ -9,7 +9,7 @@ export default function AdminUsers() {
   const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [formData, setFormData] = useState({ name: '', role: 'SALES', password: '' });
+  const [formData, setFormData] = useState({ name: '', full_name: '', role: 'SALES', password: '' });
 
   useEffect(() => {
     if (user && user.role !== 'ADMIN') {
@@ -35,7 +35,7 @@ export default function AdminUsers() {
     });
     if (res.ok) {
       setShowAdd(false);
-      setFormData({ name: '', role: 'SALES', password: '' });
+      setFormData({ name: '', full_name: '', role: 'SALES', password: '' });
       fetchUsers();
       alert("Амжилттай нэмэгдлээ");
     } else {
@@ -71,8 +71,12 @@ export default function AdminUsers() {
           <h3>Шинэ хэрэглэгч нэмэх</h3>
           <form onSubmit={handleAdd} style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
             <div>
-              <label className="label">Нэвтрэх нэр</label>
+              <label className="label">Нэвтрэх нэр (Латинаар)</label>
               <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" />
+            </div>
+            <div>
+              <label className="label">Овог нэр</label>
+              <input type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="input" placeholder="Жишээ: Бат-Эрдэнэ" />
             </div>
             <div>
               <label className="label">Эрх</label>
@@ -96,7 +100,8 @@ export default function AdminUsers() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-              <th style={{ padding: '1rem' }}>Нэр</th>
+              <th style={{ padding: '1rem' }}>Овог нэр</th>
+              <th style={{ padding: '1rem' }}>Нэвтрэх нэр</th>
               <th style={{ padding: '1rem' }}>Эрх</th>
               <th style={{ padding: '1rem' }}>Огноо</th>
               <th style={{ padding: '1rem' }}>Үйлдэл</th>
@@ -105,7 +110,8 @@ export default function AdminUsers() {
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1rem' }}>{u.name}</td>
+                <td style={{ padding: '1rem', fontWeight: 600 }}>{u.full_name || '-'}</td>
+                <td style={{ padding: '1rem', color: '#64748b' }}>{u.name}</td>
                 <td style={{ padding: '1rem' }}>{u.role}</td>
                 <td style={{ padding: '1rem' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td style={{ padding: '1rem' }}>

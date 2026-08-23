@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
-  const [statusOptions, setStatusOptions] = useState<string[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [filterTab, setFilterTab] = useState<'ALL' | 'QUOTE' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
@@ -16,15 +16,12 @@ export default function AllOrdersPage() {
   useEffect(() => {
     if (!token) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          const list = data.filter(c => c.type === 'ORDER_STATUS').map(c => c.value);
-          if (list.length > 0) setStatusOptions(list);
-        }
+        if (Array.isArray(data)) setOrderStatuses(data);
       })
       .catch(console.error);
 
@@ -45,10 +42,15 @@ export default function AllOrdersPage() {
     return Math.round(totalVal / stageKeys.length);
   };
 
-  const isDeliveredOrder = (o: any) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
-  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOrderProgress(o) >= 100);
-  const isQuoteOrder = (o: any) => o.current_status === 'Үнийн санал';
-  const isPendingOrder = (o: any) => o.current_status === 'Хүлээгдэж буй';
+  const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name) || ['Олгосон', 'Хүлээлгэж өгсөн'];
+  const readyStatusNames = orderStatuses.filter(s => s.type === 'READY').map(s => s.name) || ['Бэлэн', 'Бэлэн болсон'];
+  const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
+  const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name) || ['Хүлээгдэж буй'];
+
+  const isDeliveredOrder = (o: any) => deliveredStatusNames.includes(o.current_status || '');
+  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || getOrderProgress(o) >= 100);
+  const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
+  const isPendingOrder = (o: any) => pendingStatusNames.includes(o.current_status || '');
   const isInProductionOrder = (o: any) => !isPendingOrder(o) && !isReadyOrder(o) && !isDeliveredOrder(o) && !isQuoteOrder(o);
 
   const filteredOrders = orders.filter(o => {
@@ -163,34 +165,31 @@ export default function AllOrdersPage() {
               
               let progress = calculatedProgress;
               let statusText = o.current_status || 'Тодорхойгүй';
-              let statusColor = '#3b82f6';
+              
+              // Determine color dynamically
+              const statusObj = orderStatuses.find(s => s.name === o.current_status);
+              let statusColor = statusObj?.color || '#3b82f6';
               let hideBar = false;
 
-              if (isQuoteOrder(o)) {
-                progress = 0;
-                statusColor = '#64748b'; 
-                hideBar = true;
-              } else if (o.current_status === 'Цуцлагдсан') {
-                progress = 0;
-                statusColor = '#ef4444'; 
-                hideBar = true;
-              } else if (isDeliveredOrder(o)) {
-                progress = 100;
-                statusColor = '#475569';
-                hideBar = true;
-              } else if (isReadyOrder(o)) {
-                progress = 100;
-                statusColor = '#10b981';
-                hideBar = true;
-              } else if (isPendingOrder(o)) {
-                progress = 0;
-                statusColor = '#cbd5e1';
-                hideBar = true;
-              } else {
-                statusColor = '#3b82f6';
-                hideBar = false;
+              // Fallback color logic if missing
+              if (!statusObj) {
+                if (isDeliveredOrder(o)) {
+                  statusColor = '#64748b'; 
+                  hideBar = true;
+                } else if (o.current_status === 'Цуцлагдсан') {
+                  statusColor = '#ef4444'; 
+                  hideBar = true;
+                } else if (isPendingOrder(o)) {
+                  statusColor = '#f59e0b';
+                  hideBar = true;
+                } else if (isQuoteOrder(o)) {
+                  statusColor = '#94a3b8';
+                  hideBar = true;
+                } else if (isReadyOrder(o)) {
+                  statusColor = '#10b981';
+                  hideBar = true;
+                }
               }
-
               return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
@@ -241,7 +240,7 @@ export default function AllOrdersPage() {
                     }}
                     style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
                   >
-                    {Array.from(new Set([...statusOptions, o.current_status])).map(s => (
+                    {Array.from(new Set([...orderStatuses.map(s => s.name), o.current_status])).map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

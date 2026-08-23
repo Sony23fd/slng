@@ -140,6 +140,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const [customers, setCustomers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [formulas, setFormulas] = useState<any[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [bagDims, setBagDims] = useState({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
 
   const OP_CATEGORIES = [
@@ -223,6 +224,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (Array.isArray(data)) setTemplates(data);
       })
       .catch(console.error);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(d => setOrderStatuses(d))
+      .catch(e => console.error("Error fetching order statuses:", e));
+
   }, [token]);
 
   const groupedConstants = constants.reduce((acc, curr) => {
@@ -237,7 +245,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const { register, control, watch, handleSubmit, setValue, getValues } = useForm<OrderFormValues>({
     defaultValues: initialData ? { ...initialData, deadline: defaultDeadline } : {
       customer_name: '', phone: '', deadline: '', product_name: '', category: '', total_qty: 0,
-      size: '', sub_size: '', custom_width: 0, custom_height: 0, needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.name || '', notes: '',
+      size: '', sub_size: '', custom_width: 0, custom_height: 0, needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.full_name || user?.name || '', notes: '',
       cover_color: '', inner_color: '', has_bookmark: '', total_pages: 0, print_cost: 0,
       materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
       operations: [],
@@ -1092,18 +1100,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <input type="number" {...register("total_qty", {
                 onChange: (e) => {
                   const a6 = Number(e.target.value) || 0;
+                  const oldA6 = Number(getValues('total_qty')) || 0;
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
-                    setValue(`materials.${index}.base_qty`, a6);
+                    const currentBase = Number(m.base_qty) || 0;
+                    const isManualBase = currentBase > 0 && currentBase !== oldA6;
+                    const newBase = isManualBase ? currentBase : a6;
+                    setValue(`materials.${index}.base_qty`, newBase);
                     const press = Number(m.press_sheet) || 1;
                     const extra = Number(m.extra_qty) || 0;
                     const a7 = getA7Size();
                     const divs = calculatePaperDivision(m.print_size || 'A2', a7);
                     const setups = calculateSetups(press, divs);
-                    const total = (a6 * press) + (extra * setups);
+                    const total = (newBase * press) + (extra * setups);
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
-                    if (!evaluateDynamicFormula(index, { base_qty: a6 })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                    if (!evaluateDynamicFormula(index, { base_qty: newBase })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                   });
                 }
               })} />
@@ -1637,6 +1649,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     setValue(`materials.${index}.divide_by`, ratio);
                                     finalDivBy = ratio;
                                   }
+                                  const totalQty = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                  if (!evaluateDynamicFormula(index, { divide_by: finalDivBy })) {
+                                    setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / finalDivBy));
+                                  }
                                   // M4 is no longer calculated from M2, but from M3 and A7
                                 }
                               }}
@@ -1683,10 +1699,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   const setups = calculateSetups(m4, divs);
                                   const total = (base * m4) + (extra * setups);
                                   setValue(`materials.${index}.total_qty`, total);
-                                  const divBy = ratio > 1 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+                                  const divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
                                   if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                                 }
-                              } else if (ratio > 1) {
+                              } else if (ratio > 0) {
                                 // If M4 calculation didn't run, still update sheet_qty based on ratio
                                 const total = Number(formValues.materials?.[index]?.total_qty) || 0;
                                 setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
@@ -2015,25 +2031,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <textarea {...register("finance_notes")} style={{minHeight:'44px'}}></textarea>
               </div>
 
-              <div className="erp-grid erp-grid-2 erp-status-select">
-                <div className="erp-field">
-                  <label>Төлөв</label>
-                  <select {...register("status")}>
-                    {groupedConstants['ORDER_STATUS']?.map((c: any) => (
-                      <option key={c.id} value={c.value}>{c.value}</option>
-                    ))}
-                  </select>
+              {!isQuoteMode && (
+                <div className="erp-grid erp-grid-2 erp-status-select">
+                  <div className="erp-field">
+                    <label>Төлөв</label>
+                    <select {...register("status")}>
+                      {orderStatuses.map((s: any) => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="erp-field">
+                    <label>Дараагийн процесс</label>
+                    <select {...register("next_process")}>
+                      <option value="">Сонгох...</option>
+                      {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
+                        <option key={c.id} value={c.value}>{c.value}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="erp-field">
-                  <label>Дараагийн процесс</label>
-                  <select {...register("next_process")}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
-                      <option key={c.id} value={c.value}>{c.value}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
               
               {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
               <div style={{ marginTop: '12px', fontSize: '11.5px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '9px', padding: '10px' }}>

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 export default function AllQuotesPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
-  const [statusOptions, setStatusOptions] = useState<string[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const router = useRouter();
@@ -15,15 +15,12 @@ export default function AllQuotesPage() {
   useEffect(() => {
     if (!token) return;
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          const list = data.filter(c => c.type === 'ORDER_STATUS').map(c => c.value);
-          if (list.length > 0) setStatusOptions(list);
-        }
+        if (Array.isArray(data)) setOrderStatuses(data);
       })
       .catch(console.error);
 
@@ -44,7 +41,8 @@ export default function AllQuotesPage() {
     return Math.round(totalVal / stageKeys.length);
   };
 
-  const isQuoteOrder = (o: any) => o.current_status === 'Үнийн санал';
+  const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
+  const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
 
   const filteredOrders = orders.filter(o => {
     if (showOnlyMine && o.sales_person_id !== user?.id) return false;
@@ -171,7 +169,7 @@ export default function AllQuotesPage() {
                     }}
                     style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
                   >
-                    {Array.from(new Set([...statusOptions, o.current_status])).map(s => (
+                    {Array.from(new Set([...orderStatuses.map(s => s.name), o.current_status])).map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

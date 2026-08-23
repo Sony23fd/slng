@@ -10,24 +10,20 @@ export default function OrdersBoardPage() {
   const { token, user } = useAuthStore();
   const router = useRouter();
 
-  const [statuses, setStatuses] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) return;
 
-    // Fetch order statuses
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        const statusList = data.filter((c: any) => c.type === 'ORDER_STATUS' && c.value !== 'Үнийн санал').map((c: any) => c.value);
-        if (statusList.length === 0) {
-          statusList.push('Шинэ захиалга', 'Эх бэлтгэл', 'Хэвлэл', 'Дардас', 'Бэлэн', 'Олгосон');
-        }
-        setStatuses(statusList);
+        const activeStatuses = data.filter((s: any) => s.type !== 'QUOTE' && s.type !== 'PENDING' && s.type !== 'CANCELLED');
+        setStatuses(activeStatuses);
       })
       .catch(console.error);
 
@@ -102,34 +98,36 @@ export default function OrdersBoardPage() {
       ) : (
         <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', minHeight: '70vh' }}>
           <DragDropContext onDragEnd={onDragEnd}>
-            {statuses.map(status => {
-              const columnOrders = orders.filter(o => {
-                const progress = getOrderProgress(o);
-                const isDelivered = o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
-                const isReady = !isDelivered && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || progress >= 100);
-                if (status === 'Бэлэн' || status === 'Бэлэн болсон') {
-                  return isReady;
-                }
-                if (status === 'Олгосон' || status === 'Хүлээлгэж өгсөн') {
-                  return isDelivered;
-                }
-                return o.current_status === status && !isReady && !isDelivered;
-              });
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', minWidth: 'max-content' }}>
+            {statuses.map((statusObj) => {
               return (
-                <div key={status} style={{ minWidth: '300px', maxWidth: '300px', background: '#f8fafc', borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ padding: '1rem', borderBottom: '2px solid #e2e8f0', fontWeight: 600, color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{status}</span>
-                    <span style={{ background: '#e2e8f0', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontSize: '0.8rem' }}>{columnOrders.length}</span>
-                  </div>
-                  
-                  <Droppable droppableId={status}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: '150px' }}
-                      >
-                        {columnOrders.map((order, index) => (
+                <div key={statusObj.name} style={{ width: '300px', flexShrink: 0 }}>
+                <div style={{ padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.5rem 0.5rem 0 0', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: statusObj.color || 'var(--primary-color)' }}></span>
+                    {statusObj.name}
+                  </span>
+                  <span style={{ background: '#cbd5e1', padding: '0.1rem 0.5rem', borderRadius: '1rem', fontSize: '0.8rem' }}>
+                    {orders.filter(o => (o.current_status || 'Шинэ захиалга') === statusObj.name).length}
+                  </span>
+                </div>
+                <Droppable droppableId={statusObj.name}>
+                  {(provided, snapshot) => (
+                    <div 
+                      ref={provided.innerRef} 
+                      {...provided.droppableProps}
+                      style={{ 
+                        background: snapshot.isDraggingOver ? '#e2e8f0' : '#f1f5f9', 
+                        padding: '1rem', 
+                        minHeight: '200px', 
+                        border: '1px solid #e2e8f0',
+                        borderTop: 'none',
+                        borderRadius: '0 0 0.5rem 0.5rem'
+                      }}
+                    >
+                      {orders
+                        .filter(o => (o.current_status || 'Шинэ захиалга') === statusObj.name)
+                        .map((order, index) => (
                           <Draggable key={order.id.toString()} draggableId={order.id.toString()} index={index}>
                             {(provided, snapshot) => (
                               <div
@@ -170,6 +168,7 @@ export default function OrdersBoardPage() {
                 </div>
               );
             })}
+            </div>
           </DragDropContext>
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import JobTicketModal from './JobTicketModal';
 
 export interface OrderStageData {
   status: number; // 0 = 0%, 50 = 50%, 100 = 100%
@@ -53,14 +54,16 @@ const OPERATORS = ['Ч.Төрболд', 'Б.Тамир', 'Д.Отгонбаяр'
 
 interface Props {
   orders: Order[];
+  statuses: any[];
   onUpdateStage: (orderId: number, stageKey: string, newData: OrderStageData) => void;
 }
 
-export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
+export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUrgent, setFilterUrgent] = useState(false);
   const [statusTab, setStatusTab] = useState<'ACTIVE' | 'COMPLETED' | 'DELIVERED'>('ACTIVE');
   const [activeModal, setActiveModal] = useState<{ orderId: number; stageKey: string; data: OrderStageData } | null>(null);
+  const [ticketOrder, setTicketOrder] = useState<Order | null>(null);
 
   // Helper to calculate overall % of an order
   const getOverallProgress = (stages?: ProductionStages) => {
@@ -85,8 +88,12 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
     return diffHours <= 24;
   };
 
-  const isDeliveredOrder = (o: Order) => o.current_status === 'Олгосон' || o.current_status === 'Хүлээлгэж өгсөн';
-  const isReadyOrder = (o: Order) => !isDeliveredOrder(o) && (o.current_status === 'Бэлэн' || o.current_status === 'Бэлэн болсон' || getOverallProgress(o.production_stages) >= 100);
+  // Get status names by type
+  const deliveredStatusNames = statuses?.filter(s => s.type === 'DELIVERED').map(s => s.name) || ['Олгосон', 'Хүлээлгэж өгсөн'];
+  const readyStatusNames = statuses?.filter(s => s.type === 'READY').map(s => s.name) || ['Бэлэн', 'Бэлэн болсон'];
+
+  const isDeliveredOrder = (o: Order) => deliveredStatusNames.includes(o.current_status || '');
+  const isReadyOrder = (o: Order) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || getOverallProgress(o.production_stages) >= 100);
   const isActiveOrder = (o: Order) => o.current_status !== 'Хүлээгдэж буй' && !isReadyOrder(o) && !isDeliveredOrder(o);
 
   const activeCount = orders.filter(isActiveOrder).length;
@@ -249,7 +256,7 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
                 const bottleneck = isBottleneck(order);
                 const calculatedProgress = getOverallProgress(order.production_stages);
                 let progress = calculatedProgress;
-                if (order.current_status === 'Бэлэн' || order.current_status === 'Бэлэн болсон' || order.current_status === 'Олгосон' || order.current_status === 'Хүлээлгэж өгсөн') {
+                if (readyStatusNames.includes(order.current_status || '') || deliveredStatusNames.includes(order.current_status || '')) {
                   progress = 100;
                 }
                 const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
@@ -259,9 +266,25 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
                     <tr style={{ background: index % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s', borderBottom: hasNotes ? 'none' : '1px solid var(--border-color)' }}>
                       <td style={{ padding: '0.6rem 0.4rem', fontWeight: 700, color: 'var(--primary-color)', borderRight: '1px solid var(--border-color)' }}>
                         {order.order_number || `#${order.id}`}
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400, marginBottom: '0.25rem' }}>
                           {new Date(order.createdAt).toLocaleDateString()}
                         </div>
+                        <button 
+                          onClick={() => setTicketOrder(order)}
+                          style={{
+                            padding: '0.15rem 0.4rem',
+                            fontSize: '0.7rem',
+                            background: '#e2e8f0',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            color: '#475569',
+                            fontWeight: 600
+                          }}
+                          title="Дэлгэрэнгүй хуудас харах"
+                        >
+                          📄 Дэлгэрэнгүй
+                        </button>
                       </td>
                       <td style={{ padding: '0.6rem 0.4rem', textAlign: 'left', borderRight: '1px solid var(--border-color)', fontWeight: 600 }}>
                         {order.customer_name}
@@ -479,6 +502,10 @@ export default function ProductionMatrix({ orders, onUpdateStage }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {ticketOrder && (
+        <JobTicketModal order={ticketOrder} onClose={() => setTicketOrder(null)} />
       )}
     </div>
   );

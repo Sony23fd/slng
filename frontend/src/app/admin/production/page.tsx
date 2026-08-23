@@ -11,6 +11,7 @@ export default function ProductionPage() {
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'MATRIX' | 'KANBAN'>('MATRIX');
 
@@ -20,6 +21,7 @@ export default function ProductionPage() {
         router.push('/login');
       } else {
         fetchOrders();
+        fetchStatuses();
       }
     }
   }, [token, hasHydrated, router]);
@@ -38,6 +40,20 @@ export default function ProductionPage() {
       console.error("Failed to load orders:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStatuses = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOrderStatuses(data);
+      }
+    } catch (e) {
+      console.error("Failed to load statuses:", e);
     }
   };
 
@@ -150,9 +166,9 @@ export default function ProductionPage() {
           🔄 Мэдээлэл ачаалж байна...
         </div>
       ) : activeTab === 'MATRIX' ? (
-        <ProductionMatrix orders={orders} onUpdateStage={handleUpdateStage} />
+        <ProductionMatrix orders={orders} onUpdateStage={handleUpdateStage} statuses={orderStatuses} />
       ) : (
-        <KanbanBoard orders={orders} onMoveStatus={handleMoveStatus} />
+        <KanbanBoard orders={orders} onMoveStatus={handleMoveStatus} statuses={orderStatuses} />
       )}
     </div>
   );

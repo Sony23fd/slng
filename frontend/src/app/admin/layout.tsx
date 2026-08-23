@@ -94,6 +94,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span style={{ fontSize: '1.1rem' }}>📦</span>
                 {!collapsed && <span>Төрөл</span>}
               </Link>
+              <Link href="/admin/order-statuses" title="Захиалгын төлөв" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', marginTop: '0.25rem' }}>
+                <span style={{ fontSize: '1.1rem' }}>🚥</span>
+                {!collapsed && <span>Төлөв тохиргоо</span>}
+              </Link>
               <Link href="/admin/cover-rules" title="Хавтасны дүрмүүд" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', marginTop: '0.25rem' }}>
                 <span style={{ fontSize: '1.1rem' }}>📐</span>
                 {!collapsed && <span>Хавтасны дүрэм</span>}

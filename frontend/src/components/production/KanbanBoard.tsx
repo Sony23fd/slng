@@ -1,32 +1,31 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Order } from './ProductionMatrix';
-
-const STATUSES = [
-  "Шинэ захиалга",
-  "Эх бэлтгэл",
-  "Хэвлэл",
-  "Дардас",
-  "Бэлэн",
-  "Олгосон"
-];
+import JobTicketModal from './JobTicketModal';
 
 interface Props {
   orders: Order[];
+  statuses: any[];
   onMoveStatus: (orderId: number, newStatus: string) => void;
 }
 
-export default function KanbanBoard({ orders, onMoveStatus }: Props) {
+export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
+  const [ticketOrder, setTicketOrder] = useState<Order | null>(null);
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', alignItems: 'start' }}>
-      {STATUSES.map(status => {
+      {statuses.map(statusObj => {
+        const status = statusObj.name;
         const columnOrders = orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && (o.current_status || 'Шинэ захиалга') === status);
         return (
           <div key={status} style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--primary-color)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{status}</h4>
-              <span style={{ background: 'var(--primary-color)', color: '#fff', fontSize: '0.75rem', padding: '0.1rem 0.5rem', borderRadius: '999px', fontWeight: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${statusObj.color || 'var(--primary-color)'}`, paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: statusObj.color, marginRight: '6px' }}></span>
+                {status}
+              </h4>
+              <span style={{ background: statusObj.color || 'var(--primary-color)', color: '#fff', fontSize: '0.75rem', padding: '0.1rem 0.5rem', borderRadius: '999px', fontWeight: 600 }}>
                 {columnOrders.length}
               </span>
             </div>
@@ -43,7 +42,25 @@ export default function KanbanBoard({ orders, onMoveStatus }: Props) {
                       <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary-color)' }}>
                         {order.order_number || `#${order.id}`}
                       </span>
-                      {order.is_urgent && <span title="Яаралтай" style={{ fontSize: '0.9rem' }}>🔥</span>}
+                      <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                        <button
+                          onClick={() => setTicketOrder(order)}
+                          style={{
+                            padding: '0.15rem 0.4rem',
+                            fontSize: '0.7rem',
+                            background: '#e2e8f0',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            color: '#475569',
+                            fontWeight: 600
+                          }}
+                          title="Дэлгэрэнгүй хуудас харах"
+                        >
+                          📄
+                        </button>
+                        {order.is_urgent && <span title="Яаралтай" style={{ fontSize: '0.9rem' }}>🔥</span>}
+                      </div>
                     </div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
                       {order.product_name}
@@ -84,8 +101,8 @@ export default function KanbanBoard({ orders, onMoveStatus }: Props) {
                         value={order.current_status || status}
                         onChange={(e) => onMoveStatus(order.id, e.target.value)}
                       >
-                        {STATUSES.map(s => (
-                          <option key={s} value={s}>{s}</option>
+                        {statuses.map(s => (
+                          <option key={s.name} value={s.name}>{s.name}</option>
                         ))}
                       </select>
                     </div>
@@ -96,6 +113,10 @@ export default function KanbanBoard({ orders, onMoveStatus }: Props) {
           </div>
         );
       })}
+
+      {ticketOrder && (
+        <JobTicketModal order={ticketOrder} onClose={() => setTicketOrder(null)} />
+      )}
     </div>
   );
 }
