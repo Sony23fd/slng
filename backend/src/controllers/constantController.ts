@@ -34,7 +34,7 @@ export const deleteConstant = async (req: Request, res: Response): Promise<void>
     }
 
     if (existing.type === 'ORDER_STATUS') {
-      const coreStatuses = ['Шинэ захиалга', 'Хүлээгдэж буй', 'Бэлэн болсон', 'Хүлээлгэн өгсөн'];
+      const coreStatuses = ['Үнийн санал', 'Санхүү хүлээгдэж буй', 'Үйлдвэрлэлд', 'Бэлэн болсон', 'Хүлээлгэн өгсөн', 'Цуцлагдсан'];
       if (coreStatuses.includes(existing.value)) {
         res.status(400).json({ error: `Энэхүү '${existing.value}' төлөв нь системийн үндсэн төлөв тул устгах боломжгүй.` });
         return;
@@ -67,7 +67,7 @@ export const updateConstant = async (req: Request, res: Response): Promise<void>
     }
 
     if (existing.type === 'ORDER_STATUS' && existing.value !== value) {
-      const coreStatuses = ['Шинэ захиалга', 'Хүлээгдэж буй', 'Бэлэн болсон', 'Хүлээлгэн өгсөн'];
+      const coreStatuses = ['Үнийн санал', 'Санхүү хүлээгдэж буй', 'Үйлдвэрлэлд', 'Бэлэн болсон', 'Хүлээлгэн өгсөн', 'Цуцлагдсан'];
       if (coreStatuses.includes(existing.value)) {
         res.status(400).json({ error: `Энэхүү '${existing.value}' төлөв нь системийн үндсэн төлөв тул нэрийг солих боломжгүй.` });
         return;

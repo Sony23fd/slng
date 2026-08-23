@@ -9,9 +9,22 @@ export const getOrderStatuses = async (req: Request, res: Response) => {
       orderBy: { sequence: 'asc' }
     });
     res.json(statuses);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching order statuses:', error);
-    res.status(500).json({ error: 'Failed to fetch order statuses' });
+    if (error.code === 'P2021') {
+      res.json([
+        { name: 'Үнийн санал', color: '#94a3b8', sequence: 10, type: 'QUOTE', is_system: true },
+        { name: 'Санхүү хүлээгдэж буй', color: '#f59e0b', sequence: 20, type: 'PENDING', is_system: true },
+        { name: 'Үйлдвэрлэлд', color: '#3b82f6', sequence: 30, type: 'ACTIVE', is_system: true },
+        { name: 'Хэвлэх үйлдвэр', color: '#8b5cf6', sequence: 40, type: 'ACTIVE', is_system: false },
+        { name: 'Хэвлэлтийн дараах', color: '#ec4899', sequence: 50, type: 'ACTIVE', is_system: false },
+        { name: 'Бэлэн болсон', color: '#10b981', sequence: 60, type: 'READY', is_system: true },
+        { name: 'Хүлээлгэн өгсөн', color: '#64748b', sequence: 70, type: 'DELIVERED', is_system: true },
+        { name: 'Цуцлагдсан', color: '#ef4444', sequence: 80, type: 'CANCELLED', is_system: true },
+      ]);
+    } else {
+      res.status(500).json({ error: 'Failed to fetch order statuses' });
+    }
   }
 };
 
