@@ -121,35 +121,10 @@ export default function AllQuotesPage() {
               const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
               const calculatedProgress = Math.round(totalVal / stageKeys.length);
               
-              let progress = calculatedProgress;
-              let statusText = o.current_status || 'Тодорхойгүй';
-              let statusColor = '#3b82f6';
-              let hideBar = false;
-
-              if (isQuoteOrder(o)) {
-                progress = 0;
-                statusColor = '#64748b'; 
-                hideBar = true;
-              } else if (o.current_status === 'Цуцлагдсан') {
-                progress = 0;
-                statusColor = '#ef4444'; 
-                hideBar = true;
-              } else if (isDeliveredOrder(o)) {
-                progress = 100;
-                statusColor = '#475569';
-                hideBar = true;
-              } else if (isReadyOrder(o)) {
-                progress = 100;
-                statusColor = '#10b981';
-                hideBar = true;
-              } else if (isPendingOrder(o)) {
-                progress = 0;
-                statusColor = '#cbd5e1';
-                hideBar = true;
-              } else {
-                statusColor = '#3b82f6';
-                hideBar = false;
-              }
+              let progress = 0;
+              let statusText = 'Үнийн санал';
+              let statusColor = '#64748b'; 
+              let hideBar = true;
 
               return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -163,16 +138,11 @@ export default function AllQuotesPage() {
                 </td>
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
-                <td style={{ padding: '1rem', minWidth: '130px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: hideBar ? '0' : '0.25rem', fontWeight: 600 }}>
-                    <span style={{ color: hideBar ? statusColor : '#334155' }}>{statusText}</span>
-                    {!hideBar && <span>{progress}%</span>}
+                <td style={{ padding: '1rem', color: '#64748b', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6' }}></div>
+                    {o.current_status || 'Үнийн санал'}
                   </div>
-                  {!hideBar && (
-                    <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
-                      <div style={{ background: statusColor, width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
-                    </div>
-                  )}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <select 

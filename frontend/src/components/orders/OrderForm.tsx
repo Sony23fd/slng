@@ -51,7 +51,7 @@ interface OrderFormValues {
   }[];
   
   // 6. Ажиллагаа
-  operations: { operation_name: string; qty: number; unit_cost: number; notes: string }[];
+  operations: { operation_name: string; qty: number; unit_cost: number; notes: string; is_manual?: boolean }[];
   
   // 8. Гадуур ажил
   outsourced: { job_name: string; contractor_name?: string; qty: number; unit_cost: number; notes: string }[];
@@ -297,36 +297,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setPrevCategory(formValues.category);
       // Find the category config
       const catConfig = productCategories.find(c => c.name === formValues.category);
-      if (catConfig && catConfig.default_operations) {
+      if (catConfig) {
         try {
-          const defaults = Array.isArray(catConfig.default_operations) 
+          const defaults = catConfig.default_operations ? (Array.isArray(catConfig.default_operations) 
             ? catConfig.default_operations 
-            : JSON.parse(catConfig.default_operations);
+            : JSON.parse(catConfig.default_operations)) : [];
           
+          const currentOps = getValues('operations') || [];
+          // Хуучин Үндсэн ажиллагаануудыг устгах (зөвхөн гараар нэмсэн нь үлдэнэ)
+          let newOps = currentOps.filter((o: any) => o.notes !== 'Үндсэн ажиллагаа');
+
           if (Array.isArray(defaults) && defaults.length > 0) {
-            const currentOps = getValues('operations') || [];
-            let newOps = [...currentOps];
-            let changed = false;
-
             defaults.forEach((opName: string) => {
-              // Check if it already exists to prevent duplicates
-              if (!newOps.find(o => o.operation_name === opName)) {
-                // Find master price for this operation
-                const mp = masterPrices.find(m => m.category === 'Ажиллагаа' && m.item_name === opName);
-                newOps.push({
-                  operation_name: opName,
-                  qty: 0, // will be auto-calculated later by evaluateOperationFormula
-                  unit_cost: mp ? mp.unit_cost : 0,
-                  notes: 'Үндсэн ажиллагаа'
-                });
-                changed = true;
-              }
+              const mp = masterPrices.find(m => m.category === 'Ажиллагаа' && m.item_name === opName);
+              newOps.push({
+                operation_name: opName,
+                qty: 0, // will be auto-calculated later by evaluateOperationFormula
+                unit_cost: mp ? mp.unit_cost : 0,
+                notes: 'Үндсэн ажиллагаа',
+                is_manual: false
+              });
             });
-
-            if (changed) {
-              setValue('operations', newOps);
-            }
           }
+
+          setValue('operations', newOps);
         } catch(e) {
           console.error("Failed to parse default operations", e);
         }
@@ -640,8 +634,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   useEffect(() => {
     const ops = getValues('operations') || [];
     let changed = false;
-    const newOps = ops.map(op => {
+    const newOps = ops.map((op: any) => {
       if (!op.operation_name) return op;
+      if (op.is_manual) return op; // Гараар оруулсан бол тоог өөрчлөхгүй
 
       const mp = masterPrices.find(p => p.item_name === op.operation_name);
       if (mp && mp.formula && mp.formula.expression) {
@@ -1834,7 +1829,37 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           <input type="hidden" {...register(`operations.${index}.operation_name`)} />
                         </td>
                         <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
-                          <input type="number" step="any" style={inputStyle} {...register(`operations.${index}.qty`)} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <input 
+                              type="number" 
+                              step="any" 
+                              style={{ 
+                                ...inputStyle, 
+                                backgroundColor: (!mpFormula || o?.is_manual) ? '#fff' : '#e2e8f0', 
+                                color: (!mpFormula || o?.is_manual) ? '#000' : '#475569', 
+                                cursor: (!mpFormula || o?.is_manual) ? 'text' : 'not-allowed' 
+                              }} 
+                              readOnly={!!mpFormula && !o?.is_manual}
+                              {...register(`operations.${index}.qty`)} 
+                            />
+                            {mpFormula && (
+                              <button
+                                type="button"
+                                title={o?.is_manual ? "Гараар тохируулж байна (Автомат бодолт унтарсан)" : "Автоматаар бодогдож байна"}
+                                onClick={() => setValue(`operations.${index}.is_manual`, !o?.is_manual)}
+                                style={{ 
+                                  background: 'transparent', 
+                                  border: 'none', 
+                                  cursor: 'pointer', 
+                                  padding: '0.2rem',
+                                  fontSize: '1rem',
+                                  opacity: o?.is_manual ? 1 : 0.6
+                                }}
+                              >
+                                {o?.is_manual ? '🔓' : '🔒'}
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
                           <input type="number" step="any" style={inputStyle} {...register(`operations.${index}.unit_cost`)} />

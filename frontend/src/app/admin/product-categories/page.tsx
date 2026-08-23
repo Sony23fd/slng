@@ -184,23 +184,54 @@ export default function ProductCategoriesPage() {
             </div>
 
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label className="label">Үндсэн ажиллагаанууд (Олон сонгож болно)</label>
-              <select 
-                multiple 
-                className="input" 
-                style={{ height: '150px' }}
-                value={formData.default_operations} 
-                onChange={e => {
-                  const options = Array.from(e.target.options);
-                  const selectedValues = options.filter(opt => opt.selected).map(opt => opt.value);
-                  setFormData({...formData, default_operations: selectedValues});
-                }}
-              >
-                {operations.map(op => (
-                  <option key={op.id} value={op.item_name}>{op.item_name}</option>
+              <label className="label">Үндсэн ажиллагаанууд (Дарааллаар нь оруулах)</label>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                {formData.default_operations.map((opName, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#fff', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}>
+                    <div style={{ fontWeight: 600, width: '30px', color: '#94a3b8' }}>{i + 1}.</div>
+                    <div style={{ flex: 1 }}>{opName}</div>
+                    <button type="button" onClick={() => {
+                      if (i === 0) return;
+                      const newOps = [...formData.default_operations];
+                      [newOps[i-1], newOps[i]] = [newOps[i], newOps[i-1]];
+                      setFormData({...formData, default_operations: newOps});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem' }} disabled={i === 0}>↑</button>
+                    <button type="button" onClick={() => {
+                      if (i === formData.default_operations.length - 1) return;
+                      const newOps = [...formData.default_operations];
+                      [newOps[i+1], newOps[i]] = [newOps[i], newOps[i+1]];
+                      setFormData({...formData, default_operations: newOps});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem' }} disabled={i === formData.default_operations.length - 1}>↓</button>
+                    <button type="button" onClick={() => {
+                      const newOps = formData.default_operations.filter((_, index) => index !== i);
+                      setFormData({...formData, default_operations: newOps});
+                    }} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', color: '#ef4444', borderColor: '#fee2e2' }}>✕</button>
+                  </div>
                 ))}
-              </select>
-              <small style={{ color: '#64748b' }}>Энэ ангиллыг сонгох үед доорх ажиллагаанууд автоматаар нэмэгдэх болно. Ctrl дарж олон ажиллагаа сонгоно уу.</small>
+                {formData.default_operations.length === 0 && (
+                  <div style={{ color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>Одоогоор үндсэн ажиллагаа тохируулаагүй байна.</div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select id="new_operation_select" className="input" style={{ flex: 1 }}>
+                  <option value="">-- Ажиллагаа сонгож нэмэх --</option>
+                  {operations.filter(op => !formData.default_operations.includes(op.item_name)).map(op => (
+                    <option key={op.id} value={op.item_name}>{op.item_name}</option>
+                  ))}
+                </select>
+                <button type="button" className="btn btn-outline" onClick={() => {
+                  const select = document.getElementById('new_operation_select') as HTMLSelectElement;
+                  if (select && select.value) {
+                    setFormData({...formData, default_operations: [...formData.default_operations, select.value]});
+                    select.value = '';
+                  }
+                }}>
+                  + Нэмэх
+                </button>
+              </div>
+              <small style={{ color: '#64748b', display: 'block', marginTop: '0.5rem' }}>Энэ ангиллыг сонгох үед дээрх ажиллагаанууд яг энэ дарааллаар автоматаар нэмэгдэх болно.</small>
             </div>
 
             <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>

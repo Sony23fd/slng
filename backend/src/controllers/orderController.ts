@@ -100,7 +100,8 @@ export const createOrder = async (req: Request, res: Response) => {
             qty: o.qty ? Number(o.qty) : 0,
             unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
             total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
-            notes: o.notes || null
+            notes: o.notes || null,
+            is_manual: Boolean(o.is_manual)
           }))
         },
         outsourcedJobs: {
@@ -388,7 +389,8 @@ export const updateOrder = async (req: Request, res: Response) => {
               qty: o.qty ? Number(o.qty) : 0,
               unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
               total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
-              notes: o.notes || null
+              notes: o.notes || null,
+              is_manual: Boolean(o.is_manual)
             }))
           },
           outsourcedJobs: {

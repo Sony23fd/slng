@@ -123,6 +123,7 @@ model orderoperation {
   unit_cost      Float
   total_cost     Float
   notes          String?
+  is_manual      Boolean @default(false)
   order          order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@index([order_id])
