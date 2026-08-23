@@ -1320,7 +1320,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isCalculatorMo
               </select>
             </div>
             <div className="erp-field">
-              <label>[B2] Хавтасны дотор өнгө/хэвлэл</label>
+              <label>[B2] Хуудасны өнгө</label>
               <select {...register("inner_color")}>
                 <option value="">Сонгох...</option>
                 {groupedConstants['INNER_COLOR']?.map((c: any) => (
