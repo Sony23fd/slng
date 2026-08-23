@@ -2031,34 +2031,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <textarea {...register("finance_notes")} style={{minHeight:'44px'}}></textarea>
               </div>
 
-              {!isQuoteMode && (
-                <div className="erp-grid erp-grid-2 erp-status-select">
-                  <div className="erp-field">
-                    <label>Төлөв</label>
-                    <select {...register("status")} disabled={initialData?.current_status === 'Бэлэн болсон' || initialData?.current_status === 'Хүлээлгэн өгсөн'}>
-                      {orderStatuses
-                        .filter((s: any) => {
-                          if (initialData?.current_status === 'Бэлэн болсон') {
-                            return s.name === 'Бэлэн болсон' || s.name === 'Хүлээлгэн өгсөн';
-                          }
-                          return true;
-                        })
-                        .map((s: any) => (
-                          <option key={s.id} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="erp-field">
-                    <label>Дараагийн процесс</label>
-                    <select {...register("next_process")}>
-                      <option value="">Сонгох...</option>
-                      {groupedConstants['NEXT_PROCESS']?.map((c: any) => (
-                        <option key={c.id} value={c.value}>{c.value}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
+
               
               {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
               <div style={{ marginTop: '12px', fontSize: '11.5px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '9px', padding: '10px' }}>
