@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../stores/useAuthStore';
+import Notifications from '../../components/Notifications';
 
 export default function SalesLayout({ children }: { children: React.ReactNode }) {
   const { user, token, logout, hasHydrated } = useAuthStore();
@@ -73,6 +74,10 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
             <span style={{ fontSize: '1.1rem' }}>📋</span>
             {!collapsed && <span>Захиалгууд</span>}
           </Link>
+          <Link href="/sales/history" title="Түүх" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <span style={{ fontSize: '1.1rem' }}>🗄️</span>
+            {!collapsed && <span>Түүх</span>}
+          </Link>
           <Link href="/sales/profile" title="Хувийн тохиргоо" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
             <span style={{ fontSize: '1.1rem' }}>⚙️</span>
             {!collapsed && <span>Тохиргоо</span>}
@@ -88,7 +93,10 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '1.25rem', overflowY: 'auto', minWidth: 0 }}>
+      <main style={{ flex: 1, padding: '1.25rem', overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <Notifications />
+        </div>
         {children}
       </main>
     </div>

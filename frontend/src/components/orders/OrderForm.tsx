@@ -2035,9 +2035,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <div className="erp-grid erp-grid-2 erp-status-select">
                   <div className="erp-field">
                     <label>Төлөв</label>
-                    <select {...register("status")}>
-                      {orderStatuses.map((s: any) => (
-                        <option key={s.id} value={s.name}>{s.name}</option>
+                    <select {...register("status")} disabled={initialData?.current_status === 'Бэлэн болсон' || initialData?.current_status === 'Хүлээлгэн өгсөн'}>
+                      {orderStatuses
+                        .filter((s: any) => {
+                          if (initialData?.current_status === 'Бэлэн болсон') {
+                            return s.name === 'Бэлэн болсон' || s.name === 'Хүлээлгэн өгсөн';
+                          }
+                          return true;
+                        })
+                        .map((s: any) => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
                       ))}
                     </select>
                   </div>
@@ -2092,6 +2099,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   {isQuoteMode && (
                     <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981', marginTop: '10px'}}>
                       📦 Захиалга болгож батлах
+                    </button>
+                  )}
+
+                  {!isQuoteMode && orderId && initialData?.current_status === 'Бэлэн болсон' && (
+                    <button type="button" onClick={async () => {
+                      if (!confirm("Энэ захиалгыг хэрэглэгчид хүлээлгэн өгсөн гэж тэмдэглэх үү? (Дахин өөрчлөх боломжгүй)")) return;
+                      try {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}/status`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ new_status: 'Хүлээлгэн өгсөн' })
+                        });
+                        if (res.ok) {
+                          alert("Захиалгыг хүлээлгэн өгсөн төлөвт шилжүүллээ!");
+                          window.location.href = '/sales/history';
+                        } else {
+                          const err = await res.json();
+                          alert("Алдаа: " + err.error);
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      }
+                    }} className="erp-btn erp-btn-block" style={{background: '#10b981', color: '#fff', marginTop: '10px', border: 'none'}}>
+                      ✅ Хүлээлгэн өгөх
                     </button>
                   )}
 
