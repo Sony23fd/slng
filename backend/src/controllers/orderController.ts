@@ -165,6 +165,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     const old_status = order.current_status;
 
+    if ((old_status === 'Бэлэн болсон' || old_status === 'Бэлэн') && targetStatus !== 'Хүлээлгэн өгсөн' && targetStatus !== 'Олгосон' && targetStatus !== 'Цуцлагдсан') {
+      return res.status(400).json({ error: 'Бэлэн болсон захиалгыг буцааж үйлдвэрлэл рүү шилжүүлэх боломжгүй.' });
+    }
+
     let order_number = order.order_number;
     if (targetStatus && targetStatus !== 'Үнийн санал' && !order_number) {
       order_number = await generateOrderNumber();
@@ -221,10 +225,16 @@ export const getAllOrders = async (req: Request, res: Response) => {
     if (statusType && statusType !== 'ALL') {
       const statuses = await prisma.order_status.findMany({
         where: { type: statusType }
-      });
-      const statusNames = statuses.map(s => s.name);
+      }).catch(() => []); // Fallback if table doesn't exist
+      const statusNames = statuses.map((s: any) => s.name);
       if (statusNames.length > 0) {
         where.current_status = { in: statusNames };
+      } else {
+        // Hardcoded fallbacks
+        if (statusType === 'DELIVERED') where.current_status = { in: ['Хүлээлгэн өгсөн', 'Олгосон'] };
+        else if (statusType === 'READY') where.current_status = { in: ['Бэлэн болсон', 'Бэлэн'] };
+        else if (statusType === 'PENDING') where.current_status = 'Хүлээгдэж буй';
+        else if (statusType === 'QUOTE') where.current_status = 'Үнийн санал';
       }
     }
 
@@ -313,9 +323,9 @@ export const updateOrderStages = async (req: Request, res: Response) => {
       }
       if (stagesToCheck && typeof stagesToCheck === 'object') {
         const allCompleted = standardKeys.every(k => Number(stagesToCheck[k]?.status) === 100);
-        if (allCompleted && targetStatus !== 'Бэлэн' && targetStatus !== 'Олгосон') {
-          targetStatus = 'Бэлэн';
-          updateData.current_status = 'Бэлэн';
+        if (allCompleted && targetStatus !== 'Бэлэн болсон' && targetStatus !== 'Бэлэн' && targetStatus !== 'Хүлээлгэн өгсөн' && targetStatus !== 'Олгосон') {
+          targetStatus = 'Бэлэн болсон';
+          updateData.current_status = 'Бэлэн болсон';
           autoCompleted = true;
         }
       }
@@ -340,6 +350,23 @@ export const updateOrderStages = async (req: Request, res: Response) => {
           }
         })
       ]);
+
+      if (autoCompleted) {
+        // Send notification to Sales and Admins
+        const usersToNotify = await prisma.user.findMany({
+          where: { role: { in: ['SALES', 'ADMIN'] } }
+        });
+        const notifications = usersToNotify.map(u => ({
+          user_id: u.id,
+          order_id: orderId,
+          title: 'Захиалга бэлэн боллоо',
+          message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) 100% үйлдвэрлэгдэж дууслаа.`,
+        }));
+        if (notifications.length > 0) {
+          await prisma.notification.createMany({ data: notifications });
+        }
+      }
+
       return res.json({ message: 'Production stages updated successfully', order: result[0], autoCompleted });
     } else {
       const updatedOrder = await prisma.order.update({

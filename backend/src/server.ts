@@ -16,6 +16,7 @@ import customerRoutes from './routes/customerRoutes';
 import templateRoutes from './routes/templateRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import orderStatusRoutes from './routes/orderStatusRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import path from 'path';
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/order-statuses', orderStatusRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

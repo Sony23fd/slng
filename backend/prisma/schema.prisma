@@ -199,6 +199,7 @@ model user {
   masterpricelog masterpricelog[]
   order          order[]
   orderstatuslog orderstatuslog[]
+  notifications  notification[]
 }
 
 enum user_role {
@@ -251,4 +252,15 @@ model order_status {
   type       String   @default("ACTIVE") // QUOTE, PENDING, ACTIVE, READY, DELIVERED, CANCELLED
   is_system  Boolean  @default(false)
   createdAt  DateTime @default(now())
+}
+
+model notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  order_id   Int?
+  title      String
+  message    String
+  is_read    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
