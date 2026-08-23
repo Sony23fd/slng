@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 function SettingsContent() {
   const { user, token } = useAuthStore();
@@ -51,7 +52,6 @@ function SettingsContent() {
       setEditingId(null);
       setFormData({ type: activeType, value: '', description: '' });
       fetchConstants();
-      alert("Амжилттай хадгаллаа");
     } else {
       alert("Алдаа гарлаа");
     }
@@ -81,18 +81,44 @@ function SettingsContent() {
     INNER_COLOR: 'Дотор өнгө',
     PAYMENT_METHOD: 'Төлбөрийн хэлбэр',
     NEXT_PROCESS: 'Дараагийн процесс',
-    ORDER_START_SEQ: 'Захиалгын эхлэх дугаар (Ж: 700)',
-    ORDER_STATUS: 'Захиалгын төлөв (Kanban)',
+    ORDER_STATUS: 'Захиалгын төлөв',
     OUTSOURCED_JOB: 'Гадуур ажлын нэр',
-    OUTSOURCED_CONTRACTOR: 'Гүйцэтгэгч байгууллага',
-    DEFAULT_PROFIT_MARGIN: 'Үндсэн ашгийн хувь (Ж: 20)',
-    DEFAULT_DEPOSIT_PERCENT: 'Урьдчилгаа төлбөрийн хувь (Ж: 50)'
+    OUTSOURCED_CONTRACTOR: 'Гүйцэтгэгч',
+    ORDER_START_SEQ: 'Эхлэх дугаар',
+    DEFAULT_PROFIT_MARGIN: 'Үндсэн ашиг (%)',
+    DEFAULT_DEPOSIT_PERCENT: 'Урьдчилгаа (%)',
+    COMPANY_LOGO: 'Компанийн Лого'
   };
+
+  const tabs = Object.keys(typeLabels);
 
   return (
     <div>
+      <h1 className="title" style={{ marginBottom: '1.5rem' }}>⚙️ Системийн Тохиргоо</h1>
+      
+      {/* Horizontal Tabs */}
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+        {tabs.map(tab => (
+          <Link 
+            key={tab} 
+            href={`/admin/settings?type=${tab}`}
+            style={{ 
+              padding: '0.4rem 1rem', 
+              background: activeType === tab ? 'var(--primary-color)' : '#f1f5f9', 
+              color: activeType === tab ? '#fff' : 'var(--text-secondary)',
+              borderRadius: '2rem',
+              fontSize: '0.85rem',
+              fontWeight: activeType === tab ? 600 : 500,
+              textDecoration: 'none'
+            }}
+          >
+            {typeLabels[tab]}
+          </Link>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 className="title">⚙️ {typeLabels[activeType] || activeType} тохиргоо</h1>
+        <h2 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontWeight: 600 }}>{typeLabels[activeType]}</h2>
         <button className="btn btn-primary" onClick={() => {
           setShowAdd(!showAdd);
           setEditingId(null);
@@ -133,32 +159,32 @@ function SettingsContent() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '0.5rem' }}>Утга</th>
-              <th style={{ padding: '0.5rem' }}>{(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'Үнэ (₮)' : 'Тайлбар'}</th>
-              <th style={{ padding: '0.5rem', width: '100px' }}>Үйлдэл</th>
+              <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Утга</th>
+              <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') ? 'Үнэ (₮)' : 'Тайлбар'}</th>
+              <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)', fontWeight: 600, width: '120px' }}>Үйлдэл</th>
             </tr>
           </thead>
           <tbody>
             {filteredConstants.length > 0 ? filteredConstants.map((c: any) => (
               <tr key={c.id} style={{ borderBottom: '1px dashed var(--border-color)' }}>
-                <td style={{ padding: '0.5rem' }}>{c.value}</td>
-                <td style={{ padding: '0.5rem', color: 'var(--text-muted)' }}>
+                <td style={{ padding: '0.75rem 0.5rem' }}>{c.value}</td>
+                <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)' }}>
                   {(activeType === 'INNER_COLOR' || activeType === 'COVER_COLOR') && c.description 
                     ? `${Number(c.description).toLocaleString()} ₮` 
                     : c.description}
                 </td>
-                <td style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={() => handleEdit(c)} style={{ color: 'var(--primary-color)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                <td style={{ padding: '0.75rem 0.5rem', display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => handleEdit(c)} style={{ color: 'var(--primary-color)', background: '#e0e7ff', border: 'none', cursor: 'pointer', padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 600 }}>
                     Засах
                   </button>
-                  <button onClick={() => handleDelete(c.id)} style={{ color: 'var(--danger-color)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                  <button onClick={() => handleDelete(c.id)} style={{ color: 'var(--danger-color)', background: '#ffe4e6', border: 'none', cursor: 'pointer', padding: '0.35rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 600 }}>
                     Устгах
                   </button>
                 </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={3} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                   Одоогоор жагсаалтад утга байхгүй байна.
                 </td>
               </tr>
@@ -172,7 +198,7 @@ function SettingsContent() {
 
 export default function AdminSettings() {
   return (
-    <Suspense fallback={<div>Уншиж байна...</div>}>
+    <Suspense fallback={<div style={{ padding: '2rem' }}>Уншиж байна...</div>}>
       <SettingsContent />
     </Suspense>
   );
