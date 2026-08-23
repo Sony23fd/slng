@@ -9,7 +9,7 @@ export const getMyNotifications = async (req: Request, res: Response) => {
     const notifications = await prisma.notification.findMany({
       where: { user_id: userId },
       orderBy: { createdAt: 'desc' },
-      take: 50 // Limit to 50 latest
+      take: 15 // Limit to 15 latest
     });
     res.json(notifications);
   } catch (error) {

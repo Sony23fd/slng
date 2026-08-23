@@ -352,18 +352,24 @@ export const updateOrderStages = async (req: Request, res: Response) => {
       ]);
 
       if (autoCompleted) {
-        // Send notification to Sales and Admins
-        const usersToNotify = await prisma.user.findMany({
-          where: { role: { in: ['SALES', 'ADMIN'] } }
+        // Send notification to Sales and Admins only if not already sent
+        const existingNotif = await prisma.notification.findFirst({
+          where: { order_id: orderId, title: 'Захиалга бэлэн боллоо' }
         });
-        const notifications = usersToNotify.map(u => ({
-          user_id: u.id,
-          order_id: orderId,
-          title: 'Захиалга бэлэн боллоо',
-          message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) 100% үйлдвэрлэгдэж дууслаа.`,
-        }));
-        if (notifications.length > 0) {
-          await prisma.notification.createMany({ data: notifications });
+
+        if (!existingNotif) {
+          const usersToNotify = await prisma.user.findMany({
+            where: { role: { in: ['SALES', 'ADMIN'] } }
+          });
+          const notifications = usersToNotify.map(u => ({
+            user_id: u.id,
+            order_id: orderId,
+            title: 'Захиалга бэлэн боллоо',
+            message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) 100% үйлдвэрлэгдэж дууслаа.`,
+          }));
+          if (notifications.length > 0) {
+            await prisma.notification.createMany({ data: notifications });
+          }
         }
       }
 
