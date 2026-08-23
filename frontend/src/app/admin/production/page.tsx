@@ -35,9 +35,9 @@ export default function ProductionPage() {
       if (res.ok) {
         const data = await res.json();
         if (data && data.data) {
-          setOrders(data.data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
+          setOrders(data.data.filter((o: any) => o.current_status !== 'Санхүү хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
         } else if (Array.isArray(data)) {
-          setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй'));
+          setOrders(data.filter((o: any) => o.current_status !== 'Санхүү хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
         }
       }
     } catch (e) {

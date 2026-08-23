@@ -94,14 +94,14 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
 
   const isDeliveredOrder = (o: Order) => deliveredStatusNames.includes(o.current_status || '');
   const isReadyOrder = (o: Order) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || getOverallProgress(o.production_stages) >= 100);
-  const isActiveOrder = (o: Order) => o.current_status !== 'Хүлээгдэж буй' && !isReadyOrder(o) && !isDeliveredOrder(o);
+  const isActiveOrder = (o: Order) => o.current_status !== 'Санхүү хүлээгдэж буй' && !isReadyOrder(o) && !isDeliveredOrder(o);
 
   const activeCount = orders.filter(isActiveOrder).length;
   const completedCount = orders.filter(isReadyOrder).length;
   const deliveredCount = orders.filter(isDeliveredOrder).length;
 
   const filteredOrders = orders.filter(o => {
-    if (o.current_status === 'Хүлээгдэж буй') return false;
+    if (o.current_status === 'Санхүү хүлээгдэж буй') return false;
     if (statusTab === 'ACTIVE' && !isActiveOrder(o)) return false;
     if (statusTab === 'COMPLETED' && !isReadyOrder(o)) return false;
     if (statusTab === 'DELIVERED' && !isDeliveredOrder(o)) return false;

@@ -17,7 +17,7 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', alignItems: 'start' }}>
       {statuses.map(statusObj => {
         const status = statusObj.name;
-        const columnOrders = orders.filter(o => o.current_status !== 'Хүлээгдэж буй' && (o.current_status || 'Шинэ захиалга') === status);
+        const columnOrders = orders.filter(o => o.current_status !== 'Санхүү хүлээгдэж буй' && (o.current_status || 'Шинэ захиалга') === status);
         return (
           <div key={status} style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '0.75rem', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${statusObj.color || 'var(--primary-color)'}`, paddingBottom: '0.5rem', marginBottom: '1rem' }}>

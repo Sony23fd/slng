@@ -67,7 +67,7 @@ export default function AllOrdersPage() {
   const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name) || ['Олгосон', 'Хүлээлгэж өгсөн'];
   const readyStatusNames = orderStatuses.filter(s => s.type === 'READY').map(s => s.name) || ['Бэлэн', 'Бэлэн болсон'];
   const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
-  const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name) || ['Хүлээгдэж буй'];
+  const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name) || ['Санхүү хүлээгдэж буй'];
   const isDeliveredOrder = (o: any) => deliveredStatusNames.includes(o.current_status || '');
   const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || (o.production_stages && Math.round(['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'].reduce((acc, k) => acc + (o.production_stages[k]?.status || 0), 0) / 7) >= 100));
   const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
@@ -95,7 +95,7 @@ export default function AllOrdersPage() {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {[
               { key: 'ALL', label: 'Бүгд', color: '#64748b' },
-              { key: 'PENDING', label: '⏳ Хүлээгдэж буй', color: '#f59e0b' },
+              { key: 'PENDING', label: '⏳ Санхүү', color: '#f59e0b' },
               { key: 'IN_PRODUCTION', label: '⚙️ Үйлдвэрлэлд', color: '#3b82f6' },
               { key: 'READY', label: '✨ Бэлэн болсон', color: '#10b981' },
               { key: 'DELIVERED', label: '🤝 Олгосон', color: '#475569' }

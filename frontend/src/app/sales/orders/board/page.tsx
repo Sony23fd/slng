@@ -34,9 +34,9 @@ export default function OrdersBoardPage() {
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
-          setOrders(data.data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
+          setOrders(data.data.filter((o: any) => o.current_status !== 'Санхүү хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
         } else if (Array.isArray(data)) {
-          setOrders(data.filter((o: any) => o.current_status !== 'Хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
+          setOrders(data.filter((o: any) => o.current_status !== 'Санхүү хүлээгдэж буй' && o.current_status !== 'Үнийн санал'));
         }
         setLoading(false);
       })

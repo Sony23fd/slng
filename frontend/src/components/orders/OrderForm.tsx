@@ -251,7 +251,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       operations: [],
       outsourced: [],
       profit_margin: 20, payment_method_1: '', payment_percent_1: 50, payment_method_2: '', payment_percent_2: 50,
-      has_vat: false, finance_notes: '', status: 'Хүлээгдэж буй', next_process: ''
+      has_vat: false, finance_notes: '', status: 'Санхүү хүлээгдэж буй', next_process: ''
     }
   });
 
@@ -786,11 +786,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
     }
     
+    let targetStatus = initialData?.current_status || 'Санхүү хүлээгдэж буй';
+    if (submitType === 'Үнийн санал') {
+      targetStatus = 'Үнийн санал';
+    } else if (submitType === 'Шинэ захиалга') {
+      targetStatus = 'Санхүү хүлээгдэж буй';
+    }
+
     const payload = { 
       ...data, 
       ...prices, 
       final_price: prices?.finalPrice || 0,
-      current_status: submitType === 'Үнийн санал' ? 'Үнийн санал' : (data.status || 'Шинэ захиалга')
+      current_status: targetStatus
     };
     const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}` : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`;
@@ -2025,6 +2032,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <div style={{width:'64px'}}><input type="number" step="any" className="pct erp-mono" {...register("payment_percent_1")} style={{width: '100%', padding: '7px 9px'}} /></div>
               </div>
               <div className="pay-bar"><div className="a" style={{width: `${formValues.payment_percent_1 || 0}%`}}></div><div className="b" style={{width: `${100 - (formValues.payment_percent_1 || 0)}%`}}></div></div>
+              {formValues.payment_percent_1 > 0 && (
+                <div style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600, marginTop: '6px', textAlign: 'right' }}>
+                  Урьдчилгаа дүн: {((prices.finalPrice * (formValues.payment_percent_1 || 0)) / 100).toLocaleString()} ₮
+                </div>
+              )}
 
               <div className="erp-field" style={{marginBottom:'10px'}}>
                 <label>Санхүүгийн тайлбар, тэмдэглэл</label>
