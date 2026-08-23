@@ -115,18 +115,22 @@ export default function Notifications() {
                     padding: '0.75rem', 
                     borderRadius: '6px',
                     marginBottom: '0.5rem',
-                    background: n.is_read ? 'transparent' : 'rgba(16, 185, 129, 0.1)',
+                    background: n.is_read ? '#f8fafc' : 'rgba(16, 185, 129, 0.08)',
                     cursor: 'pointer',
-                    transition: 'background 0.2s'
+                    transition: 'background 0.2s',
+                    position: 'relative'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-color)' }}>{n.title}</strong>
+                  {!n.is_read && (
+                    <div style={{ position: 'absolute', left: '8px', top: '16px', width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%' }}></div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', paddingLeft: n.is_read ? '0' : '16px' }}>
+                    <strong style={{ fontSize: '0.9rem', color: n.is_read ? 'var(--text-secondary)' : 'var(--text-color)', fontWeight: n.is_read ? 500 : 700 }}>{n.title}</strong>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                       {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{n.message}</p>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: n.is_read ? '#94a3b8' : 'var(--text-secondary)', paddingLeft: n.is_read ? '0' : '16px' }}>{n.message}</p>
                 </div>
               ))
             )}

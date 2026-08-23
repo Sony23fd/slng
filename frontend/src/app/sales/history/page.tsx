@@ -45,49 +45,45 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <header style={{ marginBottom: '2rem' }}>
-        <h1 className="title">Түүх</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Хүлээлгэн өгсөн болон цуцлагдсан захиалгууд</p>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="title">Түүх</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Хүлээлгэн өгсөн болон цуцлагдсан захиалгууд</p>
+        </div>
       </header>
 
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
-          <input 
-            type="text" 
-            className="input" 
-            placeholder="Хайх (Нэр, Утас, Дугаар)..." 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <input
+            type="text"
+            placeholder="🔍 Хайх (дугаар, нэр...)"
             value={searchTerm}
             onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
-            style={{ maxWidth: '300px' }}
+            style={{ padding: '0.45rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', fontSize: '0.85rem', width: '220px' }}
           />
         </div>
 
-        <table className="table" style={{ minWidth: '900px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
           <thead>
-            <tr>
-              <th>Дугаар</th>
-              <th>Харилцагч</th>
-              <th>Бүтээгдэхүүн</th>
-              <th>Тоо ширхэг</th>
-              <th>Огноо</th>
-              <th>Төлөв</th>
-              <th>Үйлдэл</th>
+            <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+              <th style={{ padding: '1rem' }}>Дугаар</th>
+              <th style={{ padding: '1rem' }}>Огноо</th>
+              <th style={{ padding: '1rem' }}>Харилцагч</th>
+              <th style={{ padding: '1rem' }}>Борлуулагч</th>
+              <th style={{ padding: '1rem' }}>Бүтээгдэхүүн</th>
+              <th style={{ padding: '1rem' }}>Тоо ширхэг</th>
+              <th style={{ padding: '1rem' }}>Төлөв</th>
+              <th style={{ padding: '1rem', textAlign: 'right' }}>Үйлдэл</th>
             </tr>
           </thead>
           <tbody>
             {orders.length === 0 ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>Захиалга олдсонгүй</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem' }}>Захиалга олдсонгүй</td></tr>
             ) : (
               orders.map(o => (
-                <tr key={o.id}>
-                  <td><strong>{o.order_number || o.id}</strong></td>
-                  <td>
-                    <div>{o.customer_name}</div>
-                    {o.phone && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{o.phone}</div>}
-                  </td>
-                  <td>{o.product_name}</td>
-                  <td>{o.total_qty?.toLocaleString()} ш</td>
-                  <td>
+                <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
+                  <td style={{ padding: '1rem' }}>
                     <div>{new Date(o.createdAt).toLocaleDateString()}</div>
                     {o.deadline && (
                       <div style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>
@@ -95,10 +91,21 @@ export default function HistoryPage() {
                       </div>
                     )}
                   </td>
-                  <td>
+                  <td style={{ padding: '1rem' }}>
+                    <div>{o.customer_name}</div>
+                    {o.phone && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{o.phone}</div>}
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.8rem', color: '#475569' }}>
+                      {o.user?.name || o.sales_person_name || '-'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>{o.product_name}</td>
+                  <td style={{ padding: '1rem' }}>{o.total_qty?.toLocaleString()} ш</td>
+                  <td style={{ padding: '1rem' }}>
                     <span style={{ 
-                      background: 'rgba(100, 116, 139, 0.1)', 
-                      color: '#64748b', 
+                      background: o.current_status === 'Цуцлагдсан' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(100, 116, 139, 0.1)', 
+                      color: o.current_status === 'Цуцлагдсан' ? '#ef4444' : '#64748b', 
                       padding: '4px 8px', 
                       borderRadius: '4px', 
                       fontSize: '0.85rem',
@@ -107,8 +114,8 @@ export default function HistoryPage() {
                       {o.current_status}
                     </span>
                   </td>
-                  <td>
-                    <button onClick={() => router.push(`/${user?.role === 'ADMIN' ? 'admin' : 'sales'}/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
+                  <td style={{ padding: '1rem', textAlign: 'right' }}>
+                    <button onClick={() => router.push(`/${user?.role === 'ADMIN' ? 'admin' : 'sales'}/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
                       Дэлгэрэнгүй
                     </button>
                   </td>
@@ -119,7 +126,9 @@ export default function HistoryPage() {
         </table>
 
         {totalPages > 1 && (
-          <Pagination currentPage={page} totalPages={totalPages} totalCount={totalCount} onPageChange={setPage} />
+          <div style={{ marginTop: '1.5rem' }}>
+            <Pagination currentPage={page} totalPages={totalPages} totalCount={totalCount} onPageChange={setPage} />
+          </div>
         )}
       </div>
     </div>
