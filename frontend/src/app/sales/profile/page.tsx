@@ -124,8 +124,7 @@ export default function ProfilePage() {
           <label className="label">Гарын үсэг / Тамга (Үнийн санал дээр гарах)</label>
           {profile.stamp_url ? (
             <div style={{ marginBottom: '1rem', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '0.5rem', display: 'inline-block' }}>
-              {/* Note: In Next.js, to load images from localhost, we need to configure next.config.js, or just use img tag for external backend */}
-              <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${profile.stamp_url}`} alt="Тамга" style={{ maxHeight: '100px', objectFit: 'contain' }} />
+              <img src={profile.stamp_url.startsWith('http') ? profile.stamp_url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${profile.stamp_url}`} alt="Тамга" style={{ maxHeight: '100px', objectFit: 'contain' }} />
             </div>
           ) : (
             <div style={{ padding: '1rem', background: '#fffbeb', color: '#b45309', borderRadius: '0.5rem', marginBottom: '1rem' }}>Тамга оруулаагүй байна.</div>

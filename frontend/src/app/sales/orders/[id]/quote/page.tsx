@@ -444,7 +444,7 @@ export default function QuotationPage() {
 
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {(order?.user?.stamp_url || profile?.stamp_url) ? (
-              <img src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${order?.user?.stamp_url || profile?.stamp_url}`} alt="Stamp" style={{ width: '170px', objectFit: 'contain' }} />
+              <img src={(order?.user?.stamp_url || profile?.stamp_url).startsWith('http') ? (order?.user?.stamp_url || profile?.stamp_url) : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${order?.user?.stamp_url || profile?.stamp_url}`} alt="Stamp" style={{ width: '170px', objectFit: 'contain' }} />
             ) : (
               <div style={{
                 border: '2px solid #1d4ed8',
