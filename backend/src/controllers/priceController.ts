@@ -3,10 +3,42 @@ import prisma from '../db';
 
 export const getPrices = async (req: Request, res: Response) => {
   try {
-    const prices = await prisma.masterprice.findMany({
-      include: { formula: true }
-    });
-    res.json(prices);
+    const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const search = req.query.search as string;
+
+    let where: any = {};
+    if (search) {
+      where.OR = [
+        { item_name: { contains: search } },
+        { category: { contains: search } }
+      ];
+    }
+
+    if (page && limit) {
+      const total = await prisma.masterprice.count({ where });
+      const prices = await prisma.masterprice.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { formula: true }
+      });
+      res.json({
+        data: prices,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } else {
+      const prices = await prisma.masterprice.findMany({
+        where,
+        include: { formula: true }
+      });
+      res.json(prices);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch prices' });
   }

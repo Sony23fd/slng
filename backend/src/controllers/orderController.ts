@@ -196,17 +196,89 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const search = req.query.search as string;
+    const statusType = req.query.statusType as string; // e.g. 'ALL', 'QUOTE', 'PENDING', 'IN_PRODUCTION', 'READY', 'DELIVERED'
+    const isMine = req.query.isMine === 'true';
+    const kanbanLimit = req.query.kanbanLimit === 'true';
+    const userId = (req as any).user?.id;
+    
+    let where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { customer_name: { contains: search } },
+        { product_name: { contains: search } },
+        { order_number: { contains: search } }
+      ];
+    }
+    
+    if (isMine && userId) {
+      where.userId = userId;
+    }
+    
+    if (statusType && statusType !== 'ALL') {
+      const statuses = await prisma.order_status.findMany({
+        where: { type: statusType }
+      });
+      const statusNames = statuses.map(s => s.name);
+      if (statusNames.length > 0) {
+        where.current_status = { in: statusNames };
+      }
+    }
+
+    if (kanbanLimit) {
+      // Kanban mode: return only active orders without pagination, limited to 200
+      const activeStatuses = await prisma.order_status.findMany({
+        where: { type: { notIn: ['QUOTE', 'DELIVERED'] } }
+      });
+      
+      const activeStatusNames = activeStatuses.map(s => s.name);
+      
+      // If a specific statusType was requested along with kanbanLimit, respect it 
+      // but only if it is within active statuses (handled naturally by AND logic)
+      if (where.current_status) {
+         // keep it as is
+      } else {
+         where.current_status = { in: activeStatusNames };
+      }
+      
+      const orders = await prisma.order.findMany({
+        where,
+        take: 200,
+        orderBy: { createdAt: 'desc' },
+        include: { user: true, materials: true, operations: true, outsourcedJobs: true }
+      });
+      
+      return res.json({ data: orders, meta: { total: orders.length, page: 1, limit: 200, totalPages: 1 } });
+    }
+
+    const total = await prisma.order.count({ where });
     const orders = await prisma.order.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
       include: {
         user: true,
         materials: true,
         operations: true,
         outsourcedJobs: true,
-      },
-      orderBy: { createdAt: 'desc' }
+      }
     });
-    res.json(orders);
+    
+    res.json({
+      data: orders,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to fetch all orders' });
   }
 };

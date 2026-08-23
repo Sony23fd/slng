@@ -4,10 +4,45 @@ import bcrypt from 'bcryptjs';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await prisma.user.findMany({
-      select: { id: true, name: true, full_name: true, role: true, phone: true, createdAt: true }
-    });
-    res.json(users);
+    const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const search = req.query.search as string;
+
+    let where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { full_name: { contains: search } },
+        { role: { contains: search } }
+      ];
+    }
+
+    if (page && limit) {
+      const total = await prisma.user.count({ where });
+      const users = await prisma.user.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: { id: true, name: true, full_name: true, role: true, phone: true, createdAt: true },
+        orderBy: { id: 'desc' }
+      });
+      res.json({
+        data: users,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } else {
+      const users = await prisma.user.findMany({
+        where,
+        select: { id: true, name: true, full_name: true, role: true, phone: true, createdAt: true },
+        orderBy: { id: 'desc' }
+      });
+      res.json(users);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users' });
   }
