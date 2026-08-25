@@ -66,14 +66,14 @@ const prices = [
 ];
 
 const operationsData = [
-  { name: 'Нугалаа', expr: 'total_qty', desc: 'Нугалаа', cost: 10 },
-  { name: 'Шалгах', expr: 'total_qty', desc: 'Шалгах', cost: 10 },
-  { name: 'Цуглуулга', expr: 'total_qty', desc: 'Цуглуулга', cost: 10 },
+  { name: 'Нугалаа', expr: 'total_base_sheets', desc: 'Нугалаа', cost: 10 },
+  { name: 'Шалгах', expr: 'total_base_sheets', desc: 'Шалгах', cost: 10 },
+  { name: 'Цуглуулга', expr: 'total_base_sheets', desc: 'Цуглуулга', cost: 10 },
   
-  { name: 'Хэвлэгч (1 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 1 өнгө', cost: 10 },
-  { name: 'Хэвлэгч (2 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 2 өнгө', cost: 20 },
-  { name: 'Хэвлэгч (4 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 4 өнгө', cost: 40 },
-  { name: 'Хэвлэгч (5 өнгө)', expr: 'total_qty', desc: 'Хэвлэгч 5 өнгө', cost: 50 },
+  { name: 'Хэвлэгч (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 1 өнгө', cost: 10 },
+  { name: 'Хэвлэгч (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 2 өнгө', cost: 20 },
+  { name: 'Хэвлэгч (4 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 4 өнгө', cost: 40 },
+  { name: 'Хэвлэгч (5 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 5 өнгө', cost: 50 },
 
   { name: 'Үдээ (Унаа үдээ)', expr: 'total_qty', desc: 'Унаа үдээ', cost: 50 },
   { name: 'Үдээ (Шугамын үдээ)', expr: 'total_qty', desc: 'Шугамын үдээ', cost: 50 },
@@ -88,6 +88,7 @@ const operationsData = [
   { name: 'Огтлоо (Жижиг)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Жижиг', cost: 1000 },
   { name: 'Огтлоо (Дунд)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Дунд', cost: 1500 },
   { name: 'Огтлоо (Том)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Том', cost: 2000 },
+  { name: 'Огтлоо (Гурван талт)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Гурван талт', cost: 2500 },
 
   { name: 'Хатуу хавтас (A5)', expr: 'total_qty', desc: 'Хатуу хавтас A5', cost: 2000 },
   { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000 },
@@ -107,7 +108,12 @@ const operationsData = [
 
 export async function seedPrices(prisma: PrismaClient) {
   console.log('Seeding MasterPrice...');
-  const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+  let admin = null;
+  try {
+    admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+  } catch (e) {
+    console.log('Could not fetch admin user (possibly schema mismatch). Skipping logs.');
+  }
 
   // 1. Seed standard materials
   for (const p of prices) {
