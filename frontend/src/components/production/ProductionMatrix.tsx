@@ -5,6 +5,8 @@ import JobTicketModal from './JobTicketModal';
 
 export interface OrderStageData {
   status: number; // 0 = 0%, 50 = 50%, 100 = 100%
+  completed_qty?: number;
+  waste_qty?: number;
   operator?: string;
   machine?: string;
   updatedAt?: string;
@@ -116,18 +118,7 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
 
   const handleCellClick = (order: Order, stageKey: string) => {
     const currentData = order.production_stages?.[stageKey] || { status: 0 };
-    // Cycle status: 0 -> 100 -> 50 -> 0
-    let nextStatus = 100;
-    if (currentData.status === 0) nextStatus = 100;
-    else if (currentData.status === 100) nextStatus = 50;
-    else nextStatus = 0;
-
-    const newData: OrderStageData = {
-      ...currentData,
-      status: nextStatus,
-      updatedAt: new Date().toISOString()
-    };
-    onUpdateStage(order.id, stageKey, newData);
+    setActiveModal({ orderId: order.id, stageKey, data: currentData });
   };
 
   return (
@@ -320,7 +311,7 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
                           <td key={stage.key} style={{ padding: '0.3rem', borderRight: '1px solid var(--border-color)' }}>
                             <div
                               onClick={() => handleCellClick(order, stage.key)}
-                              title="Дээр нь дарж төлөв солино (0% -> 100% -> 50%)"
+                              title="Дэлгэрэнгүй бүртгэх"
                               style={{
                                 background: bgColor,
                                 color: textColor,
@@ -331,7 +322,7 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
                                 fontSize: '0.8rem',
                                 transition: 'transform 0.1s ease',
                                 position: 'relative',
-                                minHeight: '44px',
+                                minHeight: '50px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center',
@@ -339,12 +330,22 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
                                 boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                               }}
                             >
-                              <div>{stData.status}%</div>
+                              <div style={{ fontSize: '0.9rem' }}>{stData.status}%</div>
+                              {stData.completed_qty !== undefined && stData.completed_qty > 0 && (
+                                <div style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.9 }}>
+                                  {stData.completed_qty.toLocaleString()} / {order.total_qty.toLocaleString()}
+                                </div>
+                              )}
                               {(stData.operator || stData.machine) && (
                                 <div style={{ fontSize: '0.65rem', fontWeight: 500, lineHeight: 1.1, marginTop: '2px', opacity: 0.9 }}>
                                   {stData.machine || stData.operator}
                                 </div>
                               )}
+                              {stData.waste_qty ? (
+                                <div style={{ fontSize: '0.6rem', color: '#7f1d1d', background: 'rgba(255,255,255,0.8)', padding: '1px 4px', borderRadius: '4px', marginTop: '2px' }}>
+                                  Гологдол: {stData.waste_qty}
+                                </div>
+                              ) : null}
                             </div>
                             <button
                               type="button"
@@ -413,41 +414,88 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
       </div>
 
       {/* Modal for Setting Machine / Operator */}
-      {activeModal && (
+      {activeModal && (() => {
+        const modalOrder = orders.find(o => o.id === activeModal.orderId);
+        const totalQty = modalOrder?.total_qty || 1;
+        
+        const handleQtyChange = (val: number) => {
+          let newQty = val;
+          if (newQty < 0) newQty = 0;
+          if (newQty > totalQty) newQty = totalQty;
+          let newStatus = Math.round((newQty / totalQty) * 100);
+          setActiveModal({ ...activeModal, data: { ...activeModal.data, completed_qty: newQty, status: newStatus } });
+        };
+
+        const handleStatusChange = (val: number) => {
+          let newStatus = val;
+          if (newStatus < 0) newStatus = 0;
+          if (newStatus > 100) newStatus = 100;
+          let newQty = Math.round((newStatus / 100) * totalQty);
+          setActiveModal({ ...activeModal, data: { ...activeModal.data, status: newStatus, completed_qty: newQty } });
+        };
+
+        return (
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000
         }}>
           <div style={{
-            background: 'var(--surface-color)',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            width: '90%',
-            maxWidth: '400px',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+            background: 'var(--surface-color)', padding: '1.5rem', borderRadius: '0.75rem',
+            width: '90%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            maxHeight: '90vh', overflowY: 'auto'
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
               🛠️ Дамжлага дэлгэрэнгүй бүртгэх
             </h3>
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>Гүйцэтгэлийн хувь:</label>
-              <select
-                value={activeModal.data.status}
-                onChange={e => setActiveModal({ ...activeModal, data: { ...activeModal.data, status: Number(e.target.value) } })}
-                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid var(--border-color)' }}
-              >
-                <option value={0}>0% (Эхлээгүй - Улаан)</option>
-                <option value={50}>50% (Явагдаж буй - Шар)</option>
-                <option value={100}>100% (Дууссан - Ногоон)</option>
-              </select>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <button type="button" className="btn btn-outline" style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }} onClick={() => handleStatusChange(10)}>
+                ▶️ Эхлүүлэх
+              </button>
+              <button type="button" className="btn btn-outline" style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem', background: '#dcfce7', color: '#166534', borderColor: '#bbf7d0' }} onClick={() => handleStatusChange(100)}>
+                ✅ Дуусгах
+              </button>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>
+                <span>Хийгдсэн тоо:</span>
+                <span style={{ color: 'var(--primary-color)' }}>{activeModal.data.status}%</span>
+              </label>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <input
+                  type="number"
+                  value={activeModal.data.completed_qty !== undefined ? activeModal.data.completed_qty : Math.round((activeModal.data.status / 100) * totalQty)}
+                  onChange={e => handleQtyChange(Number(e.target.value))}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid var(--border-color)', fontWeight: 'bold' }}
+                  min={0}
+                  max={totalQty}
+                />
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ {totalQty.toLocaleString()} ш</span>
+              </div>
+              
+              <input 
+                type="range" 
+                min="0" max="100" 
+                value={activeModal.data.status} 
+                onChange={e => handleStatusChange(Number(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--primary-color)' }}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600, color: '#991b1b' }}>Гологдол / Хаягдал (ш):</label>
+              <input
+                type="number"
+                value={activeModal.data.waste_qty || 0}
+                onChange={e => setActiveModal({ ...activeModal, data: { ...activeModal.data, waste_qty: Number(e.target.value) } })}
+                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #fca5a5', background: '#fef2f2' }}
+                min={0}
+              />
             </div>
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -502,7 +550,8 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {ticketOrder && (
         <JobTicketModal order={ticketOrder} onClose={() => setTicketOrder(null)} />
