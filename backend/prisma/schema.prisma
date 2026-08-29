@@ -84,12 +84,16 @@ model order {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   order_number      String?             @unique
+  company_registry  String?
+  company_name      String?
+  needs_ebarimt     Boolean             @default(false)
   user              user?               @relation(fields: [sales_person_id], references: [id])
   materials         ordermaterial[]
   operations        orderoperation[]
   outsourcedJobs    orderoutsourced[]
   specifications    orderspecification?
   orderstatuslog    orderstatuslog[]
+  payments          payment[]
 
   @@index([sales_person_id])
 }
@@ -200,6 +204,7 @@ model user {
   order          order[]
   orderstatuslog orderstatuslog[]
   notifications  notification[]
+  payments       payment[]
 }
 
 enum user_role {
@@ -252,6 +257,22 @@ model order_status {
   type       String   @default("ACTIVE") // QUOTE, PENDING, ACTIVE, READY, DELIVERED, CANCELLED
   is_system  Boolean  @default(false)
   createdAt  DateTime @default(now())
+}
+
+model payment {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  amount     Float
+  method     String
+  date       DateTime @default(now())
+  created_by Int
+  notes      String?
+  createdAt  DateTime @default(now())
+  order      order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user       user     @relation(fields: [created_by], references: [id])
+
+  @@index([order_id])
+  @@index([created_by])
 }
 
 model notification {

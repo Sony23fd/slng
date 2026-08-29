@@ -58,6 +58,9 @@ export const createOrder = async (req: Request, res: Response) => {
         total_qty: data.total_qty ? Number(data.total_qty) : 0,
         size: data.size || null,
         sub_size: data.sub_size || null,
+        company_registry: data.company_registry || null,
+        company_name: data.company_name || null,
+        needs_ebarimt: data.needs_ebarimt === true || data.needs_ebarimt === 'true',
         needs_design: Boolean(data.needs_design),
         design_status: data.design_status || 'Эх бэлэн',
         design_cost: data.design_cost ? Number(data.design_cost) : 0,
@@ -416,6 +419,7 @@ export const getOrderById = async (req: Request, res: Response) => {
         operations: true,
         outsourcedJobs: true,
         user: true,
+        payments: true,
       }
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
