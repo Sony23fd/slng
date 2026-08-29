@@ -9,7 +9,7 @@ export default function EditOrderPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const isDuplicate = searchParams.get('duplicate') === 'true';
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +34,11 @@ export default function EditOrderPage() {
 
   if (loading) return <div style={{ padding: '2rem' }}>Уншиж байна...</div>;
   if (!initialData) return <div style={{ padding: '2rem' }}>Захиалга олдсонгүй.</div>;
+
+  const canEdit = initialData.sales_person_id === user?.id || user?.role === 'ADMIN';
+  if (!canEdit && !isDuplicate) {
+    return <div style={{ padding: '2rem', color: '#ef4444', fontWeight: 600 }}>Та энэ захиалгыг засах эрхгүй байна.</div>;
+  }
 
   return (
     <OrderForm initialData={initialData} isEdit={!isDuplicate} orderId={Number(id)} />

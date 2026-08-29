@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import Pagination from '../../../components/Pagination';
+import JobTicketModal from '../../../components/production/JobTicketModal';
 
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
@@ -15,6 +16,7 @@ export default function AllOrdersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [viewingOrder, setViewingOrder] = useState<any>(null);
   const limit = 20;
   
   const router = useRouter();
@@ -214,6 +216,7 @@ export default function AllOrdersPage() {
                 <td style={{ padding: '1rem' }}>
                   <select 
                     value={o.current_status} 
+                    disabled={!(o.sales_person_id === user?.id || user?.role === 'ADMIN')}
                     onChange={async (e) => {
                       const newStatus = e.target.value;
                       if (!confirm(`Төлөвийг '${newStatus}' болгож өөрчлөх үү?`)) return;
@@ -244,9 +247,15 @@ export default function AllOrdersPage() {
                   </select>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                    Засах
-                  </button>
+                  {(o.sales_person_id === user?.id || user?.role === 'ADMIN') ? (
+                    <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                      Засах
+                    </button>
+                  ) : (
+                    <button onClick={() => setViewingOrder(o)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                      Харах
+                    </button>
+                  )}
                   <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
                     Хуулах
                   </button>
@@ -273,6 +282,7 @@ export default function AllOrdersPage() {
           onPageChange={(p) => setPage(p)} 
         />
       </div>
+      {viewingOrder && <JobTicketModal order={viewingOrder} onClose={() => setViewingOrder(null)} />}
     </div>
   );
 }

@@ -163,6 +163,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    const userRole = (req as any).user?.role;
+    if (order.sales_person_id !== userId && !['ADMIN', 'PRODUCTION'].includes(userRole)) {
+      return res.status(403).json({ error: 'Та энэ захиалгын төлөвийг өөрчлөх эрхгүй байна.' });
+    }
+
     const old_status = order.current_status;
 
     if ((old_status === 'Бэлэн болсон' || old_status === 'Бэлэн') && targetStatus !== 'Хүлээлгэн өгсөн' && targetStatus !== 'Олгосон' && targetStatus !== 'Цуцлагдсан') {
@@ -428,6 +433,12 @@ export const updateOrder = async (req: Request, res: Response) => {
     
     const existingOrder = await prisma.order.findUnique({ where: { id: orderId } });
     if (!existingOrder) return res.status(404).json({ error: 'Order not found' });
+
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+    if (existingOrder.sales_person_id !== userId && userRole !== 'ADMIN') {
+      return res.status(403).json({ error: 'Та энэ захиалгыг засах эрхгүй байна.' });
+    }
 
     let order_number = existingOrder.order_number;
     let current_status = data.current_status || undefined;
