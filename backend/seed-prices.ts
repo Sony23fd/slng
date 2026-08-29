@@ -68,12 +68,12 @@ const prices = [
 const operationsData = [
   { name: 'Нугалаа', expr: 'total_base_sheets', desc: 'Нугалаа', cost: 10 },
   { name: 'Шалгах', expr: 'total_base_sheets', desc: 'Шалгах', cost: 10 },
-  { name: 'Цуглуулга', expr: 'total_base_sheets', desc: 'Цуглуулга', cost: 10 },
+  { name: 'Холио', expr: 'total_base_sheets', desc: 'Холио', cost: 10 },
   
-  { name: 'Хэвлэгч (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 1 өнгө', cost: 10 },
-  { name: 'Хэвлэгч (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 2 өнгө', cost: 20 },
-  { name: 'Хэвлэгч (4 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 4 өнгө', cost: 40 },
-  { name: 'Хэвлэгч (5 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэгч 5 өнгө', cost: 50 },
+  { name: 'Хэвлэх (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 1 өнгө', cost: 10 },
+  { name: 'Хэвлэх (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 2 өнгө', cost: 20 },
+  { name: 'Хэвлэх (4 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 4 өнгө', cost: 40 },
+  { name: 'Хэвлэх (5 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 5 өнгө', cost: 50 },
 
   { name: 'Үдээ (Унаа үдээ)', expr: 'total_qty', desc: 'Унаа үдээ', cost: 50 },
   { name: 'Үдээ (Шугамын үдээ)', expr: 'total_qty', desc: 'Шугамын үдээ', cost: 50 },
