@@ -1697,53 +1697,82 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <select 
-                          style={{ ...(isSpecialStrap || formValues.category === 'Түргэн хэвлэл' ? disabledStyle : inputStyle), pointerEvents: (isSpecialStrap || formValues.category === 'Түргэн хэвлэл') ? 'none' : 'auto' }} 
-                          title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''} 
-                          {...register(`materials.${index}.print_size`, {
-                            onChange: (e) => {
-                              if (isSpecialMat) return;
-                              const val = e.target.value;
-                              const sourceSize = formValues.materials?.[index]?.size || '';
-                              const ratio = calculatePaperDivision(sourceSize, val);
-                              const _isCov = formValues.materials?.[index]?.is_cover;
-                              const bt = formValues.binding_type || '';
-                              if (ratio > 0) {
-                                setValue(`materials.${index}.divide_by`, ratio);
-                              }
-                              
-                              // Trigger M4 calculation
-                              const a7Raw = formValues.size || '';
-                              const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
-                              const isCover = formValues.materials?.[index]?.is_cover || false;
-                              const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
-                              if (val && a7 && b4 > 0) {
-                                const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
-                                if (pagesPerSheet > 0) {
-                                  const m4 = b4 / pagesPerSheet;
-                                  setValue(`materials.${index}.press_sheet`, String(m4));
-                                  const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                                  const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                  const divs = calculatePaperDivision(val || 'A2', a7);
-                                  const setups = calculateSetups(m4, divs);
-                                  const total = (base * m4) + (extra * setups);
-                                  setValue(`materials.${index}.total_qty`, total);
-                                  const divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
-                                  if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                                }
-                              } else if (ratio > 0) {
-                                // If M4 calculation didn't run, still update sheet_qty based on ratio
-                                const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
-                              }
-                            }
-                          })}
-                        >
-                          <option value="">Сонгох</option>
-                          <option value="A2">A2</option>
-                          <option value="B3">B3</option>
-                          <option value="A3">A3</option>
-                        </select>
+                        <Controller
+                          name={`materials.${index}.print_size`}
+                          control={control}
+                          render={({ field }) => (
+                            <div title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''}>
+                              <CreatableSelect
+                                {...field}
+                                options={[
+                                  { value: 'A1', label: 'A1' },
+                                  { value: 'A2', label: 'A2' },
+                                  { value: 'A3', label: 'A3' },
+                                  { value: 'A4', label: 'A4' },
+                                  { value: 'B1', label: 'B1' },
+                                  { value: 'B2', label: 'B2' },
+                                  { value: 'B3', label: 'B3' },
+                                  { value: 'B4', label: 'B4' }
+                                ]}
+                                value={field.value ? { value: field.value, label: field.value } : null}
+                                onChange={(selected: any) => {
+                                  if (isSpecialMat) return;
+                                  const val = selected ? selected.value : '';
+                                  field.onChange(val);
+                                  
+                                  const sourceSize = formValues.materials?.[index]?.size || '';
+                                  const ratio = calculatePaperDivision(sourceSize, val);
+                                  const _isCov = formValues.materials?.[index]?.is_cover;
+                                  const bt = formValues.binding_type || '';
+                                  if (ratio > 0) {
+                                    setValue(`materials.${index}.divide_by`, ratio);
+                                  }
+                                  
+                                  // Trigger M4 calculation
+                                  const a7Raw = formValues.size || '';
+                                  const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
+                                  const isCover = formValues.materials?.[index]?.is_cover || false;
+                                  const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
+                                  if (val && a7 && b4 > 0) {
+                                    const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
+                                    if (pagesPerSheet > 0) {
+                                      const m4 = b4 / pagesPerSheet;
+                                      setValue(`materials.${index}.press_sheet`, String(m4));
+                                      const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                      const divs = calculatePaperDivision(val || 'A2', a7);
+                                      const setups = calculateSetups(m4, divs);
+                                      const total = (base * m4) + (extra * setups);
+                                      setValue(`materials.${index}.total_qty`, total);
+                                      const divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+                                      if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                    }
+                                  } else if (ratio > 0) {
+                                    // If M4 calculation didn't run, still update sheet_qty based on ratio
+                                    const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                    setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
+                                  }
+                                }}
+                                isClearable
+                                isDisabled={isSpecialStrap || formValues.category === 'Түргэн хэвлэл'}
+                                placeholder="Сонгох..."
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                menuPosition="fixed"
+                                styles={{ 
+                                  control: (base) => ({ 
+                                    ...base, 
+                                    background: (isSpecialStrap || formValues.category === 'Түргэн хэвлэл') ? '#f1f5f9' : 'white', 
+                                    borderRadius: '0.25rem', 
+                                    borderColor: '#cbd5e1', 
+                                    minHeight: '34px', 
+                                    fontSize: '0.85rem' 
+                                  }), 
+                                  menuPortal: base => ({ ...base, zIndex: 9999 }) 
+                                }}
+                              />
+                            </div>
+                          )}
+                        />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
