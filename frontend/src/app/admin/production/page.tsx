@@ -12,6 +12,7 @@ export default function ProductionPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
+  const [operators, setOperators] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'MATRIX' | 'KANBAN'>('MATRIX');
 
@@ -22,6 +23,7 @@ export default function ProductionPage() {
       } else {
         fetchOrders();
         fetchStatuses();
+        fetchOperators();
       }
     }
   }, [token, hasHydrated, router]);
@@ -58,6 +60,23 @@ export default function ProductionPage() {
       }
     } catch (e) {
       console.error("Failed to load statuses:", e);
+    }
+  };
+
+  const fetchOperators = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // userController might return { data: [...] } if paginated, or an array
+        const userList = Array.isArray(data) ? data : (data.data || []);
+        const prodUsers = userList.filter((u: any) => u.role === 'PRODUCTION');
+        setOperators(prodUsers.map((u: any) => u.full_name || u.name));
+      }
+    } catch (e) {
+      console.error("Failed to load operators:", e);
     }
   };
 
@@ -170,7 +189,7 @@ export default function ProductionPage() {
           🔄 Мэдээлэл ачаалж байна...
         </div>
       ) : activeTab === 'MATRIX' ? (
-        <ProductionMatrix orders={orders} onUpdateStage={handleUpdateStage} statuses={orderStatuses} />
+        <ProductionMatrix orders={orders} onUpdateStage={handleUpdateStage} statuses={orderStatuses} operators={operators} />
       ) : (
         <KanbanBoard orders={orders} onMoveStatus={handleMoveStatus} statuses={orderStatuses} />
       )}

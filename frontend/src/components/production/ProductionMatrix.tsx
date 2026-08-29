@@ -52,15 +52,14 @@ const STAGES = [
 ];
 
 const MACHINES = ['DIGITAL KONIKA', 'KOMORI', 'KOMORI RYOBI', 'HEIDELBERG', 'CTP'];
-const OPERATORS = ['Ч.Төрболд', 'Б.Тамир', 'Д.Отгонбаяр', 'И.Уранбилэг', 'Оператор 1', 'Оператор 2'];
-
 interface Props {
   orders: Order[];
   statuses: any[];
+  operators?: string[];
   onUpdateStage: (orderId: number, stageKey: string, newData: OrderStageData) => void;
 }
 
-export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Props) {
+export default function ProductionMatrix({ orders, statuses, operators = [], onUpdateStage }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUrgent, setFilterUrgent] = useState(false);
   const [statusTab, setStatusTab] = useState<'ACTIVE' | 'COMPLETED' | 'DELIVERED'>('ACTIVE');
@@ -520,7 +519,7 @@ export default function ProductionMatrix({ orders, statuses, onUpdateStage }: Pr
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid var(--border-color)' }}
               >
                 <option value="">-- Сонгоогүй --</option>
-                {OPERATORS.map(op => (
+                {operators.map(op => (
                   <option key={op} value={op}>{op}</option>
                 ))}
               </select>
