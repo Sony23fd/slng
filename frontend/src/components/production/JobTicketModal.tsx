@@ -158,17 +158,21 @@ export default function JobTicketModal({ order, onClose }: Props) {
               <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ background: '#f1f5f9' }}>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', width: '40px' }}>✓</th>
                     <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>Ажиллагааны нэр</th>
                     <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>Тоо ширхэг</th>
-                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>Төрөл</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>Тайлбар</th>
                   </tr>
                 </thead>
                 <tbody>
                   {order.operations.map((o: any, idx: number) => (
                     <tr key={idx}>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem' }}>{o.operation_name}</td>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>
+                        <div style={{ width: '20px', height: '20px', border: '2px solid #000', borderRadius: '3px', margin: '0 auto' }}></div>
+                      </td>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', fontWeight: 600 }}>{o.operation_name}</td>
                       <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{o.qty} ш</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{o.is_manual ? 'Гараар' : 'Машинаар'}</td>
+                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem' }}>{o.notes || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

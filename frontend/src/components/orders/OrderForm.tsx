@@ -130,6 +130,19 @@ const SectionCard = ({ id, step, title, sub, children }: any) => {
   );
 };
 
+const calculateMakeready = (baseQty: number): number => {
+  if (baseQty <= 1000) return 100;
+  if (baseQty <= 2000) return 150;
+  if (baseQty <= 4000) return 200;
+  if (baseQty <= 5000) return 300;
+  if (baseQty <= 10000) return 400;
+  if (baseQty <= 14999) return 500;
+  if (baseQty <= 20000) return 600;
+  if (baseQty <= 25000) return 800;
+  if (baseQty <= 29999) return 900;
+  return 1000;
+};
+
 export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isQuoteMode?: boolean }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
@@ -583,7 +596,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       if (m4 > 0) {
         const base = Number(m.base_qty) || a6;
-        const extra = Number(m.extra_qty) || 0;
+        const extra = calculateMakeready(base);
+        setValue(`materials.${index}.extra_qty`, extra);
         const divs = divBy;
         const setups = calculateSetups(m4, divs);
         const total = (base * m4) + (extra * setups);
@@ -760,7 +774,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (String(m.press_sheet) !== m4) setValue(`materials.${index}.press_sheet`, m4);
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
-        const extra = Number(m.extra_qty) || 0;
+        const extra = calculateMakeready(m5);
+        setValue(`materials.${index}.extra_qty`, extra);
         const setups = isBag ? extra : calculateSetups(1, div);
         const total = (m5 * 1) + setups;
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
@@ -773,6 +788,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
 
   const [submitType, setSubmitType] = useState<string>('');
+  const [showOperationsModal, setShowOperationsModal] = useState(false);
 
   const onSubmit = (data: OrderFormValues) => {
     // Calculator mode default values for required fields
@@ -1115,7 +1131,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     const newBase = isManualBase ? currentBase : a6;
                     setValue(`materials.${index}.base_qty`, newBase);
                     const press = Number(m.press_sheet) || 1;
-                    const extra = Number(m.extra_qty) || 0;
+                    const currentMaterialName = m.material_name || '';
+                    const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(m.extra_qty) || 0) : calculateMakeready(newBase);
+                    setValue(`materials.${index}.extra_qty`, extra);
                     const a7 = getA7Size();
                     const divs = calculatePaperDivision(m.print_size || 'A2', a7);
                     const setups = calculateSetups(press, divs);
@@ -1418,7 +1436,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                             if (m4 > 0) {
                               const base = Number(m.base_qty) || 0;
-                              const extra = Number(m.extra_qty) || 0;
+                              const currentMaterialName = m.material_name || '';
+                              const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(m.extra_qty) || 0) : calculateMakeready(base);
+                              setValue(`materials.${index}.extra_qty`, extra);
                               const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
                               const setups = calculateSetups(m4, divs);
                               const total = (base * m4) + (extra * setups);
@@ -1620,7 +1640,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               }
 
                               const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
-                              const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
+                              const currentMaterialName = getValues(`materials.${index}.material_name`) || '';
+                              const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
+                              setValue(`materials.${index}.extra_qty`, extra);
                               const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
                               const divs = calculatePaperDivision(currentPrintSize, a7);
                               const setups = calculateSetups(m4, divs);
@@ -1817,86 +1839,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         <SectionCard id="sec7" step="7" title="7. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)">
           
           
-          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
-            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-color)' }}>Боломжит ажиллагаанууд:</h4>
-            
-            {(() => {
-              const ops = masterPrices.filter(op => op.category === 'Ажиллагаа');
-              const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
-              ops.forEach(op => {
-                const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
-                if (match) {
-                  const baseName = match[1].trim();
-                  const variantName = match[2].trim();
-                  let group = groups.find(g => g.baseName === baseName);
-                  if (!group) {
-                    group = { baseName, isGroup: true, options: [] };
-                    groups.push(group);
-                  }
-                  group.options.push({ ...op, variantName });
-                } else {
-                  groups.push({ baseName: op.item_name, isGroup: false, options: [{ ...op, variantName: op.item_name }] });
-                }
-              });
-
-              return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
-                  {groups.map(group => {
-                    const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
-                    const isAdded = !!activeOpInGroup;
-
-                    return (
-                      <div key={group.baseName} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.75rem', background: isAdded ? '#eff6ff' : '#ffffff', border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0', borderRadius: '0.5rem', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#475569' }}>
-                          <input
-                            type="checkbox"
-                            checked={isAdded}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                addQuickOp(group.options[0]);
-                              } else {
-                                const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                if (idx !== -1) removeOp(idx);
-                              }
-                            }}
-                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3b82f6' }}
-                          />
-                          {group.baseName}
-                        </label>
-
-                        {isAdded && group.isGroup && (
-                          <select
-                            value={activeOpInGroup?.item_name || ''}
-                            onChange={(e) => {
-                              const newOpName = e.target.value;
-                              const newOp = group.options.find(o => o.item_name === newOpName);
-                              if (newOp) {
-                                const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                if (idx !== -1) {
-                                  const currentOp = formValues.operations?.[idx];
-                                  updateOp(idx, { 
-                                    ...currentOp,
-                                    operation_name: newOp.item_name, 
-                                    unit_cost: newOp.unit_cost,
-                                    qty: currentOp?.qty || 0,
-                                    notes: currentOp?.notes || ''
-                                  } as any);
-                                }
-                              }
-                            }}
-                            style={{ padding: '0.35rem', fontSize: '0.8rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.2rem' }}
-                          >
-                            {group.options.map(opt => (
-                              <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Нэмэлт ажиллагаа сонгох
+            </button>
           </div>
 
           {opFields.length > 0 && (
@@ -2192,6 +2138,103 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         </div>
       </div>
       </form>
+
+      {/* Нэмэлт ажиллагаа сонгох Modal */}
+      {showOperationsModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: '0.75rem', width: '100%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа сонгох</h3>
+              <button type="button" onClick={() => setShowOperationsModal(false)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+              {(() => {
+                const ops = masterPrices.filter((op: any) => op.category === 'Ажиллагаа');
+                const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
+                ops.forEach((op: any) => {
+                  const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
+                  if (match) {
+                    const baseName = match[1].trim();
+                    const variantName = match[2].trim();
+                    let group = groups.find(g => g.baseName === baseName);
+                    if (!group) {
+                      group = { baseName, isGroup: true, options: [] };
+                      groups.push(group);
+                    }
+                    group.options.push({ ...op, variantName });
+                  } else {
+                    groups.push({ baseName: op.item_name, isGroup: false, options: [{ ...op, variantName: op.item_name }] });
+                  }
+                });
+
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                    {groups.map(group => {
+                      const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
+                      const isAdded = !!activeOpInGroup;
+
+                      return (
+                        <div key={group.baseName} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.75rem', background: isAdded ? '#eff6ff' : '#ffffff', border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0', borderRadius: '0.5rem', transition: 'all 0.2s' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#475569' }}>
+                            <input
+                              type="checkbox"
+                              checked={isAdded}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  addQuickOp(group.options[0]);
+                                } else {
+                                  const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                  if (idx !== -1) removeOp(idx);
+                                }
+                              }}
+                              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                            />
+                            {group.baseName}
+                          </label>
+
+                          {isAdded && group.isGroup && (
+                            <select
+                              value={activeOpInGroup?.item_name || ''}
+                              onChange={(e) => {
+                                const newOpName = e.target.value;
+                                const newOp = group.options.find(o => o.item_name === newOpName);
+                                if (newOp) {
+                                  const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                  if (idx !== -1) {
+                                    const currentOp = formValues.operations?.[idx];
+                                    updateOp(idx, { 
+                                      ...currentOp,
+                                      operation_name: newOp.item_name, 
+                                      unit_cost: newOp.unit_cost,
+                                      qty: currentOp?.qty || 0,
+                                      notes: currentOp?.notes || ''
+                                    } as any);
+                                  }
+                                }
+                              }}
+                              style={{ padding: '0.4rem', fontSize: '0.85rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.25rem' }}
+                            >
+                              {group.options.map(opt => (
+                                <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', background: '#f8fafc', borderBottomLeftRadius: '0.75rem', borderBottomRightRadius: '0.75rem' }}>
+              <button type="button" onClick={() => setShowOperationsModal(false)} className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontWeight: 600 }}>
+                ОК
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
     </div>
   );

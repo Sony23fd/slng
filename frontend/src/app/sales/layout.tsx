@@ -60,9 +60,9 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
         </div>
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
-          <Link href="/sales" title="Хянах самбар" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>📊</span>
-            {!collapsed && <span>Хянах самбар</span>}
+          <Link href="/sales" title="Үнэ бодолт" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <span style={{ fontSize: '1.1rem' }}>🧮</span>
+            {!collapsed && <span>Үнэ бодолт</span>}
           </Link>
 
           <Link href="/sales/quotes" title="Үнийн саналууд" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
