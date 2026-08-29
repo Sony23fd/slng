@@ -1178,7 +1178,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 </div>
               </>
             )}
-            <div className="erp-field"><label>Бэлэн болох хэмжээ</label><input {...register("sub_size")} /></div>
+
             <div className="erp-field">
               <label title="[A8]">Хавтасны төрөл</label>
               <select {...register("binding_type", {
