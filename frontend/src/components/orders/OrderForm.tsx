@@ -121,10 +121,50 @@ const compactSelectStyles = {
     borderColor: '#cbd5e1',
     minHeight: '34px',
     height: '34px',
-    fontSize: '12.8px'
+    maxHeight: '34px',
+    boxSizing: 'border-box',
+    fontSize: '12.8px',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#94a3b8' }
   }),
-  valueContainer: (base: any) => ({ ...base, padding: '0 6px' }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '34px' })
+  valueContainer: (base: any) => ({ ...base, height: '34px', padding: '0 8px', display: 'flex', alignItems: 'center' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '34px' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '4px 6px' }),
+  clearIndicator: (base: any) => ({ ...base, padding: '4px 4px' })
+};
+
+const tableSelectStyles = {
+  control: (base: any) => ({
+    ...base,
+    background: 'white',
+    borderRadius: '4px',
+    borderColor: '#cbd5e1',
+    minHeight: '32px',
+    height: '32px',
+    maxHeight: '32px',
+    boxSizing: 'border-box',
+    fontSize: '12.2px',
+    boxShadow: 'none',
+    '&:hover': { borderColor: '#94a3b8' }
+  }),
+  valueContainer: (base: any) => ({ ...base, height: '32px', padding: '0 6px', display: 'flex', alignItems: 'center' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '32px' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
+  clearIndicator: (base: any) => ({ ...base, padding: '2px 4px' })
+};
+
+const tableInputStyle: React.CSSProperties = {
+  width: '100%',
+  minWidth: '40px',
+  height: '32px',
+  lineHeight: '32px',
+  padding: '0 6px',
+  border: '1px solid #cbd5e1',
+  borderRadius: '4px',
+  fontSize: '12.2px',
+  boxSizing: 'border-box'
 };
 
 const SectionCard = ({ id, step, title, sub, children }: any) => {
@@ -887,220 +927,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       }}>
         
-        {/* Compact Presets & Templates Bar */}
-        <div className="compact-presets-bar">
-          <div className="compact-presets-chips">
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              ⚡ Загварууд:
-            </span>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Брошур');
-                setValue('category', 'Брошур');
-                setValue('product_name', 'Түгээмэл 1000ш Брошур');
-                setValue('size', 'A4');
-                setValue('total_qty', 1000);
-                setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
-              }}
-            >
-              📄 1000ш Брошур
-            </button>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Тор');
-                setValue('category', 'Тор');
-                setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
-                setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
-                setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
-                setValue('total_qty', 1000);
-                setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
-              }}
-            >
-              🛍️ 1000ш Цаасан тор
-            </button>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Ном');
-                setValue('category', 'Ном');
-                setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
-                setValue('size', 'A5');
-                setValue('total_pages', 160);
-                setValue('binding_type', 'Наалттай');
-                setValue('total_qty', 1000);
-                setValue('materials', [
-                  { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
-                  { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                ]);
-              }}
-            >
-              📚 1000ш Ном
-            </button>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Календарь');
-                setValue('category', 'Календарь');
-                setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
-                setValue('size', 'A5');
-                setValue('total_pages', 26);
-                setValue('total_qty', 300);
-                setValue('materials', [
-                  { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
-                  { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
-                  { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
-                ]);
-                setValue('operations', [
-                  { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                  { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
-                  { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
-                ]);
-              }}
-            >
-              🗓️ 300ш Календарь (A5)
-            </button>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Календарь');
-                setValue('category', 'Календарь');
-                setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
-                setValue('size', 'B5');
-                setValue('total_pages', 26);
-                setValue('total_qty', 300);
-                setValue('materials', [
-                  { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
-                  { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
-                  { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
-                ]);
-                setValue('operations', [
-                  { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
-                  { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
-                  { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
-                ]);
-              }}
-            >
-              🗓️ 300ш Календарь (B5)
-            </button>
-            <button
-              type="button"
-              className="preset-chip-btn"
-              onClick={() => {
-                isApplyingTemplateRef.current = true;
-                setPrevCategory('Календарь');
-                setValue('category', 'Календарь');
-                setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
-                setValue('size', 'A2');
-                setValue('total_pages', 14);
-                setValue('total_qty', 500);
-                setValue('materials', [
-                  { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
-                ]);
-                setValue('operations', [
-                  { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                  { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
-                ]);
-              }}
-            >
-              🗓️ 500ш Ханын Кал. (A2)
-            </button>
-          </div>
-
-          <div style={{ width: '260px', flex: 'none' }}>
-            {(() => {
-              const groupedOptions = Object.values(templates.reduce((acc, t) => {
-                const cat = t.category || 'Бусад';
-                if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
-                acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
-                return acc;
-              }, {} as Record<string, { label: string, options: any[] }>));
-              
-              return (
-                <Select
-                  options={groupedOptions}
-                  onChange={(selected: any) => {
-                    if (selected && selected.template) {
-                      isApplyingTemplateRef.current = true;
-                      const t = selected.template;
-                      if (t.category) {
-                        setPrevCategory(t.category);
-                        setValue('category', t.category);
-                      }
-                      if (t.size) setValue('size', t.size);
-                      if (t.binding_type) setValue('binding_type', t.binding_type);
-                      if (t.cover_color) setValue('cover_color', t.cover_color);
-                      if (t.inner_color) setValue('inner_color', t.inner_color);
-                      if (t.total_pages) setValue('total_pages', t.total_pages);
-                      if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
-                      if (t.design_status) setValue('design_status', t.design_status);
-                      if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
-
-                      if (t.order_data) {
-                        const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
-                        if (od.sub_size) setValue('sub_size', od.sub_size);
-                        
-                        if (od.materials && Array.isArray(od.materials)) {
-                          const smartMaterials = od.materials.map((m: any) => {
-                            const mp = masterPrices.find(p => p.item_name === m.material_name);
-                            return {
-                              ...m,
-                              unit_cost: mp ? mp.unit_cost : m.unit_cost
-                            };
-                          });
-                          setValue('materials', smartMaterials);
-                        }
-                        
-                        if (od.operations && Array.isArray(od.operations)) {
-                          const smartOperations = od.operations.map((o: any) => {
-                            const mp = masterPrices.find(p => p.item_name === o.operation_name);
-                            return {
-                              ...o,
-                              unit_cost: mp ? mp.unit_cost : o.unit_cost
-                            };
-                          });
-                          setValue('operations', smartOperations);
-                        }
-                        
-                        if (od.specifications) {
-                          if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
-                          if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
-                        }
-                      }
-                    }
-                  }}
-                  placeholder="🔍 Загваруудаас хайх..."
-                  isClearable
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      background: 'white',
-                      borderRadius: '6px',
-                      borderColor: '#cbd5e1',
-                      minHeight: '32px',
-                      height: '32px',
-                      fontSize: '12px'
-                    }),
-                    valueContainer: (base) => ({ ...base, padding: '0 6px' }),
-                    indicatorsContainer: (base) => ({ ...base, height: '32px' })
-                  }}
-                />
-              );
-            })()}
-          </div>
-        </div>
-
         {/* 3-Column Layout: Customer Sidebar + Product & Calc Column + Price Summary Rail */}
         <div className="erp-three-col-layout">
           
@@ -1222,8 +1048,210 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           {/* 2. Center Column: Product & Calculation Workspace */}
           <div className="erp-calc-col">
 
-        {/* 2. Захиалгын мэдээлэл */}
-        <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
+            {/* Compact Presets & Templates Bar directly atop the calculation form */}
+            <div className="compact-presets-bar">
+              <div className="compact-presets-chips">
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  ⚡ Загварууд:
+                </span>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Брошур');
+                    setValue('category', 'Брошур');
+                    setValue('product_name', 'Түгээмэл 1000ш Брошур');
+                    setValue('size', 'A4');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
+                  }}
+                >
+                  📄 1000ш Брошур
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Тор');
+                    setValue('category', 'Тор');
+                    setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
+                    setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+                    setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
+                  }}
+                >
+                  🛍️ 1000ш Цаасан тор
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
+                    setValue('size', 'A5');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Наалттай');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
+                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                    ]);
+                  }}
+                >
+                  📚 1000ш Ном
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Календарь');
+                    setValue('category', 'Календарь');
+                    setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
+                    setValue('size', 'A5');
+                    setValue('total_pages', 26);
+                    setValue('total_qty', 300);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
+                      { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                      { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
+                      { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
+                    ]);
+                  }}
+                >
+                  🗓️ 300ш Календарь (A5)
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Календарь');
+                    setValue('category', 'Календарь');
+                    setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
+                    setValue('size', 'B5');
+                    setValue('total_pages', 26);
+                    setValue('total_qty', 300);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
+                      { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
+                      { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
+                      { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
+                    ]);
+                  }}
+                >
+                  🗓️ 300ш Календарь (B5)
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Календарь');
+                    setValue('category', 'Календарь');
+                    setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
+                    setValue('size', 'A2');
+                    setValue('total_pages', 14);
+                    setValue('total_qty', 500);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                      { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
+                    ]);
+                  }}
+                >
+                  🗓️ 500ш Ханын Кал. (A2)
+                </button>
+              </div>
+
+              <div style={{ width: '220px', flex: 'none' }}>
+                {(() => {
+                  const groupedOptions = Object.values(templates.reduce((acc, t) => {
+                    const cat = t.category || 'Бусад';
+                    if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
+                    acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
+                    return acc;
+                  }, {} as Record<string, { label: string, options: any[] }>));
+                  
+                  return (
+                    <Select
+                      options={groupedOptions}
+                      onChange={(selected: any) => {
+                        if (selected && selected.template) {
+                          isApplyingTemplateRef.current = true;
+                          const t = selected.template;
+                          if (t.category) {
+                            setPrevCategory(t.category);
+                            setValue('category', t.category);
+                          }
+                          if (t.size) setValue('size', t.size);
+                          if (t.binding_type) setValue('binding_type', t.binding_type);
+                          if (t.cover_color) setValue('cover_color', t.cover_color);
+                          if (t.inner_color) setValue('inner_color', t.inner_color);
+                          if (t.total_pages) setValue('total_pages', t.total_pages);
+                          if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
+                          if (t.design_status) setValue('design_status', t.design_status);
+                          if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
+
+                          if (t.order_data) {
+                            const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
+                            if (od.sub_size) setValue('sub_size', od.sub_size);
+                            
+                            if (od.materials && Array.isArray(od.materials)) {
+                              const smartMaterials = od.materials.map((m: any) => {
+                                const mp = masterPrices.find(p => p.item_name === m.material_name);
+                                return {
+                                  ...m,
+                                  unit_cost: mp ? mp.unit_cost : m.unit_cost
+                                };
+                              });
+                              setValue('materials', smartMaterials);
+                            }
+                            
+                            if (od.operations && Array.isArray(od.operations)) {
+                              const smartOperations = od.operations.map((o: any) => {
+                                const mp = masterPrices.find(p => p.item_name === o.operation_name);
+                                return {
+                                  ...o,
+                                  unit_cost: mp ? mp.unit_cost : o.unit_cost
+                                };
+                              });
+                              setValue('operations', smartOperations);
+                            }
+                            
+                            if (od.specifications) {
+                              if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
+                              if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
+                            }
+                          }
+                        }
+                      }}
+                      placeholder="🔍 Загвар хайх..."
+                      isClearable
+                      styles={compactSelectStyles}
+                    />
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* 2. Захиалгын мэдээлэл */}
+            <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
           
           <div className="erp-grid erp-grid-3">
             <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
@@ -1414,12 +1442,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <input type="number" {...register("design_cost", { valueAsNumber: true })} />
               </div>
             )}
-            <div className="erp-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
-              <input type="checkbox" {...register("is_urgent")} style={{ width: '1.2rem', height: '1.2rem' }} />
-              <label style={{ margin: 0, color: 'red' }}>[AA] Яаралтай эсэх</label>
-            </div>
-            <div className="erp-field"><label>Борлуулагчийн нэр</label><input {...register("sales_person_name")} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} /></div>
-            <div className="erp-field"><label>Тайлбар</label><input {...register("notes")} /></div>
           </div>
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
@@ -1694,7 +1716,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const uniqueBaseNames = Array.from(new Set(parsedMasterPrices.map(p => p.baseName)));
                   const availableSizes = parsedMasterPrices.filter(p => p.baseName === currentMaterialName);
 
-                  const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.25rem 0.35rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
+                  const inputStyle = tableInputStyle;
 
                   const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
                   const isSpecialStrap = currentMaterialName.includes('Оосор');
@@ -1743,7 +1765,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               isClearable
                               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                               menuPosition="fixed"
-                              styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.25rem', borderColor: '#cbd5e1', minHeight: '34px', fontSize: '0.85rem' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                              styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                           )}
                         />
@@ -1839,7 +1861,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               isDisabled={!currentMaterialName || isSpecialMat}
                               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                               menuPosition="fixed"
-                              styles={{ control: (base) => ({ ...base, background: isSpecialMat ? '#f1f5f9' : 'white', borderRadius: '0.25rem', borderColor: '#cbd5e1', minHeight: '34px', fontSize: '0.85rem' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                              styles={{ ...tableSelectStyles, control: base => ({ ...tableSelectStyles.control(base), background: isSpecialMat ? '#f1f5f9' : 'white' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                             />
                           )}
                         />
@@ -2068,7 +2090,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     const o = formValues.operations?.[index];
                     const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
                     const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
-                    const inputStyle: React.CSSProperties = { width: '100%', minWidth: '40px', padding: '0.25rem 0.35rem', border: '1px solid #cbd5e1', borderRadius: '0.25rem', fontSize: '0.85rem', boxSizing: 'border-box' };
+                    const inputStyle = tableInputStyle;
                     return (
                       <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: '#f8fafc' }}>
                         <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
@@ -2209,6 +2231,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             </div>
 
             <div className="summary-body">
+              {/* Sales Person Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '10px', fontSize: '12px' }}>
+                <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>👤 Борлуулагч:</span>
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>{formValues.sales_person_name || user?.full_name || user?.name || 'Бүртгэгдээгүй'}</span>
+                <input type="hidden" {...register("sales_person_name")} />
+              </div>
+
               <div className="stat-grid">
                 <div className="stat"><div className="l">Материалын өртөг</div><div className="v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
                 <div className="stat"><div className="l">Ажиллагааны өртөг</div><div className="v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
@@ -2339,6 +2368,26 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   )}
                 </>
               )}
+
+              {/* 📋 Үнийн санал хуулах (Copy Quote) */}
+              <button
+                type="button"
+                onClick={() => {
+                  const pName = formValues.product_name || 'Бүтээгдэхүүн';
+                  const pQty = Number(formValues.total_qty || 0).toLocaleString();
+                  const pSize = formValues.size || '-';
+                  const uPrice = prices.unitPrice.toLocaleString();
+                  const tPrice = prices.finalPrice.toLocaleString();
+                  const deadline = formValues.deadline || '-';
+                  const text = `📌 ҮНИЙН САНАЛ:\n• Бүтээгдэхүүн: ${pName}\n• Хэмжээ: ${pSize}\n• Тоо ширхэг: ${pQty} ш\n• Нэгжийн үнэ: ${uPrice} ₮\n• Нийт дүн: ${tPrice} ₮\n• Хугацаа: ${deadline}`;
+                  navigator.clipboard.writeText(text);
+                  alert("Үнийн саналын хураангуй текстийг амжилттай хууллаа!");
+                }}
+                className="erp-btn erp-btn-ghost erp-btn-block"
+                style={{ marginTop: '10px', fontSize: '12px', borderColor: '#cbd5e1', color: '#334155' }}
+              >
+                📋 Үнийн санал хуулах
+              </button>
             </div>
           </div>
         </div>
