@@ -16,15 +16,18 @@ model constant {
 }
 
 model customer {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
   phone           String?
   email           String?
   company_name    String?
-  discount_margin Int?     @default(20)
+  customer_type   String?         @default("Бизнесийн байгууллага")
+  lead_source     String?         @default("Бусад")
+  discount_margin Int?            @default(20)
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  gifts           customer_gift[]
 }
 
 model masterprice {
@@ -87,6 +90,8 @@ model order {
   company_registry  String?
   company_name      String?
   needs_ebarimt     Boolean             @default(false)
+  order_type        String?             @default("STANDARD")
+  lead_source       String?
   user              user?               @relation(fields: [sales_person_id], references: [id])
   materials         ordermaterial[]
   operations        orderoperation[]
@@ -285,3 +290,33 @@ model notification {
   createdAt  DateTime @default(now())
   user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
+
+model sales_target {
+  id             Int      @id @default(autoincrement())
+  year           Int
+  month          Int
+  target_amount  Float    @default(0)
+  manager_targets Json?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([year, month])
+}
+
+model customer_gift {
+  id            Int       @id @default(autoincrement())
+  customer_id   Int?
+  customer_name String
+  gift_items    String
+  qty           Int       @default(1)
+  year          Int
+  month         Int
+  notes         String?
+  createdAt     DateTime  @default(now())
+  customer      customer? @relation(fields: [customer_id], references: [id], onDelete: SetNull)
+
+  @@index([customer_id])
+  @@index([year, month])
+}
+

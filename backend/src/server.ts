@@ -17,6 +17,7 @@ import templateRoutes from './routes/templateRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import orderStatusRoutes from './routes/orderStatusRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import reportRoutes from './routes/reportRoutes';
 import path from 'path';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/constants', constantRoutes);
 app.use('/api/coverrules', coverRuleRoutes);
 app.use('/api/product-categories', productCategoryRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/formulas', formulaRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/templates', templateRoutes);

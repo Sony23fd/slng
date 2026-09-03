@@ -61,6 +61,8 @@ export const createOrder = async (req: Request, res: Response) => {
         company_registry: data.company_registry || null,
         company_name: data.company_name || null,
         needs_ebarimt: data.needs_ebarimt === true || data.needs_ebarimt === 'true',
+        order_type: data.order_type || 'STANDARD',
+        lead_source: data.lead_source || null,
         needs_design: Boolean(data.needs_design),
         design_status: data.design_status || 'Эх бэлэн',
         design_cost: data.design_cost ? Number(data.design_cost) : 0,
