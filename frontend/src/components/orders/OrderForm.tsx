@@ -790,6 +790,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   const [submitType, setSubmitType] = useState<string>('');
   const [showOperationsModal, setShowOperationsModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const onSubmit = (data: OrderFormValues) => {
     // Calculator mode default values for required fields
@@ -819,6 +821,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}` : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`;
     
+    setIsSubmitting(true);
     fetch(url, {
       method,
       headers: { 
@@ -829,14 +832,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     })
       .then(res => res.json())
       .then(resData => {
+        setIsSubmitting(false);
         if (resData.error) {
-          alert('Алдаа гарлаа: ' + resData.error + (resData.details ? '\\nДэлгэрэнгүй: ' + resData.details : ''));
+          alert('Алдаа гарлаа: ' + resData.error + (resData.details ? '\nДэлгэрэнгүй: ' + resData.details : ''));
         } else {
-          alert(isEdit ? 'Захиалга амжилттай шинэчлэгдлээ!' : 'Захиалга амжилттай үүслээ!');
-          router.push('/sales/orders');
+          setIsSuccess(true);
+          setTimeout(() => {
+            alert(isEdit ? 'Захиалга амжилттай шинэчлэгдлээ!' : 'Захиалга амжилттай үүслээ!');
+            router.push('/sales/orders');
+          }, 300);
         }
       })
-      .catch(console.error);
+      .catch((e) => {
+        setIsSubmitting(false);
+        console.error(e);
+      });
   };
 
   return (
@@ -2121,19 +2131,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               {!isEdit ? (
                 <>
                   {isQuoteMode ? (
-                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Үнийн санал хадгалах (Draft)
+                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block" disabled={isSubmitting}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> {isSubmitting && submitType === 'Үнийн санал' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Үнийн санал' ? '✅ Амжилттай' : 'Үнийн санал хадгалах (Draft)'}
                     </button>
                   ) : (
-                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> Захиалга үүсгэх
+                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> {isSubmitting && submitType === 'Шинэ захиалга' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Шинэ захиалга' ? '✅ Амжилттай' : 'Захиалга үүсгэх'}
                     </button>
                   )}
                 </>
               ) : (
                 <>
-                  <button type="submit" className="erp-btn erp-btn-primary erp-btn-block">
-                    {isQuoteMode ? '💾 Үнийн санал шинэчлэх' : '💾 Захиалга шинэчлэх'}
+                  <button type="submit" className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
+                    {isSubmitting ? '⏳ Уншиж байна...' : isSuccess ? '✅ Амжилттай' : (isQuoteMode ? '💾 Үнийн санал шинэчлэх' : '💾 Захиалга шинэчлэх')}
                   </button>
                   
                   {isQuoteMode && (

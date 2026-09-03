@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fira_Code } from "next/font/google";
 import "./globals.css";
 import "./erp-design.css";
 import GlobalFetchInterceptor from "../components/GlobalFetchInterceptor";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin", "cyrillic"],
+});
+
+const firaCode = Fira_Code({
+  variable: "--font-fira-code",
   subsets: ["latin", "cyrillic"],
 });
 
@@ -20,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="mn" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="mn" className={`${inter.variable} ${firaCode.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <GlobalFetchInterceptor />
         {children}

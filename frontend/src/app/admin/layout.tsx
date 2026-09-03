@@ -72,6 +72,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span style={{ fontSize: '1.1rem' }}>🏭</span>
             {!collapsed && <span>Үйлдвэрлэл хяналт</span>}
           </Link>
+
+          <Link href="/admin/reports/monthly" title="Сарын тайлан (PPTX)" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#eef2ff', fontWeight: 600, textDecoration: 'none', color: '#4338ca', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <span style={{ fontSize: '1.1rem' }}>📑</span>
+            {!collapsed && <span>Сарын тайлан (PPTX)</span>}
+          </Link>
           
           {/* 2. ЗАХИАЛГА & БҮРТГЭЛ */}
           {(user.role === 'ADMIN' || user.role === 'FINANCE') && (
