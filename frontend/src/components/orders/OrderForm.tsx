@@ -312,9 +312,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const formValues = watch();
 
   const [prevCategory, setPrevCategory] = useState(initialData?.category || '');
+  const isApplyingTemplateRef = React.useRef(false);
 
   useEffect(() => {
     if (!formValues.category) return;
+    if (isApplyingTemplateRef.current) {
+      setPrevCategory(formValues.category);
+      isApplyingTemplateRef.current = false;
+      return;
+    }
     if (formValues.category !== prevCategory) {
       setPrevCategory(formValues.category);
       // Find the category config
@@ -883,6 +889,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <button
                 type="button"
                 onClick={() => {
+                  isApplyingTemplateRef.current = true;
+                  setPrevCategory('Тор');
                   setValue('category', 'Тор');
                   setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
                   setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
@@ -897,6 +905,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <button
                 type="button"
                 onClick={() => {
+                  isApplyingTemplateRef.current = true;
+                  setPrevCategory('Ном');
                   setValue('category', 'Ном');
                   setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
                   setValue('size', 'A5');
@@ -915,6 +925,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <button
                 type="button"
                 onClick={() => {
+                  isApplyingTemplateRef.current = true;
+                  setPrevCategory('Календарь');
                   setValue('category', 'Календарь');
                   setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
                   setValue('size', 'A5');
@@ -938,6 +950,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <button
                 type="button"
                 onClick={() => {
+                  isApplyingTemplateRef.current = true;
+                  setPrevCategory('Календарь');
                   setValue('category', 'Календарь');
                   setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
                   setValue('size', 'B5');
@@ -961,6 +975,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <button
                 type="button"
                 onClick={() => {
+                  isApplyingTemplateRef.current = true;
+                  setPrevCategory('Календарь');
                   setValue('category', 'Календарь');
                   setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
                   setValue('size', 'A2');
@@ -993,8 +1009,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 options={groupedOptions}
             onChange={(selected: any) => {
               if (selected && selected.template) {
+                isApplyingTemplateRef.current = true;
                 const t = selected.template;
-                if (t.category) setValue('category', t.category);
+                if (t.category) {
+                  setPrevCategory(t.category);
+                  setValue('category', t.category);
+                }
                 if (t.size) setValue('size', t.size);
                 if (t.binding_type) setValue('binding_type', t.binding_type);
                 if (t.cover_color) setValue('cover_color', t.cover_color);
