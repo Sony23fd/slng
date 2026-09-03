@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '../../stores/useAuthStore';
 import Notifications from '../../components/Notifications';
 
 export default function SalesLayout({ children }: { children: React.ReactNode }) {
   const { user, token, logout, hasHydrated } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -34,69 +34,64 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const navLinks = [
+    { href: '/sales', label: 'Үнэ бодолт', icon: '🧮', exact: true },
+    { href: '/sales/quotes', label: 'Үнийн санал', icon: '📄' },
+    { href: '/sales/orders', label: 'Захиалгууд', icon: '📋' },
+    { href: '/sales/history', label: 'Түүх', icon: '🗄️' },
+    { href: '/sales/profile', label: 'Тохиргоо', icon: '⚙️' },
+  ];
+
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-color)' }}>
-      {/* Sidebar */}
-      <aside style={{
-        width: collapsed ? '65px' : '210px',
-        transition: 'width 0.25s ease',
-        background: 'var(--surface-color)',
-        borderRight: '1px solid var(--border-color)',
-        padding: collapsed ? '1rem 0.5rem' : '1.25rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}>
-        <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          {!collapsed && <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary-color)', margin: 0, whiteSpace: 'nowrap' }}>Mini-ERP</h2>}
-          <button
-            type="button"
-            onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? 'Цэс дэлгэх' : 'Цэс хумих'}
-            style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '0.375rem', cursor: 'pointer', padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
-          >
-            {collapsed ? '▶' : '◀'}
-          </button>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--paper)', overflow: 'hidden' }}>
+      {/* Top Header Navbar */}
+      <header className="erp-top-header">
+        <div className="erp-top-left">
+          <Link href="/sales" className="erp-top-brand" title="Mini-ERP">
+            <span className="mark">⚡</span>
+            <span>Mini-ERP</span>
+          </Link>
+
+          <nav className="erp-top-nav">
+            {navLinks.map((link) => {
+              const isActive = link.exact ? pathname === link.href : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={isActive ? 'active' : ''}
+                >
+                  <span>{link.icon}</span>
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
-        
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
-          <Link href="/sales" title="Үнэ бодолт" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>🧮</span>
-            {!collapsed && <span>Үнэ бодолт</span>}
-          </Link>
 
-          <Link href="/sales/quotes" title="Үнийн саналууд" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>📄</span>
-            {!collapsed && <span>Үнийн саналууд</span>}
-          </Link>
-
-          <Link href="/sales/orders" title="Миний захиалгууд" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>📋</span>
-            {!collapsed && <span>Захиалгууд</span>}
-          </Link>
-          <Link href="/sales/history" title="Түүх" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>🗄️</span>
-            {!collapsed && <span>Түүх</span>}
-          </Link>
-          <Link href="/sales/profile" title="Хувийн тохиргоо" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>⚙️</span>
-            {!collapsed && <span>Тохиргоо</span>}
-          </Link>
-        </nav>
-
-        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
-          {!collapsed && <div style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name} ({user.role})</div>}
-          <button onClick={() => { logout(); router.push('/login'); }} title="Гарах" className="btn btn-outline" style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem' }}>
-            {collapsed ? '🚪' : 'Гарах'}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main style={{ flex: 1, padding: '1.25rem', overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', position: 'relative', zIndex: 50 }}>
+        <div className="erp-top-right">
           <Notifications />
+
+          <div className="erp-user-badge">
+            <div className="erp-user-avatar">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <span><b>{user.name}</b> ({user.role})</span>
+          </div>
+
+          <button
+            onClick={() => { logout(); router.push('/login'); }}
+            title="Системээс гарах"
+            className="erp-logout-btn"
+          >
+            <span>🚪</span>
+            <span>Гарах</span>
+          </button>
         </div>
+      </header>
+
+      {/* Main Workspace Area */}
+      <main style={{ flex: 1, overflowY: 'auto', minWidth: 0, position: 'relative' }}>
         {children}
       </main>
     </div>

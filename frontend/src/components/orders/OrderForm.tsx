@@ -16,6 +16,10 @@ interface OrderFormValues {
   // 1. Үндсэн
   customer_name: string;
   phone: string;
+  company_name?: string;
+  company_registry?: string;
+  order_type?: string;
+  lead_source?: string;
   deadline: string;
   product_name: string;
   category: string;
@@ -109,6 +113,20 @@ function calculateSetups(pressSheet: number, divisions: number) {
   return fullSheets + fractionalSetups;
 }
 
+const compactSelectStyles = {
+  control: (base: any) => ({
+    ...base,
+    background: 'white',
+    borderRadius: '6px',
+    borderColor: '#cbd5e1',
+    minHeight: '34px',
+    height: '34px',
+    fontSize: '12.8px'
+  }),
+  valueContainer: (base: any) => ({ ...base, padding: '0 6px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '34px' })
+};
+
 const SectionCard = ({ id, step, title, sub, children }: any) => {
   const [collapsed, setCollapsed] = React.useState(false);
   return (
@@ -117,8 +135,8 @@ const SectionCard = ({ id, step, title, sub, children }: any) => {
         <div className="erp-left">
           <div className="step-badge">{step}</div>
           <div>
-            <h2 style={{margin:0, fontSize:'15.2px', fontWeight:700}}>{title}</h2>
-            {sub && <div className="sub" style={{fontSize:'12.2px', color:'var(--muted-2)', fontWeight:500, marginTop:'1px'}}>{sub}</div>}
+            <h2 style={{margin:0, fontSize:'13.8px', fontWeight:700}}>{title}</h2>
+            {sub && <div className="sub" style={{fontSize:'11.5px', color:'var(--muted-2)', fontWeight:500, marginTop:'1px'}}>{sub}</div>}
           </div>
         </div>
         <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -258,7 +276,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   
   const { register, control, watch, handleSubmit, setValue, getValues } = useForm<OrderFormValues>({
     defaultValues: initialData ? { ...initialData, deadline: defaultDeadline } : {
-      customer_name: '', phone: '', deadline: '', product_name: '', category: '', total_qty: 0,
+      customer_name: '', phone: '', company_name: '', company_registry: '', order_type: 'STANDARD', lead_source: 'Шууд харилцагч', deadline: '', product_name: '', category: '', total_qty: 0,
       size: '', sub_size: '', custom_width: 0, custom_height: 0, needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.full_name || user?.name || '', notes: '',
       cover_color: '', inner_color: '', has_bookmark: '', total_pages: 0, print_cost: 0,
       materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
@@ -866,242 +884,340 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       }}>
         
-        {/* Бэлэн загвар сонгох */}
-        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'linear-gradient(to right, #eff6ff, #f8fafc)', border: '1px solid #bfdbfe', borderRadius: '0.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.75rem' }}>
-            <label style={{ fontWeight: 600, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-              ⚡ <span>Хурдан загвар (1 товчоор бөглөх)</span>
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('category', 'Брошур');
-                  setValue('product_name', 'Түгээмэл 1000ш Брошур');
-                  setValue('size', 'A4');
-                  setValue('total_qty', 1000);
-                  setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
-                }}
-                style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                📄 1000ш Брошур
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  isApplyingTemplateRef.current = true;
-                  setPrevCategory('Тор');
-                  setValue('category', 'Тор');
-                  setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
-                  setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
-                  setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
-                  setValue('total_qty', 1000);
-                  setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
-                }}
-                style={{ background: '#6366f1', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                🛍️ 1000ш Цаасан тор
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  isApplyingTemplateRef.current = true;
-                  setPrevCategory('Ном');
-                  setValue('category', 'Ном');
-                  setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
-                  setValue('size', 'A5');
-                  setValue('total_pages', 160);
-                  setValue('binding_type', 'Наалттай');
-                  setValue('total_qty', 1000);
-                  setValue('materials', [
-                    { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
-                    { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                  ]);
-                }}
-                style={{ background: '#8b5cf6', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                📚 1000ш Ном
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  isApplyingTemplateRef.current = true;
-                  setPrevCategory('Календарь');
-                  setValue('category', 'Календарь');
-                  setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
-                  setValue('size', 'A5');
-                  setValue('total_pages', 26);
-                  setValue('total_qty', 300);
-                  setValue('materials', [
-                    { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
-                    { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
-                    { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
-                  ]);
-                  setValue('operations', [
-                    { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                    { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
-                    { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
-                  ]);
-                }}
-                style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                🗓️ 300ш Календарь (A5)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  isApplyingTemplateRef.current = true;
-                  setPrevCategory('Календарь');
-                  setValue('category', 'Календарь');
-                  setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
-                  setValue('size', 'B5');
-                  setValue('total_pages', 26);
-                  setValue('total_qty', 300);
-                  setValue('materials', [
-                    { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
-                    { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
-                    { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
-                  ]);
-                  setValue('operations', [
-                    { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
-                    { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
-                    { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
-                  ]);
-                }}
-                style={{ background: '#ea580c', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                🗓️ 300ш Календарь (B5)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  isApplyingTemplateRef.current = true;
-                  setPrevCategory('Календарь');
-                  setValue('category', 'Календарь');
-                  setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
-                  setValue('size', 'A2');
-                  setValue('total_pages', 14);
-                  setValue('total_qty', 500);
-                  setValue('materials', [
-                    { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
-                  ]);
-                  setValue('operations', [
-                    { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                    { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
-                  ]);
-                }}
-                style={{ background: '#059669', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                🗓️ 500ш Ханын Календарь (A2)
-              </button>
-            </div>
-          </div>
-          {(() => {
-            const groupedOptions = Object.values(templates.reduce((acc, t) => {
-              const cat = t.category || 'Бусад';
-              if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
-              acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
-              return acc;
-            }, {} as Record<string, { label: string, options: any[] }>));
-            
-            return (
-              <Select
-                options={groupedOptions}
-            onChange={(selected: any) => {
-              if (selected && selected.template) {
+        {/* Compact Presets & Templates Bar */}
+        <div className="compact-presets-bar">
+          <div className="compact-presets-chips">
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              ⚡ Загварууд:
+            </span>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
                 isApplyingTemplateRef.current = true;
-                const t = selected.template;
-                if (t.category) {
-                  setPrevCategory(t.category);
-                  setValue('category', t.category);
-                }
-                if (t.size) setValue('size', t.size);
-                if (t.binding_type) setValue('binding_type', t.binding_type);
-                if (t.cover_color) setValue('cover_color', t.cover_color);
-                if (t.inner_color) setValue('inner_color', t.inner_color);
-                if (t.total_pages) setValue('total_pages', t.total_pages);
-                if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
-                if (t.design_status) setValue('design_status', t.design_status);
-                if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
+                setPrevCategory('Брошур');
+                setValue('category', 'Брошур');
+                setValue('product_name', 'Түгээмэл 1000ш Брошур');
+                setValue('size', 'A4');
+                setValue('total_qty', 1000);
+                setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
+              }}
+            >
+              📄 1000ш Брошур
+            </button>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
+                isApplyingTemplateRef.current = true;
+                setPrevCategory('Тор');
+                setValue('category', 'Тор');
+                setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
+                setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+                setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
+                setValue('total_qty', 1000);
+                setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
+              }}
+            >
+              🛍️ 1000ш Цаасан тор
+            </button>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
+                isApplyingTemplateRef.current = true;
+                setPrevCategory('Ном');
+                setValue('category', 'Ном');
+                setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
+                setValue('size', 'A5');
+                setValue('total_pages', 160);
+                setValue('binding_type', 'Наалттай');
+                setValue('total_qty', 1000);
+                setValue('materials', [
+                  { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
+                  { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                ]);
+              }}
+            >
+              📚 1000ш Ном
+            </button>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
+                isApplyingTemplateRef.current = true;
+                setPrevCategory('Календарь');
+                setValue('category', 'Календарь');
+                setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
+                setValue('size', 'A5');
+                setValue('total_pages', 26);
+                setValue('total_qty', 300);
+                setValue('materials', [
+                  { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
+                  { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
+                  { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
+                ]);
+                setValue('operations', [
+                  { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                  { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
+                  { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
+                ]);
+              }}
+            >
+              🗓️ 300ш Календарь (A5)
+            </button>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
+                isApplyingTemplateRef.current = true;
+                setPrevCategory('Календарь');
+                setValue('category', 'Календарь');
+                setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
+                setValue('size', 'B5');
+                setValue('total_pages', 26);
+                setValue('total_qty', 300);
+                setValue('materials', [
+                  { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
+                  { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
+                  { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
+                ]);
+                setValue('operations', [
+                  { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
+                  { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
+                  { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
+                ]);
+              }}
+            >
+              🗓️ 300ш Календарь (B5)
+            </button>
+            <button
+              type="button"
+              className="preset-chip-btn"
+              onClick={() => {
+                isApplyingTemplateRef.current = true;
+                setPrevCategory('Календарь');
+                setValue('category', 'Календарь');
+                setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
+                setValue('size', 'A2');
+                setValue('total_pages', 14);
+                setValue('total_qty', 500);
+                setValue('materials', [
+                  { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
+                ]);
+                setValue('operations', [
+                  { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
+                  { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
+                ]);
+              }}
+            >
+              🗓️ 500ш Ханын Кал. (A2)
+            </button>
+          </div>
 
-                if (t.order_data) {
-                  const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
-                  if (od.sub_size) setValue('sub_size', od.sub_size);
-                  
-                  if (od.materials && Array.isArray(od.materials)) {
-                    const smartMaterials = od.materials.map((m: any) => {
-                      const mp = masterPrices.find(p => p.item_name === m.material_name);
-                      return {
-                        ...m,
-                        unit_cost: mp ? mp.unit_cost : m.unit_cost
-                      };
-                    });
-                    setValue('materials', smartMaterials);
-                  }
-                  
-                  if (od.operations && Array.isArray(od.operations)) {
-                    const smartOperations = od.operations.map((o: any) => {
-                      const mp = masterPrices.find(p => p.item_name === o.operation_name);
-                      return {
-                        ...o,
-                        unit_cost: mp ? mp.unit_cost : o.unit_cost
-                      };
-                    });
-                    setValue('operations', smartOperations);
-                  }
-                  
-                  if (od.specifications) {
-                    if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
-                    if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
-                  }
-                }
-              }
-            }}
-                placeholder="Эсвэл хадгалсан загваруудаас хайх..."
-                isClearable
-                styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
-              />
-            );
-          })()}
-        </div>
+          <div style={{ width: '260px', flex: 'none' }}>
+            {(() => {
+              const groupedOptions = Object.values(templates.reduce((acc, t) => {
+                const cat = t.category || 'Бусад';
+                if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
+                acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
+                return acc;
+              }, {} as Record<string, { label: string, options: any[] }>));
+              
+              return (
+                <Select
+                  options={groupedOptions}
+                  onChange={(selected: any) => {
+                    if (selected && selected.template) {
+                      isApplyingTemplateRef.current = true;
+                      const t = selected.template;
+                      if (t.category) {
+                        setPrevCategory(t.category);
+                        setValue('category', t.category);
+                      }
+                      if (t.size) setValue('size', t.size);
+                      if (t.binding_type) setValue('binding_type', t.binding_type);
+                      if (t.cover_color) setValue('cover_color', t.cover_color);
+                      if (t.inner_color) setValue('inner_color', t.inner_color);
+                      if (t.total_pages) setValue('total_pages', t.total_pages);
+                      if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
+                      if (t.design_status) setValue('design_status', t.design_status);
+                      if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
 
-        <div className="erp-layout">
-          <div className="form-col">
-
-        {/* 1. Захиалгын мэдээлэл */}
-        <SectionCard id="sec1" step="1" title="1. Захиалагчийн мэдээлэл">
-          
-          <div className="erp-grid erp-grid-3">
-            <div className="erp-field">
-              <label>Захиалагчийн нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label>
-              <Controller
-                name="customer_name"
-                control={control}
-                render={({ field }) => (
-                  <CreatableSelect
-                    {...field}
-                    options={customers.map(c => ({ value: c.name, label: c.name, customer: c }))}
-                    onChange={(selected: any) => {
-                      field.onChange(selected ? selected.value : '');
-                      if (selected && selected.customer) {
-                        setValue('phone', selected.customer.phone || '');
-                        if (selected.customer.discount_margin) {
-                          setValue('profit_margin', selected.customer.discount_margin);
+                      if (t.order_data) {
+                        const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
+                        if (od.sub_size) setValue('sub_size', od.sub_size);
+                        
+                        if (od.materials && Array.isArray(od.materials)) {
+                          const smartMaterials = od.materials.map((m: any) => {
+                            const mp = masterPrices.find(p => p.item_name === m.material_name);
+                            return {
+                              ...m,
+                              unit_cost: mp ? mp.unit_cost : m.unit_cost
+                            };
+                          });
+                          setValue('materials', smartMaterials);
+                        }
+                        
+                        if (od.operations && Array.isArray(od.operations)) {
+                          const smartOperations = od.operations.map((o: any) => {
+                            const mp = masterPrices.find(p => p.item_name === o.operation_name);
+                            return {
+                              ...o,
+                              unit_cost: mp ? mp.unit_cost : o.unit_cost
+                            };
+                          });
+                          setValue('operations', smartOperations);
+                        }
+                        
+                        if (od.specifications) {
+                          if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
+                          if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
                         }
                       }
-                    }}
-                    value={field.value ? { value: field.value, label: field.value } : null}
-                    placeholder="Хайх эсвэл бичих..."
-                    isClearable
-                    styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
-                  />
-                )}
-              />
-            </div>
-            <div className="erp-field"><label title="[A2]">Утас</label><input {...register("phone")} /></div>
-            <div className="erp-field"><label>Хүлээлгэн өгөх огноо</label><input type="date" {...register("deadline")} /></div>
+                    }
+                  }}
+                  placeholder="🔍 Загваруудаас хайх..."
+                  isClearable
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      background: 'white',
+                      borderRadius: '6px',
+                      borderColor: '#cbd5e1',
+                      minHeight: '32px',
+                      height: '32px',
+                      fontSize: '12px'
+                    }),
+                    valueContainer: (base) => ({ ...base, padding: '0 6px' }),
+                    indicatorsContainer: (base) => ({ ...base, height: '32px' })
+                  }}
+                />
+              );
+            })()}
           </div>
-        </SectionCard>
+        </div>
+
+        {/* 3-Column Layout: Customer Sidebar + Product & Calc Column + Price Summary Rail */}
+        <div className="erp-three-col-layout">
+          
+          {/* 1. Left Sidebar: Customer Information Panel */}
+          <div className="erp-customer-panel">
+            <div className="erp-card" style={{ borderTop: '3px solid #2563eb' }}>
+              <div className="erp-card-head" style={{ background: '#f1f5f9', cursor: 'default' }}>
+                <div className="left" style={{ gap: '6px' }}>
+                  <span style={{ fontSize: '15px' }}>🤝</span>
+                  <div>
+                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>Харилцагчийн мэдээлэл</h2>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Захиалагч & Бүртгэл</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="erp-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="erp-field">
+                  <label>Захиалагчийн нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '11px', color: '#64748b'}}>(сонголттой)</span> : <span style={{ color: 'red' }}>*</span>}</label>
+                  <Controller
+                    name="customer_name"
+                    control={control}
+                    render={({ field }) => (
+                      <CreatableSelect
+                        {...field}
+                        options={customers.map(c => ({ value: c.name, label: c.name, customer: c }))}
+                        onChange={(selected: any) => {
+                          field.onChange(selected ? selected.value : '');
+                          if (selected && selected.customer) {
+                            setValue('phone', selected.customer.phone || '');
+                            if (selected.customer.company_name) setValue('company_name', selected.customer.company_name);
+                            if (selected.customer.company_registry) setValue('company_registry', selected.customer.company_registry);
+                            if (selected.customer.discount_margin) {
+                              setValue('profit_margin', selected.customer.discount_margin);
+                            }
+                          }
+                        }}
+                        value={field.value ? { value: field.value, label: field.value } : null}
+                        placeholder="Хайх эсвэл шинээр..."
+                        isClearable
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            background: 'white',
+                            borderRadius: '6px',
+                            borderColor: '#cbd5e1',
+                            minHeight: '34px',
+                            height: '34px',
+                            fontSize: '12.5px'
+                          }),
+                          valueContainer: (base) => ({ ...base, padding: '0 6px' }),
+                          indicatorsContainer: (base) => ({ ...base, height: '34px' })
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="erp-field">
+                  <label title="[A2]">Утасны дугаар</label>
+                  <input {...register("phone")} placeholder="9911..." />
+                </div>
+
+                <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <div className="erp-field">
+                    <label>Байгууллагын нэр</label>
+                    <input {...register("company_name")} placeholder="Компани..." />
+                  </div>
+                  <div className="erp-field">
+                    <label>Регистр</label>
+                    <input {...register("company_registry")} placeholder="РД..." />
+                  </div>
+                </div>
+
+                <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <div className="erp-field">
+                    <label>Захиалгын төрөл</label>
+                    <select {...register("order_type")} defaultValue="STANDARD">
+                      <option value="STANDARD">Стандарт</option>
+                      <option value="BARTER">Бартер</option>
+                      <option value="DONATION">Хандив</option>
+                      <option value="INTERNAL">Дотоод</option>
+                    </select>
+                  </div>
+                  <div className="erp-field">
+                    <label>Эх үүсвэр</label>
+                    <select {...register("lead_source")} defaultValue="Шууд харилцагч">
+                      <option value="Шууд харилцагч">Шууд</option>
+                      <option value="Сошиал медиа">Сошиал</option>
+                      <option value="Утсаар">Утсаар</option>
+                      <option value="Имэйлээр">Имэйл</option>
+                      <option value="Гэрээт байгууллага">Гэрээт</option>
+                      <option value="Хуучин харилцагч">Хуучин</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="erp-field">
+                  <label>Хүлээлгэн өгөх огноо</label>
+                  <input type="date" {...register("deadline")} />
+                </div>
+
+                <div className="erp-field">
+                  <label>Хаяг / Тэмдэглэл</label>
+                  <textarea {...register("notes")} placeholder="Хаяг, хүргэлтийн санамж..." style={{ minHeight: '44px', fontSize: '12px' }} />
+                </div>
+
+                <div className="toggle-row" style={{ marginTop: '2px', padding: '5px 8px' }}>
+                  <span className="t" style={{ fontSize: '11.8px' }}>⚡ Яаралтай захиалга</span>
+                  <label className="switch">
+                    <input type="checkbox" {...register("is_urgent")} />
+                    <span className="track"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Center Column: Product & Calculation Workspace */}
+          <div className="erp-calc-col">
 
         {/* 2. Захиалгын мэдээлэл */}
         <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
@@ -1143,7 +1259,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       value={field.value ? { value: field.value, label: field.value } : null}
                       placeholder="Сонгох эсвэл бичих..."
                       isClearable
-                      styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+                      styles={compactSelectStyles}
                     />
                   );
                 }}
@@ -1197,7 +1313,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       value={field.value ? { value: field.value, label: field.value } : null}
                       placeholder="Сонгох эсвэл бичих..."
                       isClearable
-                      styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+                      styles={compactSelectStyles}
                     />
                   );
                 }}
@@ -2042,7 +2158,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         value={field.value ? { value: field.value, label: field.value } : null}
                         placeholder="Сонгох эсвэл бичих..."
                         isClearable
-                        styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+                        styles={compactSelectStyles}
                       />
                     );
                   }}
@@ -2063,7 +2179,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         value={field.value ? { value: field.value, label: field.value } : null}
                         placeholder="Сонгох эсвэл бичих..."
                         isClearable
-                        styles={{ control: (base) => ({ ...base, background: 'white', borderRadius: '0.375rem', borderColor: '#cbd5e1', minHeight: '40px' }) }}
+                        styles={compactSelectStyles}
                       />
                     );
                   }}
@@ -2071,17 +2187,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </div>
               <div className="erp-field"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
               <div className="erp-field"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
-              <div className="erp-field" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0.75rem', background: '#e2e8f0', borderRadius: '0.25rem', height: '40px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
+              <div className="erp-field" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0 8px', background: '#e2e8f0', borderRadius: '4px', height: '34px', fontSize: '12.8px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
               <div className="erp-field" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
-              <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '40px'}}>X</button>
+              <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '34px', padding: '0 10px'}}>X</button>
             </div>
           )})}
           <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
         </SectionCard>
 
-        </div> {/* End of form-main-col */}
+        </div> {/* End of erp-calc-col */}
 
-                <div className="rail" id="rail-summary">
+        <div className="erp-rail-col" id="rail-summary">
           <div className="summary-card">
             <div className="summary-top">
               <div className="lbl">Нийт үнэ (харилцагчид)</div>
