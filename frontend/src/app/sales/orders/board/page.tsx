@@ -20,12 +20,14 @@ export default function OrdersBoardPage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
-        const activeStatuses = data.filter((s: any) => s.type !== 'QUOTE' && s.type !== 'PENDING' && s.type !== 'CANCELLED');
-        setStatuses(activeStatuses);
+        if (Array.isArray(data)) {
+          const activeStatuses = data.filter((s: any) => s.type !== 'QUOTE' && s.type !== 'PENDING' && s.type !== 'CANCELLED');
+          setStatuses(activeStatuses);
+        }
       })
-      .catch(console.error);
+      .catch(() => {});
 
     // Fetch active orders
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?kanbanLimit=true`, {

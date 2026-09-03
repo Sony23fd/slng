@@ -188,7 +188,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/constants`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) {
           setConstants(data);
@@ -206,7 +206,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setMasterPrices(data);
       })
@@ -215,7 +215,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/customers`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setCustomers(data);
       })
@@ -224,7 +224,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/coverrules`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setCoverRules(data);
       })
@@ -233,7 +233,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/product-categories`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setProductCategories(data);
       })
@@ -242,7 +242,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/formulas`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setFormulas(data);
       })
@@ -251,17 +251,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setTemplates(data);
       })
       .catch(console.error);
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })
-      .then(r => r.json())
-      .then(d => setOrderStatuses(d))
-      .catch(e => console.error("Error fetching order statuses:", e));
+      .then(r => r.ok ? r.json() : [])
+      .then(d => {
+        if (Array.isArray(d)) setOrderStatuses(d);
+      })
+      .catch(() => {});
 
   }, [token]);
 

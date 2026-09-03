@@ -22,13 +22,13 @@ export default function Notifications() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/notifications`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) {
           setNotifications(data);
         }
       })
-      .catch(console.error);
+      .catch(() => {});
   };
 
   useEffect(() => {

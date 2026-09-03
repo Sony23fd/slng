@@ -24,11 +24,11 @@ export default function AllQuotesPage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setOrderStatuses(data);
       })
-      .catch(console.error);
+      .catch(() => {});
   }, [token]);
 
   useEffect(() => {
