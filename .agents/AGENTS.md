@@ -46,6 +46,59 @@
 - **Хэвлэгч (1 өнгө, 2 өнгө, 4 өнгө, 5 өнгө)**
 Эдгээр томьёог `seed-prices.ts` дотор `expr: 'total_base_sheets'` гэж хатуу тохируулж өгсөн бөгөөд дураараа `total_qty` руу буцаахыг хориглоно.
 
+### Е. Хавтасны дүрмийн матриц (Cover Rules Standard Matrix)
+Хавтасны хэвлэлийн хуудас (`press_sheet`), хуваалт (`divide_by`), болон хэвлэх хэмжээ (`print_size`) нь бүтээгдэхүүний хэмжээ болон үдэлтийн төрлөөс хамаарч дараах батлагдсан дүрмийг мөрдөнө:
+- **A4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 6`, `PrintSize = A3`
+- **A4 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **A5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
+- **A5 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
+- **A6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
+- **A6 Үдээстэй**: `PressSheet = 0.125`, `DivideBy = 4`, `PrintSize = A2`
+- **B4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 4`, `PrintSize = A2`
+- **B4 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 2`, `PrintSize = B2`
+- **B5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **B5 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
+- **B6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
+- **B6 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 5`, `PrintSize = B3`
+
+### Ё. Машины хадаас ба Тохируулга (Makeready & Setups Standard)
+- **Хадаасны шатлал (`calculateMakeready`)**:
+  - $\text{Base} \le 1000 \rightarrow 100$ хуудас
+  - $\text{Base} \le 2000 \rightarrow 150$ хуудас
+  - $\text{Base} \le 4000 \rightarrow 200$ хуудас
+  - $\text{Base} \le 5000 \rightarrow 300$ хуудас
+  - $\text{Base} \le 10000 \rightarrow 400$ хуудас
+  - $\text{Base} \le 15000 \rightarrow 500$ хуудас
+  - $\text{Base} \le 20000 \rightarrow 600$ хуудас
+  - $\text{Base} \le 25000 \rightarrow 800$ хуудас
+  - $\text{Base} \le 30000 \rightarrow 900$ хуудас
+  - $\text{Base} > 30000 \rightarrow 1000$ хуудас
+- **Тохируулга тооцох (`calculateSetups`)**:
+  - $\text{Бүхэл хуудас} = \lfloor \text{press\_sheet} \rfloor$
+  - Бутархай хуудасны үед $\text{popcount}(\text{round}(\text{fraction} \times \text{divisions}))$ ашиглан нэмэлт тохируулгын тоог гаргана.
+- **Нийт цаасны тооцоо**:
+  - $\text{Total Qty} = (\text{Base} \times \text{PressSheet}) + (\text{Extra} \times \text{Setups})$
+  - $\text{Sheet Qty (Том цаасны тоо)} = \lceil \text{Total Qty} / \text{DivideBy} \rceil$
+
+### Ж. CTP Хавтан тооцох физик стандарт (CTP Plates Calculation)
+- **Тогтмол үнэ**: `CTP_PLATE_PRICE = 8,800₮`
+- **Хавтангийн тоо**:
+  - Бүрэн хуудас: $\text{FullSheets} \times (\text{FrontColors} + \text{BackColors})$
+  - Бутархай хуудас: Татаж хөмрөх (Work-and-turn) зарчмаар 1 хэвэнд хоёр тал багтдаг тул $\text{FractionalSetups} \times \max(\text{FrontColors}, \text{BackColors})$
+
+### З. Календарийн спираль үдээсний стандарт (Calendar Spiral Binding)
+- **Ширээний А5 (26 нүүр / 13 хуудас)**: 1 ширхэгт 24 ш спираль $\rightarrow \text{Qty} = \text{total\_qty} \times 24$
+- **Ширээний B5 (26 нүүр / 13 хуудас)**: 1 ширхэгт 28 ш спираль $\rightarrow \text{Qty} = \text{total\_qty} \times 28$
+- **Ханын А2 (14 нүүр / 7 хуудас)**: 1 ширхэгт 56 ш спираль $\rightarrow \text{Qty} = \text{total\_qty} \times 56$
+
+### И. Санхүүгийн үнийн бодолтын дэс дараалал (Pricing Waterfall)
+1. $\text{Үйлдвэрийн өртөг} = \sum \text{Материал} + \sum \text{Ажиллагаа} + \sum \text{Гадуур ажил} + \text{Хэвлэлт} + \text{Эх бэлтгэл}$
+2. $\text{Нэгжийн өртөг} = \text{Үйлдвэрийн өртөг} / \text{Нийт бүтээгдэхүүний тоо}$
+3. $\text{Цэвэр үнэ (Ашигтай)} = \text{Үйлдвэрийн өртөг} \times (1 + \text{Margin}\% / 100)$
+4. $\text{Эцсийн үнэ (НӨАТ-тай)} = \text{Цэвэр үнэ} \times 1.10$ *(Хэрэв has_vat сонгосон бол)*
+5. $\text{Нэгжийн үнэ} = \text{Эцсийн үнэ} / \text{Нийт тоо}$
+
+
 ---
 
 ## 🎨 3. UI БОЛОН ДИЗАЙНЫ СТАНДАРТ (UI & STYLING GUIDELINES)
