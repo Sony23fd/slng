@@ -233,9 +233,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (Array.isArray(data)) {
           setConstants(data);
           if (!initialData) {
-            const profit = data.find(c => c.type === 'DEFAULT_PROFIT_MARGIN')?.value || 20;
+            const profit = data.find(c => c.type === 'DEFAULT_PROFIT_MARGIN')?.value;
+            let defaultProfit = 2.3;
+            if (profit) {
+              const pNum = Number(profit);
+              if (pNum > 100) defaultProfit = pNum / 100;
+              else if (pNum > 10) defaultProfit = 2.3;
+              else if (pNum > 0) defaultProfit = pNum;
+            }
             const deposit = data.find(c => c.type === 'DEFAULT_DEPOSIT_PERCENT')?.value || 50;
-            setValue('profit_margin', Number(profit));
+            setValue('profit_margin', defaultProfit);
             setValue('payment_percent_1', Number(deposit));
             setValue('payment_percent_2', 100 - Number(deposit));
           }
@@ -325,7 +332,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
       operations: [],
       outsourced: [],
-      profit_margin: 20, payment_method_1: '', payment_percent_1: 50, payment_method_2: '', payment_percent_2: 50,
+      profit_margin: 2.3, payment_method_1: '', payment_percent_1: 50, payment_method_2: '', payment_percent_2: 50,
       has_vat: false, finance_notes: '', status: 'Санхүү хүлээгдэж буй', next_process: ''
     }
   });
@@ -960,7 +967,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             if (selected.customer.company_name) setValue('company_name', selected.customer.company_name);
                             if (selected.customer.company_registry) setValue('company_registry', selected.customer.company_registry);
                             if (selected.customer.discount_margin) {
-                              setValue('profit_margin', selected.customer.discount_margin);
+                              const dm = Number(selected.customer.discount_margin);
+                              const mult = dm > 100 ? dm / 100 : (dm > 10 ? 2.3 : dm);
+                              setValue('profit_margin', mult);
                             }
                           }
                         }}
@@ -2039,10 +2048,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             {tCost.toLocaleString()}
                           </td>
                           <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: '500', color: '#22c55e', paddingTop: '0.5rem' }}>
-                            {(tCost * ((Number(formValues.profit_margin) || 0) / 100)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            {(tCost * Math.max(0, (Number(formValues.profit_margin) || 2.3) - 1)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </td>
                           <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem' }}>
-                            {(tCost * (1 + (Number(formValues.profit_margin) || 0) / 100)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            {(tCost * (Number(formValues.profit_margin) || 2.3)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </td>
                         </>
                       )}
@@ -2227,7 +2236,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             <div className="summary-top">
               <div className="lbl">Нийт үнэ (харилцагчид)</div>
               <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
-              <div className="margin-badge">📈 Ашгийн маржин {formValues.profit_margin || 20}%</div>
+              <div className="margin-badge">📈 Үржүүлэгч {formValues.profit_margin || 2.3}x</div>
             </div>
 
             <div className="summary-body">
@@ -2247,8 +2256,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
               <div className="row-line"><span className="l">Нэгжийн өртөг:</span><span className="v">{prices.unitCost.toLocaleString()} ₮</span></div>
               <div className="erp-field-inline">
-                <label>Ашгийн хувь (%)</label>
-                <div className="erp-mini-input"><input type="number" step="any" {...register("profit_margin")} /></div>
+                <label>Үнийн үржүүлэгч (коэф)</label>
+                <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
               </div>
               <div className="erp-field-inline">
                 <label>Нэгжийн үнэ (ашигтай)</label>

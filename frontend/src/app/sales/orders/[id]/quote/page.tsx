@@ -77,7 +77,8 @@ export default function QuotationPage() {
           const opCost = opArray.reduce((acc: number, o: any) => acc + ((Number(o.qty) || 0) * (Number(o.unit_cost) || 0)), 0);
           const factoryCost = matCost + opCost + (Number(data.print_cost) || 0);
           const margin = Number(data.profit_margin) || 0;
-          const net = factoryCost * ((100 + margin) / 100);
+          const mult = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);
+          const net = factoryCost * mult;
           total = data.has_vat !== false ? net * 1.1 : net;
         }
         setCustomTotal(Math.round(total));

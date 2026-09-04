@@ -53,8 +53,10 @@ export function usePriceCalculator(params: PricingParams) {
     const qty = params.total_product_qty > 0 ? params.total_product_qty : 1;
     const unitCost = factoryTotalCost / qty;
 
-    // 6. Цэвэр үнэ (Ашиг нэмсэн үнэ)
-    const netPrice = factoryTotalCost * ((100 + (params.profit_margin || 0)) / 100);
+    // 6. Цэвэр үнэ (Үнийн үржүүлэгч коэф: жишээ нь 2.3, 1.8)
+    const margin = Number(params.profit_margin);
+    const multiplier = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);
+    const netPrice = factoryTotalCost * multiplier;
 
     // 7. Эцсийн үнэ (НӨАТ)
     const finalPrice = params.has_vat ? netPrice * 1.10 : netPrice;
