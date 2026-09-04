@@ -85,7 +85,7 @@ function SettingsContent() {
     OUTSOURCED_JOB: 'Гадуур ажлын нэр',
     OUTSOURCED_CONTRACTOR: 'Гүйцэтгэгч',
     ORDER_START_SEQ: 'Эхлэх дугаар',
-    DEFAULT_PROFIT_MARGIN: 'Үндсэн үнийн үржүүлэгч (коэф e.g. 2.3)',
+    DEFAULT_PROFIT_MARGIN: 'Үндсэн ашиг (e.g. 2.3)',
     DEFAULT_DEPOSIT_PERCENT: 'Урьдчилгаа (%)',
     COMPANY_LOGO: 'Компанийн Лого'
   };

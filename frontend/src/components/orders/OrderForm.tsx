@@ -2236,7 +2236,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             <div className="summary-top">
               <div className="lbl">Нийт үнэ (харилцагчид)</div>
               <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
-              <div className="margin-badge">📈 Үржүүлэгч {formValues.profit_margin || 2.3}x</div>
+              <div className="margin-badge">📈 Ашиг {formValues.profit_margin || 2.3}</div>
             </div>
 
             <div className="summary-body">
@@ -2256,7 +2256,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
               <div className="row-line"><span className="l">Нэгжийн өртөг:</span><span className="v">{prices.unitCost.toLocaleString()} ₮</span></div>
               <div className="erp-field-inline">
-                <label>Үнийн үржүүлэгч (коэф)</label>
+                <label>Ашиг</label>
                 <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
               </div>
               <div className="erp-field-inline">
