@@ -38,6 +38,7 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
     { href: '/sales', label: 'Үнэ бодолт', icon: '🧮', exact: true },
     { href: '/sales/quotes', label: 'Үнийн санал', icon: '📄' },
     { href: '/sales/orders', label: 'Захиалгууд', icon: '📋' },
+    { href: '/sales/reports', label: 'Тайлан', icon: '📊' },
     { href: '/sales/history', label: 'Түүх', icon: '🗄️' },
     { href: '/sales/profile', label: 'Тохиргоо', icon: '⚙️' },
   ];
