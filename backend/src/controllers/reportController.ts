@@ -1406,7 +1406,7 @@ export const getSalespersonReportData = async (req: Request, res: Response) => {
     let availableSalespersons: Array<{ id: number; name: string; role: string }> = [];
     if (canSwitchManager) {
       availableSalespersons = await prisma.user.findMany({
-        where: { role: { in: ['SALES', 'MANAGER', 'ADMIN'] } },
+        where: { role: { in: ['SALES', 'ADMIN'] } },
         select: { id: true, name: true, role: true },
         orderBy: { name: 'asc' }
       });
