@@ -1206,3 +1206,248 @@ export const deleteCustomerGift = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to delete customer gift', details: error.message });
   }
 };
+
+// 5. SALESPERSON DEDICATED REPORT DATA
+export const getSalespersonReportData = async (req: Request, res: Response) => {
+  try {
+    const currentUser = (req as any).user;
+    if (!currentUser) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { period, startDate, endDate, salesPersonId } = req.query;
+
+    // Determine target salesperson
+    let targetUser = currentUser;
+    const canSwitchManager = ['ADMIN', 'FINANCE', 'MANAGER'].includes(currentUser.role);
+    if (canSwitchManager && salesPersonId) {
+      const found = await prisma.user.findUnique({
+        where: { id: parseInt(salesPersonId as string, 10) }
+      });
+      if (found) {
+        targetUser = found;
+      }
+    }
+
+    // Determine Date Range
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (period === 'today') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    } else if (period === 'this_week') {
+      const day = now.getDay(); // 0 is Sunday, 1 is Monday...
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    } else if (period === 'last_month') {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    } else if (period === 'custom' && startDate && endDate) {
+      start = new Date(startDate as string);
+      start.setHours(0, 0, 0, 0);
+      end = new Date(endDate as string);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      // Default: 'this_month'
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
+
+    // Filter by salesperson
+    const userOrConditions: any[] = [];
+    if (targetUser.id) {
+      userOrConditions.push({ sales_person_id: targetUser.id });
+    }
+    if (targetUser.name) {
+      userOrConditions.push({ sales_person_name: targetUser.name });
+    }
+
+    const where: any = {
+      createdAt: { gte: start, lte: end }
+    };
+
+    if (userOrConditions.length > 0) {
+      where.OR = userOrConditions;
+    }
+
+    // Query orders with payments
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        payments: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const nonCancelled = orders.filter(o => o.current_status !== 'Цуцлагдсан');
+    const totalRevenue = nonCancelled.reduce((sum, o) => sum + (o.final_price || 0), 0);
+    const totalOrders = nonCancelled.length;
+    const cancelledOrders = orders.filter(o => o.current_status === 'Цуцлагдсан');
+    const cancelledRevenue = cancelledOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+    const completedOrders = nonCancelled.filter(o => ['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || ''));
+    const completedRevenue = completedOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+    const inProductionOrders = nonCancelled.filter(o => !['Үнийн санал', 'Хүлээлгэн өгсөн', 'Олгосон', 'Бэлэн'].includes(o.current_status || ''));
+    const inProductionRevenue = inProductionOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+    // Payments & Receivables
+    let totalPaid = 0;
+    let totalReceivables = 0;
+
+    nonCancelled.forEach(o => {
+      const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+      totalPaid += paid;
+      const balance = Math.max(0, (o.final_price || 0) - paid);
+      totalReceivables += balance;
+    });
+
+    // Monthly Target & Achievement
+    const targetYear = start.getFullYear();
+    const targetMonth = start.getMonth() + 1;
+    const targetRecord = await prisma.sales_target.findUnique({
+      where: { year_month: { year: targetYear, month: targetMonth } }
+    });
+
+    let myTarget = 0;
+    if (targetRecord && targetRecord.manager_targets) {
+      const mgrList = targetRecord.manager_targets as Array<{ manager_name: string; target: number }>;
+      const matched = mgrList.find(m => m.manager_name === targetUser.name);
+      if (matched) {
+        myTarget = Number(matched.target) || 0;
+      }
+    }
+    const achievementRate = myTarget > 0 ? (totalRevenue / myTarget) * 100 : 0;
+
+    // Daily Trend
+    const trendMap = new Map<string, { date: string; revenue: number; count: number }>();
+    const dIter = new Date(start);
+    while (dIter <= end) {
+      const dateKey = dIter.toISOString().split('T')[0];
+      trendMap.set(dateKey, { date: dateKey, revenue: 0, count: 0 });
+      dIter.setDate(dIter.getDate() + 1);
+    }
+
+    nonCancelled.forEach(o => {
+      const dateKey = o.createdAt.toISOString().split('T')[0];
+      const entry = trendMap.get(dateKey);
+      if (entry) {
+        entry.revenue += (o.final_price || 0);
+        entry.count += 1;
+      }
+    });
+
+    const trend = Array.from(trendMap.values());
+
+    // Category Breakdown
+    const catMap = new Map<string, { category: string; count: number; revenue: number }>();
+    nonCancelled.forEach(o => {
+      const cat = o.category || 'Бусад';
+      const existing = catMap.get(cat) || { category: cat, count: 0, revenue: 0 };
+      existing.count += 1;
+      existing.revenue += (o.final_price || 0);
+      catMap.set(cat, existing);
+    });
+
+    const categoryBreakdown = Array.from(catMap.values()).map(c => ({
+      ...c,
+      percent: totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0
+    })).sort((a, b) => b.revenue - a.revenue);
+
+    // Status Breakdown
+    const statusMap = new Map<string, { status: string; count: number; revenue: number }>();
+    orders.forEach(o => {
+      const st = o.current_status || 'Тодорхойгүй';
+      const existing = statusMap.get(st) || { status: st, count: 0, revenue: 0 };
+      existing.count += 1;
+      existing.revenue += (o.final_price || 0);
+      statusMap.set(st, existing);
+    });
+    const statusBreakdown = Array.from(statusMap.values()).sort((a, b) => b.count - a.count);
+
+    // Top Customers
+    const custMap = new Map<string, { name: string; count: number; totalAmount: number }>();
+    nonCancelled.forEach(o => {
+      const name = o.customer_name || 'Нэргүй харилцагч';
+      const existing = custMap.get(name) || { name, count: 0, totalAmount: 0 };
+      existing.count += 1;
+      existing.totalAmount += (o.final_price || 0);
+      custMap.set(name, existing);
+    });
+    const topCustomers = Array.from(custMap.values())
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 10);
+
+    // Formatted Order Items
+    const orderItems = orders.map(o => {
+      const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+      const balance = Math.max(0, (o.final_price || 0) - paid);
+      return {
+        id: o.id,
+        order_number: o.order_number || `ORD-${o.id}`,
+        customer_name: o.customer_name,
+        company_name: o.company_name,
+        product_name: o.product_name,
+        category: o.category || 'Бусад',
+        total_qty: o.total_qty,
+        final_price: o.final_price || 0,
+        paid_amount: paid,
+        balance: balance,
+        current_status: o.current_status,
+        createdAt: o.createdAt,
+        deadline: o.deadline,
+        is_urgent: o.is_urgent,
+        order_type: o.order_type || 'STANDARD'
+      };
+    });
+
+    // Available Salespersons for dropdown (for Admin/Manager)
+    let availableSalespersons: Array<{ id: number; name: string; role: string }> = [];
+    if (canSwitchManager) {
+      availableSalespersons = await prisma.user.findMany({
+        where: { role: { in: ['SALES', 'MANAGER', 'ADMIN'] } },
+        select: { id: true, name: true, role: true },
+        orderBy: { name: 'asc' }
+      });
+    }
+
+    res.json({
+      targetUser: {
+        id: targetUser.id,
+        name: targetUser.name,
+        role: targetUser.role
+      },
+      period: {
+        type: period || 'this_month',
+        startDate: start.toISOString(),
+        endDate: end.toISOString()
+      },
+      summary: {
+        totalRevenue,
+        totalOrders,
+        completedRevenue,
+        completedCount: completedOrders.length,
+        inProductionRevenue,
+        inProductionCount: inProductionOrders.length,
+        cancelledCount: cancelledOrders.length,
+        cancelledRevenue,
+        totalPaid,
+        totalReceivables,
+        target: myTarget,
+        achievementRate
+      },
+      trend,
+      categoryBreakdown,
+      statusBreakdown,
+      topCustomers,
+      orders: orderItems,
+      availableSalespersons
+    });
+
+  } catch (error: any) {
+    console.error('Salesperson Report Error:', error);
+    res.status(500).json({ error: 'Failed to fetch sales report', details: error.message });
+  }
+};
+

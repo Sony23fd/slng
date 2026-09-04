@@ -6,11 +6,15 @@ import {
   upsertSalesTarget,
   getCustomerGifts,
   createCustomerGift,
-  deleteCustomerGift
+  deleteCustomerGift,
+  getSalespersonReportData
 } from '../controllers/reportController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
+
+// Salesperson Personal Report Data
+router.get('/sales', authMiddleware(), getSalespersonReportData);
 
 // Monthly Report Data & Presentation
 router.get('/monthly', authMiddleware(), getMonthlyReportData);
