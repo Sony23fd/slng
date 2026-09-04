@@ -1655,11 +1655,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
             <table className="smart-table" style={{ minWidth: isExpandedMaterial ? '950px' : '500px' }}>
               <thead>
-                <tr>
-                  <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>Материал</th>
-                  
-                  {isExpandedMaterial && (
-                    <>
+                {isExpandedMaterial ? (
+                  <>
+                    <tr>
+                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>Материал</th>
                       <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>Хэмжээ</th>
                       <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>Хэв. хэмжээ</th>
                       <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
@@ -1678,35 +1677,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           <span title="[M9] Тоо">Нийт (ш)</span>
                         </div>
                       </th>
-                    </>
-                  )}
-
-                  <th colSpan={isExpandedMaterial ? 2 : 1} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
-                  
-                  {!isExpandedMaterial && (
-                    <>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', minWidth: '80px' }}>Нийт өртөг</th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', minWidth: '80px' }}>Ашиг</th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', minWidth: '80px' }}>Нийт үнэ</th>
-                    </>
-                  )}
-                  
-                  <th rowSpan={2} title="[MC] Тэмдэглэл" style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>Тэмдэглэл</th>
-                  <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '35px' }}></th>
-                </tr>
-                <tr>
-                  {isExpandedMaterial && (
-                    <>
+                      <th colSpan={2} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
+                      <th rowSpan={2} title="[MC] Тэмдэглэл" style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>Тэмдэглэл</th>
+                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '38px' }}></th>
+                    </tr>
+                    <tr>
                       <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '90px', background: '#f8fafc' }}>Үндсэн</th>
                       <th title="[M6] Хадаас" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Хадаас</th>
                       <th title="[M7] Нийт" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '85px', background: '#f8fafc' }}>Бүгд</th>
-                    </>
-                  )}
-                  <th title="[MA] Нэгж өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Нэгж</th>
-                  {isExpandedMaterial && (
-                    <th title="[MB] Нийт өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Нийт</th>
-                  )}
-                </tr>
+                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Нэгж</th>
+                      <th title="[MB] Нийт өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Нийт</th>
+                    </tr>
+                  </>
+                ) : (
+                  <tr>
+                    <th style={{ padding: '0.5rem 0.6rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '48%' }}>Материал</th>
+                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '12%' }}>Нэгж өртөг</th>
+                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '13%' }}>Нийт өртөг</th>
+                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '14%' }}>Нийт үнэ</th>
+                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '13%' }}>Тэмдэглэл</th>
+                    <th style={{ padding: '0.5rem 0.2rem', width: '38px', textAlign: 'center' }}></th>
+                  </tr>
+                )}
               </thead>
               <tbody>
                 {materialFields.map((field, index) => {
@@ -1734,7 +1726,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '48%' : undefined }}>
                         <Controller
                           name={`materials.${index}.material_name`}
                           control={control}
@@ -2035,7 +2027,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.sheet_qty`)} />
                       </td>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '12%' : undefined }}>
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.unit_cost`)} />
                       </td>
                       {isExpandedMaterial ? (
@@ -2044,21 +2036,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         </td>
                       ) : (
                         <>
-                          <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: '500', color: '#475569', paddingTop: '0.5rem' }}>
+                          <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: '500', color: '#475569', paddingTop: '0.5rem', width: '13%' }}>
                             {tCost.toLocaleString()}
                           </td>
-                          <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: '500', color: '#22c55e', paddingTop: '0.5rem' }}>
-                            {(tCost * Math.max(0, (Number(formValues.profit_margin) || 2.3) - 1)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </td>
-                          <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem' }}>
+                          <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem', width: '14%' }}>
                             {(tCost * (Number(formValues.profit_margin) || 2.3)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </td>
                         </>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', width: !isExpandedMaterial ? '13%' : undefined }}>
                         <input style={inputStyle} {...register(`materials.${index}.notes`)} />
                       </td>
-                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', textAlign: 'center' }}>
+                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', textAlign: 'center', width: !isExpandedMaterial ? '38px' : undefined }}>
                         <button type="button" onClick={() => removeMaterial(index)} style={{ width: '28px', height: '28px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>X</button>
                       </td>
                     </tr>
