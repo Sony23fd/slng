@@ -126,7 +126,8 @@ export default function SalesReportPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Тайлан татахад алдаа гарлаа');
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || errJson?.details || `Тайлан татахад алдаа гарлаа (${res.status})`);
       }
 
       const data: ReportData = await res.json();
