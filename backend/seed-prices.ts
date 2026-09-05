@@ -96,6 +96,7 @@ const operationsData = [
   { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000 },
   { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500 },
   { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500 },
+  { name: 'Супер хавтас хийх', expr: 'total_qty', desc: 'Супер хавтас нугалах, өмсгөх', cost: 1000 },
 
   { name: 'Бөгж цоологч', expr: 'total_qty', desc: 'Бөгж цоологч', cost: 20 },
   { name: 'Гараар хийх ажил', expr: 'total_qty', desc: 'Гараар хийх ажил', cost: 100 },
