@@ -51,11 +51,11 @@
 - **A4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 6`, `PrintSize = A3`
 - **A4 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **A4 Хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 5`, `PrintSize = B3`
-- **A4 Хөөсөн хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 3`, `PrintSize = B2`
+- **A4 Хөндлөн хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 3`, `PrintSize = B2`
 - **A5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
 - **A5 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
 - **A5 Хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
-- **A5 Хөөсөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **A5 Хөндлөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **A6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
 - **A6 Үдээстэй**: `PressSheet = 0.125`, `DivideBy = 4`, `PrintSize = A2`
 - **B4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 4`, `PrintSize = A2`
@@ -64,7 +64,7 @@
 - **B5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **B5 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
 - **B5 Хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 5`, `PrintSize = B3`
-- **B5 Хөөсөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **B5 Хөндлөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **B6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
 - **B6 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 5`, `PrintSize = B3`
 
@@ -106,7 +106,7 @@
 5. $\text{Нэгжийн үнэ} = \text{Эцсийн үнэ} / \text{Нийт тоо}$
 
 ### К. Хатуу хавтасны туслах материалын стандарт (Hardcover Auxiliary Materials Matrix)
-Хатуу хавтастай болон Хөөсөн хатуу хавтастай номд дараах технологийн нормоор картон, форзац, капитал, хавчуурга тооцогдоно:
+Хатуу хавтастай болон Хөндлөн хатуу хавтастай номд дараах технологийн нормоор картон, форзац, капитал, хавчуурга тооцогдоно:
 - **А5**:
   - Картон (Суурь 2мм): $\text{DivideBy} = 14 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 14 \rceil$
   - Форзац (200гр матт):
