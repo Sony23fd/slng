@@ -73,7 +73,16 @@ async function main() {
     { size: 'B5', binding: 'Наалттай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
     { size: 'B5', binding: 'Үдээстэй', press_sheet: 0.5, divide_by: 5, print_size: 'B3' },
     { size: 'B6', binding: 'Наалттай', press_sheet: 0.25, divide_by: 4, print_size: 'A2' },
-    { size: 'B6', binding: 'Үдээстэй', press_sheet: 0.25, divide_by: 5, print_size: 'B3' }
+    { size: 'B6', binding: 'Үдээстэй', press_sheet: 0.25, divide_by: 5, print_size: 'B3' },
+    // Хатуу хавтастай (xx1.jpg)
+    { size: 'A4', binding: 'Хатуу хавтастай', press_sheet: 1.0, divide_by: 5, print_size: 'B3' },
+    { size: 'A5', binding: 'Хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'B4', binding: 'Хатуу хавтастай', press_sheet: 1.0, divide_by: 4, print_size: 'A2' },
+    { size: 'B5', binding: 'Хатуу хавтастай', press_sheet: 1.0, divide_by: 5, print_size: 'B3' },
+    // Хөөсөн хатуу хавтастай (xx2.jpg)
+    { size: 'A4', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 1.0, divide_by: 3, print_size: 'B2' },
+    { size: 'A5', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'B5', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' }
   ];
 
   for (const r of coverRules) {

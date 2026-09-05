@@ -63,6 +63,8 @@ const prices = [
   { category: 'Материал', item_name: 'Бүрэлт (Гялгар)', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт (Матт)', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Оосор (Торны оосор)', unit_cost: 80 },
+  { category: 'Материал', item_name: 'Номын капитал (м)', unit_cost: 0 },
+  { category: 'Материал', item_name: 'Хавчуурга тууз (м)', unit_cost: 0 },
 ];
 
 const operationsData = [

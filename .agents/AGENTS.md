@@ -50,14 +50,21 @@
 Хавтасны хэвлэлийн хуудас (`press_sheet`), хуваалт (`divide_by`), болон хэвлэх хэмжээ (`print_size`) нь бүтээгдэхүүний хэмжээ болон үдэлтийн төрлөөс хамаарч дараах батлагдсан дүрмийг мөрдөнө:
 - **A4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 6`, `PrintSize = A3`
 - **A4 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **A4 Хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 5`, `PrintSize = B3`
+- **A4 Хөөсөн хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 3`, `PrintSize = B2`
 - **A5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
 - **A5 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
+- **A5 Хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
+- **A5 Хөөсөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **A6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
 - **A6 Үдээстэй**: `PressSheet = 0.125`, `DivideBy = 4`, `PrintSize = A2`
 - **B4 Наалттай**: `PressSheet = 1.0`, `DivideBy = 4`, `PrintSize = A2`
 - **B4 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 2`, `PrintSize = B2`
+- **B4 Хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 4`, `PrintSize = A2`
 - **B5 Наалттай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **B5 Үдээстэй**: `PressSheet = 0.5`, `DivideBy = 5`, `PrintSize = B3`
+- **B5 Хатуу хавтастай**: `PressSheet = 1.0`, `DivideBy = 5`, `PrintSize = B3`
+- **B5 Хөөсөн хатуу хавтастай**: `PressSheet = 0.5`, `DivideBy = 4`, `PrintSize = A2`
 - **B6 Наалттай**: `PressSheet = 0.25`, `DivideBy = 4`, `PrintSize = A2`
 - **B6 Үдээстэй**: `PressSheet = 0.25`, `DivideBy = 5`, `PrintSize = B3`
 
@@ -97,6 +104,37 @@
 3. $\text{Цэвэр үнэ (Ашигтай)} = \text{Үйлдвэрийн өртөг} \times \text{Ашиг}$ *(Үндсэн тохиргоо 2.3 коэф, хямдруулахад 1.8 гэх мэт)*
 4. $\text{Эцсийн үнэ (НӨАТ-тай)} = \text{Цэвэр үнэ} \times 1.10$ *(Хэрэв has_vat сонгосон бол)*
 5. $\text{Нэгжийн үнэ} = \text{Эцсийн үнэ} / \text{Нийт тоо}$
+
+### К. Хатуу хавтасны туслах материалын стандарт (Hardcover Auxiliary Materials Matrix)
+Хатуу хавтастай болон Хөөсөн хатуу хавтастай номд дараах технологийн нормоор картон, форзац, капитал, хавчуурга тооцогдоно:
+- **А5**:
+  - Картон (Суурь 2мм): $\text{DivideBy} = 14 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 14 \rceil$
+  - Форзац (200гр матт):
+    - Хэвлэлгүй: $\text{DivideBy} = 8 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 8 \rceil$
+    - Хэвлэлтэй: $\text{PrintSize} = \text{A2}, \text{DivideBy} = 4, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} \times 0.5 + 100) / 4 \rceil$
+  - Номын капитал: $\lceil \text{TotalQty} / 25 \rceil$ метр
+  - Хавчуурга утас (хэрэв хавчуургатай бол): $\lceil \text{TotalQty} \times 0.30 \rceil$ метр
+- **В5**:
+  - Картон: $\text{DivideBy} = 9 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 9 \rceil$
+  - Форзац:
+    - Хэвлэлгүй: $\text{DivideBy} = 5 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 5 \rceil$
+    - Хэвлэлтэй: $\text{DivideBy} = 5, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} + 100) / 5 \rceil$
+  - Номын капитал: $\lceil \text{TotalQty} / 16 \rceil$ метр
+  - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.33 \rceil$ метр
+- **А4**:
+  - Картон: $\text{DivideBy} = 7 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 7 \rceil$
+  - Форзац:
+    - Хэвлэлгүй: $\text{DivideBy} = 4 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 4 \rceil$
+    - Хэвлэлтэй: $\text{DivideBy} = 4, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} + 100) / 4 \rceil$
+  - Номын капитал: $\lceil \text{TotalQty} / 14 \rceil$ метр
+  - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.38 \rceil$ метр
+- **В4**:
+  - Картон: $\text{DivideBy} = 4.5 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 4.5 \rceil$
+  - Форзац:
+    - Хэвлэлгүй: $\text{DivideBy} = 2.5 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 2.5 \rceil$
+    - Хэвлэлтэй: $\text{DivideBy} = 5, \text{Base} = \text{TotalQty} \times 2, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} \times 2 + 100) / 5 \rceil$
+  - Номын капитал: $\lceil \text{TotalQty} / 12 \rceil$ метр
+  - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.44 \rceil$ метр
 
 
 ---
