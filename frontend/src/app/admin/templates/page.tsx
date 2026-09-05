@@ -121,6 +121,7 @@ export default function TemplatesPage() {
                 <option value="Наалттай">Наалттай</option>
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
+                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
               </select>
             </div>
             <div className="form-group">

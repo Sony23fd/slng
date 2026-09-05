@@ -35,6 +35,7 @@ interface OrderFormValues {
   sales_person_name: string;
   notes: string;
   binding_type?: string;
+  has_printed_endpaper?: boolean;
   
   // 2. Өнгө
   cover_color: string;
@@ -94,12 +95,23 @@ function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []
     if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
   }
 
-  if (s === 'A4' && bt === 'наалттай') return { pressSheet: 1.0, divideBy: 6 };
-  if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4 };
-  if (s === 'A5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 5 };
-  if (s === 'A5' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4 };
-  if (s === 'B5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 4 };
-  if (s === 'B5' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5 };
+  if (s === 'A4' && bt === 'наалттай') return { pressSheet: 1.0, divideBy: 6, printSize: 'A3' };
+  if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'A5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
+  if (s === 'A5' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
+
+  // Hardcover (Хатуу хавтас) fallbacks
+  if (s === 'A5' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
+  if (s === 'A4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
+  if (s === 'B4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
+
+  // Foam Hardcover (Хөөсөн хатуу хавтас) fallbacks
+  if (s === 'A4' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
+  if (s === 'A5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   
   return null;
 }
@@ -684,6 +696,163 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     });
   };
 
+  const handleAddHardcoverAuxiliary = () => {
+    const size = (getValues('size') || 'A5').toUpperCase();
+    const totalQty = Number(getValues('total_qty')) || 1000;
+    const isPrintedEndpaper = !!getValues('has_printed_endpaper');
+    const hasRibbon = !!getValues('has_bookmark');
+    
+    let cardboardDiv = 14;
+    let endpaperDiv = 8;
+    let endpaperPrinted = { printSize: 'A2', pressSheet: '0.5', divBy: 4, extra: 100, baseMultiplier: 0.5 };
+    let headbandDiv = 25;
+    let ribbonLength = 0.30;
+    let opName = 'Хатуу хавтас (A5)';
+
+    if (size === 'B5') {
+      cardboardDiv = 9;
+      endpaperDiv = 5;
+      endpaperPrinted = { printSize: 'B3', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 1.0 };
+      headbandDiv = 16;
+      ribbonLength = 0.33;
+      opName = 'Хатуу хавтас (B5)';
+    } else if (size === 'A4') {
+      cardboardDiv = 7;
+      endpaperDiv = 4;
+      endpaperPrinted = { printSize: 'B3', pressSheet: '1.0', divBy: 4, extra: 100, baseMultiplier: 1.0 };
+      headbandDiv = 14;
+      ribbonLength = 0.38;
+      opName = 'Хатуу хавтас (A4)';
+    } else if (size === 'B4') {
+      cardboardDiv = 4.5;
+      endpaperDiv = 2.5;
+      endpaperPrinted = { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 };
+      headbandDiv = 12;
+      ribbonLength = 0.44;
+      opName = 'Хатуу хавтас (B4)';
+    }
+
+    const existingMaterials = getValues('materials') || [];
+    const cleanMaterials = existingMaterials.filter(m => {
+      const name = m.material_name || '';
+      const notes = m.notes || '';
+      return !name.includes('Картон') && !notes.includes('картон') &&
+             !name.includes('Форзац') && !notes.includes('Форзац') && !notes.includes('форзац') &&
+             !name.includes('капитал') && !notes.includes('Капитал') &&
+             !name.includes('Хавчуурга') && !notes.includes('Хавчуурга');
+    });
+
+    const cardboardPrice = masterPrices.find(p => p.item_name.includes('Картон 2'))?.unit_cost || 6300;
+    const endpaperPrice = masterPrices.find(p => p.item_name.includes('Мат цаас 200гр') || p.item_name.includes('200гр'))?.unit_cost || 1200;
+    const capitalPrice = masterPrices.find(p => p.item_name.includes('капитал'))?.unit_cost || 0;
+    const ribbonPrice = masterPrices.find(p => p.item_name.includes('Хавчуурга тууз'))?.unit_cost || 0;
+
+    const cardboardSheets = Math.ceil(totalQty / cardboardDiv);
+    const cardboardRow = {
+      material_name: 'Картон 2 A0 (889x1194)',
+      size: 'A0',
+      print_size: '',
+      press_sheet: '1',
+      base_qty: totalQty,
+      extra_qty: 0,
+      total_qty: totalQty,
+      divide_by: cardboardDiv,
+      sheet_qty: cardboardSheets,
+      unit_cost: cardboardPrice,
+      notes: `Хатуу хавтасны картон (${cardboardDiv}ш гарна)`,
+      is_cover: false
+    };
+
+    let endpaperRow: any;
+    if (isPrintedEndpaper) {
+      const endpaperTotal = (totalQty * endpaperPrinted.baseMultiplier) + endpaperPrinted.extra;
+      const endpaperSheets = Math.ceil(endpaperTotal / endpaperPrinted.divBy);
+      endpaperRow = {
+        material_name: 'Мат цаас 200гр A0 (889x1194)',
+        size: 'A0',
+        print_size: endpaperPrinted.printSize,
+        press_sheet: endpaperPrinted.pressSheet,
+        base_qty: totalQty,
+        extra_qty: endpaperPrinted.extra,
+        total_qty: endpaperTotal,
+        divide_by: endpaperPrinted.divBy,
+        sheet_qty: endpaperSheets,
+        unit_cost: endpaperPrice,
+        notes: `Хэвлэлтэй форзац (200гр)`,
+        is_cover: false
+      };
+    } else {
+      const endpaperSheets = Math.ceil(totalQty / endpaperDiv);
+      endpaperRow = {
+        material_name: 'Мат цаас 200гр A0 (889x1194)',
+        size: 'A0',
+        print_size: '',
+        press_sheet: '1',
+        base_qty: totalQty,
+        extra_qty: 0,
+        total_qty: totalQty,
+        divide_by: endpaperDiv,
+        sheet_qty: endpaperSheets,
+        unit_cost: endpaperPrice,
+        notes: `Хэвлэлгүй форзац (${endpaperDiv}ш гарна)`,
+        is_cover: false
+      };
+    }
+
+    const headbandMeters = Math.ceil(totalQty / headbandDiv);
+    const headbandRow = {
+      material_name: 'Номын капитал (м)',
+      size: '',
+      print_size: '',
+      press_sheet: '1',
+      base_qty: totalQty,
+      extra_qty: 0,
+      total_qty: totalQty,
+      divide_by: headbandDiv,
+      sheet_qty: headbandMeters,
+      unit_cost: capitalPrice,
+      notes: `Капитал тууз (1м-ээр ${headbandDiv} ном)`,
+      is_cover: false
+    };
+
+    const newMaterials = [...cleanMaterials, cardboardRow, endpaperRow, headbandRow];
+
+    if (hasRibbon) {
+      const ribbonMeters = Math.ceil(totalQty * ribbonLength);
+      const ribbonRow = {
+        material_name: 'Хавчуурга тууз (м)',
+        size: '',
+        print_size: '',
+        press_sheet: '1',
+        base_qty: totalQty,
+        extra_qty: 0,
+        total_qty: totalQty,
+        divide_by: 1,
+        sheet_qty: ribbonMeters,
+        unit_cost: ribbonPrice,
+        notes: `Хавчуурга тууз (${Math.round(ribbonLength * 100)}см)`,
+        is_cover: false
+      };
+      newMaterials.push(ribbonRow);
+    }
+
+    setValue('materials', newMaterials);
+
+    const existingOps = getValues('operations') || [];
+    if (!existingOps.some(o => o.operation_name?.includes('Хатуу хавтас'))) {
+      const opMaster = masterPrices.find(p => p.item_name === opName);
+      setValue('operations', [
+        ...existingOps,
+        {
+          operation_name: opName,
+          qty: totalQty,
+          unit_cost: opMaster ? opMaster.unit_cost : (size === 'A4' ? 5000 : size === 'B5' ? 4000 : 3500),
+          notes: `${size} хатуу хавтас угсрах, наах`
+        }
+      ]);
+    }
+  };
+
   const isOpInCategory = (opName: string, categoryName: string) => {
     const cat = OP_CATEGORIES.find(c => c.name === categoryName);
     if (!cat) return false;
@@ -1186,6 +1355,93 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 >
                   🗓️ 500ш Ханын Кал. (A2)
                 </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А5 Хатуу хавтастай ном (160 хуудас)');
+                    setValue('size', 'A5');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Хатуу хавтастай');
+                    setValue('has_printed_endpaper', false);
+                    setValue('has_bookmark', 'true');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Шохойтой 157гр', size: 'A2', print_size: 'A2', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 4, sheet_qty: 150, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (14ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
+                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (8ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 8, sheet_qty: 125, is_cover: false },
+                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 25 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 25, sheet_qty: 40, is_cover: false },
+                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (30см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 300, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 3500, notes: 'Хатуу хавтас угсрах, наах' }
+                    ]);
+                  }}
+                >
+                  📖 1000ш А5 Хатуу
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт В5 Хатуу хавтастай ном (160 хуудас)');
+                    setValue('size', 'B5');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Хатуу хавтастай');
+                    setValue('has_printed_endpaper', false);
+                    setValue('has_bookmark', 'true');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Шохойтой 157гр', size: 'B3', print_size: 'B3', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 5, sheet_qty: 220, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (9ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 9, sheet_qty: 112, is_cover: false },
+                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (5ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 5, sheet_qty: 200, is_cover: false },
+                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 16 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 16, sheet_qty: 63, is_cover: false },
+                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (33см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 330, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'B5', print_size: 'B2', unit_cost: 90, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 4000, notes: 'Хатуу хавтас угсрах, наах' }
+                    ]);
+                  }}
+                >
+                  📖 1000ш В5 Хатуу
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А4 Хатуу хавтастай ном (160 хуудас)');
+                    setValue('size', 'A4');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Хатуу хавтастай');
+                    setValue('has_printed_endpaper', false);
+                    setValue('has_bookmark', 'true');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Шохойтой 157гр', size: 'B3', print_size: 'B3', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 5, sheet_qty: 220, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (7ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 7, sheet_qty: 143, is_cover: false },
+                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (4ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 4, sheet_qty: 250, is_cover: false },
+                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 14 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
+                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (38см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 380, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 5000, notes: 'Хатуу хавтас угсрах, наах' }
+                    ]);
+                  }}
+                >
+                  📖 1000ш А4 Хатуу
+                </button>
               </div>
 
               <div style={{ width: '220px', flex: 'none' }}>
@@ -1423,8 +1679,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Наалттай">Наалттай</option>
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
+                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
               </select>
             </div>
+            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+              <div className="erp-field col-span-full" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>📘 Хатуу хавтасны тохиргоо:</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
+                  <input 
+                    type="checkbox" 
+                    {...register("has_printed_endpaper")} 
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span>📄 Хэвлэлтэй форзац</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
+                  <input 
+                    type="checkbox" 
+                    {...register("has_bookmark")} 
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span>🔖 Хавчуурга туузтай</span>
+                </label>
+              </div>
+            )}
             <div className="erp-field">
               <label>Эх бэлтгэлийн төлөв</label>
               <select {...register("design_status", {
@@ -2056,9 +2334,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
-            + Материал нэмэх
-          </button>
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
+              + Материал нэмэх
+            </button>
+            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+              <button 
+                type="button" 
+                onClick={handleAddHardcoverAuxiliary} 
+                className="btn btn-primary"
+                style={{ background: '#0284c7', borderColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+                title="Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"
+              >
+                ✨ Хатуу хавтасны туслах материал бодох
+              </button>
+            )}
+          </div>
         </SectionCard>
 
         {/* 6. Ажиллагаа */}
