@@ -36,6 +36,7 @@ interface OrderFormValues {
   notes: string;
   binding_type?: string;
   has_printed_endpaper?: boolean;
+  has_super_cover?: boolean;
   
   // 2. Өнгө
   cover_color: string;
@@ -112,6 +113,12 @@ function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []
   if (s === 'A4' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
   if (s === 'A5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   if (s === 'B5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+
+  // Super Cover (Супер хавтас - sx.jpg) fallbacks
+  if (s === 'A5' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 6, printSize: 'B3' };
+  if (s === 'B5' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 6, printSize: '594x280' };
+  if (s === 'A4' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 3, printSize: '720x380' };
+  if (s === 'B4' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 2, printSize: 'B2' };
   
   return null;
 }
@@ -853,6 +860,100 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
   };
 
+  const handleAddSuperCoverAuxiliary = () => {
+    const rawSize = getValues('size') || 'A5';
+    let size = 'A5';
+    if (rawSize.includes('A4')) size = 'A4';
+    else if (rawSize.includes('B5')) size = 'B5';
+    else if (rawSize.includes('B4')) size = 'B4';
+    else if (rawSize.includes('A5')) size = 'A5';
+
+    const totalQty = Number(getValues('total_qty')) || 1000;
+
+    let coverDiv = 6;
+    let coverPrintSize = 'B3';
+    let endpaperDiv = 16;
+
+    if (size === 'A5') {
+      coverDiv = 6;
+      coverPrintSize = 'B3';
+      endpaperDiv = 16;
+    } else if (size === 'B5') {
+      coverDiv = 6;
+      coverPrintSize = '594x280';
+      endpaperDiv = 10;
+    } else if (size === 'A4') {
+      coverDiv = 3;
+      coverPrintSize = '720x380';
+      endpaperDiv = 8;
+    } else if (size === 'B4') {
+      coverDiv = 2;
+      coverPrintSize = 'B2';
+      endpaperDiv = 5;
+    }
+
+    const existingMaterials = getValues('materials') || [];
+    const cleanMaterials = existingMaterials.filter(m => {
+      const name = m.material_name || '';
+      const notes = m.notes || '';
+      return !notes.includes('Супер хавтас') && !name.includes('Супер хавтас') &&
+             !notes.includes('Супер хавтасны форзац');
+    });
+
+    const cover250Price = masterPrices.find(p => p.item_name.includes('250гр'))?.unit_cost || 1150;
+    const endpaper157Price = masterPrices.find(p => p.item_name.includes('157гр'))?.unit_cost || 890;
+
+    const coverTotal = totalQty + 100;
+    const coverSheets = Math.ceil(coverTotal / coverDiv);
+    const superCoverRow = {
+      material_name: 'Мат цаас 250гр B1 (787x1092)',
+      size: 'B1',
+      print_size: coverPrintSize,
+      press_sheet: '1',
+      base_qty: totalQty,
+      extra_qty: 100,
+      total_qty: coverTotal,
+      divide_by: coverDiv,
+      sheet_qty: coverSheets,
+      unit_cost: cover250Price,
+      notes: `Супер хавтас 250гр (${coverPrintSize}, ${coverDiv} хуваалт)`,
+      is_cover: false
+    };
+
+    const endpaperSheets = Math.ceil(totalQty / endpaperDiv);
+    const endpaperRow = {
+      material_name: 'Мат цаас 157гр A0 (889x1194)',
+      size: 'A0',
+      print_size: '',
+      press_sheet: '1',
+      base_qty: totalQty,
+      extra_qty: 0,
+      total_qty: totalQty,
+      divide_by: endpaperDiv,
+      sheet_qty: endpaperSheets,
+      unit_cost: endpaper157Price,
+      notes: `Супер хавтасны форзац 157гр (${endpaperDiv} хуваалт)`,
+      is_cover: false
+    };
+
+    const newMaterials = [...cleanMaterials, superCoverRow, endpaperRow];
+    setValue('materials', newMaterials);
+
+    const existingOps = getValues('operations') || [];
+    if (!existingOps.some(o => o.operation_name?.includes('Супер хавтас'))) {
+      const opMaster = masterPrices.find(p => p.item_name === 'Супер хавтас хийх');
+      setValue('operations', [
+        ...existingOps,
+        {
+          operation_name: 'Супер хавтас хийх',
+          qty: totalQty,
+          unit_cost: opMaster ? opMaster.unit_cost : 1000,
+          notes: `${size} супер хавтас нугалах, өмсгөх`
+        }
+      ]);
+    }
+  };
+
   const isOpInCategory = (opName: string, categoryName: string) => {
     const cat = OP_CATEGORIES.find(c => c.name === categoryName);
     if (!cat) return false;
@@ -1442,6 +1543,84 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 >
                   📖 1000ш А4 Хатуу
                 </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А5 Супер хавтастай ном (160 хуудас)');
+                    setValue('size', 'A5');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Супер хавтастай');
+                    setValue('has_super_cover', true);
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: 'B3', unit_cost: 1150, notes: 'Супер хавтас 250гр (B3, 6 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 6, sheet_qty: 184, is_cover: true },
+                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (16 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 16, sheet_qty: 63, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
+                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А5 супер хавтас нугалах, өмсгөх' }
+                    ]);
+                  }}
+                >
+                  🧥 1000ш А5 Супер
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт В5 Супер хавтастай ном (160 хуудас)');
+                    setValue('size', 'B5');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Супер хавтастай');
+                    setValue('has_super_cover', true);
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: '594x280', unit_cost: 1150, notes: 'Супер хавтас 250гр (594x280, 6 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 6, sheet_qty: 184, is_cover: true },
+                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (10 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 10, sheet_qty: 100, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'B5', print_size: 'B2', unit_cost: 90, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
+                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'В5 супер хавтас нугалах, өмсгөх' }
+                    ]);
+                  }}
+                >
+                  🧥 1000ш В5 Супер
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А4 Супер хавтастай ном (160 хуудас)');
+                    setValue('size', 'A4');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Супер хавтастай');
+                    setValue('has_super_cover', true);
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: '720x380', unit_cost: 1150, notes: 'Супер хавтас 250гр (720x380, 3 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 3, sheet_qty: 367, is_cover: true },
+                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (8 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 8, sheet_qty: 125, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
+                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А4 супер хавтас нугалах, өмсгөх' }
+                    ]);
+                  }}
+                >
+                  🧥 1000ш А4 Супер
+                </button>
               </div>
 
               <div style={{ width: '220px', flex: 'none' }}>
@@ -1680,27 +1859,40 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
+                <option value="Супер хавтастай">Супер хавтастай</option>
               </select>
             </div>
-            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
               <div className="erp-field col-span-full" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>📘 Хатуу хавтасны тохиргоо:</span>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>📘 Нэмэлт тохиргоо:</span>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
                   <input 
                     type="checkbox" 
-                    {...register("has_printed_endpaper")} 
+                    {...register("has_super_cover")} 
                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                   />
-                  <span>📄 Хэвлэлтэй форзац</span>
+                  <span>🧥 Супер хавтастай</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
-                  <input 
-                    type="checkbox" 
-                    {...register("has_bookmark")} 
-                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                  />
-                  <span>🔖 Хавчуурга туузтай</span>
-                </label>
+                {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                  <>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
+                      <input 
+                        type="checkbox" 
+                        {...register("has_printed_endpaper")} 
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>📄 Хэвлэлтэй форзац</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
+                      <input 
+                        type="checkbox" 
+                        {...register("has_bookmark")} 
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>🔖 Хавчуурга туузтай</span>
+                    </label>
+                  </>
+                )}
               </div>
             )}
             <div className="erp-field">
@@ -2347,6 +2539,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 title="Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"
               >
                 ✨ Хатуу хавтасны туслах материал бодох
+              </button>
+            )}
+            {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
+              <button 
+                type="button" 
+                onClick={handleAddSuperCoverAuxiliary} 
+                className="btn btn-primary"
+                style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+                title="Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"
+              >
+                🧥 Супер хавтасны материал бодох
               </button>
             )}
           </div>
