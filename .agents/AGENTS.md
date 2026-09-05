@@ -136,6 +136,21 @@
   - Номын капитал: $\lceil \text{TotalQty} / 12 \rceil$ метр
   - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.44 \rceil$ метр
 
+### Л. Супер хавтасны физик стандарт (Dust Jacket / Super Cover Matrix - sx.jpg)
+Супер хавтас нь номын үндсэн хавтасны гадуур нэмэлт материал болж өмсгөгдөх ба дараах дэлгээс, хуваалтын стандартыг мөрдөнө:
+- **А5**:
+  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = \text{B3}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
+  - Форзац (157гр матт): $\text{DivideBy} = 16 \rightarrow \lceil \text{TotalQty} / 16 \rceil$
+- **В5**:
+  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = 594\times 280\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
+  - Форзац (157гр матт): $\text{DivideBy} = 10 \rightarrow \lceil \text{TotalQty} / 10 \rceil$
+- **А4**:
+  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = 720\times 380\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 3, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 3 \rceil$
+  - Форзац (157гр матт): $\text{DivideBy} = 8 \rightarrow \lceil \text{TotalQty} / 8 \rceil$
+- **В4**:
+  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = \text{B2} (720\times 520\text{мм}), \text{PressSheet} = 1.0, \text{DivideBy} = 2, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 2 \rceil$
+  - Форзац (157гр матт): $\text{DivideBy} = 5 \rightarrow \lceil \text{TotalQty} / 5 \rceil$
+- **Ажиллагаа**: `Супер хавтас хийх` (1000₮ / ширхэг).
 
 ---
 
