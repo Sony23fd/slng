@@ -1891,39 +1891,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Супер хавтастай">Супер хавтастай</option>
               </select>
             </div>
-            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
-              <div className="erp-field col-span-full" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>📘 Нэмэлт тохиргоо:</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
-                  <input 
-                    type="checkbox" 
-                    {...register("has_super_cover")} 
-                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                  />
-                  <span>🧥 Супер хавтастай</span>
-                </label>
-                {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
-                  <>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
-                      <input 
-                        type="checkbox" 
-                        {...register("has_printed_endpaper")} 
-                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>📄 Хэвлэлтэй форзац</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
-                      <input 
-                        type="checkbox" 
-                        {...register("has_bookmark")} 
-                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>🔖 Хавчуурга туузтай</span>
-                    </label>
-                  </>
-                )}
-              </div>
-            )}
             <div className="erp-field">
               <label>Эх бэлтгэлийн төлөв</label>
               <select {...register("design_status", {
@@ -1951,6 +1918,44 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </div>
             )}
           </div>
+
+          {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
+          {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
+            <div className="erp-addon-bar">
+              <span className="erp-addon-title">
+                <span>📘</span>
+                <span>Нэмэлт сонголтууд:</span>
+              </span>
+              
+              <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
+                <input 
+                  type="checkbox" 
+                  {...register("has_super_cover")} 
+                />
+                <span>🧥 Супер хавтастай</span>
+              </label>
+
+              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                <>
+                  <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
+                    <input 
+                      type="checkbox" 
+                      {...register("has_printed_endpaper")} 
+                    />
+                    <span>📄 Хэвлэлтэй форзац</span>
+                  </label>
+
+                  <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
+                    <input 
+                      type="checkbox" 
+                      {...register("has_bookmark")} 
+                    />
+                    <span>🔖 Хавчуурга туузтай</span>
+                  </label>
+                </>
+              )}
+            </div>
+          )}
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
