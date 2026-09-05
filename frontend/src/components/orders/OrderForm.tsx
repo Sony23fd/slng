@@ -109,10 +109,10 @@ function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []
   if (s === 'A4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
   if (s === 'B4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
 
-  // Foam Hardcover (Хөөсөн хатуу хавтас) fallbacks
-  if (s === 'A4' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
-  if (s === 'A5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && (bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  // Landscape Hardcover (Хөндлөн хатуу хавтас - xx2.jpg) fallbacks
+  if (s === 'A4' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
+  if (s === 'A5' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
 
   // Super Cover (Супер хавтас - sx.jpg) fallbacks
   if (s === 'A5' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 6, printSize: 'B3' };
@@ -1550,6 +1550,35 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     isApplyingTemplateRef.current = true;
                     setPrevCategory('Ном');
                     setValue('category', 'Ном');
+                    setValue('product_name', 'Стандарт А4 Хөндлөн хатуу хавтастай ном (160 хуудас)');
+                    setValue('size', 'A4');
+                    setValue('total_pages', 160);
+                    setValue('binding_type', 'Хөндлөн хатуу хавтастай');
+                    setValue('has_printed_endpaper', false);
+                    setValue('has_bookmark', 'true');
+                    setValue('total_qty', 1000);
+                    setValue('materials', [
+                      { material_name: 'Шохойтой 157гр', size: 'B1', print_size: 'B2', unit_cost: 450, notes: 'Хөндлөн хавтас 720х390мм (3 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 3, sheet_qty: 367, is_cover: true },
+                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (7ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 7, sheet_qty: 143, is_cover: false },
+                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (4ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 4, sheet_qty: 250, is_cover: false },
+                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 14 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
+                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (38см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 380, is_cover: false },
+                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
+                    ]);
+                    setValue('operations', [
+                      { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 5000, notes: 'А4 хөндлөн хатуу хавтас угсрах, наах' }
+                    ]);
+                  }}
+                >
+                  📖 1000ш А4 Хөндлөн хатуу
+                </button>
+                <button
+                  type="button"
+                  className="preset-chip-btn"
+                  onClick={() => {
+                    isApplyingTemplateRef.current = true;
+                    setPrevCategory('Ном');
+                    setValue('category', 'Ном');
                     setValue('product_name', 'Стандарт А5 Супер хавтастай ном (160 хуудас)');
                     setValue('size', 'A5');
                     setValue('total_pages', 160);
@@ -1858,11 +1887,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Наалттай">Наалттай</option>
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
-                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
+                <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
               </select>
             </div>
-            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
+            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
               <div className="erp-field col-span-full" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>📘 Нэмэлт тохиргоо:</span>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
@@ -1873,7 +1902,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   />
                   <span>🧥 Супер хавтастай</span>
                 </label>
-                {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
                   <>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#1e293b' }}>
                       <input 
@@ -2530,7 +2559,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
               + Материал нэмэх
             </button>
-            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
               <button 
                 type="button" 
                 onClick={handleAddHardcoverAuxiliary} 
