@@ -79,10 +79,10 @@ async function main() {
     { size: 'A5', binding: 'Хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
     { size: 'B4', binding: 'Хатуу хавтастай', press_sheet: 1.0, divide_by: 4, print_size: 'A2' },
     { size: 'B5', binding: 'Хатуу хавтастай', press_sheet: 1.0, divide_by: 5, print_size: 'B3' },
-    // Хөөсөн хатуу хавтастай (xx2.jpg)
-    { size: 'A4', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 1.0, divide_by: 3, print_size: 'B2' },
-    { size: 'A5', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
-    { size: 'B5', binding: 'Хөөсөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    // Хөндлөн хатуу хавтастай (xx2.jpg - Landscape Hardcover)
+    { size: 'A4', binding: 'Хөндлөн хатуу хавтастай', press_sheet: 1.0, divide_by: 3, print_size: 'B2' },
+    { size: 'A5', binding: 'Хөндлөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'B5', binding: 'Хөндлөн хатуу хавтастай', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
     // Супер хавтастай (sx.jpg)
     { size: 'A5', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 6, print_size: 'B3' },
     { size: 'B5', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 6, print_size: '594x280' },
