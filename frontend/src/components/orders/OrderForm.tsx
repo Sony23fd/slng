@@ -2189,7 +2189,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '160px' }}>Материал</th>
+                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '220px' }}>Материал</th>
                       <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>Хэмжээ</th>
                       <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>Хэв. хэмжээ</th>
                       <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
@@ -2253,111 +2253,141 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
                   const isSpecialStrap = currentMaterialName.includes('Оосор');
                   const isSpecialMat = isSpecialCoating || isSpecialStrap;
+                  const isCoverRow = Boolean(formValues.materials?.[index]?.is_cover);
                   const disabledStyle = { ...inputStyle, backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' };
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '48%' : undefined }}>
-                        <Controller
-                          name={`materials.${index}.material_name`}
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              options={uniqueBaseNames.map(name => ({ value: name, label: name }))}
-                              onChange={(selectedOption: any) => {
-                                const val = selectedOption ? selectedOption.value : '';
-                                field.onChange(val);
-                                if (val) {
-                                  const newSizes = parsedMasterPrices.filter(p => p.baseName === val);
-                                  if (newSizes.length === 1) {
-                                    const singleSize = newSizes[0];
-                                    setValue(`materials.${index}.size`, singleSize.sizeName);
-                                    setValue(`materials.${index}.unit_cost`, singleSize.unit_cost);
-                                    const printSize = formValues.materials?.[index]?.print_size || '';
-                                    const ratio = calculatePaperDivision(singleSize.sizeName, printSize);
-                                    const isCover = formValues.materials?.[index]?.is_cover;
-                                    const bt = formValues.binding_type || '';
-                                    const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                                    const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
-                                    if (ratio > 1 && !coverLogic) {
-                                      setValue(`materials.${index}.divide_by`, ratio);
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Controller
+                              name={`materials.${index}.material_name`}
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={uniqueBaseNames.map(name => ({ value: name, label: name }))}
+                                  onChange={(selectedOption: any) => {
+                                    const val = selectedOption ? selectedOption.value : '';
+                                    field.onChange(val);
+                                    if (val) {
+                                      const newSizes = parsedMasterPrices.filter(p => p.baseName === val);
+                                      if (newSizes.length === 1) {
+                                        const singleSize = newSizes[0];
+                                        setValue(`materials.${index}.size`, singleSize.sizeName);
+                                        setValue(`materials.${index}.unit_cost`, singleSize.unit_cost);
+                                        const printSize = formValues.materials?.[index]?.print_size || '';
+                                        const ratio = calculatePaperDivision(singleSize.sizeName, printSize);
+                                        const isCover = formValues.materials?.[index]?.is_cover;
+                                        const bt = formValues.binding_type || '';
+                                        const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                                        const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
+                                        if (ratio > 1 && !coverLogic) {
+                                          setValue(`materials.${index}.divide_by`, ratio);
+                                        }
+                                      } else {
+                                        setValue(`materials.${index}.size`, '');
+                                        setValue(`materials.${index}.unit_cost`, 0);
+                                      }
+                                    } else {
+                                      setValue(`materials.${index}.size`, '');
+                                      setValue(`materials.${index}.unit_cost`, 0);
                                     }
-                                  } else {
-                                    setValue(`materials.${index}.size`, '');
-                                    setValue(`materials.${index}.unit_cost`, 0);
-                                  }
-                                } else {
-                                  setValue(`materials.${index}.size`, '');
-                                  setValue(`materials.${index}.unit_cost`, 0);
-                                }
-                              }}
-                              value={field.value ? { value: field.value, label: field.value } : null}
-                              placeholder="Хайх..."
-                              isClearable
-                              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                              menuPosition="fixed"
-                              styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                  }}
+                                  value={field.value ? { value: field.value, label: field.value } : null}
+                                  placeholder="Хайх..."
+                                  isClearable
+                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                  menuPosition="fixed"
+                                  styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 99999 }) }}
+                                />
+                              )}
                             />
+                          </div>
+                          {!isSpecialMat && (
+                            <label
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                height: '32px',
+                                padding: '0 7px',
+                                borderRadius: '5px',
+                                fontSize: '11px',
+                                fontWeight: isCoverRow ? 700 : 500,
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                whiteSpace: 'nowrap',
+                                border: isCoverRow ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                                backgroundColor: isCoverRow ? '#eff6ff' : '#f8fafc',
+                                color: isCoverRow ? '#1d4ed8' : '#64748b',
+                                boxShadow: isCoverRow ? '0 1px 2px rgba(37,99,235,0.1)' : 'none',
+                                transition: 'all 0.15s ease',
+                                flexShrink: 0
+                              }}
+                              title={isCoverRow ? "Хавтасны цаас гэж тооцоолсон (Цуцлах бол дарна уу)" : "Хавтасны цаас болгож тооцоолох"}
+                            >
+                              <input
+                                type="checkbox"
+                                {...register(`materials.${index}.is_cover`, {
+                                  onChange: (e) => {
+                                    const isCov = e.target.checked;
+                                    const bt = getValues('binding_type') || '';
+                                    const b4 = Number(getValues('total_pages')) || 0;
+                                    const a7 = getA7Size();
+                                    
+                                    let coverLogic = null;
+                                    let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
+                                    let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
+
+                                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+                                    if ((categoryConfig.calc_mode === 'BOOK_MODE' || !categoryConfig.calc_mode || categoryConfig.calc_mode === 'null') && isCov) {
+                                      coverLogic = getCoverLogic(a7, bt, coverRules);
+                                      if (coverLogic) {
+                                        m4 = coverLogic.pressSheet;
+                                        divBy = coverLogic.divideBy;
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
+                                        setValue(`materials.${index}.divide_by`, divBy);
+                                        if (coverLogic?.printSize) {
+                                          setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                                        }
+                                      }
+                                    } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
+                                      divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
+                                    } else {
+                                      const targetPages = isCov ? 4 : b4;
+                                      const printSize = getValues(`materials.${index}.print_size`);
+                                      if (printSize && a7 && targetPages > 0) {
+                                        const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
+                                        if (pagesPerSheet > 0) {
+                                          m4 = targetPages / pagesPerSheet;
+                                          setValue(`materials.${index}.press_sheet`, String(m4));
+                                        }
+                                      }
+                                    }
+
+                                    const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
+                                    const currentMaterialName = getValues(`materials.${index}.material_name`) || '';
+                                    const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
+                                    setValue(`materials.${index}.extra_qty`, extra);
+                                    const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
+                                    const divs = calculatePaperDivision(currentPrintSize, a7);
+                                    const setups = calculateSetups(m4, divs);
+                                    const total = (base * m4) + (extra * setups);
+                                    setValue(`materials.${index}.total_qty`, total);
+                                    
+                                    if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) { 
+                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
+                                    }
+                                  }
+                                })}
+                                style={{ width: '13px', height: '13px', accentColor: '#2563eb', cursor: 'pointer', margin: 0 }}
+                              />
+                              <span>{isCoverRow ? '📘 Хавтас' : 'Хавтас'}</span>
+                            </label>
                           )}
-                        />
-                        {!isSpecialMat && (
-                        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <input type="checkbox" {...register(`materials.${index}.is_cover`, {
-                            onChange: (e) => {
-                              const isCov = e.target.checked;
-                              const bt = getValues('binding_type') || '';
-                              const b4 = Number(getValues('total_pages')) || 0;
-                              const a7 = getA7Size();
-                              
-                              let coverLogic = null;
-                              let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
-                              let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
-
-                              const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                              if ((categoryConfig.calc_mode === 'BOOK_MODE' || !categoryConfig.calc_mode || categoryConfig.calc_mode === 'null') && isCov) {
-                                coverLogic = getCoverLogic(a7, bt, coverRules);
-                                if (coverLogic) {
-                                  m4 = coverLogic.pressSheet;
-                                  divBy = coverLogic.divideBy;
-                                  setValue(`materials.${index}.press_sheet`, String(m4));
-                                  setValue(`materials.${index}.divide_by`, divBy);
-                                  if (coverLogic?.printSize) {
-                                    setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                                  }
-                                }
-                              } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
-                                divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
-                              } else {
-                                const targetPages = isCov ? 4 : b4;
-                                const printSize = getValues(`materials.${index}.print_size`);
-                                if (printSize && a7 && targetPages > 0) {
-                                  const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
-                                  if (pagesPerSheet > 0) {
-                                    m4 = targetPages / pagesPerSheet;
-                                    setValue(`materials.${index}.press_sheet`, String(m4));
-                                  }
-                                }
-                              }
-
-                              const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
-                              const currentMaterialName = getValues(`materials.${index}.material_name`) || '';
-                              const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
-                              setValue(`materials.${index}.extra_qty`, extra);
-                              const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
-                              const divs = calculatePaperDivision(currentPrintSize, a7);
-                              const setups = calculateSetups(m4, divs);
-                              const total = (base * m4) + (extra * setups);
-                              setValue(`materials.${index}.total_qty`, total);
-                              
-                              if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) { 
-                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
-                              }
-                            }
-                          })} />
-                          <label style={{ fontSize: '0.75rem', color: '#475569', cursor: 'pointer', margin: 0 }}>Хавтас</label>
                         </div>
-                        )}
                       </td>
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
