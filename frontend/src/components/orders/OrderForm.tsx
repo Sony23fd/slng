@@ -1121,8 +1121,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         const extra = calculateMakeready(m5);
         setValue(`materials.${index}.extra_qty`, extra);
-        const setups = isBag ? extra : calculateSetups(1, div);
-        const total = (m5 * 1) + setups;
+        const setups = isBag ? 1 : calculateSetups(1, div);
+        const total = (m5 * 1) + (extra * setups);
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
         const divBy = Number(m.divide_by) || (isBag ? 2 : 1);
         if (isBag && Number(m.divide_by) !== divBy) setValue(`materials.${index}.divide_by`, divBy);
@@ -1783,15 +1783,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     setValue(`materials.${index}.base_qty`, newBase);
                     const press = Number(m.press_sheet) || 1;
                     const currentMaterialName = m.material_name || '';
-                    const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(m.extra_qty) || 0) : calculateMakeready(newBase);
+                    const isAuxiliaryNoMakeready = 
+                      currentMaterialName.includes('Картон') || 
+                      currentMaterialName.includes('капитал') || 
+                      currentMaterialName.includes('Хавчуурга') || 
+                      currentMaterialName.includes('Оосор') || 
+                      currentMaterialName.includes('Бүрэлт');
+                    const extra = isAuxiliaryNoMakeready ? (Number(m.extra_qty) || 0) : calculateMakeready(newBase);
                     setValue(`materials.${index}.extra_qty`, extra);
                     const a7 = getA7Size();
                     const divs = calculatePaperDivision(m.print_size || 'A2', a7);
-                    const setups = calculateSetups(press, divs);
+                    const setups = isAuxiliaryNoMakeready ? 0 : calculateSetups(press, divs);
                     const total = (newBase * press) + (extra * setups);
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
-                    if (!evaluateDynamicFormula(index, { base_qty: newBase })) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                    if (!evaluateDynamicFormula(index, { base_qty: newBase })) {
+                      if (currentMaterialName.includes('Хавчуурга')) {
+                        const ribbonLen = (Number(m.sheet_qty) && newBase > 0 && oldA6 > 0) ? (Number(m.sheet_qty) / oldA6) : 0.33;
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase * ribbonLen));
+                      } else {
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                      }
+                    }
                   });
                 }
               })} />
@@ -2409,23 +2422,35 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   const a7Raw = formValues.size || '';
                                   const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
                                   const isCover = formValues.materials?.[index]?.is_cover || false;
-                                  const b4 = isCover ? 4 : (Number(formValues.total_pages) || 0);
-                                  if (val && a7 && b4 > 0) {
-                                    const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
-                                    if (pagesPerSheet > 0) {
-                                      const m4 = b4 / pagesPerSheet;
-                                      setValue(`materials.${index}.press_sheet`, String(m4));
-                                      const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                      const divs = calculatePaperDivision(val || 'A2', a7);
-                                      const setups = calculateSetups(m4, divs);
-                                      const total = (base * m4) + (extra * setups);
-                                      setValue(`materials.${index}.total_qty`, total);
-                                      const divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
-                                      if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                  const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+                                  let m4 = 0;
+                                  let divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+
+                                  if (coverLogic) {
+                                    m4 = coverLogic.pressSheet;
+                                    divBy = coverLogic.divideBy;
+                                    setValue(`materials.${index}.press_sheet`, String(m4));
+                                    setValue(`materials.${index}.divide_by`, divBy);
+                                  } else {
+                                    const b4 = Number(formValues.total_pages) || 0;
+                                    if (val && a7 && b4 > 0) {
+                                      const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
+                                      if (pagesPerSheet > 0) {
+                                        m4 = b4 / pagesPerSheet;
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
+                                      }
                                     }
+                                  }
+
+                                  if (m4 > 0) {
+                                    const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                                    const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                    const divs = calculatePaperDivision(val || 'A2', a7);
+                                    const setups = calculateSetups(m4, divs);
+                                    const total = (base * m4) + (extra * setups);
+                                    setValue(`materials.${index}.total_qty`, total);
+                                    if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                                   } else if (ratio > 0) {
-                                    // If M4 calculation didn't run, still update sheet_qty based on ratio
                                     const total = Number(formValues.materials?.[index]?.total_qty) || 0;
                                     setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
                                   }
