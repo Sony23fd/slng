@@ -174,6 +174,17 @@ const tableSelectStyles = {
   indicatorsContainer: (base: any) => ({ ...base, height: '32px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
   clearIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
+  groupHeading: (base: any) => ({
+    ...base,
+    fontSize: '11px',
+    fontWeight: 700,
+    color: '#475569',
+    backgroundColor: '#f8fafc',
+    padding: '4px 8px',
+    margin: 0,
+    borderBottom: '1px solid #e2e8f0',
+    textTransform: 'none'
+  }),
   menu: (base: any) => ({ ...base, zIndex: 99999 }),
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
@@ -2245,7 +2256,53 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     })
                     .map(p => ({ ...p, ...parseMaterial(p.item_name) }));
                     
-                  const uniqueBaseNames = Array.from(new Set(parsedMasterPrices.map(p => p.baseName)));
+                  const isPaperItem = (p: any) => {
+                    const cat = (p.category || '').toLowerCase();
+                    const name = (p.baseName || p.item_name || '').toLowerCase();
+                    if (name.includes('бүрэлт') || name.includes('оосор') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || name.includes('цавуу')) {
+                      return false;
+                    }
+                    if (cat.includes('цаас') || cat.includes('paper')) return true;
+                    if (name.includes('цаас') || name.includes('paper')) return true;
+                    if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт')) return true;
+                    return false;
+                  };
+
+                  const paperPriority = [
+                    'Шохойтой цаас',
+                    'Мат цаас',
+                    'Офсет цаас',
+                    'Номын шар',
+                    'Картон',
+                    'Кай цаас',
+                    'Хортой цаас',
+                    'Стикер'
+                  ];
+
+                  const rawPaperNames = Array.from(new Set(parsedMasterPrices.filter(isPaperItem).map(p => p.baseName)));
+                  const rawOtherNames = Array.from(new Set(parsedMasterPrices.filter(p => !isPaperItem(p)).map(p => p.baseName)));
+
+                  rawPaperNames.sort((a, b) => {
+                    const indexA = paperPriority.indexOf(a);
+                    const indexB = paperPriority.indexOf(b);
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.localeCompare(b);
+                  });
+
+                  const uniqueBaseNames = [...rawPaperNames, ...rawOtherNames];
+                  const materialOptions = [
+                    ...(rawPaperNames.length > 0 ? [{
+                      label: '📄 Цаас',
+                      options: rawPaperNames.map(name => ({ value: name, label: name }))
+                    }] : []),
+                    ...(rawOtherNames.length > 0 ? [{
+                      label: '📦 Бусад / Туслах материал',
+                      options: rawOtherNames.map(name => ({ value: name, label: name }))
+                    }] : [])
+                  ];
+
                   const availableSizes = parsedMasterPrices.filter(p => p.baseName === currentMaterialName);
 
                   const inputStyle = tableInputStyle;
@@ -2267,7 +2324,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               render={({ field }) => (
                                 <Select
                                   {...field}
-                                  options={uniqueBaseNames.map(name => ({ value: name, label: name }))}
+                                  options={materialOptions}
                                   onChange={(selectedOption: any) => {
                                     const val = selectedOption ? selectedOption.value : '';
                                     field.onChange(val);
