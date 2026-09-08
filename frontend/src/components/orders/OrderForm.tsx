@@ -150,7 +150,9 @@ const compactSelectStyles = {
   input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
   indicatorsContainer: (base: any) => ({ ...base, height: '34px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '4px 6px' }),
-  clearIndicator: (base: any) => ({ ...base, padding: '4px 4px' })
+  clearIndicator: (base: any) => ({ ...base, padding: '4px 4px' }),
+  menu: (base: any) => ({ ...base, zIndex: 99999 }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
 
 const tableSelectStyles = {
@@ -171,7 +173,9 @@ const tableSelectStyles = {
   input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
   indicatorsContainer: (base: any) => ({ ...base, height: '32px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
-  clearIndicator: (base: any) => ({ ...base, padding: '2px 4px' })
+  clearIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
+  menu: (base: any) => ({ ...base, zIndex: 99999 }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
 
 const tableInputStyle: React.CSSProperties = {
@@ -1246,6 +1250,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         value={field.value ? { value: field.value, label: field.value } : null}
                         placeholder="Хайх эсвэл шинээр..."
                         isClearable
+                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                        menuPosition="fixed"
                         styles={{
                           control: (base) => ({
                             ...base,
@@ -1257,7 +1263,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             fontSize: '12.5px'
                           }),
                           valueContainer: (base) => ({ ...base, padding: '0 6px' }),
-                          indicatorsContainer: (base) => ({ ...base, height: '34px' })
+                          indicatorsContainer: (base) => ({ ...base, height: '34px' }),
+                          menu: (base) => ({ ...base, zIndex: 99999 }),
+                          menuPortal: (base) => ({ ...base, zIndex: 99999 })
                         }}
                       />
                     )}
@@ -1716,6 +1724,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       }}
                       placeholder="🔍 Загвар хайх..."
                       isClearable
+                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                      menuPosition="fixed"
                       styles={compactSelectStyles}
                     />
                   );
@@ -1763,6 +1773,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       value={field.value ? { value: field.value, label: field.value } : null}
                       placeholder="Сонгох эсвэл бичих..."
                       isClearable
+                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                      menuPosition="fixed"
                       styles={compactSelectStyles}
                     />
                   );
@@ -1830,6 +1842,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       value={field.value ? { value: field.value, label: field.value } : null}
                       placeholder="Сонгох эсвэл бичих..."
                       isClearable
+                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                      menuPosition="fixed"
                       styles={compactSelectStyles}
                     />
                   );
@@ -2734,6 +2748,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         value={field.value ? { value: field.value, label: field.value } : null}
                         placeholder="Сонгох эсвэл бичих..."
                         isClearable
+                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                        menuPosition="fixed"
                         styles={compactSelectStyles}
                       />
                     );
@@ -2755,6 +2771,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         value={field.value ? { value: field.value, label: field.value } : null}
                         placeholder="Сонгох эсвэл бичих..."
                         isClearable
+                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                        menuPosition="fixed"
                         styles={compactSelectStyles}
                       />
                     );
