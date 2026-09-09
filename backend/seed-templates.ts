@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const prisma = new PrismaClient();
 
@@ -489,6 +490,717 @@ const standardTemplates = [
       specifications: {
         cover_color: '4+4',
         total_pages: 2
+      }
+    }
+  },
+  {
+    template_name: 'Ном А5 (Хатуу хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Хатуу хавтастай',
+    size: 'A5',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'А5 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    order_data: {
+      sub_size: '148x210mm',
+      materials: [
+        {
+          material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
+          size: 'A5',
+          print_size: 'A2',
+          press_sheet: '0.5',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 600,
+          divide_by: 4,
+          sheet_qty: 150,
+          unit_cost: 890,
+          notes: 'Хавтас (157гр)',
+          is_cover: true
+        },
+        {
+          material_name: 'Картон 2 A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 14,
+          sheet_qty: 72,
+          unit_cost: 6300,
+          notes: 'Суурь картон 2мм',
+          is_cover: false
+        },
+        {
+          material_name: 'Мат цаас 200гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 8,
+          sheet_qty: 125,
+          unit_cost: 1150,
+          notes: 'Форзац (200гр хэвлэлгүй)',
+          is_cover: false
+        },
+        {
+          material_name: 'Номын капитал (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 40,
+          divide_by: 1,
+          sheet_qty: 40,
+          unit_cost: 0,
+          notes: 'Номын капитал (1000ш / 25)',
+          is_cover: false
+        },
+        {
+          material_name: 'Хавчуурга тууз (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 300,
+          divide_by: 1,
+          sheet_qty: 300,
+          unit_cost: 0,
+          notes: 'Хавчуурга тууз (1000ш * 0.30м)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'A5',
+          print_size: 'A2',
+          press_sheet: '10',
+          base_qty: 1000,
+          extra_qty: 200,
+          total_qty: 10200,
+          divide_by: 4,
+          sheet_qty: 2550,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 500, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (A2 0.006 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 2000, notes: 'Хатуу хавтас угсрах, наах' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_printed_endpaper: false,
+        has_bookmark: 'true'
+      }
+    }
+  },
+  {
+    template_name: 'Ном В5 (Хатуу хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Хатуу хавтастай',
+    size: 'B5',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'В5 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    order_data: {
+      sub_size: '176x250mm',
+      materials: [
+        {
+          material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
+          size: 'B5',
+          print_size: 'B3',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 5,
+          sheet_qty: 220,
+          unit_cost: 890,
+          notes: 'Хавтас (157гр)',
+          is_cover: true
+        },
+        {
+          material_name: 'Картон 2 A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 9,
+          sheet_qty: 112,
+          unit_cost: 6300,
+          notes: 'Суурь картон 2мм',
+          is_cover: false
+        },
+        {
+          material_name: 'Мат цаас 200гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 5,
+          sheet_qty: 200,
+          unit_cost: 1150,
+          notes: 'Форзац (200гр хэвлэлгүй)',
+          is_cover: false
+        },
+        {
+          material_name: 'Номын капитал (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 63,
+          divide_by: 1,
+          sheet_qty: 63,
+          unit_cost: 0,
+          notes: 'Номын капитал (1000ш / 16)',
+          is_cover: false
+        },
+        {
+          material_name: 'Хавчуурга тууз (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 330,
+          divide_by: 1,
+          sheet_qty: 330,
+          unit_cost: 0,
+          notes: 'Хавчуурга тууз (1000ш * 0.33м)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'B5',
+          print_size: 'B2',
+          press_sheet: '10',
+          base_qty: 1000,
+          extra_qty: 200,
+          total_qty: 10200,
+          divide_by: 2,
+          sheet_qty: 5100,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 2500, notes: 'Хатуу хавтас угсрах, наах' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_printed_endpaper: false,
+        has_bookmark: 'true'
+      }
+    }
+  },
+  {
+    template_name: 'Ном А4 (Хатуу хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Хатуу хавтастай',
+    size: 'A4',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'А4 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    order_data: {
+      sub_size: '210x297mm',
+      materials: [
+        {
+          material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
+          size: 'A4',
+          print_size: 'B3',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 5,
+          sheet_qty: 220,
+          unit_cost: 890,
+          notes: 'Хавтас (157гр)',
+          is_cover: true
+        },
+        {
+          material_name: 'Картон 2 A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 7,
+          sheet_qty: 143,
+          unit_cost: 6300,
+          notes: 'Суурь картон 2мм',
+          is_cover: false
+        },
+        {
+          material_name: 'Мат цаас 200гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 4,
+          sheet_qty: 250,
+          unit_cost: 1150,
+          notes: 'Форзац (200гр хэвлэлгүй)',
+          is_cover: false
+        },
+        {
+          material_name: 'Номын капитал (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 72,
+          divide_by: 1,
+          sheet_qty: 72,
+          unit_cost: 0,
+          notes: 'Номын капитал (1000ш / 14)',
+          is_cover: false
+        },
+        {
+          material_name: 'Хавчуурга тууз (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 380,
+          divide_by: 1,
+          sheet_qty: 380,
+          unit_cost: 0,
+          notes: 'Хавчуурга тууз (1000ш * 0.38м)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'A4',
+          print_size: 'A2',
+          press_sheet: '20',
+          base_qty: 1000,
+          extra_qty: 300,
+          total_qty: 20300,
+          divide_by: 4,
+          sheet_qty: 5075,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 3000, notes: 'Хатуу хавтас угсрах, наах' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_printed_endpaper: false,
+        has_bookmark: 'true'
+      }
+    }
+  },
+  {
+    template_name: 'Ном А4 (Хөөсөн хатуу хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Хөөсөн хатуу хавтастай',
+    size: 'A4',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'А4 хөөсөн хатуу хавтастай ном (дэлгээс 720х390мм, 1000ш standard)',
+    order_data: {
+      sub_size: '210x297mm',
+      materials: [
+        {
+          material_name: 'Шохойтой цаас 157гр B1 (787x1092)',
+          size: 'A4',
+          print_size: 'B2',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 3,
+          sheet_qty: 367,
+          unit_cost: 752,
+          notes: 'Хавтас (157гр хөөсөн, 3 хуваалт)',
+          is_cover: true
+        },
+        {
+          material_name: 'Картон 2 A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 7,
+          sheet_qty: 143,
+          unit_cost: 6300,
+          notes: 'Суурь картон 2мм',
+          is_cover: false
+        },
+        {
+          material_name: 'Мат цаас 200гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 4,
+          sheet_qty: 250,
+          unit_cost: 1150,
+          notes: 'Форзац (200гр хэвлэлгүй)',
+          is_cover: false
+        },
+        {
+          material_name: 'Номын капитал (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 72,
+          divide_by: 1,
+          sheet_qty: 72,
+          unit_cost: 0,
+          notes: 'Номын капитал (1000ш / 14)',
+          is_cover: false
+        },
+        {
+          material_name: 'Хавчуурга тууз (м)',
+          size: '',
+          print_size: '',
+          press_sheet: '',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 380,
+          divide_by: 1,
+          sheet_qty: 380,
+          unit_cost: 0,
+          notes: 'Хавчуурга тууз (1000ш * 0.38м)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'A4',
+          print_size: 'A2',
+          press_sheet: '20',
+          base_qty: 1000,
+          extra_qty: 300,
+          total_qty: 20300,
+          divide_by: 4,
+          sheet_qty: 5075,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хөөсөн хатуу хавтас хийх', qty: 1000, unit_cost: 3500, notes: 'Хөөсөн хатуу хавтас угсрах' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_printed_endpaper: false,
+        has_bookmark: 'true'
+      }
+    }
+  },
+  {
+    template_name: 'Ном А5 (Супер хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Супер хавтастай',
+    size: 'A5',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'А5 супер хавтастай ном (дэлгээс B3, 1000ш standard)',
+    order_data: {
+      sub_size: '148x210mm',
+      materials: [
+        {
+          material_name: 'Мат цаас 250гр B1 (787x1092)',
+          size: 'B1',
+          print_size: 'B3',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 6,
+          sheet_qty: 184,
+          unit_cost: 1150,
+          notes: 'Супер хавтас (250гр, 6 хуваалт)',
+          is_cover: true
+        },
+        {
+          material_name: 'Мат цаас 157гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 16,
+          sheet_qty: 63,
+          unit_cost: 890,
+          notes: 'Супер хавтасны форзац 157гр (16 хуваалт)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'A5',
+          print_size: 'A2',
+          press_sheet: '10',
+          base_qty: 1000,
+          extra_qty: 200,
+          total_qty: 10200,
+          divide_by: 4,
+          sheet_qty: 2550,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А5 супер хавтас нугалах, өмсгөх' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_super_cover: true
+      }
+    }
+  },
+  {
+    template_name: 'Ном В5 (Супер хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Супер хавтастай',
+    size: 'B5',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'В5 супер хавтастай ном (дэлгээс 594x280мм, 1000ш standard)',
+    order_data: {
+      sub_size: '176x250mm',
+      materials: [
+        {
+          material_name: 'Мат цаас 250гр B1 (787x1092)',
+          size: 'B1',
+          print_size: '594x280',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 6,
+          sheet_qty: 184,
+          unit_cost: 1150,
+          notes: 'Супер хавтас (594x280, 6 хуваалт)',
+          is_cover: true
+        },
+        {
+          material_name: 'Мат цаас 157гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 10,
+          sheet_qty: 100,
+          unit_cost: 890,
+          notes: 'Супер хавтасны форзац 157гр (10 хуваалт)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр B1 (787x1092)',
+          size: 'B5',
+          print_size: 'B2',
+          press_sheet: '10',
+          base_qty: 1000,
+          extra_qty: 200,
+          total_qty: 10200,
+          divide_by: 2,
+          sheet_qty: 5100,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, notes: 'Хавтас матт бүрэлт' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'В5 супер хавтас нугалах, өмсгөх' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_super_cover: true
+      }
+    }
+  },
+  {
+    template_name: 'Ном А4 (Супер хавтастай, 160 нүүр, 1000ш)',
+    category: 'Ном',
+    binding_type: 'Супер хавтастай',
+    size: 'A4',
+    cover_color: '4+0',
+    inner_color: '1+1',
+    total_pages: 160,
+    needs_design: false,
+    design_status: 'Эх бэлэн',
+    design_cost: 0,
+    notes: 'А4 супер хавтастай ном (дэлгээс 720x380мм, 1000ш standard)',
+    order_data: {
+      sub_size: '210x297mm',
+      materials: [
+        {
+          material_name: 'Мат цаас 250гр B1 (787x1092)',
+          size: 'B1',
+          print_size: '720x380',
+          press_sheet: '1.0',
+          base_qty: 1000,
+          extra_qty: 100,
+          total_qty: 1100,
+          divide_by: 3,
+          sheet_qty: 367,
+          unit_cost: 1150,
+          notes: 'Супер хавтас 250гр (720x380, 3 хуваалт)',
+          is_cover: true
+        },
+        {
+          material_name: 'Мат цаас 157гр A0 (889x1194)',
+          size: 'A0',
+          print_size: '',
+          press_sheet: '1',
+          base_qty: 1000,
+          extra_qty: 0,
+          total_qty: 1000,
+          divide_by: 8,
+          sheet_qty: 125,
+          unit_cost: 890,
+          notes: 'Супер хавтасны форзац 157гр (8 хуваалт)',
+          is_cover: false
+        },
+        {
+          material_name: 'Офсет цаас 80гр A0 (889x1194)',
+          size: 'A4',
+          print_size: 'A2',
+          press_sheet: '20',
+          base_qty: 1000,
+          extra_qty: 300,
+          total_qty: 20300,
+          divide_by: 4,
+          sheet_qty: 5075,
+          unit_cost: 510,
+          notes: 'Дотор хуудас (160 нүүр)',
+          is_cover: false
+        }
+      ],
+      operations: [
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А4 супер хавтас нугалах, өмсгөх' }
+      ],
+      specifications: {
+        cover_color: '4+0',
+        inner_color: '1+1',
+        total_pages: 160,
+        has_super_cover: true
       }
     }
   }

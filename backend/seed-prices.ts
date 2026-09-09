@@ -71,6 +71,7 @@ const operationsData = [
   { name: 'Нугалаа', expr: 'total_base_sheets', desc: 'Нугалаа', cost: 10 },
   { name: 'Шалгах', expr: 'total_base_sheets', desc: 'Шалгах', cost: 10 },
   { name: 'Холио', expr: 'total_base_sheets', desc: 'Холио', cost: 10 },
+  { name: 'Цуглуулга', expr: 'total_base_sheets', desc: 'Цуглуулга', cost: 10 },
   
   { name: 'Хэвлэх (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 1 өнгө', cost: 10 },
   { name: 'Хэвлэх (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 2 өнгө', cost: 20 },
@@ -96,6 +97,7 @@ const operationsData = [
   { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000 },
   { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500 },
   { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500 },
+  { name: 'Хөөсөн хатуу хавтас хийх', expr: 'total_qty', desc: 'Хөөсөн хатуу хавтас угсрах', cost: 3500 },
   { name: 'Супер хавтас хийх', expr: 'total_qty', desc: 'Супер хавтас нугалах, өмсгөх', cost: 1000 },
 
   { name: 'Бөгж цоологч', expr: 'total_qty', desc: 'Бөгж цоологч', cost: 20 },
