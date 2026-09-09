@@ -11,6 +11,7 @@ import CreatableSelect from 'react-select/creatable';
 import { parseMaterial } from '../../utils/parseMaterial';
 import { calculatePaperDivision } from '../../utils/paperSizes';
 import CalculationHelpBadge from '../common/CalculationHelpBadge';
+import TemplateCatalogModal from './TemplateCatalogModal';
 
 interface OrderFormValues {
   // 1. Үндсэн
@@ -245,6 +246,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const [masterPrices, setMasterPrices] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [formulas, setFormulas] = useState<any[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [bagDims, setBagDims] = useState({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
@@ -415,6 +417,77 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   const [prevCategory, setPrevCategory] = useState(initialData?.category || '');
   const isApplyingTemplateRef = React.useRef(false);
+
+  const applyFullTemplate = (t: any) => {
+    if (!t) return;
+    isApplyingTemplateRef.current = true;
+
+    // 1. Basic fields
+    if (t.category) {
+      setPrevCategory(t.category);
+      setValue('category', t.category);
+    }
+    setValue('product_name', t.template_name || t.product_name || 'Загварын бүтээгдэхүүн');
+    if (t.size) setValue('size', t.size);
+    if (t.binding_type) setValue('binding_type', t.binding_type);
+    if (t.cover_color) setValue('cover_color', t.cover_color);
+    if (t.inner_color) setValue('inner_color', t.inner_color);
+    if (t.total_pages) setValue('total_pages', t.total_pages);
+    if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
+    if (t.design_status) setValue('design_status', t.design_status);
+    if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
+    if (t.notes) setValue('notes', t.notes);
+
+    // 2. Order data specifics
+    if (t.order_data) {
+      const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
+      if (od.sub_size) setValue('sub_size', od.sub_size);
+
+      // Total qty
+      const tQty = t.total_qty || (od.materials && od.materials[0]?.base_qty) || 1000;
+      setValue('total_qty', tQty);
+
+      // Specifications
+      if (od.specifications) {
+        if (od.specifications.cover_color) setValue('cover_color', od.specifications.cover_color);
+        if (od.specifications.inner_color) setValue('inner_color', od.specifications.inner_color);
+        if (od.specifications.total_pages) setValue('total_pages', od.specifications.total_pages);
+        if (od.specifications.has_bookmark !== undefined) setValue('has_bookmark', String(od.specifications.has_bookmark));
+        if (od.specifications.has_printed_endpaper !== undefined) setValue('has_printed_endpaper', od.specifications.has_printed_endpaper);
+        if (od.specifications.has_super_cover !== undefined) setValue('has_super_cover', od.specifications.has_super_cover);
+        if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
+      }
+
+      // If category or product is Тор (Bag), configure bag dimensions
+      if (t.category === 'Тор' || t.template_name?.includes('Тор')) {
+        setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+      }
+
+      // Materials with live prices from masterPrices
+      if (od.materials && Array.isArray(od.materials)) {
+        const smartMaterials = od.materials.map((m: any) => {
+          const mp = masterPrices.find(p => p.item_name === m.material_name);
+          return {
+            ...m,
+            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : m.unit_cost
+          };
+        });
+        setValue('materials', smartMaterials);
+      }
+
+      // Operations with live prices from masterPrices
+      if (od.operations && Array.isArray(od.operations)) {
+        const smartOperations = od.operations.map((o: any) => {
+          const mp = masterPrices.find(p => p.item_name === o.operation_name);
+          return {
+            ...o,
+            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : o.unit_cost
+          };
+        });
+        setValue('operations', smartOperations);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!formValues.category) return;
@@ -1349,388 +1422,76 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             {/* Compact Presets & Templates Bar directly atop the calculation form */}
             <div className="compact-presets-bar">
               <div className="compact-presets-chips">
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  ⚡ Загварууд:
-                </span>
+                {/* 1. Main Button: Opens Interactive Catalog Modal */}
                 <button
                   type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Брошур');
-                    setValue('category', 'Брошур');
-                    setValue('product_name', 'Түгээмэл 1000ш Брошур');
-                    setValue('size', 'A4');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [{ material_name: 'Шохойтой 150гр', size: 'A4', print_size: 'A2', unit_cost: 150, notes: '', base_qty: 1000, extra_qty: 50, press_sheet: '1', total_qty: 1050, divide_by: 1, sheet_qty: 1050, is_cover: false }]);
-                  }}
+                  className="template-catalog-trigger-btn"
+                  onClick={() => setIsTemplateModalOpen(true)}
+                  title="Бүх бэлэн бүтээгдэхүүний загварыг ангилал, хайлттай дэлгэрэнгүй харах"
                 >
-                  📄 1000ш Брошур
+                  ⚡ Бэлэн загварын каталог ({templates.length || '16'})
                 </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Тор');
-                    setValue('category', 'Тор');
-                    setValue('product_name', 'Стандарт Цаасан тор (32х24х8см)');
-                    setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
-                    setValue('size', 'Тор 24х32х8 (Дэлгээс: 64х44см)');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [{ material_name: 'Картон 250гр', size: '64х44см', print_size: 'B2', unit_cost: 400, notes: '', base_qty: 1000, extra_qty: 100, press_sheet: '1', total_qty: 1100, divide_by: 2, sheet_qty: 550, is_cover: false }]);
-                  }}
-                >
-                  🛍️ 1000ш Цаасан тор
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А5 Ном (160 хуудас)');
-                    setValue('size', 'A5');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Наалттай');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Шохойтой 250гр', size: 'A5', print_size: 'A2', unit_cost: 300, notes: 'Хавтас', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 2, sheet_qty: 300, is_cover: true },
-                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор хуудас', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                    ]);
-                  }}
-                >
-                  📚 1000ш Ном
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Календарь');
-                    setValue('category', 'Календарь');
-                    setValue('product_name', 'Ширээний Календарь (A5, 26 нүүр)');
-                    setValue('size', 'A5');
-                    setValue('total_pages', 26);
-                    setValue('total_qty', 300);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A5', print_size: 'A2', unit_cost: 1400, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 4, sheet_qty: 197, is_cover: false },
-                      { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'B3', print_size: 'B3', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 5, sheet_qty: 80, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (12ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 12, sheet_qty: 25, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                      { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24 ш (300 × 24 = 7200ш)' },
-                      { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Ширээний календарын хатуу картон суурь наах, угсрах' }
-                    ]);
-                  }}
-                >
-                  🗓️ 300ш Календарь (A5)
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Календарь');
-                    setValue('category', 'Календарь');
-                    setValue('product_name', 'Ширээний Календарь (B5, 26 нүүр)');
-                    setValue('size', 'B5');
-                    setValue('total_pages', 26);
-                    setValue('total_qty', 300);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B5', print_size: 'B2', unit_cost: 1150, notes: 'Дотор 26 нүүр (13 хуудас)', base_qty: 300, extra_qty: 300, press_sheet: '1.625', total_qty: 787.5, divide_by: 2, sheet_qty: 394, is_cover: false },
-                      { material_name: 'Мат цаас 300гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1800, notes: 'Хавтас / Суурь (1ш гарна)', base_qty: 300, extra_qty: 100, press_sheet: '1', total_qty: 400, divide_by: 4, sheet_qty: 100, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: 'A0', unit_cost: 6300, notes: 'Суурь картон (8ш багтана)', base_qty: 300, extra_qty: 0, press_sheet: '1', total_qty: 300, divide_by: 8, sheet_qty: 38, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Бүрэлт', qty: 2.80, unit_cost: 1500, notes: 'Хавтас (2.4) болон эхний 1 хуудас (0.4) бүрнэ' },
-                      { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 календарт 28 ш (300 × 28 = 8400ш)' },
-                      { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'B5 календарийн хатуу картон суурь наах, угсрах' }
-                    ]);
-                  }}
-                >
-                  🗓️ 300ш Календарь (B5)
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Календарь');
-                    setValue('category', 'Календарь');
-                    setValue('product_name', 'Ханын Календарь (A2, 14 нүүр / 7 хуудас)');
-                    setValue('size', 'A2');
-                    setValue('total_pages', 14);
-                    setValue('total_qty', 500);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр A0 (889x1194)', size: 'A2', print_size: 'A2', unit_cost: 1400, notes: '14 нүүр (7 хуудас / хэвлэлийн хуудас)', base_qty: 500, extra_qty: 100, press_sheet: '7', total_qty: 4200, divide_by: 4, sheet_qty: 1050, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ (44см хэмжээтэй хуулга)' },
-                      { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын календарт 3/8 хэмжээтэй 56 ш (500 × 56 = 28000ш)' }
-                    ]);
-                  }}
-                >
-                  🗓️ 500ш Ханын Кал. (A2)
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А5 Хатуу хавтастай ном (160 хуудас)');
-                    setValue('size', 'A5');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Хатуу хавтастай');
-                    setValue('has_printed_endpaper', false);
-                    setValue('has_bookmark', 'true');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Шохойтой 157гр', size: 'A2', print_size: 'A2', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '0.5', total_qty: 600, divide_by: 4, sheet_qty: 150, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (14ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
-                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (8ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 8, sheet_qty: 125, is_cover: false },
-                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 25 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 25, sheet_qty: 40, is_cover: false },
-                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (30см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 300, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 3500, notes: 'Хатуу хавтас угсрах, наах' }
-                    ]);
-                  }}
-                >
-                  📖 1000ш А5 Хатуу
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт В5 Хатуу хавтастай ном (160 хуудас)');
-                    setValue('size', 'B5');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Хатуу хавтастай');
-                    setValue('has_printed_endpaper', false);
-                    setValue('has_bookmark', 'true');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Шохойтой 157гр', size: 'B3', print_size: 'B3', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 5, sheet_qty: 220, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (9ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 9, sheet_qty: 112, is_cover: false },
-                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (5ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 5, sheet_qty: 200, is_cover: false },
-                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 16 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 16, sheet_qty: 63, is_cover: false },
-                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (33см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 330, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'B5', print_size: 'B2', unit_cost: 90, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 4000, notes: 'Хатуу хавтас угсрах, наах' }
-                    ]);
-                  }}
-                >
-                  📖 1000ш В5 Хатуу
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А4 Хатуу хавтастай ном (160 хуудас)');
-                    setValue('size', 'A4');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Хатуу хавтастай');
-                    setValue('has_printed_endpaper', false);
-                    setValue('has_bookmark', 'true');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Шохойтой 157гр', size: 'B3', print_size: 'B3', unit_cost: 250, notes: 'Хавтас (157гр)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 5, sheet_qty: 220, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (7ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 7, sheet_qty: 143, is_cover: false },
-                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (4ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 4, sheet_qty: 250, is_cover: false },
-                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 14 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
-                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (38см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 380, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 5000, notes: 'Хатуу хавтас угсрах, наах' }
-                    ]);
-                  }}
-                >
-                  📖 1000ш А4 Хатуу
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А4 Хөндлөн хатуу хавтастай ном (160 хуудас)');
-                    setValue('size', 'A4');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Хөндлөн хатуу хавтастай');
-                    setValue('has_printed_endpaper', false);
-                    setValue('has_bookmark', 'true');
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Шохойтой 157гр', size: 'B1', print_size: 'B2', unit_cost: 450, notes: 'Хөндлөн хавтас 720х390мм (3 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 3, sheet_qty: 367, is_cover: true },
-                      { material_name: 'Картон 2 A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 6300, notes: 'Хатуу хавтасны картон (7ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 7, sheet_qty: 143, is_cover: false },
-                      { material_name: 'Мат цаас 200гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 1200, notes: 'Форзац (4ш гарна)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 4, sheet_qty: 250, is_cover: false },
-                      { material_name: 'Номын капитал (м)', size: '', print_size: '', unit_cost: 0, notes: 'Капитал тууз (1м-ээр 14 ном)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 14, sheet_qty: 72, is_cover: false },
-                      { material_name: 'Хавчуурга тууз (м)', size: '', print_size: '', unit_cost: 0, notes: 'Хавчуурга тууз (38см)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 1, sheet_qty: 380, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 5000, notes: 'А4 хөндлөн хатуу хавтас угсрах, наах' }
-                    ]);
-                  }}
-                >
-                  📖 1000ш А4 Хөндлөн хатуу
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А5 Супер хавтастай ном (160 хуудас)');
-                    setValue('size', 'A5');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Супер хавтастай');
-                    setValue('has_super_cover', true);
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: 'B3', unit_cost: 1150, notes: 'Супер хавтас 250гр (B3, 6 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 6, sheet_qty: 184, is_cover: true },
-                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (16 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 16, sheet_qty: 63, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'A5', print_size: 'A2', unit_cost: 80, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
-                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А5 супер хавтас нугалах, өмсгөх' }
-                    ]);
-                  }}
-                >
-                  🧥 1000ш А5 Супер
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт В5 Супер хавтастай ном (160 хуудас)');
-                    setValue('size', 'B5');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Супер хавтастай');
-                    setValue('has_super_cover', true);
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: '594x280', unit_cost: 1150, notes: 'Супер хавтас 250гр (594x280, 6 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 6, sheet_qty: 184, is_cover: true },
-                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (10 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 10, sheet_qty: 100, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'B5', print_size: 'B2', unit_cost: 90, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '10', total_qty: 10200, divide_by: 1, sheet_qty: 10200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
-                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'В5 супер хавтас нугалах, өмсгөх' }
-                    ]);
-                  }}
-                >
-                  🧥 1000ш В5 Супер
-                </button>
-                <button
-                  type="button"
-                  className="preset-chip-btn"
-                  onClick={() => {
-                    isApplyingTemplateRef.current = true;
-                    setPrevCategory('Ном');
-                    setValue('category', 'Ном');
-                    setValue('product_name', 'Стандарт А4 Супер хавтастай ном (160 хуудас)');
-                    setValue('size', 'A4');
-                    setValue('total_pages', 160);
-                    setValue('binding_type', 'Супер хавтастай');
-                    setValue('has_super_cover', true);
-                    setValue('total_qty', 1000);
-                    setValue('materials', [
-                      { material_name: 'Мат цаас 250гр B1 (787x1092)', size: 'B1', print_size: '720x380', unit_cost: 1150, notes: 'Супер хавтас 250гр (720x380, 3 хуваалт)', base_qty: 1000, extra_qty: 100, press_sheet: '1.0', total_qty: 1100, divide_by: 3, sheet_qty: 367, is_cover: true },
-                      { material_name: 'Мат цаас 157гр A0 (889x1194)', size: 'A0', print_size: '', unit_cost: 890, notes: 'Супер хавтасны форзац 157гр (8 хуваалт)', base_qty: 1000, extra_qty: 0, press_sheet: '1', total_qty: 1000, divide_by: 8, sheet_qty: 125, is_cover: false },
-                      { material_name: 'Офсет 80гр', size: 'A4', print_size: 'A1', unit_cost: 120, notes: 'Дотор 160 нүүр', base_qty: 1000, extra_qty: 200, press_sheet: '20', total_qty: 20200, divide_by: 1, sheet_qty: 20200, is_cover: false }
-                    ]);
-                    setValue('operations', [
-                      { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Ном наах' },
-                      { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А4 супер хавтас нугалах, өмсгөх' }
-                    ]);
-                  }}
-                >
-                  🧥 1000ш А4 Супер
-                </button>
+
+                {/* 2. Top 5 Quick Preset Chips */}
+                {[
+                  {
+                    key: 'soft_book',
+                    label: '📚 Зөөлөн ном (A5)',
+                    finder: (t: any) => (t.template_name?.includes('Ном А5') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
+                  },
+                  {
+                    key: 'hard_book',
+                    label: '📖 Хатуу хавтас (A5)',
+                    finder: (t: any) => t.template_name?.includes('Ном А5') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
+                  },
+                  {
+                    key: 'paper_bag',
+                    label: '🛍️ Цаасан тор (B2)',
+                    finder: (t: any) => t.category === 'Тор' || t.template_name?.includes('Тор')
+                  },
+                  {
+                    key: 'brochure',
+                    label: '📄 Брошур (A4)',
+                    finder: (t: any) => t.category === 'Брошур' || t.template_name?.includes('Брошур')
+                  },
+                  {
+                    key: 'calendar',
+                    label: '🗓️ Календарь (A5)',
+                    finder: (t: any) => t.template_name?.includes('Ширээний Календарь А5')
+                  }
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="preset-chip-btn"
+                    onClick={() => {
+                      const matched = templates.find(item.finder);
+                      if (matched) {
+                        applyFullTemplate(matched);
+                      }
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
+              {/* 3. Searchable Select Dropdown */}
               <div style={{ width: '220px', flex: 'none' }}>
                 {(() => {
-                  const groupedOptions = Object.values(templates.reduce((acc, t) => {
+                  const groupedOptions = Object.values(templates.reduce((acc: any, t: any) => {
                     const cat = t.category || 'Бусад';
                     if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
                     acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
                     return acc;
-                  }, {} as Record<string, { label: string, options: any[] }>));
+                  }, {} as Record<string, any>));
                   
                   return (
                     <Select
                       options={groupedOptions}
                       onChange={(selected: any) => {
                         if (selected && selected.template) {
-                          isApplyingTemplateRef.current = true;
-                          const t = selected.template;
-                          if (t.category) {
-                            setPrevCategory(t.category);
-                            setValue('category', t.category);
-                          }
-                          if (t.size) setValue('size', t.size);
-                          if (t.binding_type) setValue('binding_type', t.binding_type);
-                          if (t.cover_color) setValue('cover_color', t.cover_color);
-                          if (t.inner_color) setValue('inner_color', t.inner_color);
-                          if (t.total_pages) setValue('total_pages', t.total_pages);
-                          if (t.needs_design !== undefined) setValue('needs_design', t.needs_design);
-                          if (t.design_status) setValue('design_status', t.design_status);
-                          if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
-
-                          if (t.order_data) {
-                            const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
-                            if (od.sub_size) setValue('sub_size', od.sub_size);
-                            
-                            if (od.materials && Array.isArray(od.materials)) {
-                              const smartMaterials = od.materials.map((m: any) => {
-                                const mp = masterPrices.find(p => p.item_name === m.material_name);
-                                return {
-                                  ...m,
-                                  unit_cost: mp ? mp.unit_cost : m.unit_cost
-                                };
-                              });
-                              setValue('materials', smartMaterials);
-                            }
-                            
-                            if (od.operations && Array.isArray(od.operations)) {
-                              const smartOperations = od.operations.map((o: any) => {
-                                const mp = masterPrices.find(p => p.item_name === o.operation_name);
-                                return {
-                                  ...o,
-                                  unit_cost: mp ? mp.unit_cost : o.unit_cost
-                                };
-                              });
-                              setValue('operations', smartOperations);
-                            }
-                            
-                            if (od.specifications) {
-                              if (od.specifications.has_bookmark) setValue('has_bookmark', od.specifications.has_bookmark);
-                              if (od.specifications.print_cost !== undefined) setValue('print_cost', od.specifications.print_cost);
-                            }
-                          }
+                          applyFullTemplate(selected.template);
                         }
                       }}
                       placeholder="🔍 Загвар хайх..."
@@ -1743,6 +1504,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 })()}
               </div>
             </div>
+
+            {/* Template Catalog Modal */}
+            <TemplateCatalogModal
+              isOpen={isTemplateModalOpen}
+              onClose={() => setIsTemplateModalOpen(false)}
+              templates={templates}
+              onSelectTemplate={applyFullTemplate}
+            />
 
             {/* 2. Захиалгын мэдээлэл */}
             <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
