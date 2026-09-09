@@ -12,6 +12,12 @@ export const getPrices = async (req: Request, res: Response) => {
     if (category && category !== 'All' && category !== 'Бүгд') {
       where.category = category;
     }
+    if (req.query.is_pricing !== undefined) {
+      where.is_pricing = req.query.is_pricing === 'true';
+    }
+    if (req.query.production_stage && req.query.production_stage !== 'All') {
+      where.production_stage = req.query.production_stage as string;
+    }
     if (search) {
       const searchCondition = [
         { item_name: { contains: search } },
@@ -61,7 +67,7 @@ export const getPrices = async (req: Request, res: Response) => {
 
 export const updatePrice = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { unit_cost, formula_id } = req.body;
+  const { unit_cost, formula_id, is_pricing, production_stage } = req.body;
   const userId = (req as any).user?.id; // from auth middleware
 
   try {
@@ -72,34 +78,72 @@ export const updatePrice = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Price not found' });
     }
 
-    const dataToUpdate: any = { unit_cost: Number(unit_cost) };
+    const dataToUpdate: any = {};
+    if (unit_cost !== undefined) {
+      dataToUpdate.unit_cost = Number(unit_cost);
+    }
     if (formula_id !== undefined) {
       dataToUpdate.formula_id = formula_id ? Number(formula_id) : null;
     }
+    if (is_pricing !== undefined) {
+      dataToUpdate.is_pricing = Boolean(is_pricing);
+    }
+    if (production_stage !== undefined) {
+      dataToUpdate.production_stage = production_stage;
+    }
 
-    const result = await prisma.$transaction([
-      prisma.masterprice.update({
+    const isCostChanged = unit_cost !== undefined && oldPrice.unit_cost !== Number(unit_cost);
+
+    let resultPrice;
+    if (isCostChanged && userId) {
+      const tx = await prisma.$transaction([
+        prisma.masterprice.update({
+          where: { id: priceId },
+          data: dataToUpdate
+        }),
+        prisma.masterpricelog.create({
+          data: {
+            masterPriceId: priceId,
+            changed_by: userId,
+            old_cost: oldPrice.unit_cost,
+            new_cost: Number(unit_cost)
+          }
+        })
+      ]);
+      resultPrice = tx[0];
+    } else {
+      resultPrice = await prisma.masterprice.update({
         where: { id: priceId },
         data: dataToUpdate
-      }),
-      prisma.masterpricelog.create({
-        data: {
-          masterPriceId: priceId,
-          changed_by: userId,
-          old_cost: oldPrice.unit_cost,
-          new_cost: Number(unit_cost)
-        }
-      })
-    ]);
+      });
+    }
 
-    res.json({ message: 'Price updated successfully', price: result[0] });
+    res.json({ message: 'Price updated successfully', price: resultPrice });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update price' });
   }
 };
 
+export const togglePricePricing = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const priceId = parseInt(id as string);
+    const price = await prisma.masterprice.findUnique({ where: { id: priceId } });
+    if (!price) {
+      return res.status(404).json({ error: 'Price not found' });
+    }
+    const updated = await prisma.masterprice.update({
+      where: { id: priceId },
+      data: { is_pricing: !price.is_pricing }
+    });
+    res.json({ message: 'Price pricing status toggled', price: updated });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle price pricing status' });
+  }
+};
+
 export const bulkUpdatePrices = async (req: Request, res: Response) => {
-  const { items } = req.body; // Array of { id: number, unit_cost: number, formula_id?: number | null }
+  const { items } = req.body;
   const userId = (req as any).user?.id;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -113,16 +157,25 @@ export const bulkUpdatePrices = async (req: Request, res: Response) => {
       const oldPrice = await prisma.masterprice.findUnique({ where: { id: priceId } });
       if (!oldPrice) continue;
 
-      const newCost = Number(item.unit_cost);
-      const dataToUpdate: any = { unit_cost: newCost };
+      const dataToUpdate: any = {};
+      let isCostChanged = false;
+
+      if (item.unit_cost !== undefined) {
+        const newCost = Number(item.unit_cost);
+        dataToUpdate.unit_cost = newCost;
+        isCostChanged = oldPrice.unit_cost !== newCost;
+      }
       if (item.formula_id !== undefined) {
         dataToUpdate.formula_id = item.formula_id ? Number(item.formula_id) : null;
       }
+      if (item.is_pricing !== undefined) {
+        dataToUpdate.is_pricing = Boolean(item.is_pricing);
+      }
+      if (item.production_stage !== undefined) {
+        dataToUpdate.production_stage = item.production_stage;
+      }
 
-      const isCostChanged = oldPrice.unit_cost !== newCost;
-      const isFormulaChanged = item.formula_id !== undefined && oldPrice.formula_id !== dataToUpdate.formula_id;
-
-      if (isCostChanged || isFormulaChanged) {
+      if (isCostChanged && userId) {
         const [updated] = await prisma.$transaction([
           prisma.masterprice.update({
             where: { id: priceId },
@@ -133,13 +186,17 @@ export const bulkUpdatePrices = async (req: Request, res: Response) => {
               masterPriceId: priceId,
               changed_by: userId,
               old_cost: oldPrice.unit_cost,
-              new_cost: newCost
+              new_cost: Number(item.unit_cost)
             }
           })
         ]);
         results.push(updated);
       } else {
-        results.push(oldPrice);
+        const updated = await prisma.masterprice.update({
+          where: { id: priceId },
+          data: dataToUpdate
+        });
+        results.push(updated);
       }
     }
     res.json({ message: 'Bulk update successful', count: results.length, data: results });
@@ -245,14 +302,16 @@ export const getPriceLogs = async (req: Request, res: Response) => {
 };
 
 export const createPrice = async (req: Request, res: Response) => {
-  const { category, item_name, unit_cost, formula_id } = req.body;
+  const { category, item_name, unit_cost, formula_id, is_pricing, production_stage } = req.body;
   const userId = (req as any).user?.id;
 
   try {
     const dataToCreate: any = {
       category,
       item_name,
-      unit_cost: Number(unit_cost)
+      unit_cost: Number(unit_cost || 0),
+      is_pricing: is_pricing !== undefined ? Boolean(is_pricing) : true,
+      production_stage: production_stage || 'POST_PRESS'
     };
     if (formula_id) {
       dataToCreate.formula_id = Number(formula_id);
@@ -262,15 +321,17 @@ export const createPrice = async (req: Request, res: Response) => {
       data: dataToCreate
     });
 
-    // Create an initial log
-    await prisma.masterpricelog.create({
-      data: {
-        masterPriceId: price.id,
-        changed_by: userId,
-        old_cost: 0,
-        new_cost: price.unit_cost
-      }
-    });
+    // Create an initial log if price > 0 and user is present
+    if (userId && price.unit_cost > 0) {
+      await prisma.masterpricelog.create({
+        data: {
+          masterPriceId: price.id,
+          changed_by: userId,
+          old_cost: 0,
+          new_cost: price.unit_cost
+        }
+      });
+    }
 
     res.json(price);
   } catch (error) {

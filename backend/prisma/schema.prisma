@@ -31,15 +31,17 @@ model customer {
 }
 
 model masterprice {
-  id             Int                  @id @default(autoincrement())
-  category       String
-  item_name      String
-  unit_cost      Float
-  formula_id     Int?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  masterpricelog masterpricelog[]
-  formula        calculation_formula? @relation(fields: [formula_id], references: [id])
+  id               Int                  @id @default(autoincrement())
+  category         String
+  item_name        String
+  unit_cost        Float
+  formula_id       Int?
+  is_pricing       Boolean              @default(true)
+  production_stage String?              @default("POST_PRESS")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  masterpricelog   masterpricelog[]
+  formula          calculation_formula? @relation(fields: [formula_id], references: [id])
 }
 
 model masterpricelog {
@@ -125,15 +127,17 @@ model ordermaterial {
 }
 
 model orderoperation {
-  id             Int     @id @default(autoincrement())
-  order_id       Int
-  operation_name String
-  qty            Int
-  unit_cost      Float
-  total_cost     Float
-  notes          String?
-  is_manual      Boolean @default(false)
-  order          order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  id               Int     @id @default(autoincrement())
+  order_id         Int
+  operation_name   String
+  qty              Int
+  unit_cost        Float
+  total_cost       Float
+  notes            String?
+  is_manual        Boolean @default(false)
+  is_pricing       Boolean @default(true)
+  production_stage String? @default("POST_PRESS")
+  order            order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@index([order_id])
 }

@@ -107,14 +107,21 @@ export const createOrder = async (req: Request, res: Response) => {
           }))
         },
         operations: {
-          create: (data.operations || []).map((o: any) => ({
-            operation_name: o.operation_name || '',
-            qty: o.qty ? Number(o.qty) : 0,
-            unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-            total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
-            notes: o.notes || null,
-            is_manual: Boolean(o.is_manual)
-          }))
+          create: (data.operations || []).map((o: any) => {
+            const isPricing = o.is_pricing !== false;
+            const qty = o.qty ? Number(o.qty) : 0;
+            const unit_cost = isPricing ? (o.unit_cost ? Number(o.unit_cost) : 0) : 0;
+            return {
+              operation_name: o.operation_name || '',
+              qty,
+              unit_cost,
+              total_cost: qty * unit_cost,
+              notes: o.notes || null,
+              is_manual: Boolean(o.is_manual),
+              is_pricing: isPricing,
+              production_stage: o.production_stage || 'POST_PRESS'
+            };
+          })
         },
         outsourcedJobs: {
           create: (data.outsourcedJobs || data.outsourced || []).map((o: any) => ({
@@ -524,14 +531,21 @@ export const updateOrder = async (req: Request, res: Response) => {
             }))
           },
           operations: {
-            create: (data.operations || []).map((o: any) => ({
-              operation_name: o.operation_name || '',
-              qty: o.qty ? Number(o.qty) : 0,
-              unit_cost: o.unit_cost ? Number(o.unit_cost) : 0,
-              total_cost: (o.qty ? Number(o.qty) : 0) * (o.unit_cost ? Number(o.unit_cost) : 0),
-              notes: o.notes || null,
-              is_manual: Boolean(o.is_manual)
-            }))
+            create: (data.operations || []).map((o: any) => {
+              const isPricing = o.is_pricing !== false;
+              const qty = o.qty ? Number(o.qty) : 0;
+              const unit_cost = isPricing ? (o.unit_cost ? Number(o.unit_cost) : 0) : 0;
+              return {
+                operation_name: o.operation_name || '',
+                qty,
+                unit_cost,
+                total_cost: qty * unit_cost,
+                notes: o.notes || null,
+                is_manual: Boolean(o.is_manual),
+                is_pricing: isPricing,
+                production_stage: o.production_stage || 'POST_PRESS'
+              };
+            })
           },
           outsourcedJobs: {
             create: (data.outsourcedJobs || data.outsourced || []).map((o: any) => ({
