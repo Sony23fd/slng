@@ -1,6 +1,6 @@
-import { PRODUCTION_STAGES } from '../../app/admin/prices/page';
 "use client";
 
+import { PRODUCTION_STAGES } from '../../utils/productionStages';
 import { evaluate } from 'mathjs';
 import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';

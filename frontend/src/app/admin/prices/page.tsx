@@ -16,12 +16,8 @@ interface PriceItem {
   updatedAt?: string;
 }
 
-export const PRODUCTION_STAGES = [
-  { id: 'PRE_PRESS', label: 'Хэвлэхийн өмнөх', color: '#6366f1', icon: '📝' },
-  { id: 'PRINTING', label: 'Хэвлэх дамжлага', color: '#0ea5e9', icon: '🖨️' },
-  { id: 'POST_PRESS', label: 'Хэвлэсний дараах', color: '#f59e0b', icon: '✂️' },
-  { id: 'PACKAGING', label: 'Савлалт, хүргэлт', color: '#10b981', icon: '📦' }
-];
+import { PRODUCTION_STAGES } from '../../../utils/productionStages';
+export { PRODUCTION_STAGES };
 
 interface PriceLog {
   id: number;
