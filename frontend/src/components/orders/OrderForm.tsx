@@ -1,3 +1,4 @@
+import { PRODUCTION_STAGES } from '../../app/admin/prices/page';
 "use client";
 
 import { evaluate } from 'mathjs';
@@ -58,7 +59,15 @@ interface OrderFormValues {
   }[];
   
   // 6. Ажиллагаа
-  operations: { operation_name: string; qty: number; unit_cost: number; notes: string; is_manual?: boolean }[];
+  operations: { 
+    operation_name: string; 
+    qty: number; 
+    unit_cost: number; 
+    notes: string; 
+    is_manual?: boolean;
+    is_pricing?: boolean;
+    production_stage?: string;
+  }[];
   
   // 8. Гадуур ажил
   outsourced: { job_name: string; contractor_name?: string; qty: number; unit_cost: number; notes: string }[];
@@ -375,6 +384,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({ control, name: 'materials' });
   const { fields: opFields, append: appendOp, remove: removeOp, update: updateOp } = useFieldArray({ control, name: 'operations' });
+  const [opModalTab, setOpModalTab] = useState<'ALL' | 'BILLABLE' | 'NON_BILLABLE'>('ALL');
+  const [opModalStage, setOpModalStage] = useState<string>('All');
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
 
@@ -513,12 +524,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           if (Array.isArray(defaults) && defaults.length > 0) {
             defaults.forEach((opName: string) => {
               const mp = masterPrices.find(m => m.category === 'Ажиллагаа' && m.item_name === opName);
+              const isPricing = mp ? (mp.is_pricing !== false) : true;
               newOps.push({
                 operation_name: opName,
                 qty: 0, // will be auto-calculated later by evaluateOperationFormula
-                unit_cost: mp ? mp.unit_cost : 0,
+                unit_cost: mp ? (isPricing ? mp.unit_cost : 0) : 0,
                 notes: 'Үндсэн ажиллагаа',
-                is_manual: false
+                is_manual: false,
+                is_pricing: isPricing,
+                production_stage: mp?.production_stage || 'POST_PRESS'
               });
             });
           }
@@ -942,7 +956,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           operation_name: opName,
           qty: totalQty,
           unit_cost: opMaster ? opMaster.unit_cost : (size === 'A4' ? 5000 : size === 'B5' ? 4000 : 3500),
-          notes: `${size} хатуу хавтас угсрах, наах`
+          notes: `${size} хатуу хавтас угсрах, наах`,
+          is_pricing: true,
+          production_stage: 'POST_PRESS'
         }
       ]);
     }
@@ -1036,7 +1052,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           operation_name: 'Супер хавтас хийх',
           qty: totalQty,
           unit_cost: opMaster ? opMaster.unit_cost : 1000,
-          notes: `${size} супер хавтас нугалах, өмсгөх`
+          notes: `${size} супер хавтас нугалах, өмсгөх`,
+          is_pricing: true,
+          production_stage: 'POST_PRESS'
         }
       ]);
     }
@@ -1054,12 +1072,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   };
 
   const addQuickOp = (op: any) => {
-    let calcQty = op.formula && op.formula.expression ? evaluateOperationFormula(op.formula.expression) : 0;
+    const isPricing = op.is_pricing !== false;
+    let calcQty = op.formula && op.formula.expression ? evaluateOperationFormula(op.formula.expression) : (isPricing ? 0 : 1);
     appendOp({
       operation_name: op.item_name,
       qty: calcQty,
-      unit_cost: op.unit_cost || 0,
-      notes: op.item_name.startsWith('Бүрэлт') ? 'Бүрэлтийн хуулга' : ''
+      unit_cost: isPricing ? (op.unit_cost || 0) : 0,
+      notes: op.item_name.startsWith('Бүрэлт') ? 'Бүрэлтийн хуулга' : '',
+      is_manual: false,
+      is_pricing: isPricing,
+      production_stage: op.production_stage || 'POST_PRESS'
     });
   };
 
@@ -2485,100 +2507,319 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         </SectionCard>
 
         {/* 6. Ажиллагаа */}
-        <SectionCard id="sec7" step="7" title="7. Ажиллагаа (Нугалаа, наалт, үдээ гэх мэт)">
+        <SectionCard id="sec7" step="7" title="7. Ажиллагаа ба Технологийн зааварчилгаа">
           
-          
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Нэмэлт ажиллагаа сонгох
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Нэмэлт ажиллагаа / Заавар сонгох
             </button>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.85rem' }}>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.35rem 0.8rem', borderRadius: '6px', fontWeight: 600 }}>
+                💵 Нийт ажиллагааны өртөг: <strong>{prices.totalOperationCost.toLocaleString()} ₮</strong>
+              </div>
+            </div>
           </div>
 
-          {opFields.length > 0 && (
-            <div className="table-responsive">
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Ажиллагааны нэр</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Тоо</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Нэгж өртөг</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Нийт өртөг</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #cbd5e1', color: '#475569', fontSize: '0.85rem' }}>Тайлбар</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {opFields.map((field, index) => {
-                    const o = formValues.operations?.[index];
-                    const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
-                    const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
-                    const inputStyle = tableInputStyle;
-                    return (
-                      <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: '#f8fafc' }}>
-                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
-                          {o?.operation_name}
-                          {mpFormula && (
-                            <div style={{ display: 'inline-block', marginLeft: '0.5rem' }}>
-                              <CalculationHelpBadge
-                                title="Мастер үнийн сангийн томьёо"
-                                formula={mpFormula}
-                                liveCalculation={`Үр дүн: ${o?.qty || 0}`}
-                                details={[
-                                  "Энэхүү ажиллагааны тоог Мастер үнийн санд тохируулсан динамик томьёогоор бодож байна."
-                                ]}
-                              />
-                            </div>
-                          )}
-                          <input type="hidden" {...register(`operations.${index}.operation_name`)} />
-                        </td>
-                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <input 
-                              type="number" 
-                              step="any" 
-                              style={{ 
-                                ...inputStyle, 
-                                backgroundColor: (!mpFormula || o?.is_manual) ? '#fff' : '#e2e8f0', 
-                                color: (!mpFormula || o?.is_manual) ? '#000' : '#475569', 
-                                cursor: (!mpFormula || o?.is_manual) ? 'text' : 'not-allowed' 
-                              }} 
-                              readOnly={!!mpFormula && !o?.is_manual}
-                              {...register(`operations.${index}.qty`)} 
-                            />
-                            {mpFormula && (
-                              <button
-                                type="button"
-                                title={o?.is_manual ? "Гараар тохируулж байна (Автомат бодолт унтарсан)" : "Автоматаар бодогдож байна"}
-                                onClick={() => setValue(`operations.${index}.is_manual`, !o?.is_manual)}
-                                style={{ 
-                                  background: 'transparent', 
-                                  border: 'none', 
-                                  cursor: 'pointer', 
-                                  padding: '0.2rem',
-                                  fontSize: '1rem',
-                                  opacity: o?.is_manual ? 1 : 0.6
-                                }}
-                              >
-                                {o?.is_manual ? '🔓' : '🔒'}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '120px' }}>
-                          <input type="number" step="any" style={inputStyle} {...register(`operations.${index}.unit_cost`)} />
-                        </td>
-                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '120px' }}>
-                          {tCost.toLocaleString()}
-                        </td>
-                        <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top' }}>
-                          <input style={inputStyle} {...register(`operations.${index}.notes`)} placeholder="Тэмдэглэл..." />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {(() => {
+            const indexedOps = opFields.map((field, idx) => ({ field, index: idx, op: formValues.operations?.[idx] }));
+            const billableOps = indexedOps.filter(item => item.op?.is_pricing !== false);
+            const nonBillableOps = indexedOps.filter(item => item.op?.is_pricing === false);
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* 1. ҮНЭ БОДОХ АЖИЛЛАГААНУУД */}
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
+                  <div style={{ background: '#f8fafc', padding: '0.65rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '1rem' }}>💵</span>
+                      <strong style={{ color: '#0f172a', fontSize: '0.9rem' }}>Үнэ бодолтод оролцох үндсэн ажиллагаанууд</strong>
+                      <span style={{ fontSize: '0.75rem', background: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                        {billableOps.length}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Өртөг тооцоонд шууд нэмэгдэнэ
+                    </span>
+                  </div>
+
+                  {billableOps.length === 0 ? (
+                    <div style={{ padding: '1.25rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Одоогоор үнэ бодох нэмэлт ажиллагаа сонгогдоогүй байна. Дээрх "Нэмэлт ажиллагаа сонгох" товчоор нэмнэ үү.
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569', width: '130px' }}>Дамжлага</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569' }}>Ажиллагааны нэр</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'center', color: '#475569', width: '130px' }}>Тоо</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#475569', width: '120px' }}>Нэгж өртөг</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'right', color: '#475569', width: '120px' }}>Нийт өртөг</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569' }}>Тайлбар</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'center', color: '#475569', width: '140px' }}>Үйлдэл</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {billableOps.map(({ field, index, op: o }) => {
+                            const tCost = (o?.qty || 0) * (o?.unit_cost || 0);
+                            const mpFormula = masterPrices.find(p => p.item_name === o?.operation_name)?.formula?.expression;
+                            const inputStyle = tableInputStyle;
+
+                            return (
+                              <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
+                                {/* Stage */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <select
+                                    value={o?.production_stage || 'POST_PRESS'}
+                                    onChange={e => setValue(`operations.${index}.production_stage`, e.target.value)}
+                                    style={{ height: '28px', padding: '0 4px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
+                                  >
+                                    {PRODUCTION_STAGES.map(s => (
+                                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                                    ))}
+                                  </select>
+                                </td>
+
+                                {/* Name */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                    <span>{o?.operation_name}</span>
+                                    {mpFormula && (
+                                      <CalculationHelpBadge
+                                        title="Динамик томьёо"
+                                        formula={mpFormula}
+                                        liveCalculation={`Үр дүн: ${o?.qty || 0}`}
+                                        details={["Мастер үнийн сангийн томьёогоор бодогдож байна."]}
+                                      />
+                                    )}
+                                  </div>
+                                  <input type="hidden" {...register(`operations.${index}.operation_name`)} />
+                                  <input type="hidden" {...register(`operations.${index}.is_pricing`)} value="true" />
+                                </td>
+
+                                {/* Qty */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                                    <input 
+                                      type="number" 
+                                      step="any" 
+                                      style={{ 
+                                        ...inputStyle, 
+                                        width: '85px',
+                                        backgroundColor: (!mpFormula || o?.is_manual) ? '#fff' : '#f1f5f9', 
+                                        color: (!mpFormula || o?.is_manual) ? '#000' : '#475569', 
+                                        cursor: (!mpFormula || o?.is_manual) ? 'text' : 'not-allowed' 
+                                      }} 
+                                      readOnly={!!mpFormula && !o?.is_manual}
+                                      {...register(`operations.${index}.qty`)} 
+                                    />
+                                    {mpFormula && (
+                                      <button
+                                        type="button"
+                                        title={o?.is_manual ? "Гараар засаж байна" : "Автоматаар бодогдож байна"}
+                                        onClick={() => setValue(`operations.${index}.is_manual`, !o?.is_manual)}
+                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: o?.is_manual ? 1 : 0.6 }}
+                                      >
+                                        {o?.is_manual ? '🔓' : '🔒'}
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* Unit Cost */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
+                                  <input type="number" step="any" style={{ ...inputStyle, width: '90px', textAlign: 'right' }} {...register(`operations.${index}.unit_cost`)} />
+                                </td>
+
+                                {/* Total Cost */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                                  {tCost.toLocaleString()} ₮
+                                </td>
+
+                                {/* Notes */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <input style={{ ...inputStyle, width: '100%' }} {...register(`operations.${index}.notes`)} placeholder="Тэмдэглэл..." />
+                                </td>
+
+                                {/* Actions */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setValue(`operations.${index}.is_pricing`, false);
+                                        setValue(`operations.${index}.unit_cost`, 0);
+                                      }}
+                                      title="Үнэ бодохгүй, цехийн технологийн заавар болгох"
+                                      style={{
+                                        background: '#f8fafc',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '4px',
+                                        padding: '3px 6px',
+                                        fontSize: '0.72rem',
+                                        cursor: 'pointer',
+                                        color: '#475569'
+                                      }}
+                                    >
+                                      ⚙️ Заавар болгох
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeOp(index)}
+                                      title="Устгах"
+                                      style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', color: '#b91c1c', padding: '3px 6px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. ҮЙЛДВЭРЛЭЛИЙН ТЕХНОЛОГИЙН ЗААВАРЧИЛГАА (ҮНЭГҮЙ - 0₮) */}
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
+                  <div style={{ background: '#f0fdf4', padding: '0.65rem 1rem', borderBottom: '1px solid #bbf7d0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '1rem' }}>⚙️</span>
+                      <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Үйлдвэрлэлийн технологийн зааварчилгаа (Үнэгүй - 0₮)</strong>
+                      <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', padding: '1px 6px', borderRadius: '10px' }}>
+                        {nonBillableOps.length}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', color: '#166534' }}>
+                      📋 Үнийн саналд 0₮ нөлөөлөхгүй ба Ажлын хуудсанд хэвлэгдэнэ
+                    </span>
+                  </div>
+
+                  {nonBillableOps.length === 0 ? (
+                    <div style={{ padding: '1.25rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Одоогоор технологийн нэмэлт зааварчилгаа байхгүй байна. Дээрх "Нэмэлт ажиллагаа / Заавар сонгох" товчоор оруулах боломжтой.
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569', width: '130px' }}>Дамжлага</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569' }}>Зааварчилгаа / Ажиллагаа</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'center', color: '#475569', width: '110px' }}>Тоо хэмжээ</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'center', color: '#475569', width: '110px' }}>Өртөг</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'left', color: '#475569' }}>Онцгой санамж / Тайлбар</th>
+                            <th style={{ padding: '0.5rem 0.6rem', textAlign: 'center', color: '#475569', width: '140px' }}>Үйлдэл</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {nonBillableOps.map(({ field, index, op: o }) => {
+                            const inputStyle = tableInputStyle;
+
+                            return (
+                              <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
+                                {/* Stage */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <select
+                                    value={o?.production_stage || 'POST_PRESS'}
+                                    onChange={e => setValue(`operations.${index}.production_stage`, e.target.value)}
+                                    style={{ height: '28px', padding: '0 4px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
+                                  >
+                                    {PRODUCTION_STAGES.map(s => (
+                                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                                    ))}
+                                  </select>
+                                </td>
+
+                                {/* Name */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span>{o?.operation_name}</span>
+                                    <span style={{ fontSize: '0.72rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px' }}>
+                                      Зааварчилгаа
+                                    </span>
+                                  </div>
+                                  <input type="hidden" {...register(`operations.${index}.operation_name`)} />
+                                  <input type="hidden" {...register(`operations.${index}.is_pricing`)} value="false" />
+                                  <input type="hidden" {...register(`operations.${index}.unit_cost`)} value="0" />
+                                </td>
+
+                                {/* Qty */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <input 
+                                    type="number" 
+                                    step="any" 
+                                    style={{ ...inputStyle, width: '80px', textAlign: 'center' }}
+                                    {...register(`operations.${index}.qty`)} 
+                                  />
+                                </td>
+
+                                {/* Cost */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <span style={{ color: '#059669', fontWeight: 600, fontSize: '0.8rem', background: '#f0fdf4', padding: '2px 8px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                                    0 ₮ (Үнэгүй)
+                                  </span>
+                                </td>
+
+                                {/* Notes */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <input 
+                                    style={{ ...inputStyle, width: '100%' }} 
+                                    {...register(`operations.${index}.notes`)} 
+                                    placeholder="Мастер болон ажилтанд зориулсан санамж..." 
+                                  />
+                                </td>
+
+                                {/* Actions */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setValue(`operations.${index}.is_pricing`, true);
+                                        const mp = masterPrices.find(p => p.item_name === o?.operation_name);
+                                        setValue(`operations.${index}.unit_cost`, mp ? mp.unit_cost : 0);
+                                      }}
+                                      title="Үнэ боддог үндсэн ажиллагаа руу шилжүүлэх"
+                                      style={{
+                                        background: '#f0fdf4',
+                                        border: '1px solid #86efac',
+                                        borderRadius: '4px',
+                                        padding: '3px 6px',
+                                        fontSize: '0.72rem',
+                                        cursor: 'pointer',
+                                        color: '#166534',
+                                        fontWeight: 600
+                                      }}
+                                    >
+                                      💵 Үнэ бодох
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeOp(index)}
+                                      title="Устгах"
+                                      style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', color: '#b91c1c', padding: '3px 6px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            );
+          })()}
         </SectionCard>
 
         {/* 8. Гадуур ажил */}
@@ -2827,9 +3068,85 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа сонгох</h3>
               <button type="button" onClick={() => setShowOperationsModal(false)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>&times;</button>
             </div>
-            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1 }}>
+              {/* Tabs for Billable vs Technological Instructions */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '0.6rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('ALL')}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: opModalTab === 'ALL' ? 700 : 500,
+                      background: opModalTab === 'ALL' ? '#0f172a' : '#f1f5f9',
+                      color: opModalTab === 'ALL' ? '#fff' : '#475569',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Бүгд ({masterPrices.filter(op => op.category === 'Ажиллагаа').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('BILLABLE')}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: opModalTab === 'BILLABLE' ? 700 : 500,
+                      background: opModalTab === 'BILLABLE' ? '#16a34a' : '#f0fdf4',
+                      color: opModalTab === 'BILLABLE' ? '#fff' : '#166534',
+                      border: '1px solid ' + (opModalTab === 'BILLABLE' ? 'transparent' : '#bbf7d0'),
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💵 Үнэ бодох ажиллагаа ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing !== false).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('NON_BILLABLE')}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: opModalTab === 'NON_BILLABLE' ? 700 : 500,
+                      background: opModalTab === 'NON_BILLABLE' ? '#0284c7' : '#f0f9ff',
+                      color: opModalTab === 'NON_BILLABLE' ? '#fff' : '#0369a1',
+                      border: '1px solid ' + (opModalTab === 'NON_BILLABLE' ? 'transparent' : '#bae6fd'),
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⚙️ Технологийн заавар (0₮) ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing === false).length})
+                  </button>
+                </div>
+
+                {/* Stage Filter inside Modal */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Дамжлага:</span>
+                  <select
+                    value={opModalStage}
+                    onChange={e => setOpModalStage(e.target.value)}
+                    style={{ padding: '4px 8px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
+                  >
+                    <option value="All">Бүх дамжлага</option>
+                    {PRODUCTION_STAGES.map(s => (
+                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {(() => {
-                const ops = masterPrices.filter((op: any) => op.category === 'Ажиллагаа');
+                const ops = masterPrices.filter((op: any) => {
+                  if (op.category !== 'Ажиллагаа') return false;
+                  if (opModalTab === 'BILLABLE' && op.is_pricing === false) return false;
+                  if (opModalTab === 'NON_BILLABLE' && op.is_pricing !== false) return false;
+                  if (opModalStage !== 'All' && (op.production_stage || 'POST_PRESS') !== opModalStage) return false;
+                  return true;
+                });
+
                 const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
                 ops.forEach((op: any) => {
                   const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
@@ -2848,14 +3165,46 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 });
 
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '0.85rem' }}>
                     {groups.map(group => {
                       const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
                       const isAdded = !!activeOpInGroup;
+                      const repOp = group.options[0];
+                      const isPricing = repOp.is_pricing !== false;
+                      const stageObj = PRODUCTION_STAGES.find(s => s.id === (repOp.production_stage || 'POST_PRESS'));
 
                       return (
-                        <div key={group.baseName} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.75rem', background: isAdded ? '#eff6ff' : '#ffffff', border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0', borderRadius: '0.5rem', transition: 'all 0.2s' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#475569' }}>
+                        <div key={group.baseName} style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.4rem',
+                          padding: '0.75rem',
+                          background: isAdded ? '#eff6ff' : '#ffffff',
+                          border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          transition: 'all 0.15s ease'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              background: '#f1f5f9',
+                              color: '#475569'
+                            }}>
+                              {stageObj ? `${stageObj.icon} ${stageObj.label}` : 'Дамжлага'}
+                            </span>
+                            <span style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              color: isPricing ? '#16a34a' : '#0284c7'
+                            }}>
+                              {isPricing ? `${repOp.unit_cost?.toLocaleString()}₮` : '0₮ (Заавар)'}
+                            </span>
+                          </div>
+
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#1e293b' }}>
                             <input
                               type="checkbox"
                               checked={isAdded}
@@ -2867,7 +3216,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   if (idx !== -1) removeOp(idx);
                                 }
                               }}
-                              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3b82f6' }}
+                              style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#3b82f6' }}
                             />
                             {group.baseName}
                           </label>
@@ -2885,14 +3234,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     updateOp(idx, { 
                                       ...currentOp,
                                       operation_name: newOp.item_name, 
-                                      unit_cost: newOp.unit_cost,
+                                      unit_cost: newOp.is_pricing !== false ? newOp.unit_cost : 0,
                                       qty: currentOp?.qty || 0,
-                                      notes: currentOp?.notes || ''
+                                      notes: currentOp?.notes || '',
+                                      is_pricing: newOp.is_pricing !== false,
+                                      production_stage: newOp.production_stage || 'POST_PRESS'
                                     } as any);
                                   }
                                 }
                               }}
-                              style={{ padding: '0.4rem', fontSize: '0.85rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.25rem' }}
+                              style={{ padding: '0.35rem', fontSize: '0.82rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.2rem' }}
                             >
                               {group.options.map(opt => (
                                 <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>

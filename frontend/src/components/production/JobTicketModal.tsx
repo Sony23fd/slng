@@ -7,6 +7,13 @@ interface Props {
   onClose: () => void;
 }
 
+const STAGE_LABELS: Record<string, { label: string; badgeBg: string; textColor: string }> = {
+  PRE_PRESS: { label: '📝 Хэвлэхийн өмнөх', badgeBg: '#e0f2fe', textColor: '#0369a1' },
+  PRINTING: { label: '🖨️ Хэвлэх', badgeBg: '#dcfce7', textColor: '#15803d' },
+  POST_PRESS: { label: '✂️ Хэвлэсний дараах', badgeBg: '#fef3c7', textColor: '#b45309' },
+  PACKAGING: { label: '📦 Савлалт', badgeBg: '#f3e8ff', textColor: '#6d28d9' },
+};
+
 export default function JobTicketModal({ order, onClose }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -15,6 +22,9 @@ export default function JobTicketModal({ order, onClose }: Props) {
   };
 
   if (!order) return null;
+
+  const techDirectives = (order.operations || []).filter((o: any) => o.is_pricing === false);
+  const standardOps = (order.operations || []).filter((o: any) => o.is_pricing !== false);
 
   const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
 
@@ -151,30 +161,88 @@ export default function JobTicketModal({ order, onClose }: Props) {
             </div>
           )}
 
-          {/* Operations Table */}
-          {order.operations && order.operations.length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: '0 0 0.5rem 0', borderBottom: '1px solid #000' }}>Ажиллагаа (Нэмэлт)</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+          {/* ⚙️ Үйлдвэрлэлийн технологийн зааварчилгаа (Non-billable Workshop Directives) */}
+          {techDirectives.length > 0 && (
+            <div style={{ marginBottom: '1.5rem', border: '1.5px solid #0284c7', borderRadius: '6px', overflow: 'hidden' }}>
+              <div style={{ background: '#f0f9ff', padding: '0.6rem 0.8rem', borderBottom: '1.5px solid #0284c7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚙️ Үйлдвэрлэлийн технологийн онцгой зааварчилгаа ({techDirectives.length})
+                </h3>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '2px 8px', borderRadius: '10px' }}>
+                  Мастер / операторт заавал биелүүлэх
+                </span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                 <thead>
-                  <tr style={{ background: '#f1f5f9' }}>
-                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', width: '40px' }}>✓</th>
-                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>Ажиллагааны нэр</th>
-                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>Тоо ширхэг</th>
-                    <th style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>Тайлбар</th>
+                  <tr style={{ background: '#f8fafc' }}>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '40px' }}>✓</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '130px' }}>Шат дамжлага</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Зааварчилгаа</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Тайлбар / Технологийн горим</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.operations.map((o: any, idx: number) => (
-                    <tr key={idx}>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>
-                        <div style={{ width: '20px', height: '20px', border: '2px solid #000', borderRadius: '3px', margin: '0 auto' }}></div>
-                      </td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', fontWeight: 600 }}>{o.operation_name}</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{o.qty} ш</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem' }}>{o.notes || '-'}</td>
-                    </tr>
-                  ))}
+                  {techDirectives.map((o: any, idx: number) => {
+                    const stg = STAGE_LABELS[o.production_stage] || { label: o.production_stage || 'Ерөнхий', badgeBg: '#f1f5f9', textColor: '#475569' };
+                    return (
+                      <tr key={`td-${idx}`} style={{ background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center' }}>
+                          <div style={{ width: '20px', height: '20px', border: '2px solid #0284c7', borderRadius: '3px', margin: '0 auto' }}></div>
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.35rem', textAlign: 'center' }}>
+                          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: stg.badgeBg, color: stg.textColor }}>
+                            {stg.label}
+                          </span>
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', fontWeight: 700, color: '#0f172a' }}>
+                          {o.operation_name}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', color: '#334155' }}>
+                          {o.notes || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 🛠️ Үндсэн ба нэмэлт ажиллагаанууд (Standard Operations) */}
+          {standardOps.length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', borderBottom: '1px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🛠️ Үйлдвэрлэлийн ажиллагаанууд ({standardOps.length})</span>
+              </h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem', fontSize: '0.88rem' }}>
+                <thead>
+                  <tr style={{ background: '#f1f5f9' }}>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '40px' }}>✓</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '130px' }}>Шат дамжлага</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Ажиллагааны нэр</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '80px' }}>Тоо ширхэг</th>
+                    <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Тайлбар</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {standardOps.map((o: any, idx: number) => {
+                    const stg = STAGE_LABELS[o.production_stage] || { label: o.production_stage || 'Ерөнхий', badgeBg: '#f1f5f9', textColor: '#475569' };
+                    return (
+                      <tr key={`so-${idx}`}>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center' }}>
+                          <div style={{ width: '20px', height: '20px', border: '2px solid #000', borderRadius: '3px', margin: '0 auto' }}></div>
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.35rem', textAlign: 'center' }}>
+                          <span style={{ display: 'inline-block', fontSize: '0.72rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', background: stg.badgeBg, color: stg.textColor }}>
+                            {stg.label}
+                          </span>
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', fontWeight: 600 }}>{o.operation_name}</td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', fontWeight: 'bold' }}>{o.qty} ш</td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem' }}>{o.notes || '-'}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

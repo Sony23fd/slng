@@ -59,7 +59,11 @@ export default function QuotationPage() {
 
         const innerDesc = innerMats.map((m: any) => m.material_name || m.name).join(', ') || '128 гр мат';
         const coverDesc = coverMats.map((m: any) => m.material_name || m.name).join(', ') || '-';
-        const opsDesc = opArray.map((o: any) => o.op_name || o.name).join(', ') || 'мат бүрэлт';
+        const opsDesc = opArray
+          .filter((o: any) => o.is_pricing !== false)
+          .map((o: any) => o.operation_name || o.op_name || o.name)
+          .filter(Boolean)
+          .join(', ') || '-';
 
         setCustomCustomer(data.customer_name || '');
         setCustomProduct(data.product_name || '');
@@ -74,7 +78,9 @@ export default function QuotationPage() {
         let total = data.final_price || data.finalPrice || 0;
         if (total === 0 && matArray.length > 0) {
           const matCost = matArray.reduce((acc: number, m: any) => acc + ((Number(m.sheet_qty) || 0) * (Number(m.unit_cost) || 0)), 0);
-          const opCost = opArray.reduce((acc: number, o: any) => acc + ((Number(o.qty) || 0) * (Number(o.unit_cost) || 0)), 0);
+          const opCost = opArray
+            .filter((o: any) => o.is_pricing !== false)
+            .reduce((acc: number, o: any) => acc + ((Number(o.qty) || 0) * (Number(o.unit_cost) || 0)), 0);
           const factoryCost = matCost + opCost + (Number(data.print_cost) || 0);
           const margin = Number(data.profit_margin) || 0;
           const mult = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);

@@ -11,8 +11,17 @@ interface PriceItem {
   unit_cost: number;
   formula_id?: number | null;
   formula?: { id: number; name: string } | null;
+  is_pricing?: boolean;
+  production_stage?: string | null;
   updatedAt?: string;
 }
+
+export const PRODUCTION_STAGES = [
+  { id: 'PRE_PRESS', label: 'Хэвлэхийн өмнөх', color: '#6366f1', icon: '📝' },
+  { id: 'PRINTING', label: 'Хэвлэх дамжлага', color: '#0ea5e9', icon: '🖨️' },
+  { id: 'POST_PRESS', label: 'Хэвлэсний дараах', color: '#f59e0b', icon: '✂️' },
+  { id: 'PACKAGING', label: 'Савлалт, хүргэлт', color: '#10b981', icon: '📦' }
+];
 
 interface PriceLog {
   id: number;
@@ -36,7 +45,11 @@ export default function AdminPrices() {
 
   // Category & Filter
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [activeStage, setActiveStage] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Bulk Selection
+  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
 
   // Dirty state tracking (id -> new unit cost)
   const [editedPrices, setEditedPrices] = useState<Record<number, number>>({});
@@ -62,7 +75,9 @@ export default function AdminPrices() {
     category: 'Цаас',
     item_name: '',
     unit_cost: '',
-    formula_id: ''
+    formula_id: '',
+    is_pricing: true,
+    production_stage: 'POST_PRESS'
   });
 
   // Batch Markup State
@@ -118,10 +133,26 @@ export default function AdminPrices() {
 
   // Category counts
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: prices.length, Цаас: 0, Материал: 0, Ажиллагаа: 0 };
+    const counts: Record<string, number> = {
+      All: prices.length,
+      Цаас: 0,
+      Материал: 0,
+      Ажиллагаа_Үнэтэй: 0,
+      Ажиллагаа_Үнэгүй: 0
+    };
     prices.forEach(p => {
       const cat = p.category || 'Бусад';
-      counts[cat] = (counts[cat] || 0) + 1;
+      if (cat === 'Цаас') counts['Цаас'] = (counts['Цаас'] || 0) + 1;
+      else if (cat === 'Материал') counts['Материал'] = (counts['Материал'] || 0) + 1;
+      else if (cat === 'Ажиллагаа') {
+        if (p.is_pricing !== false) {
+          counts['Ажиллагаа_Үнэтэй'] = (counts['Ажиллагаа_Үнэтэй'] || 0) + 1;
+        } else {
+          counts['Ажиллагаа_Үнэгүй'] = (counts['Ажиллагаа_Үнэгүй'] || 0) + 1;
+        }
+      } else {
+        counts[cat] = (counts[cat] || 0) + 1;
+      }
     });
     return counts;
   }, [prices]);
@@ -129,13 +160,26 @@ export default function AdminPrices() {
   // Filtered prices
   const filteredPrices = useMemo(() => {
     return prices.filter(p => {
-      const matchCategory = activeCategory === 'All' || p.category === activeCategory;
+      let matchCategory = true;
+      if (activeCategory === 'All') matchCategory = true;
+      else if (activeCategory === 'Цаас') matchCategory = p.category === 'Цаас';
+      else if (activeCategory === 'Материал') matchCategory = p.category === 'Материал';
+      else if (activeCategory === 'Ажиллагаа_Үнэтэй') matchCategory = p.category === 'Ажиллагаа' && p.is_pricing !== false;
+      else if (activeCategory === 'Ажиллагаа_Үнэгүй') matchCategory = p.category === 'Ажиллагаа' && p.is_pricing === false;
+      else matchCategory = p.category === activeCategory;
+
+      let matchStage = true;
+      if (activeStage !== 'All') {
+        matchStage = (p.production_stage || 'POST_PRESS') === activeStage;
+      }
+
       const matchSearch = !searchTerm || 
         p.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.category.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchCategory && matchSearch;
+
+      return matchCategory && matchStage && matchSearch;
     });
-  }, [prices, activeCategory, searchTerm]);
+  }, [prices, activeCategory, activeStage, searchTerm]);
 
   // Check how many items have unsaved changes
   const modifiedItems = useMemo(() => {
@@ -154,6 +198,92 @@ export default function AdminPrices() {
   const handleFormulaChange = (id: number, val: string) => {
     const formulaId = val === '' ? null : Number(val);
     setEditedFormulas(prev => ({ ...prev, [id]: formulaId }));
+  };
+
+  // Dynamic Toggle for Pricing Status (Billable <-> Non-billable)
+  const handleTogglePricing = async (p: PriceItem) => {
+    const nextVal = p.is_pricing === false;
+    setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_pricing: nextVal } : item));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/${p.id}/toggle-pricing`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast(`"${p.item_name}" -> ${nextVal ? '💵 Үнэ боддог боллоо' : '⚙️ Технологийн заавар (0₮) боллоо'}`, 'success');
+      } else {
+        setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_pricing: !nextVal } : item));
+        showToast('Төлөв солиход алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_pricing: !nextVal } : item));
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
+  };
+
+  // Dynamic Stage Change
+  const handleStageChange = async (p: PriceItem, newStage: string) => {
+    setPrices(prev => prev.map(item => item.id === p.id ? { ...item, production_stage: newStage } : item));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/${p.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ production_stage: newStage })
+      });
+      if (res.ok) {
+        const stageObj = PRODUCTION_STAGES.find(s => s.id === newStage);
+        showToast(`"${p.item_name}" -> ${stageObj?.label || newStage} дамжлагад шилжлээ`, 'success');
+      } else {
+        showToast('Дамжлага хадгалахад алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
+  };
+
+  // Bulk set pricing status
+  const handleBulkSetPricing = async (isPricing: boolean) => {
+    if (selectedItemIds.length === 0) return;
+    const itemsToUpdate = selectedItemIds.map(id => ({ id, is_pricing: isPricing }));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ items: itemsToUpdate })
+      });
+      if (res.ok) {
+        showToast(`Сонгосон ${selectedItemIds.length} ажиллагаа ${isPricing ? 'Үнэ боддог' : 'Технологийн заавар'} боллоо!`, 'success');
+        setSelectedItemIds([]);
+        fetchAllPrices();
+      } else {
+        showToast('Олноор өөрчлөхөд алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
+  };
+
+  // Bulk set production stage
+  const handleBulkSetStage = async (newStage: string) => {
+    if (selectedItemIds.length === 0) return;
+    const itemsToUpdate = selectedItemIds.map(id => ({ id, production_stage: newStage }));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ items: itemsToUpdate })
+      });
+      if (res.ok) {
+        const stageObj = PRODUCTION_STAGES.find(s => s.id === newStage);
+        showToast(`Сонгосон ${selectedItemIds.length} ажиллагаа ${stageObj?.label || newStage} дамжлага руу шилжлээ!`, 'success');
+        setSelectedItemIds([]);
+        fetchAllPrices();
+      } else {
+        showToast('Дамжлага олноор өөрчлөхөд алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
   };
 
   // Save single item
@@ -238,20 +368,23 @@ export default function AdminPrices() {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const isOp = newFormData.category === 'Ажиллагаа';
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           category: newFormData.category,
           item_name: newFormData.item_name,
-          unit_cost: Number(newFormData.unit_cost),
-          formula_id: newFormData.formula_id ? Number(newFormData.formula_id) : null
+          unit_cost: (isOp && !newFormData.is_pricing) ? 0 : Number(newFormData.unit_cost || 0),
+          formula_id: newFormData.formula_id ? Number(newFormData.formula_id) : null,
+          is_pricing: isOp ? newFormData.is_pricing : true,
+          production_stage: isOp ? newFormData.production_stage : 'POST_PRESS'
         })
       });
       if (res.ok) {
         showToast(`"${newFormData.item_name}" амжилттай нэмэгдлээ`, 'success');
         setShowAddModal(false);
-        setNewFormData({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '' });
+        setNewFormData({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '', is_pricing: true, production_stage: 'POST_PRESS' });
         fetchAllPrices();
       } else {
         showToast('Нэмэхэд алдаа гарлаа', 'error');
@@ -286,11 +419,13 @@ export default function AdminPrices() {
   // Export to CSV with UTF-8 BOM
   const handleExportCSV = () => {
     try {
-      const headers = ['ID', 'Ангилал', 'Бараа/Үйлчилгээний нэр', 'Нэгж өртөг (₮)'];
+      const headers = ['ID', 'Ангилал', 'Бараа/Үйлчилгээний нэр', 'Дамжлага', 'Зориулалт (Үнэ/Заавар)', 'Нэгж өртөг (₮)'];
       const rows = prices.map(p => [
         p.id,
         `"${(p.category || '').replace(/"/g, '""')}"`,
         `"${(p.item_name || '').replace(/"/g, '""')}"`,
+        `"${p.production_stage || 'POST_PRESS'}"`,
+        `"${p.is_pricing !== false ? 'Үнэ бодно' : 'Технологийн заавар'}"`,
         p.unit_cost
       ]);
 
@@ -644,17 +779,21 @@ export default function AdminPrices() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           
           {/* Category Tabs */}
-          <div style={{ display: 'flex', gap: '0.35rem', background: '#f1f5f9', padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', gap: '0.35rem', background: '#f1f5f9', padding: '3px', borderRadius: '8px', flexWrap: 'wrap' }}>
             {[
               { id: 'All', label: 'Бүгд', count: categoryCounts['All'] || 0 },
               { id: 'Цаас', label: '📄 Цаас', count: categoryCounts['Цаас'] || 0 },
               { id: 'Материал', label: '📦 Туслах материал', count: categoryCounts['Материал'] || 0 },
-              { id: 'Ажиллагаа', label: '⚙️ Ажиллагаа', count: categoryCounts['Ажиллагаа'] || 0 }
+              { id: 'Ажиллагаа_Үнэтэй', label: '💵 Үнийн ажиллагаа', count: categoryCounts['Ажиллагаа_Үнэтэй'] || 0 },
+              { id: 'Ажиллагаа_Үнэгүй', label: '⚙️ Технологийн заавар (0₮)', count: categoryCounts['Ажиллагаа_Үнэгүй'] || 0 }
             ].map(tab => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveCategory(tab.id)}
+                onClick={() => {
+                  setActiveCategory(tab.id);
+                  setSelectedItemIds([]);
+                }}
                 style={{
                   padding: '6px 14px',
                   borderRadius: '6px',
@@ -715,29 +854,145 @@ export default function AdminPrices() {
           </div>
         </div>
 
+        {/* Stage Filter Row (For Operations / All) */}
+        {(activeCategory === 'All' || activeCategory.startsWith('Ажиллагаа')) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', padding: '0.4rem 0.6rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginRight: '4px' }}>
+              🏭 Дамжлагаар шүүх:
+            </span>
+            {[
+              { id: 'All', label: 'Бүх дамжлага' },
+              ...PRODUCTION_STAGES
+            ].map(stage => (
+              <button
+                key={stage.id}
+                type="button"
+                onClick={() => setActiveStage(stage.id)}
+                style={{
+                  padding: '3px 10px',
+                  borderRadius: '14px',
+                  fontSize: '0.75rem',
+                  fontWeight: activeStage === stage.id ? 700 : 500,
+                  color: activeStage === stage.id ? '#ffffff' : '#475569',
+                  background: activeStage === stage.id ? ('color' in stage ? (stage as any).color : '#0284c7') : '#ffffff',
+                  border: '1px solid ' + (activeStage === stage.id ? 'transparent' : '#cbd5e1'),
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {'icon' in stage ? `${(stage as any).icon} ` : ''}{stage.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Bulk Actions Toolbar (when items selected) */}
+        {selectedItemIds.length > 0 && (
+          <div style={{
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: '6px',
+            padding: '0.5rem 0.85rem',
+            marginBottom: '0.75rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.6rem'
+          }}>
+            <div style={{ fontSize: '0.82rem', color: '#1e40af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>☑️ Сонгосон: <strong>{selectedItemIds.length}</strong> ажиллагаа</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handleBulkSetPricing(true)}
+                className="btn btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', color: '#166534', borderColor: '#86efac', background: '#f0fdf4' }}
+                title="Сонгосон ажиллагаануудыг үнэ боддог болгох"
+              >
+                💵 Үнэ боддог болгох
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkSetPricing(false)}
+                className="btn btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', color: '#475569', borderColor: '#cbd5e1', background: '#ffffff' }}
+                title="Сонгосон ажиллагаануудыг 0₮ үнэтэй технологийн заавар болгох"
+              >
+                ⚙️ Технологийн заавар болгох (0₮)
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#475569' }}>Дамжлага:</span>
+                <select
+                  onChange={e => {
+                    if (e.target.value) handleBulkSetStage(e.target.value);
+                  }}
+                  defaultValue=""
+                  style={{
+                    height: '26px',
+                    fontSize: '0.75rem',
+                    padding: '0 4px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    background: '#fff'
+                  }}
+                >
+                  <option value="" disabled>Шилжүүлэх дамжлага...</option>
+                  {PRODUCTION_STAGES.map(s => (
+                    <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedItemIds([])}
+                className="btn btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem', color: '#64748b' }}
+              >
+                ✕ Цуцлах
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Prices Table */}
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '120px' }}>Ангилал</th>
+                <th style={{ padding: '0.75rem 0.4rem', color: '#475569', fontWeight: 700, width: '36px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={filteredPrices.length > 0 && selectedItemIds.length === filteredPrices.length}
+                    onChange={e => {
+                      if (e.target.checked) setSelectedItemIds(filteredPrices.map(p => p.id));
+                      else setSelectedItemIds([]);
+                    }}
+                    style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    title="Бүгдийг сонгох"
+                  />
+                </th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '110px' }}>Ангилал</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700 }}>Бараа / Үйлчилгээний нэр</th>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '130px' }}>Одоогийн өртөг</th>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '180px' }}>Шинэ өртөг (₮)</th>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '180px' }}>Томьёо</th>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '140px', textAlign: 'center' }}>Үйлдэл</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Дамжлага</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Зориулалт (Төрөл)</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '120px' }}>Одоогийн өртөг</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '160px' }}>Шинэ өртөг (₮)</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Томьёо</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '120px', textAlign: 'center' }}>Үйлдэл</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                     Уншиж байна...
                   </td>
                 </tr>
               ) : filteredPrices.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                     Үнийн мэдээлэл олдсонгүй
                   </td>
                 </tr>
@@ -762,6 +1017,19 @@ export default function AdminPrices() {
                         transition: 'background 0.15s ease'
                       }}
                     >
+                      {/* Checkbox */}
+                      <td style={{ padding: '0.6rem 0.4rem', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedItemIds.includes(p.id)}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedItemIds(prev => [...prev, p.id]);
+                            else setSelectedItemIds(prev => prev.filter(id => id !== p.id));
+                          }}
+                          style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                        />
+                      </td>
+
                       {/* Category */}
                       <td style={{ padding: '0.6rem' }}>
                         <span style={{
@@ -782,37 +1050,103 @@ export default function AdminPrices() {
                         {p.item_name}
                       </td>
 
+                      {/* Stage */}
+                      <td style={{ padding: '0.6rem' }}>
+                        {p.category === 'Ажиллагаа' ? (
+                          <select
+                            value={p.production_stage || 'POST_PRESS'}
+                            onChange={e => handleStageChange(p, e.target.value)}
+                            style={{
+                              height: '28px',
+                              padding: '0 6px',
+                              borderRadius: '4px',
+                              border: '1px solid #cbd5e1',
+                              fontSize: '0.78rem',
+                              background: '#fff',
+                              color: '#334155',
+                              fontWeight: 500,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <option value="PRE_PRESS">📝 Хэвлэхийн өмнөх</option>
+                            <option value="PRINTING">🖨️ Хэвлэх</option>
+                            <option value="POST_PRESS">✂️ Хэвлэсний дараах</option>
+                            <option value="PACKAGING">📦 Савлалт</option>
+                          </select>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Purpose (Billable vs Directive) */}
+                      <td style={{ padding: '0.6rem' }}>
+                        {p.category === 'Ажиллагаа' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePricing(p)}
+                            title="Дарж зориулалтыг шууд солих (Үнэ бодох <-> Технологийн заавар)"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '3px 8px',
+                              borderRadius: '14px',
+                              border: p.is_pricing !== false ? '1px solid #86efac' : '1px solid #cbd5e1',
+                              background: p.is_pricing !== false ? '#f0fdf4' : '#f8fafc',
+                              color: p.is_pricing !== false ? '#166534' : '#475569',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span>{p.is_pricing !== false ? '💵 Үнэ бодно' : '⚙️ Заавар (0₮)'}</span>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>⇄</span>
+                          </button>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Үндсэн өртөг</span>
+                        )}
+                      </td>
+
                       {/* Current Cost */}
                       <td style={{ padding: '0.6rem', color: '#64748b', fontFamily: 'monospace', fontSize: '0.9rem' }}>
-                        {p.unit_cost.toLocaleString()}₮
+                        {p.category === 'Ажиллагаа' && p.is_pricing === false ? (
+                          <span style={{ color: '#059669', fontWeight: 600, fontSize: '0.8rem' }}>0₮ (Үнэгүй)</span>
+                        ) : (
+                          `${p.unit_cost.toLocaleString()}₮`
+                        )}
                       </td>
 
                       {/* Editable Cost Input */}
                       <td style={{ padding: '0.6rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <input
-                            type="number"
-                            value={currentVal}
-                            onChange={e => handlePriceChange(p.id, e.target.value)}
-                            style={{
-                              width: '120px',
-                              height: '32px',
-                              padding: '0 8px',
-                              borderRadius: '4px',
-                              border: isCostChanged ? '2px solid #0284c7' : '1px solid #cbd5e1',
-                              background: isCostChanged ? '#f0f9ff' : '#ffffff',
-                              fontWeight: isCostChanged ? 700 : 500,
-                              color: isCostChanged ? '#0284c7' : '#0f172a',
-                              fontFamily: 'monospace',
-                              fontSize: '0.9rem'
-                            }}
-                          />
-                          {isCostChanged && (
-                            <span style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 600 }}>
-                              {currentVal > p.unit_cost ? `+${(currentVal - p.unit_cost).toLocaleString()}₮` : `${(currentVal - p.unit_cost).toLocaleString()}₮`}
-                            </span>
-                          )}
-                        </div>
+                        {p.category === 'Ажиллагаа' && p.is_pricing === false ? (
+                          <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic' }}>Үнэд нөлөөлөхгүй (0₮)</span>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input
+                              type="number"
+                              value={currentVal}
+                              onChange={e => handlePriceChange(p.id, e.target.value)}
+                              style={{
+                                width: '110px',
+                                height: '30px',
+                                padding: '0 8px',
+                                borderRadius: '4px',
+                                border: isCostChanged ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                                background: isCostChanged ? '#f0f9ff' : '#ffffff',
+                                fontWeight: isCostChanged ? 700 : 500,
+                                color: isCostChanged ? '#0284c7' : '#0f172a',
+                                fontFamily: 'monospace',
+                                fontSize: '0.85rem'
+                              }}
+                            />
+                            {isCostChanged && (
+                              <span style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 600 }}>
+                                {currentVal > p.unit_cost ? `+${(currentVal - p.unit_cost).toLocaleString()}₮` : `${(currentVal - p.unit_cost).toLocaleString()}₮`}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Formula */}
@@ -949,41 +1283,113 @@ export default function AdminPrices() {
                 </select>
               </div>
 
+              {newFormData.category === 'Ажиллагаа' && (
+                <>
+                  <div>
+                    <label className="label">Зориулалт (Төрөл)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setNewFormData({ ...newFormData, is_pricing: true })}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: newFormData.is_pricing ? '2px solid #16a34a' : '1px solid #cbd5e1',
+                          background: newFormData.is_pricing ? '#f0fdf4' : '#fff',
+                          color: newFormData.is_pricing ? '#15803d' : '#475569',
+                          fontWeight: newFormData.is_pricing ? 700 : 500,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        💵 Үнэ бодно
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewFormData({ ...newFormData, is_pricing: false, unit_cost: '0' })}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: !newFormData.is_pricing ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                          background: !newFormData.is_pricing ? '#f0f9ff' : '#fff',
+                          color: !newFormData.is_pricing ? '#0369a1' : '#475569',
+                          fontWeight: !newFormData.is_pricing ? 700 : 500,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⚙️ Технологийн заавар (0₮)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label">Үйлдвэрлэлийн дамжлага</label>
+                    <select
+                      value={newFormData.production_stage}
+                      onChange={e => setNewFormData({ ...newFormData, production_stage: e.target.value })}
+                      className="input"
+                    >
+                      {PRODUCTION_STAGES.map(s => (
+                        <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
               <div>
-                <label className="label">Нэр (Жишээ: Шохойтой 157гр, Картон 2 A0, Хатуу хавтас A4)</label>
+                <label className="label">
+                  {newFormData.category === 'Ажиллагаа' ? 'Ажиллагааны нэр' : 'Нэр (Жишээ: Шохойтой 157гр, Картон 2 A0)'}
+                </label>
                 <input 
                   type="text" 
                   required 
-                  placeholder="Барааны нэр бичих..."
+                  placeholder="Нэр бичих..."
                   value={newFormData.item_name} 
                   onChange={e => setNewFormData({ ...newFormData, item_name: e.target.value })} 
                   className="input" 
                 />
               </div>
 
-              <div>
-                <label className="label">Нэгж өртөг (₮)</label>
-                <input 
-                  type="number" 
-                  required 
-                  placeholder="Жишээ нь: 450"
-                  value={newFormData.unit_cost} 
-                  onChange={e => setNewFormData({ ...newFormData, unit_cost: e.target.value })} 
-                  className="input" 
-                />
-              </div>
+              {!(newFormData.category === 'Ажиллагаа' && !newFormData.is_pricing) ? (
+                <>
+                  <div>
+                    <label className="label">Нэгж өртөг (₮)</label>
+                    <input 
+                      type="number" 
+                      required 
+                      placeholder="Жишээ нь: 450"
+                      value={newFormData.unit_cost} 
+                      onChange={e => setNewFormData({ ...newFormData, unit_cost: e.target.value })} 
+                      className="input" 
+                    />
+                  </div>
 
-              <div>
-                <label className="label">Томьёо холбох (Сонголттой)</label>
-                <select 
-                  value={newFormData.formula_id} 
-                  onChange={e => setNewFormData({ ...newFormData, formula_id: e.target.value })} 
-                  className="input"
-                >
-                  <option value="">Байхгүй</option>
-                  {formulas.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-              </div>
+                  <div>
+                    <label className="label">Томьёо холбох (Сонголттой)</label>
+                    <select 
+                      value={newFormData.formula_id} 
+                      onChange={e => setNewFormData({ ...newFormData, formula_id: e.target.value })} 
+                      className="input"
+                    >
+                      <option value="">Байхгүй</option>
+                      {formulas.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px dashed #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '0.6rem 0.8rem',
+                  fontSize: '0.8rem',
+                  color: '#64748b'
+                }}>
+                  💡 Технологийн зааварчилгаа нь <strong>0₮</strong> өртөгтэй тул үнийн саналд оролцохгүй. Үйлдвэрлэлийн хуудсанд ажилтанд заавар болж хэвлэгдэнэ.
+                </div>
+              )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
                 <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-outline">Болих</button>

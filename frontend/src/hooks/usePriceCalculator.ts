@@ -10,6 +10,7 @@ export interface MaterialInput {
 export interface OperationInput {
   qty: number;
   unit_cost: number;
+  is_pricing?: boolean;
 }
 
 export interface OutsourcedInput {
@@ -38,6 +39,7 @@ export function usePriceCalculator(params: PricingParams) {
 
     // 2. Ажиллагааны өртөг
     const totalOperationCost = params.operations.reduce((sum, op) => {
+      if (op.is_pricing === false) return sum;
       return sum + ((op.qty || 0) * (op.unit_cost || 0));
     }, 0);
 
