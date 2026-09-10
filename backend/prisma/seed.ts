@@ -106,13 +106,22 @@ async function main() {
     { name: 'Сэтгүүл', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
     { name: 'Брошур', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
     { name: 'Календарь', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: false, has_pages: true, has_bookmark: false, waste_qty: 50 },
+    { name: 'Тор', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
+    { name: 'Хайрцаг', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
+    { name: 'Түргэн хэвлэл', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
     { name: 'Флаер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
     { name: 'Нэрийн хуудас', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
     { name: 'Урилга', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Меню', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
+    { name: 'Меню', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 50 },
     { name: 'Билет', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Тор', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Хайрцаг', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 }
+    { name: 'Албан бланк', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
+    { name: 'Дугтуй', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 },
+    { name: 'Хавтас', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
+    { name: 'Стикер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 },
+    { name: 'Дэвтэр', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 50 },
+    { name: 'Сертификат', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 10 },
+    { name: 'Постер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 10 },
+    { name: 'Шошго', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 }
   ];
 
   for (const c of productCategories) {
