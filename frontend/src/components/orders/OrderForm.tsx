@@ -366,6 +366,60 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     return acc;
   }, {} as Record<string, any[]>);
 
+  const categoryOptions = React.useMemo(() => {
+    const map = new Map<string, { value: string; label: string }>();
+
+    // 1. Dynamic product_category from DB (managed in /admin/product-categories)
+    if (Array.isArray(productCategories) && productCategories.length > 0) {
+      productCategories.forEach((cat: any) => {
+        if (cat?.name) {
+          map.set(cat.name, { value: cat.name, label: cat.name });
+        }
+      });
+    }
+
+    // 2. Constants table (type: 'CATEGORY')
+    if (groupedConstants['CATEGORY']) {
+      groupedConstants['CATEGORY'].forEach((c: any) => {
+        if (c?.value && !map.has(c.value)) {
+          map.set(c.value, { value: c.value, label: c.value });
+        }
+      });
+    }
+
+    // 3. Complete list of all 20 standard printing product categories
+    const standardCategories = [
+      { value: 'Ном', label: 'Ном (Зөөлөн / Хатуу хавтастай)' },
+      { value: 'Сэтгүүл', label: 'Сэтгүүл' },
+      { value: 'Брошур', label: 'Брошур / Танилцуулга' },
+      { value: 'Календарь', label: 'Календарь (Ширээний / Ханын)' },
+      { value: 'Тор', label: 'Тор (Цаасан тор)' },
+      { value: 'Хайрцаг', label: 'Хайрцаг (Сав баглаа)' },
+      { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл (Quick Print)' },
+      { value: 'Флаер', label: 'Флаер / Лифлет' },
+      { value: 'Нэрийн хуудас', label: 'Нэрийн хуудас' },
+      { value: 'Урилга', label: 'Урилга / Мэндчилгээ' },
+      { value: 'Меню', label: 'Меню (Хоолны цэс)' },
+      { value: 'Билет', label: 'Билет / Тасалбар' },
+      { value: 'Албан бланк', label: 'Албан бланк / Маягт' },
+      { value: 'Дугтуй', label: 'Дугтуй' },
+      { value: 'Хавтас', label: 'Хавтас (Folder)' },
+      { value: 'Стикер', label: 'Стикер / Наалт' },
+      { value: 'Дэвтэр', label: 'Дэвтэр / Блокнот' },
+      { value: 'Сертификат', label: 'Сертификат / Батламж' },
+      { value: 'Постер', label: 'Постер / Плакат' },
+      { value: 'Шошго', label: 'Шошго / Бирка' }
+    ];
+
+    standardCategories.forEach(sc => {
+      if (!map.has(sc.value)) {
+        map.set(sc.value, sc);
+      }
+    });
+
+    return Array.from(map.values());
+  }, [productCategories, groupedConstants]);
+
   // Format deadline for date input
   const defaultDeadline = initialData?.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '';
   
@@ -1546,15 +1600,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 name="category"
                 control={control}
                 render={({ field }) => {
-                  const dbCategories = groupedConstants['CATEGORY']?.map((c: any) => ({ value: c.value, label: c.value })) || [
-                    { value: 'Ном', label: 'Ном' }, { value: 'Сэтгүүл', label: 'Сэтгүүл' },
-                    { value: 'Брошур', label: 'Брошур' }, { value: 'Календарь', label: 'Календарь' }
-                  ];
-                  const categoryOptions = [
-                    { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл (Quick Print)' },
-                    { value: 'Тор', label: 'Тор (Цаасан тор)' },
-                    ...dbCategories
-                  ];
+                  const selectedOption = field.value 
+                    ? (categoryOptions.find(o => o.value === field.value) || { value: field.value, label: field.value }) 
+                    : null;
                   return (
                     <CreatableSelect
                       {...field}
@@ -1572,8 +1620,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           });
                         }
                       }}
-                      value={field.value ? { value: field.value, label: field.value } : null}
-                      placeholder="Сонгох эсвэл бичих..."
+                      value={selectedOption}
+                      placeholder="Бүтээгдэхүүний ангилал сонгох эсвэл шинээр бичих..."
                       isClearable
                       menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                       menuPosition="fixed"
