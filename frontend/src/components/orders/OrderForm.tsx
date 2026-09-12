@@ -643,25 +643,64 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
       }
 
-      // Materials with live prices from masterPrices
+      // Materials with live prices from masterPrices and auxiliary standard normalization
       if (od.materials && Array.isArray(od.materials)) {
+        const a7 = (t.size || getValues('size') || 'A5').trim().toUpperCase();
         const smartMaterials = od.materials.map((m: any) => {
           const mp = masterPrices.find(p => p.item_name === m.material_name);
+          const aux = getMaterialType(m.material_name);
+          const pMat = parseMaterial(m.material_name);
+
+          let rowPrintSize = m.print_size;
+          let rowDivideBy = m.divide_by;
+          let rowPressSheet = m.press_sheet;
+          let rowSize = m.size;
+
+          if (aux.isNonPrinted) {
+            rowPrintSize = '';
+            if (aux.type === 'cardboard') {
+              const specs = getHardcoverAuxiliarySpecs(a7);
+              rowDivideBy = m.divide_by || specs.cardboardDiv;
+              rowPressSheet = '1';
+            } else if (aux.type === 'endpaper_plain') {
+              const specs = getHardcoverAuxiliarySpecs(a7);
+              rowDivideBy = m.divide_by || specs.endpaperDiv;
+              rowPressSheet = '1';
+            } else if (aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'strap') {
+              rowPressSheet = '';
+              rowDivideBy = 1;
+            }
+          } else {
+            if (!rowSize || ['A5', 'A4', 'B5', 'A2', 'B4', 'Custom'].includes(rowSize)) {
+              rowSize = pMat.sizeName || 'A0';
+            }
+          }
+
           return {
             ...m,
+            size: rowSize,
+            print_size: rowPrintSize,
+            divide_by: rowDivideBy,
+            press_sheet: rowPressSheet,
             unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : m.unit_cost
           };
         });
         setValue('materials', smartMaterials);
       }
 
-      // Operations with live prices from masterPrices
+      // Operations with live prices from masterPrices, is_pricing, and production_stage
       if (od.operations && Array.isArray(od.operations)) {
         const smartOperations = od.operations.map((o: any) => {
           const mp = masterPrices.find(p => p.item_name === o.operation_name);
+          const isPricing = o.is_pricing !== undefined ? o.is_pricing : (mp ? (mp.is_pricing !== false) : true);
+          const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
+          const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || 0)) : 0;
           return {
             ...o,
-            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : o.unit_cost
+            is_pricing: isPricing,
+            production_stage: stage,
+            is_manual: o.is_manual ?? false,
+            unit_cost: cost
           };
         });
         setValue('operations', smartOperations);
