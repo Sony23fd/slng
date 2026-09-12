@@ -555,6 +555,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const { fields: opFields, append: appendOp, remove: removeOp, update: updateOp } = useFieldArray({ control, name: 'operations' });
   const [opModalTab, setOpModalTab] = useState<'ALL' | 'BILLABLE' | 'NON_BILLABLE'>('ALL');
   const [opModalStage, setOpModalStage] = useState<string>('All');
+  const [opModalSearch, setOpModalSearch] = useState<string>('');
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
 
@@ -3662,90 +3663,140 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       {/* Нэмэлт ажиллагаа сонгох Modal */}
       {showOperationsModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div style={{ background: '#fff', borderRadius: '0.75rem', width: '100%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа сонгох</h3>
-              <button type="button" onClick={() => setShowOperationsModal(false)} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '0.75rem' }}>
+          <div style={{ background: '#fff', borderRadius: '10px', width: '100%', maxWidth: '560px', maxHeight: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', overflow: 'hidden' }}>
+            
+            {/* Modal Header */}
+            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1rem' }}>⚙️</span>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа / заавар</h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowOperationsModal(false)} 
+                style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}
+                title="Хаах"
+              >
+                &times;
+              </button>
             </div>
-            <div style={{ padding: '1.25rem 1.5rem', overflowY: 'auto', flex: 1 }}>
-              {/* Tabs for Billable vs Technological Instructions */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '0.6rem' }}>
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => setOpModalTab('ALL')}
+
+            {/* Filter & Search Bar */}
+            <div style={{ padding: '0.65rem 1rem', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: '#94a3b8' }}>🔍</span>
+                  <input
+                    type="text"
+                    value={opModalSearch}
+                    onChange={e => setOpModalSearch(e.target.value)}
+                    placeholder="Ажиллагааны нэрээр хайх..."
                     style={{
-                      padding: '5px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.82rem',
-                      fontWeight: opModalTab === 'ALL' ? 700 : 500,
-                      background: opModalTab === 'ALL' ? '#0f172a' : '#f1f5f9',
-                      color: opModalTab === 'ALL' ? '#fff' : '#475569',
-                      border: 'none',
-                      cursor: 'pointer'
+                      width: '100%',
+                      padding: '5px 24px 5px 28px',
+                      fontSize: '0.8rem',
+                      borderRadius: '5px',
+                      border: '1px solid #cbd5e1',
+                      outline: 'none'
                     }}
-                  >
-                    Бүгд ({masterPrices.filter(op => op.category === 'Ажиллагаа').length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOpModalTab('BILLABLE')}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.82rem',
-                      fontWeight: opModalTab === 'BILLABLE' ? 700 : 500,
-                      background: opModalTab === 'BILLABLE' ? '#16a34a' : '#f0fdf4',
-                      color: opModalTab === 'BILLABLE' ? '#fff' : '#166534',
-                      border: '1px solid ' + (opModalTab === 'BILLABLE' ? 'transparent' : '#bbf7d0'),
-                      cursor: 'pointer'
-                    }}
-                  >
-                    💵 Үнэ бодох ажиллагаа ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing !== false).length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOpModalTab('NON_BILLABLE')}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.82rem',
-                      fontWeight: opModalTab === 'NON_BILLABLE' ? 700 : 500,
-                      background: opModalTab === 'NON_BILLABLE' ? '#0284c7' : '#f0f9ff',
-                      color: opModalTab === 'NON_BILLABLE' ? '#fff' : '#0369a1',
-                      border: '1px solid ' + (opModalTab === 'NON_BILLABLE' ? 'transparent' : '#bae6fd'),
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ⚙️ Технологийн заавар (0₮) ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing === false).length})
-                  </button>
+                  />
+                  {opModalSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setOpModalSearch('')}
+                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1 }}
+                    >
+                      &times;
+                    </button>
+                  )}
                 </div>
 
-                {/* Stage Filter inside Modal */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Дамжлага:</span>
-                  <select
-                    value={opModalStage}
-                    onChange={e => setOpModalStage(e.target.value)}
-                    style={{ padding: '4px 8px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
-                  >
-                    <option value="All">Бүх дамжлага</option>
-                    {PRODUCTION_STAGES.map(s => (
-                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  value={opModalStage}
+                  onChange={e => setOpModalStage(e.target.value)}
+                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: '5px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155', maxWidth: '140px' }}
+                >
+                  <option value="All">Бүх дамжлага</option>
+                  {PRODUCTION_STAGES.map(s => (
+                    <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                  ))}
+                </select>
               </div>
 
+              {/* Segmented Mini Tabs */}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setOpModalTab('ALL')}
+                  style={{
+                    padding: '3px 9px',
+                    borderRadius: '4px',
+                    fontSize: '0.74rem',
+                    fontWeight: opModalTab === 'ALL' ? 700 : 500,
+                    background: opModalTab === 'ALL' ? '#0f172a' : '#f1f5f9',
+                    color: opModalTab === 'ALL' ? '#fff' : '#475569',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Бүгд ({masterPrices.filter(op => op.category === 'Ажиллагаа').length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpModalTab('BILLABLE')}
+                  style={{
+                    padding: '3px 9px',
+                    borderRadius: '4px',
+                    fontSize: '0.74rem',
+                    fontWeight: opModalTab === 'BILLABLE' ? 700 : 500,
+                    background: opModalTab === 'BILLABLE' ? '#16a34a' : '#f0fdf4',
+                    color: opModalTab === 'BILLABLE' ? '#fff' : '#166534',
+                    border: '1px solid ' + (opModalTab === 'BILLABLE' ? 'transparent' : '#bbf7d0'),
+                    cursor: 'pointer'
+                  }}
+                >
+                  💵 Үнэ бодох ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing !== false).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpModalTab('NON_BILLABLE')}
+                  style={{
+                    padding: '3px 9px',
+                    borderRadius: '4px',
+                    fontSize: '0.74rem',
+                    fontWeight: opModalTab === 'NON_BILLABLE' ? 700 : 500,
+                    background: opModalTab === 'NON_BILLABLE' ? '#0284c7' : '#f0f9ff',
+                    color: opModalTab === 'NON_BILLABLE' ? '#fff' : '#0369a1',
+                    border: '1px solid ' + (opModalTab === 'NON_BILLABLE' ? 'transparent' : '#bae6fd'),
+                    cursor: 'pointer'
+                  }}
+                >
+                  ⚙️ Заавар 0₮ ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing === false).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Compact Items List */}
+            <div style={{ padding: '0.75rem 1rem', overflowY: 'auto', flex: 1 }}>
               {(() => {
+                const search = opModalSearch.toLowerCase().trim();
                 const ops = masterPrices.filter((op: any) => {
                   if (op.category !== 'Ажиллагаа') return false;
                   if (opModalTab === 'BILLABLE' && op.is_pricing === false) return false;
                   if (opModalTab === 'NON_BILLABLE' && op.is_pricing !== false) return false;
                   if (opModalStage !== 'All' && (op.production_stage || 'POST_PRESS') !== opModalStage) return false;
+                  if (search && !op.item_name.toLowerCase().includes(search)) return false;
                   return true;
                 });
+
+                if (ops.length === 0) {
+                  return (
+                    <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Тохирох ажиллагаа олдсонгүй.
+                    </div>
+                  );
+                }
 
                 const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
                 ops.forEach((op: any) => {
@@ -3765,7 +3816,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 });
 
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '0.85rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '6px' }}>
                     {groups.map(group => {
                       const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
                       const isAdded = !!activeOpInGroup;
@@ -3777,78 +3828,92 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <div key={group.baseName} style={{
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '0.4rem',
-                          padding: '0.75rem',
-                          background: isAdded ? '#eff6ff' : '#ffffff',
-                          border: isAdded ? '1px solid #93c5fd' : '1px solid #e2e8f0',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                          transition: 'all 0.15s ease'
+                          gap: '2px',
+                          padding: '5px 8px',
+                          background: isAdded ? '#f0fdf4' : '#ffffff',
+                          border: isAdded ? '1px solid #86efac' : '1px solid #e2e8f0',
+                          borderRadius: '5px',
+                          transition: 'all 0.1s ease',
+                          boxShadow: isAdded ? '0 1px 2px rgba(22, 163, 74, 0.08)' : 'none'
                         }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <span style={{
-                              fontSize: '0.7rem',
-                              padding: '1px 6px',
-                              borderRadius: '4px',
-                              background: '#f1f5f9',
-                              color: '#475569'
-                            }}>
-                              {stageObj ? `${stageObj.icon} ${stageObj.label}` : 'Дамжлага'}
-                            </span>
-                            <span style={{
-                              fontSize: '0.72rem',
-                              fontWeight: 600,
-                              color: isPricing ? '#16a34a' : '#0284c7'
-                            }}>
-                              {isPricing ? `${repOp.unit_cost?.toLocaleString()}₮` : '0₮ (Заавар)'}
-                            </span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#166534' : '#1e293b', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                              <input
+                                type="checkbox"
+                                checked={isAdded}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    addQuickOp(group.options[0]);
+                                  } else {
+                                    const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                    if (idx !== -1) removeOp(idx);
+                                  }
+                                }}
+                                style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#16a34a', flexShrink: 0 }}
+                              />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={group.baseName}>
+                                {group.baseName}
+                              </span>
+                            </label>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                              <span title={stageObj?.label} style={{ fontSize: '0.72rem' }}>
+                                {stageObj?.icon || '⚙️'}
+                              </span>
+                              <span style={{
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                color: isPricing ? '#16a34a' : '#0284c7',
+                                background: isPricing ? '#f0fdf4' : '#f0f9ff',
+                                padding: '1px 4px',
+                                borderRadius: '3px',
+                                border: '1px solid ' + (isPricing ? '#dcfce7' : '#e0f2fe')
+                              }}>
+                                {isPricing ? `${repOp.unit_cost?.toLocaleString()}₮` : '0₮'}
+                              </span>
+                            </div>
                           </div>
 
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#1e40af' : '#1e293b' }}>
-                            <input
-                              type="checkbox"
-                              checked={isAdded}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  addQuickOp(group.options[0]);
-                                } else {
-                                  const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                  if (idx !== -1) removeOp(idx);
-                                }
-                              }}
-                              style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#3b82f6' }}
-                            />
-                            {group.baseName}
-                          </label>
-
                           {isAdded && group.isGroup && (
-                            <select
-                              value={activeOpInGroup?.item_name || ''}
-                              onChange={(e) => {
-                                const newOpName = e.target.value;
-                                const newOp = group.options.find(o => o.item_name === newOpName);
-                                if (newOp) {
-                                  const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                  if (idx !== -1) {
-                                    const currentOp = formValues.operations?.[idx];
-                                    updateOp(idx, { 
-                                      ...currentOp,
-                                      operation_name: newOp.item_name, 
-                                      unit_cost: newOp.is_pricing !== false ? newOp.unit_cost : 0,
-                                      qty: currentOp?.qty || 0,
-                                      notes: currentOp?.notes || '',
-                                      is_pricing: newOp.is_pricing !== false,
-                                      production_stage: newOp.production_stage || 'POST_PRESS'
-                                    } as any);
+                            <div style={{ marginTop: '2px', paddingLeft: '21px' }}>
+                              <select
+                                value={activeOpInGroup?.item_name || ''}
+                                onChange={(e) => {
+                                  const newOpName = e.target.value;
+                                  const newOp = group.options.find(o => o.item_name === newOpName);
+                                  if (newOp) {
+                                    const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                    if (idx !== -1) {
+                                      const currentOp = formValues.operations?.[idx];
+                                      updateOp(idx, { 
+                                        ...currentOp,
+                                        operation_name: newOp.item_name, 
+                                        unit_cost: newOp.is_pricing !== false ? newOp.unit_cost : 0,
+                                        qty: currentOp?.qty || 0,
+                                        notes: currentOp?.notes || '',
+                                        is_pricing: newOp.is_pricing !== false,
+                                        production_stage: newOp.production_stage || 'POST_PRESS'
+                                      } as any);
+                                    }
                                   }
-                                }
-                              }}
-                              style={{ padding: '0.35rem', fontSize: '0.82rem', borderRadius: '0.375rem', border: '1px solid #bfdbfe', background: '#fff', color: '#1e293b', outline: 'none', cursor: 'pointer', marginTop: '0.2rem' }}
-                            >
-                              {group.options.map(opt => (
-                                <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
-                              ))}
-                            </select>
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '2px 4px',
+                                  fontSize: '0.74rem',
+                                  borderRadius: '3px',
+                                  border: '1px solid #86efac',
+                                  background: '#fff',
+                                  color: '#166534',
+                                  outline: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {group.options.map(opt => (
+                                  <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
+                                ))}
+                              </select>
+                            </div>
                           )}
                         </div>
                       );
@@ -3857,9 +3922,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 );
               })()}
             </div>
-            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', background: '#f8fafc', borderBottomLeftRadius: '0.75rem', borderBottomRightRadius: '0.75rem' }}>
-              <button type="button" onClick={() => setShowOperationsModal(false)} className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontWeight: 600 }}>
-                ОК
+
+            {/* Modal Footer */}
+            <div style={{ padding: '0.6rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                Сонгогдсон: <strong style={{ color: '#0f172a' }}>{opFields.length}</strong> ажиллагаа
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setShowOperationsModal(false)} 
+                className="btn btn-primary" 
+                style={{ padding: '0.35rem 1.25rem', fontSize: '0.82rem', fontWeight: 600, borderRadius: '5px' }}
+              >
+                Болсон
               </button>
             </div>
           </div>
