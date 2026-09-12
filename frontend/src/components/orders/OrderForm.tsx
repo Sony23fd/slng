@@ -142,6 +142,100 @@ function calculateSetups(pressSheet: number, divisions: number) {
   return fullSheets + fractionalSetups;
 }
 
+function getMaterialType(matName?: string, notes?: string): {
+  isAux: boolean;
+  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'none';
+  isNonPrinted: boolean;
+} {
+  const n = (matName || '').toLowerCase();
+  const note = (notes || '').toLowerCase();
+
+  if (n.includes('картон') || note.includes('картон')) {
+    return { isAux: true, type: 'cardboard', isNonPrinted: true };
+  }
+  if (n.includes('форзац') || note.includes('форзац')) {
+    if (n.includes('хэвлэлтэй') || note.includes('хэвлэлтэй')) {
+      return { isAux: true, type: 'endpaper_printed', isNonPrinted: false };
+    }
+    return { isAux: true, type: 'endpaper_plain', isNonPrinted: true };
+  }
+  if (n.includes('капитал') || note.includes('капитал')) {
+    return { isAux: true, type: 'capital', isNonPrinted: true };
+  }
+  if (n.includes('хавчуурга') || note.includes('хавчуурга')) {
+    return { isAux: true, type: 'ribbon', isNonPrinted: true };
+  }
+  if (n.includes('оосор') || note.includes('оосор')) {
+    return { isAux: true, type: 'strap', isNonPrinted: true };
+  }
+  if (n.includes('бүрэлт') || note.includes('бүрэлт')) {
+    return { isAux: true, type: 'coating', isNonPrinted: false };
+  }
+
+  return { isAux: false, type: 'none', isNonPrinted: false };
+}
+
+function getHardcoverAuxiliarySpecs(size?: string) {
+  const s = (size || 'A5').toUpperCase();
+  if (s === 'B5') {
+    return {
+      cardboardDiv: 9,
+      endpaperDiv: 5,
+      endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 1.0 },
+      headbandDiv: 16,
+      ribbonLength: 0.33,
+      opName: 'Хатуу хавтас (B5)'
+    };
+  } else if (s === 'A4') {
+    return {
+      cardboardDiv: 7,
+      endpaperDiv: 4,
+      endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 4, extra: 100, baseMultiplier: 1.0 },
+      headbandDiv: 14,
+      ribbonLength: 0.38,
+      opName: 'Хатуу хавтас (A4)'
+    };
+  } else if (s === 'B4') {
+    return {
+      cardboardDiv: 4.5,
+      endpaperDiv: 2.5,
+      endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
+      headbandDiv: 12,
+      ribbonLength: 0.44,
+      opName: 'Хатуу хавтас (B4)'
+    };
+  } else {
+    return {
+      cardboardDiv: 14,
+      endpaperDiv: 8,
+      endpaperPrinted: { printSize: 'A2', pressSheet: '0.5', divBy: 4, extra: 100, baseMultiplier: 0.5 },
+      headbandDiv: 25,
+      ribbonLength: 0.30,
+      opName: 'Хатуу хавтас (A5)'
+    };
+  }
+}
+
+function getDefaultPrintSize(category?: string, productSize?: string, isCover?: boolean, bindingType?: string, coverRules?: any[]): string {
+  const cat = (category || '').trim();
+  const s = (productSize || 'A5').trim().toUpperCase();
+  const bt = (bindingType || '').trim();
+
+  if (cat === 'Түргэн хэвлэл') return 'A3';
+  if (cat === 'Тор' || cat === 'Цаасан тор') return 'B2';
+
+  if (isCover) {
+    const coverLogic = getCoverLogic(s, bt, coverRules);
+    if (coverLogic?.printSize) return coverLogic.printSize;
+  }
+
+  if (s.startsWith('B')) {
+    return 'B2';
+  }
+  return 'A2';
+}
+
+
 const compactSelectStyles = {
   control: (base: any) => ({
     ...base,
@@ -626,17 +720,32 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           let newMats = currentMats.filter((m: any) => m.notes !== 'Үндсэн материал');
 
           if (Array.isArray(defMats) && defMats.length > 0) {
+            const a7 = getA7Size();
+            const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, getValues('binding_type'), coverRules);
             defMats.forEach((matName: string) => {
-              const mp = masterPrices.find(m => m.category === 'Материал' && m.item_name === matName);
+              const mp = masterPrices.find(m => m.item_name === matName || (m.category === 'Материал' && m.item_name === matName));
+              const aux = getMaterialType(matName);
+              const pMat = parseMaterial(matName);
+              const matSize = pMat.sizeName || 'A0';
+              let rowPrintSize = aux.isNonPrinted ? '' : defPrintSize;
+              let rowDivideBy = 1;
+              if (aux.isAux) {
+                const specs = getHardcoverAuxiliarySpecs(a7);
+                if (aux.type === 'cardboard') rowDivideBy = specs.cardboardDiv;
+                else if (aux.type === 'endpaper_plain') rowDivideBy = specs.endpaperDiv;
+                else if (aux.type === 'capital') rowDivideBy = specs.headbandDiv;
+              } else {
+                rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
+              }
               newMats.push({
                 material_name: matName,
                 is_cover: false, 
-                print_size: '',
-                size: '',
-                press_sheet: '',
+                print_size: rowPrintSize,
+                size: matSize,
+                press_sheet: aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '',
                 base_qty: 0,
                 extra_qty: 0,
-                divide_by: 1,
+                divide_by: rowDivideBy,
                 sheet_qty: 0,
                 unit_cost: mp ? mp.unit_cost : 0,
                 total_qty: 0,
@@ -701,6 +810,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const requiredCtps: Record<string, number> = {};
     
     mats.forEach((m, i) => {
+      const aux = getMaterialType(m.material_name, m.notes);
+      if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap') return;
       const isCover = m.is_cover || false;
       const colorToUse = isCover ? b1 : b2;
       const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
@@ -801,7 +912,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const c = groupedConstants['INNER_COLOR']?.find((x: any) => x.value === formValues.inner_color);
       const parsedPrice = c ? parsePrice(c.description) : NaN;
       if (!isNaN(parsedPrice) && parsedPrice > 0) {
-        const innerMats = formValues.materials?.filter((m: any) => !m.is_cover) || [];
+        const innerMats = formValues.materials?.filter((m: any) => {
+          if (m.is_cover) return false;
+          const aux = getMaterialType(m.material_name, m.notes);
+          return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap';
+        }) || [];
         let totalInnerSetups = 0;
         innerMats.forEach((m: any) => {
           const m4 = Number(m.press_sheet) || 0;
@@ -831,6 +946,68 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const materials = getValues('materials') || [];
     
     materials.forEach((m, index) => {
+      const aux = getMaterialType(m.material_name, m.notes);
+      if (aux.isAux) {
+        const specs = getHardcoverAuxiliarySpecs(a7);
+        if (aux.type === 'cardboard') {
+          setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
+          setValue(`materials.${index}.press_sheet`, '1');
+          setValue(`materials.${index}.print_size`, '');
+          setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
+          const sheets = Math.ceil(a6 / specs.cardboardDiv);
+          setValue(`materials.${index}.sheet_qty`, sheets);
+          setValue(`materials.${index}.total_qty`, a6);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'endpaper_plain') {
+          setValue(`materials.${index}.divide_by`, specs.endpaperDiv);
+          setValue(`materials.${index}.press_sheet`, '1');
+          setValue(`materials.${index}.print_size`, '');
+          setValue(`materials.${index}.notes`, `Хэвлэлгүй форзац (${specs.endpaperDiv}ш гарна)`);
+          const sheets = Math.ceil(a6 / specs.endpaperDiv);
+          setValue(`materials.${index}.sheet_qty`, sheets);
+          setValue(`materials.${index}.total_qty`, a6);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'endpaper_printed') {
+          const epTotal = (a6 * specs.endpaperPrinted.baseMultiplier) + specs.endpaperPrinted.extra;
+          const epSheets = Math.ceil(epTotal / specs.endpaperPrinted.divBy);
+          setValue(`materials.${index}.print_size`, specs.endpaperPrinted.printSize);
+          setValue(`materials.${index}.press_sheet`, specs.endpaperPrinted.pressSheet);
+          setValue(`materials.${index}.extra_qty`, specs.endpaperPrinted.extra);
+          setValue(`materials.${index}.total_qty`, epTotal);
+          setValue(`materials.${index}.divide_by`, specs.endpaperPrinted.divBy);
+          setValue(`materials.${index}.sheet_qty`, epSheets);
+          return;
+        }
+        if (aux.type === 'capital') {
+          const capMeters = Math.ceil(a6 / specs.headbandDiv);
+          setValue(`materials.${index}.divide_by`, specs.headbandDiv);
+          setValue(`materials.${index}.sheet_qty`, capMeters);
+          setValue(`materials.${index}.notes`, `Номын капитал (${a6}ш / ${specs.headbandDiv})`);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'ribbon') {
+          const ribMeters = Math.ceil(a6 * specs.ribbonLength);
+          setValue(`materials.${index}.sheet_qty`, ribMeters);
+          setValue(`materials.${index}.notes`, `Хавчуурга тууз (${Math.round(specs.ribbonLength * 100)}см)`);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'strap') {
+          setValue(`materials.${index}.sheet_qty`, a6 * 2);
+          setValue(`materials.${index}.total_qty`, a6 * 2);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'coating') {
+          return;
+        }
+      }
+
       const isCover = m.is_cover || false;
       const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
       let m4 = 0;
@@ -845,11 +1022,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           setValue(`materials.${index}.print_size`, coverLogic.printSize);
         }
       } else {
+        let effectivePrintSize = m.print_size;
+        if (!effectivePrintSize) {
+          effectivePrintSize = getDefaultPrintSize(getValues('category'), a7, false, bt, coverRules);
+          setValue(`materials.${index}.print_size`, effectivePrintSize);
+        }
         const targetPages = isCover ? 4 : b4;
-        if (m.print_size && a7) {
-          const newDivs = calculatePaperDivision(m.print_size, a7);
-          
-          const matDivs = calculatePaperDivision(m.size || 'A0', m.print_size);
+        if (effectivePrintSize && a7) {
+          const newDivs = calculatePaperDivision(effectivePrintSize, a7);
+          const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+          const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
           if (matDivs > 0) {
             setValue(`materials.${index}.divide_by`, matDivs);
             divBy = matDivs;
@@ -886,35 +1068,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const isPrintedEndpaper = !!getValues('has_printed_endpaper');
     const hasRibbon = !!getValues('has_bookmark');
     
-    let cardboardDiv = 14;
-    let endpaperDiv = 8;
-    let endpaperPrinted = { printSize: 'A2', pressSheet: '0.5', divBy: 4, extra: 100, baseMultiplier: 0.5 };
-    let headbandDiv = 25;
-    let ribbonLength = 0.30;
-    let opName = 'Хатуу хавтас (A5)';
-
-    if (size === 'B5') {
-      cardboardDiv = 9;
-      endpaperDiv = 5;
-      endpaperPrinted = { printSize: 'B3', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 1.0 };
-      headbandDiv = 16;
-      ribbonLength = 0.33;
-      opName = 'Хатуу хавтас (B5)';
-    } else if (size === 'A4') {
-      cardboardDiv = 7;
-      endpaperDiv = 4;
-      endpaperPrinted = { printSize: 'B3', pressSheet: '1.0', divBy: 4, extra: 100, baseMultiplier: 1.0 };
-      headbandDiv = 14;
-      ribbonLength = 0.38;
-      opName = 'Хатуу хавтас (A4)';
-    } else if (size === 'B4') {
-      cardboardDiv = 4.5;
-      endpaperDiv = 2.5;
-      endpaperPrinted = { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 };
-      headbandDiv = 12;
-      ribbonLength = 0.44;
-      opName = 'Хатуу хавтас (B4)';
-    }
+    const specs = getHardcoverAuxiliarySpecs(size);
+    const cardboardDiv = specs.cardboardDiv;
+    const endpaperDiv = specs.endpaperDiv;
+    const endpaperPrinted = specs.endpaperPrinted;
+    const headbandDiv = specs.headbandDiv;
+    const ribbonLength = specs.ribbonLength;
+    const opName = specs.opName;
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
@@ -1173,7 +1333,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       };
 
       const materials = getValues('materials') || [];
-      const innerMats = materials.filter((m: any) => !m.is_cover);
+      const innerMats = materials.filter((m: any) => {
+        if (m.is_cover) return false;
+        const aux = getMaterialType(m.material_name, m.notes);
+        return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap';
+      });
       const coverMats = materials.filter((m: any) => m.is_cover);
 
       const inner_press_sheet = innerMats.reduce((acc: number, m: any) => acc + (Number(m.press_sheet) || 0), 0);
@@ -1664,14 +1828,52 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     const isManualBase = currentBase > 0 && currentBase !== oldA6;
                     const newBase = isManualBase ? currentBase : a6;
                     setValue(`materials.${index}.base_qty`, newBase);
+
+                    const aux = getMaterialType(m.material_name, m.notes);
+                    if (aux.isAux) {
+                      const a7 = getA7Size();
+                      const specs = getHardcoverAuxiliarySpecs(a7);
+                      if (aux.type === 'cardboard') {
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.cardboardDiv));
+                        return;
+                      }
+                      if (aux.type === 'endpaper_plain') {
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.endpaperDiv));
+                        return;
+                      }
+                      if (aux.type === 'capital') {
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.headbandDiv));
+                        return;
+                      }
+                      if (aux.type === 'ribbon') {
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase * specs.ribbonLength));
+                        return;
+                      }
+                      if (aux.type === 'strap') {
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase * 2);
+                        setValue(`materials.${index}.sheet_qty`, newBase * 2);
+                        return;
+                      }
+                      if (aux.type === 'endpaper_printed') {
+                        const epTotal = (newBase * specs.endpaperPrinted.baseMultiplier) + specs.endpaperPrinted.extra;
+                        setValue(`materials.${index}.extra_qty`, specs.endpaperPrinted.extra);
+                        setValue(`materials.${index}.total_qty`, epTotal);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(epTotal / specs.endpaperPrinted.divBy));
+                        return;
+                      }
+                    }
+
                     const press = Number(m.press_sheet) || 1;
-                    const currentMaterialName = m.material_name || '';
-                    const isAuxiliaryNoMakeready = 
-                      currentMaterialName.includes('Картон') || 
-                      currentMaterialName.includes('капитал') || 
-                      currentMaterialName.includes('Хавчуурга') || 
-                      currentMaterialName.includes('Оосор') || 
-                      currentMaterialName.includes('Бүрэлт');
+                    const isAuxiliaryNoMakeready = aux.isAux;
                     const extra = isAuxiliaryNoMakeready ? (Number(m.extra_qty) || 0) : calculateMakeready(newBase);
                     setValue(`materials.${index}.extra_qty`, extra);
                     const a7 = getA7Size();
@@ -1681,12 +1883,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     setValue(`materials.${index}.total_qty`, total);
                     const divBy = Number(m.divide_by) || 1;
                     if (!evaluateDynamicFormula(index, { base_qty: newBase })) {
-                      if (currentMaterialName.includes('Хавчуурга')) {
-                        const ribbonLen = (Number(m.sheet_qty) && newBase > 0 && oldA6 > 0) ? (Number(m.sheet_qty) / oldA6) : 0.33;
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase * ribbonLen));
-                      } else {
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
-                      }
+                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
                     }
                   });
                 }
@@ -1990,45 +2187,61 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const a7 = getA7Size();
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
+                    const aux = getMaterialType(m.material_name, m.notes);
+                    if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap') {
+                      return; // Skip auxiliary materials! Never apply inner page count to cardboard/endpaper/capital/ribbon
+                    }
+
                     const isCover = m.is_cover || false;
+                    const bt = getValues('binding_type') || '';
+                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+                    const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
+                    let m4 = 0;
+                    let divBy = Number(m.divide_by) || 1;
 
-                            const bt = getValues('binding_type') || '';
-                            const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                            const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
-                            let m4 = 0;
-                            let divBy = Number(m.divide_by) || 1;
+                    if (coverLogic) {
+                      m4 = coverLogic.pressSheet;
+                      divBy = coverLogic.divideBy;
+                      setValue(`materials.${index}.press_sheet`, String(m4));
+                      setValue(`materials.${index}.divide_by`, divBy);
+                      if (coverLogic?.printSize) {
+                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                      }
+                    } else {
+                      let effectivePrintSize = m.print_size;
+                      if (!effectivePrintSize && !isCover) {
+                        effectivePrintSize = getDefaultPrintSize(getValues('category'), a7, false, bt, coverRules);
+                        setValue(`materials.${index}.print_size`, effectivePrintSize);
+                      }
+                      const targetPages = isCover ? 4 : b4;
+                      if (effectivePrintSize && a7 && targetPages > 0) {
+                        const pagesPerSheet = calculatePaperDivision(effectivePrintSize, a7) * 2;
+                        if (pagesPerSheet > 0) {
+                          m4 = targetPages / pagesPerSheet;
+                          setValue(`materials.${index}.press_sheet`, String(m4));
+                        }
+                        const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+                        const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
+                        if (matDivs > 0) {
+                          setValue(`materials.${index}.divide_by`, matDivs);
+                          divBy = matDivs;
+                        }
+                      }
+                    }
 
-                            if (coverLogic) {
-                              m4 = coverLogic.pressSheet;
-                              divBy = coverLogic.divideBy;
-                              setValue(`materials.${index}.press_sheet`, String(m4));
-                              setValue(`materials.${index}.divide_by`, divBy);
-                              if (coverLogic?.printSize) {
-                                setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                              }
-                            } else {
-                              const targetPages = isCover ? 4 : b4;
-                              if (m.print_size && a7 && targetPages > 0) {
-                                const pagesPerSheet = calculatePaperDivision(m.print_size, a7) * 2;
-                                if (pagesPerSheet > 0) {
-                                  m4 = targetPages / pagesPerSheet;
-                                  setValue(`materials.${index}.press_sheet`, String(m4));
-                                }
-                              }
-                            }
-
-                            if (m4 > 0) {
-                              const base = Number(m.base_qty) || 0;
-                              const currentMaterialName = m.material_name || '';
-                              const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(m.extra_qty) || 0) : calculateMakeready(base);
-                              setValue(`materials.${index}.extra_qty`, extra);
-                              const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
-                              const setups = calculateSetups(m4, divs);
-                              const total = (base * m4) + (extra * setups);
-                              setValue(`materials.${index}.total_qty`, total);
-                              if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                            }
-
+                    if (m4 > 0) {
+                      const base = Number(m.base_qty) || 0;
+                      const extra = calculateMakeready(base);
+                      setValue(`materials.${index}.extra_qty`, extra);
+                      const printSizeToUse = coverLogic?.printSize || m.print_size || getDefaultPrintSize(getValues('category'), a7, isCover, bt, coverRules);
+                      const divs = calculatePaperDivision(printSizeToUse, a7);
+                      const setups = calculateSetups(m4, divs);
+                      const total = (base * m4) + (extra * setups);
+                      setValue(`materials.${index}.total_qty`, total);
+                      if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) {
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                      }
+                    }
                   });
                 }
               })} />
@@ -2222,7 +2435,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     }] : [])
                   ];
 
-                  const availableSizes = parsedMasterPrices.filter(p => p.baseName === currentMaterialName);
+                  const availableSizes = parsedMasterPrices.filter(p => p.baseName === currentMaterialName || p.item_name === currentMaterialName);
+                  const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
 
                   const inputStyle = tableInputStyle;
 
@@ -2248,24 +2462,127 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     const val = selectedOption ? selectedOption.value : '';
                                     field.onChange(val);
                                     if (val) {
-                                      const newSizes = parsedMasterPrices.filter(p => p.baseName === val);
-                                      if (newSizes.length === 1) {
-                                        const singleSize = newSizes[0];
-                                        setValue(`materials.${index}.size`, singleSize.sizeName);
-                                        setValue(`materials.${index}.unit_cost`, singleSize.unit_cost);
-                                        const printSize = formValues.materials?.[index]?.print_size || '';
-                                        const ratio = calculatePaperDivision(singleSize.sizeName, printSize);
-                                        const isCover = formValues.materials?.[index]?.is_cover;
-                                        const bt = formValues.binding_type || '';
-                                        const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                                        const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(formValues.size || '', bt, coverRules) : null;
-                                        if (ratio > 1 && !coverLogic) {
-                                          setValue(`materials.${index}.divide_by`, ratio);
-                                        }
+                                      const selectedAux = getMaterialType(val);
+                                      const a7 = getA7Size();
+                                      const totalQty = Number(getValues('total_qty')) || 1000;
+                                      const isCover = Boolean(formValues.materials?.[index]?.is_cover);
+                                      const bt = formValues.binding_type || '';
+                                      const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                                      const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
+
+                                      const matchingPrices = parsedMasterPrices.filter(p => p.baseName === val || p.item_name === val);
+                                      const firstMatched = matchingPrices.length === 1 ? matchingPrices[0] : (matchingPrices.find(p => p.sizeName) || matchingPrices[0]);
+
+                                      if (firstMatched) {
+                                        setValue(`materials.${index}.size`, firstMatched.sizeName);
+                                        setValue(`materials.${index}.unit_cost`, firstMatched.unit_cost);
                                       } else {
                                         setValue(`materials.${index}.size`, '');
                                         setValue(`materials.${index}.unit_cost`, 0);
                                       }
+
+                                      if (selectedAux.isAux) {
+                                        const specs = getHardcoverAuxiliarySpecs(a7);
+                                        if (selectedAux.type === 'cardboard') {
+                                          setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
+                                          setValue(`materials.${index}.press_sheet`, '1');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.cardboardDiv));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'endpaper_plain') {
+                                          setValue(`materials.${index}.divide_by`, specs.endpaperDiv);
+                                          setValue(`materials.${index}.press_sheet`, '1');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Хэвлэлгүй форзац (${specs.endpaperDiv}ш гарна)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.endpaperDiv));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'capital') {
+                                          setValue(`materials.${index}.divide_by`, specs.headbandDiv);
+                                          setValue(`materials.${index}.press_sheet`, '');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Номын капитал (${totalQty}ш / ${specs.headbandDiv})`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.headbandDiv));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'ribbon') {
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Хавчуурга тууз (${Math.round(specs.ribbonLength * 100)}см)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty * specs.ribbonLength));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'strap') {
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty * 2);
+                                          setValue(`materials.${index}.sheet_qty`, totalQty * 2);
+                                          return;
+                                        }
+                                      }
+
+                                      // Standard paper material
+                                      let printSize = formValues.materials?.[index]?.print_size;
+                                      if (!printSize) {
+                                        printSize = getDefaultPrintSize(formValues.category, a7, isCover, bt, coverRules);
+                                        setValue(`materials.${index}.print_size`, printSize);
+                                      }
+
+                                      let divBy = 1;
+                                      if (coverLogic) {
+                                        divBy = coverLogic.divideBy;
+                                        setValue(`materials.${index}.press_sheet`, String(coverLogic.pressSheet));
+                                        setValue(`materials.${index}.divide_by`, divBy);
+                                        if (coverLogic.printSize) {
+                                          setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                                          printSize = coverLogic.printSize;
+                                        }
+                                      } else {
+                                        const sourceSize = firstMatched?.sizeName || 'A0';
+                                        const ratio = calculatePaperDivision(sourceSize, printSize);
+                                        if (ratio > 0) {
+                                          setValue(`materials.${index}.divide_by`, ratio);
+                                          divBy = ratio;
+                                        }
+                                        const b4 = Number(getValues('total_pages')) || 0;
+                                        if (b4 > 0 && printSize && a7) {
+                                          const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
+                                          if (pagesPerSheet > 0) {
+                                            const m4 = b4 / pagesPerSheet;
+                                            setValue(`materials.${index}.press_sheet`, String(m4));
+                                            const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                            const extra = calculateMakeready(base);
+                                            setValue(`materials.${index}.extra_qty`, extra);
+                                            const divs = calculatePaperDivision(printSize, a7);
+                                            const setups = calculateSetups(m4, divs);
+                                            const total = (base * m4) + (extra * setups);
+                                            setValue(`materials.${index}.total_qty`, total);
+                                            setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                            return;
+                                          }
+                                        }
+                                      }
+
+                                      const currentTotal = Number(formValues.materials?.[index]?.total_qty) || totalQty;
+                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(currentTotal / divBy));
                                     } else {
                                       setValue(`materials.${index}.size`, '');
                                       setValue(`materials.${index}.unit_cost`, 0);
@@ -2333,7 +2650,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
                                     } else {
                                       const targetPages = isCov ? 4 : b4;
-                                      const printSize = getValues(`materials.${index}.print_size`);
+                                      const printSize = getValues(`materials.${index}.print_size`) || getDefaultPrintSize(getValues('category'), a7, isCov, bt, coverRules);
                                       if (printSize && a7 && targetPages > 0) {
                                         const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
                                         if (pagesPerSheet > 0) {
@@ -2379,18 +2696,31 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 field.onChange(val);
                                 if (selectedOption) {
                                   setValue(`materials.${index}.unit_cost`, selectedOption.unit_cost);
-                                  const printSize = formValues.materials?.[index]?.print_size || '';
+                                  const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
                                   let finalDivBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                                  const ratio = calculatePaperDivision(val, printSize);
-                                  if (ratio > 0) {
-                                    setValue(`materials.${index}.divide_by`, ratio);
-                                    finalDivBy = ratio;
+                                  const a7 = getA7Size();
+                                  if (aux.isNonPrinted) {
+                                    const specs = getHardcoverAuxiliarySpecs(a7);
+                                    if (aux.type === 'cardboard') finalDivBy = specs.cardboardDiv;
+                                    else if (aux.type === 'endpaper_plain') finalDivBy = specs.endpaperDiv;
+                                    else if (aux.type === 'capital') finalDivBy = specs.headbandDiv;
+                                    setValue(`materials.${index}.divide_by`, finalDivBy);
+                                  } else {
+                                    let printSize = formValues.materials?.[index]?.print_size;
+                                    if (!printSize) {
+                                      printSize = getDefaultPrintSize(formValues.category, a7, isCoverRow, formValues.binding_type, coverRules);
+                                      setValue(`materials.${index}.print_size`, printSize);
+                                    }
+                                    const ratio = calculatePaperDivision(val, printSize);
+                                    if (ratio > 0) {
+                                      setValue(`materials.${index}.divide_by`, ratio);
+                                      finalDivBy = ratio;
+                                    }
                                   }
                                   const totalQty = Number(formValues.materials?.[index]?.total_qty) || 0;
                                   if (!evaluateDynamicFormula(index, { divide_by: finalDivBy })) {
                                     setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / finalDivBy));
                                   }
-                                  // M4 is no longer calculated from M2, but from M3 and A7
                                 }
                               }}
                               value={field.value ? { value: field.value, label: field.value || (field.value === '' && availableSizes.length > 0 && availableSizes[0].sizeName === '' ? 'Үндсэн (Хэмжээгүй)' : '') } : null}
@@ -2407,113 +2737,152 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <Controller
-                          name={`materials.${index}.print_size`}
-                          control={control}
-                          render={({ field }) => (
-                            <div title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''}>
-                              <CreatableSelect
-                                {...field}
-                                options={[
-                                  { value: 'A1', label: 'A1' },
-                                  { value: 'A2', label: 'A2' },
-                                  { value: 'A3', label: 'A3' },
-                                  { value: 'A4', label: 'A4' },
-                                  { value: 'B1', label: 'B1' },
-                                  { value: 'B2', label: 'B2' },
-                                  { value: 'B3', label: 'B3' },
-                                  { value: 'B4', label: 'B4' }
-                                ]}
-                                value={field.value ? { value: field.value, label: field.value } : null}
-                                onChange={(selected: any) => {
-                                  if (isSpecialMat) return;
-                                  const val = selected ? selected.value : '';
-                                  field.onChange(val);
-                                  
-                                  const sourceSize = formValues.materials?.[index]?.size || '';
-                                  const ratio = calculatePaperDivision(sourceSize, val);
-                                  const _isCov = formValues.materials?.[index]?.is_cover;
-                                  const bt = formValues.binding_type || '';
-                                  if (ratio > 0) {
-                                    setValue(`materials.${index}.divide_by`, ratio);
-                                  }
-                                  
-                                  // Trigger M4 calculation
-                                  const a7Raw = formValues.size || '';
-                                  const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
-                                  const isCover = formValues.materials?.[index]?.is_cover || false;
-                                  const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
-                                  let m4 = 0;
-                                  let divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+                        {aux.isNonPrinted ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f8fafc', 
+                              border: '1px dashed #cbd5e1', 
+                              borderRadius: '4px', 
+                              fontSize: '11px', 
+                              color: '#94a3b8', 
+                              fontWeight: 500 
+                            }}
+                            title="Хэвлэх машинд орохгүй, шууд зүсэгдэх туслах материал"
+                          >
+                            — (Хэвлэлгүй)
+                          </div>
+                        ) : (
+                          <Controller
+                            name={`materials.${index}.print_size`}
+                            control={control}
+                            render={({ field }) => (
+                              <div title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''}>
+                                <CreatableSelect
+                                  {...field}
+                                  options={[
+                                    { value: 'A1', label: 'A1' },
+                                    { value: 'A2', label: 'A2' },
+                                    { value: 'A3', label: 'A3' },
+                                    { value: 'A4', label: 'A4' },
+                                    { value: 'B1', label: 'B1' },
+                                    { value: 'B2', label: 'B2' },
+                                    { value: 'B3', label: 'B3' },
+                                    { value: 'B4', label: 'B4' }
+                                  ]}
+                                  value={field.value ? { value: field.value, label: field.value } : null}
+                                  onChange={(selected: any) => {
+                                    if (isSpecialMat) return;
+                                    const val = selected ? selected.value : '';
+                                    field.onChange(val);
+                                    
+                                    const sourceSize = formValues.materials?.[index]?.size || '';
+                                    const ratio = calculatePaperDivision(sourceSize, val);
+                                    const _isCov = formValues.materials?.[index]?.is_cover;
+                                    const bt = formValues.binding_type || '';
+                                    if (ratio > 0) {
+                                      setValue(`materials.${index}.divide_by`, ratio);
+                                    }
+                                    
+                                    // Trigger M4 calculation
+                                    const a7Raw = formValues.size || '';
+                                    const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
+                                    const isCover = formValues.materials?.[index]?.is_cover || false;
+                                    const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+                                    let m4 = 0;
+                                    let divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
 
-                                  if (coverLogic) {
-                                    m4 = coverLogic.pressSheet;
-                                    divBy = coverLogic.divideBy;
-                                    setValue(`materials.${index}.press_sheet`, String(m4));
-                                    setValue(`materials.${index}.divide_by`, divBy);
-                                  } else {
-                                    const b4 = Number(formValues.total_pages) || 0;
-                                    if (val && a7 && b4 > 0) {
-                                      const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
-                                      if (pagesPerSheet > 0) {
-                                        m4 = b4 / pagesPerSheet;
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
+                                    if (coverLogic) {
+                                      m4 = coverLogic.pressSheet;
+                                      divBy = coverLogic.divideBy;
+                                      setValue(`materials.${index}.press_sheet`, String(m4));
+                                      setValue(`materials.${index}.divide_by`, divBy);
+                                    } else {
+                                      const b4 = Number(formValues.total_pages) || 0;
+                                      if (val && a7 && b4 > 0) {
+                                        const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
+                                        if (pagesPerSheet > 0) {
+                                          m4 = b4 / pagesPerSheet;
+                                          setValue(`materials.${index}.press_sheet`, String(m4));
+                                        }
                                       }
                                     }
-                                  }
 
-                                  if (m4 > 0) {
-                                    const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                                    const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                                    const divs = calculatePaperDivision(val || 'A2', a7);
-                                    const setups = calculateSetups(m4, divs);
-                                    const total = (base * m4) + (extra * setups);
-                                    setValue(`materials.${index}.total_qty`, total);
-                                    if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                                  } else if (ratio > 0) {
-                                    const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                                    setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
-                                  }
-                                }}
-                                isClearable
-                                isDisabled={isSpecialStrap || formValues.category === 'Түргэн хэвлэл'}
-                                placeholder="Сонгох..."
-                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                menuPosition="fixed"
-                                styles={{ 
-                                  control: (base) => ({ 
-                                    ...base, 
-                                    background: (isSpecialStrap || formValues.category === 'Түргэн хэвлэл') ? '#f1f5f9' : 'white', 
-                                    borderRadius: '0.25rem', 
-                                    borderColor: '#cbd5e1', 
-                                    minHeight: '34px', 
-                                    fontSize: '0.85rem' 
-                                  }), 
-                                  menuPortal: base => ({ ...base, zIndex: 9999 }) 
-                                }}
-                              />
-                            </div>
-                          )}
-                        />
+                                    if (m4 > 0) {
+                                      const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                      const divs = calculatePaperDivision(val || 'A2', a7);
+                                      const setups = calculateSetups(m4, divs);
+                                      const total = (base * m4) + (extra * setups);
+                                      setValue(`materials.${index}.total_qty`, total);
+                                      if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                    } else if (ratio > 0) {
+                                      const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
+                                    }
+                                  }}
+                                  isClearable
+                                  isDisabled={isSpecialStrap || formValues.category === 'Түргэн хэвлэл'}
+                                  placeholder="Сонгох..."
+                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                  menuPosition="fixed"
+                                  styles={{ 
+                                    control: (base) => ({ 
+                                      ...base, 
+                                      background: (isSpecialStrap || formValues.category === 'Түргэн хэвлэл') ? '#f1f5f9' : 'white', 
+                                      borderRadius: '0.25rem', 
+                                      borderColor: '#cbd5e1', 
+                                      minHeight: '34px', 
+                                      fontSize: '0.85rem' 
+                                    }), 
+                                    menuPortal: base => ({ ...base, zIndex: 9999 }) 
+                                  }}
+                                />
+                              </div>
+                            )}
+                          />
+                        )}
                       </td>
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
-                          onChange: (e) => {
-                            if (isSpecialMat) return;
-                            const press = Number(e.target.value) || 1;
-                            const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                            const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                            const a7 = getA7Size();
-                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
-                            const setups = calculateSetups(press, divs);
-                            const total = (base * press) + (extra * setups);
-                            setValue(`materials.${index}.total_qty`, total);
-                            const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                          }
-                        })} />
+                        {aux.isNonPrinted ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f1f5f9', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '4px', 
+                              fontSize: '12px', 
+                              color: '#94a3b8' 
+                            }}
+                            title="Хэвлэлийн хуудас тооцохгүй"
+                          >
+                            {aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '—'}
+                          </div>
+                        ) : (
+                          <input style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
+                            onChange: (e) => {
+                              if (isSpecialMat) return;
+                              const press = Number(e.target.value) || 1;
+                              const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                              const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                              const a7 = getA7Size();
+                              const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                              const setups = calculateSetups(press, divs);
+                              const total = (base * press) + (extra * setups);
+                              setValue(`materials.${index}.total_qty`, total);
+                              const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+                              if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            }
+                          })} />
+                        )}
                       </td>
                       )}
                       {isExpandedMaterial && (
@@ -2607,7 +2976,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           </div>
           <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '0.5rem' }}>
             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
+              <button 
+                type="button" 
+                onClick={() => {
+                  const a7 = getA7Size();
+                  const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules);
+                  const defRatio = calculatePaperDivision('A0', defPrintSize) || 4;
+                  appendMaterial({ 
+                    material_name: '', 
+                    size: 'A0', 
+                    print_size: defPrintSize, 
+                    press_sheet: '', 
+                    base_qty: Number(getValues('total_qty')) || 0, 
+                    extra_qty: 0, 
+                    total_qty: 0, 
+                    divide_by: defRatio, 
+                    sheet_qty: 0, 
+                    unit_cost: 0, 
+                    notes: '' 
+                  });
+                }} 
+                className="btn btn-outline"
+              >
                 + Материал нэмэх
               </button>
               {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
