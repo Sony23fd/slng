@@ -211,19 +211,40 @@ const tableInputStyle: React.CSSProperties = {
   boxSizing: 'border-box'
 };
 
-const SectionCard = ({ id, step, title, sub, children }: any) => {
+const SectionCard = ({ id, step, title, sub, actions, children }: any) => {
   const [collapsed, setCollapsed] = React.useState(false);
   return (
     <section className={`erp-card ${collapsed ? 'collapsed' : ''}`} id={id}>
       <div className="erp-card-head" onClick={() => setCollapsed(!collapsed)}>
-        <div className="erp-left">
+        <div className="erp-left" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
           <div className="step-badge">{step}</div>
-          <div>
-            <h2 style={{margin:0, fontSize:'13.8px', fontWeight:700}}>{title}</h2>
-            {sub && <div className="sub" style={{fontSize:'11.5px', color:'var(--muted-2)', fontWeight:500, marginTop:'1px'}}>{sub}</div>}
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: '13.8px', fontWeight: 700, color: '#1e293b' }}>{title}</h2>
+            {sub && <div className="sub" style={{ fontSize: '11.5px', color: 'var(--muted-2)', fontWeight: 500, marginTop: '1px' }}>{sub}</div>}
           </div>
         </div>
-        <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+        <div 
+          className="erp-card-actions" 
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (collapsed) setCollapsed(false);
+          }}
+        >
+          {actions}
+          <div 
+            onClick={(e) => {
+              e.stopPropagation();
+              setCollapsed(!collapsed);
+            }} 
+            style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '2px' }}
+            title={collapsed ? 'Дэлгэх' : 'Хураах'}
+          >
+            <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px', color: 'var(--muted-2)', transition: 'transform .2s' }}>
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
       </div>
       <div className="erp-card-body">
         {children}
@@ -2018,20 +2039,79 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         </SectionCard>
 
-        {/* 5. Материал */}
-        <SectionCard id="sec6" step="6" title={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span>6. Шаардлагатай материал</span>
-            <button 
-              type="button" 
-              onClick={() => setIsExpandedMaterial(!isExpandedMaterial)} 
-              className="btn btn-outline" 
-              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: 'auto', minHeight: 'unset' }}
+        {/* 6. Шаардлагатай материал */}
+        <SectionCard 
+          id="sec6" 
+          step="6" 
+          title="6. Шаардлагатай материал"
+          sub="Цаас болон туслах материалын өртөг, хэвлэлийн бодолт"
+          actions={
+            <div 
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                background: '#f1f5f9', 
+                padding: '2px', 
+                borderRadius: '6px', 
+                border: '1px solid #e2e8f0',
+                userSelect: 'none'
+              }}
             >
-              {isExpandedMaterial ? '[-] Хураангуйлах' : '[+] Дэлгэрэнгүй үйлдвэрлэлийн бодолт харах'}
-            </button>
-          </div>
-        }>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpandedMaterial(false);
+                }}
+                style={{
+                  padding: '3px 10px',
+                  fontSize: '11.5px',
+                  fontWeight: !isExpandedMaterial ? 700 : 500,
+                  color: !isExpandedMaterial ? '#0f172a' : '#64748b',
+                  background: !isExpandedMaterial ? '#ffffff' : 'transparent',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Хураангуй харагдац: Борлуулалтын үндсэн үнэ, өртөг"
+              >
+                <span>📄</span>
+                <span>Хураангуй</span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpandedMaterial(true);
+                }}
+                style={{
+                  padding: '3px 10px',
+                  fontSize: '11.5px',
+                  fontWeight: isExpandedMaterial ? 700 : 500,
+                  color: isExpandedMaterial ? '#0284c7' : '#64748b',
+                  background: isExpandedMaterial ? '#ffffff' : 'transparent',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Дэлгэрэнгүй харагдац: Хэвлэлийн хуудас, хуваалт, хадаас, том цаасны бодолт"
+              >
+                <span>🔬</span>
+                <span>Дэлгэрэнгүй бодолт</span>
+              </button>
+            </div>
+          }
+        >
           
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
             <table className="smart-table" style={{ minWidth: isExpandedMaterial ? '950px' : '500px' }}>
@@ -2525,32 +2605,75 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </tbody>
             </table>
           </div>
-          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
-              + Материал нэмэх
-            </button>
-            {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
-              <button 
-                type="button" 
-                onClick={handleAddHardcoverAuxiliary} 
-                className="btn btn-primary"
-                style={{ background: '#0284c7', borderColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
-                title="Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"
-              >
-                ✨ Хатуу хавтасны туслах материал бодох
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => appendMaterial({ material_name: '', size: '', print_size: formValues.category === 'Түргэн хэвлэл' ? 'A3' : '', press_sheet: '', base_qty: Number(getValues('total_qty')) || 0, extra_qty: formValues.category === 'Түргэн хэвлэл' ? 0 : 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">
+                + Материал нэмэх
               </button>
-            )}
-            {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
-              <button 
-                type="button" 
-                onClick={handleAddSuperCoverAuxiliary} 
-                className="btn btn-primary"
-                style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
-                title="Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"
-              >
-                🧥 Супер хавтасны материал бодох
-              </button>
-            )}
+              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                <button 
+                  type="button" 
+                  onClick={handleAddHardcoverAuxiliary} 
+                  className="btn btn-primary"
+                  style={{ background: '#0284c7', borderColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+                  title="Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"
+                >
+                  ✨ Хатуу хавтасны туслах материал бодох
+                </button>
+              )}
+              {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
+                <button 
+                  type="button" 
+                  onClick={handleAddSuperCoverAuxiliary} 
+                  className="btn btn-primary"
+                  style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+                  title="Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"
+                >
+                  🧥 Супер хавтасны материал бодох
+                </button>
+              )}
+            </div>
+
+            {/* Quick View Mode Switcher at Table Bottom */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#64748b' }}>
+              <span>Харагдац:</span>
+              <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '2px', borderRadius: '5px', border: '1px solid #e2e8f0' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsExpandedMaterial(false)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: !isExpandedMaterial ? 700 : 500,
+                    color: !isExpandedMaterial ? '#0f172a' : '#64748b',
+                    background: !isExpandedMaterial ? '#ffffff' : 'transparent',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                  }}
+                >
+                  📄 Хураангуй
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsExpandedMaterial(true)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: isExpandedMaterial ? 700 : 500,
+                    color: isExpandedMaterial ? '#0284c7' : '#64748b',
+                    background: isExpandedMaterial ? '#ffffff' : 'transparent',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                  }}
+                >
+                  🔬 Дэлгэрэнгүй бодолт
+                </button>
+              </div>
+            </div>
           </div>
         </SectionCard>
 
