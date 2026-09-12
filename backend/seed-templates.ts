@@ -24,7 +24,7 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 250гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'B3',
           press_sheet: '0.5',
           base_qty: 1000,
@@ -38,7 +38,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '10',
           base_qty: 1000,
@@ -52,11 +52,16 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор хуудас нугалах' },
-        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Термо цавуун наалт' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 1, unit_cost: 1500, notes: 'Хавтас матт бүрэлт' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: '3 тал огтлох' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 500, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор хуудас нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Термо цавуун наалт' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн согог шалгалт' },
+        { operation_name: 'Тусгай боодол / Хайрцаглах', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Баглаж хайрцаглах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -83,7 +88,7 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 200гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '0.5',
           base_qty: 500,
@@ -97,7 +102,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Шохойтой цаас 128гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '3.5',
           base_qty: 500,
@@ -111,10 +116,12 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Нугалаа', qty: 1750, unit_cost: 10, notes: 'Нугалаа' },
-        { operation_name: 'Үдээ (Унаа үдээ)', qty: 500, unit_cost: 50, notes: 'Төмөр үдээс' },
-        { operation_name: 'Бүрэлт (Гялгар)', qty: 1, unit_cost: 1500, notes: 'Хавтас гялгар бүрэлт' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 1, unit_cost: 2500, notes: 'Огтлох' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 2000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Өнгөт хэвлэлт' },
+        { operation_name: 'Нугалаа', qty: 1750, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
+        { operation_name: 'Үдээ (Унаа үдээ)', qty: 500, unit_cost: 50, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Төмөр үдээс' },
+        { operation_name: 'Бүрэлт (Гялгар)', qty: 3, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас гялгар бүрэлт (A2 0.006 * 500)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 1, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Огтлох' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 500, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
         cover_color: '4+4',
@@ -140,23 +147,25 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 200гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '1',
-          base_qty: 1000,
+          base_qty: 250,
           extra_qty: 100,
-          total_qty: 1100,
+          total_qty: 350,
           divide_by: 4,
-          sheet_qty: 275,
+          sheet_qty: 88,
           unit_cost: 1150,
           notes: 'Үндсэн цаас',
           is_cover: false
         }
       ],
       operations: [
-        { operation_name: 'Нугалаа', qty: 1000, unit_cost: 10, notes: '1 нугалаа' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 1, unit_cost: 1500, notes: '2 тал матт бүрэлт' },
-        { operation_name: 'Огтлоо (Дунд)', qty: 2, unit_cost: 1500, notes: 'Зүсэлт' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 250, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: '2 тал 4+4 хэвлэлт' },
+        { operation_name: 'Нугалаа', qty: 1000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: '1 нугалаа' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 1.5, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: '2 тал матт бүрэлт' },
+        { operation_name: 'Огтлоо (Дунд)', qty: 2, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Зүсэлт' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Согог шалгах' }
       ],
       specifications: {
         cover_color: '4+4',
@@ -176,13 +185,13 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'Стандарт цаасан тор B2 дэлгээс, оосортой',
+    notes: 'Стандарт цаасан тор B2 дэлгээс, оосортой (Rule 2.Б, 2.Г стандарт)',
     order_data: {
       sub_size: '24x32x8cm',
       materials: [
         {
           material_name: 'Шохойтой цаас 250гр B1 (787x1092)',
-          size: 'B2',
+          size: 'B1',
           print_size: 'B2',
           press_sheet: '1',
           base_qty: 500,
@@ -197,11 +206,11 @@ const standardTemplates = [
         {
           material_name: 'Бүрэлт (Матт)',
           size: '',
-          print_size: 'B2',
-          press_sheet: '1',
+          print_size: '',
+          press_sheet: '',
           base_qty: 500,
           extra_qty: 100,
-          total_qty: 600,
+          total_qty: 4.2,
           divide_by: 1,
           sheet_qty: 4.2,
           unit_cost: 1500,
@@ -219,14 +228,17 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 1000,
           unit_cost: 80,
-          notes: 'Торны бариул оосор (хосоор)',
+          notes: 'Торны бариул оосор (1 торонд 2ш)',
           is_cover: false
         }
       ],
       operations: [
-        { operation_name: 'Бөгж цоологч', qty: 500, unit_cost: 20, notes: 'Нүх цоолж бөгж шахах' },
-        { operation_name: 'Гараар хийх ажил', qty: 500, unit_cost: 100, notes: 'Тор нугалж наах угсрах' },
-        { operation_name: 'Хэв дарах (A3)', qty: 500, unit_cost: 350, notes: 'Торны хэлбэрт зүсэх хэв' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 500, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Тор хэвлэх' },
+        { operation_name: 'Бөгж цоологч', qty: 500, unit_cost: 20, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нүх цоолж бөгж шахах' },
+        { operation_name: 'Гараар хийх ажил', qty: 500, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Тор нугалж наах угсрах' },
+        { operation_name: 'Хэв дарах (A3)', qty: 500, unit_cost: 350, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Торны хэлбэрт зүсэх хэв' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 500, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Торны наалт, оосор шалгах' },
+        { operation_name: 'Тусгай боодол / Хайрцаглах', qty: 500, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Хайрцаглах' }
       ],
       specifications: {
         cover_color: '4+0'
@@ -244,27 +256,27 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'Ширээний хуанли 13 хуудастай, хатуу картон хөл суурьтай',
+    notes: 'Ширээний хуанли 13 хуудастай, хатуу картон хөл суурьтай (Rule 2.З)',
     order_data: {
       sub_size: '148x210mm',
       materials: [
         {
           material_name: 'Мат цаас 250гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '1.625',
           base_qty: 300,
-          extra_qty: 300,
-          total_qty: 787.5,
+          extra_qty: 150,
+          total_qty: 637.5,
           divide_by: 4,
-          sheet_qty: 197,
+          sheet_qty: 160,
           unit_cost: 1400,
           notes: 'Дотор 26 нүүр (13 хуудас)',
           is_cover: false
         },
         {
           material_name: 'Мат цаас 300гр A0 (889x1194)',
-          size: 'B3',
+          size: 'A0',
           print_size: 'B3',
           press_sheet: '1',
           base_qty: 300,
@@ -279,7 +291,7 @@ const standardTemplates = [
         {
           material_name: 'Картон 2 A0 (889x1194)',
           size: 'A0',
-          print_size: 'A0',
+          print_size: '',
           press_sheet: '1',
           base_qty: 300,
           extra_qty: 0,
@@ -292,9 +304,11 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Бүрэлт', qty: 0.35, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ' },
-        { operation_name: 'Нуруу (Спирал үдээс А5)', qty: 7200, unit_cost: 20, notes: 'А5 календарт 24ш (300 × 24 = 7200)' },
-        { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, notes: 'Хатуу картон суурь наах, угсрах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 488, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хэвлэлт' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 0.35, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас бүрэх' },
+        { operation_name: 'Спираль дарагч', qty: 7200, unit_cost: 50, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'А5 календарт 24ш (300 × 24 = 7200ш)' },
+        { operation_name: 'Суурь хийх (А5)', qty: 300, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хатуу картон суурь наах, угсрах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 300, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Календарийн хуудас, суурь шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -314,27 +328,27 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'B5 хэмжээтэй ширээний хуанли',
+    notes: 'B5 хэмжээтэй ширээний хуанли (Rule 2.З)',
     order_data: {
       sub_size: '176x250mm',
       materials: [
         {
           material_name: 'Мат цаас 250гр B1 (787x1092)',
-          size: 'B5',
+          size: 'B1',
           print_size: 'B2',
           press_sheet: '1.625',
           base_qty: 300,
-          extra_qty: 300,
-          total_qty: 787.5,
+          extra_qty: 150,
+          total_qty: 637.5,
           divide_by: 2,
-          sheet_qty: 394,
+          sheet_qty: 319,
           unit_cost: 1150,
           notes: 'Дотор 26 нүүр',
           is_cover: false
         },
         {
           material_name: 'Мат цаас 300гр A0 (889x1194)',
-          size: 'A2',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '1',
           base_qty: 300,
@@ -349,7 +363,7 @@ const standardTemplates = [
         {
           material_name: 'Картон 2 A0 (889x1194)',
           size: 'A0',
-          print_size: 'A0',
+          print_size: '',
           press_sheet: '1',
           base_qty: 300,
           extra_qty: 0,
@@ -362,9 +376,11 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Бүрэлт', qty: 2.8, unit_cost: 1500, notes: 'Хавтас болон 1 хуудас бүрэх' },
-        { operation_name: 'Нуруу (Спирал үдээс B5)', qty: 8400, unit_cost: 20, notes: 'B5 спираль 28ш (300 × 28 = 8400)' },
-        { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, notes: 'Суурь угсрах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 488, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хэвлэлт' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 2.8, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас болон 1 хуудас бүрэх' },
+        { operation_name: 'Спираль дарагч', qty: 8400, unit_cost: 50, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'B5 спираль 28ш (300 × 28 = 8400ш)' },
+        { operation_name: 'Суурь хийх (B5)', qty: 300, unit_cost: 1800, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Суурь угсрах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 300, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -384,28 +400,30 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'Ханын А2 том хэмжээтэй 7 хуудас календарь',
+    notes: 'Ханын А2 том хэмжээтэй 7 хуудас календарь (Rule 2.З)',
     order_data: {
       sub_size: '420x594mm',
       materials: [
         {
           material_name: 'Мат цаас 250гр A0 (889x1194)',
-          size: 'A2',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '7',
           base_qty: 500,
           extra_qty: 100,
-          total_qty: 4200,
+          total_qty: 3600,
           divide_by: 4,
-          sheet_qty: 1050,
+          sheet_qty: 900,
           unit_cost: 1400,
           notes: '14 нүүр (7 хуудас)',
           is_cover: false
         }
       ],
       operations: [
-        { operation_name: 'Бүрэлт', qty: 3.12, unit_cost: 1500, notes: 'Эхний 1 хуудсыг бүрнэ' },
-        { operation_name: 'Нуруу (Спирал үдээс Ханын А2)', qty: 28000, unit_cost: 5, notes: 'А2 ханын спираль 56ш (500 × 56 = 28000)' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 3500, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хэвлэлт' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 3.12, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Эхний 1 хуудсыг бүрнэ' },
+        { operation_name: 'Спираль дарагч', qty: 28000, unit_cost: 50, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'А2 ханын спираль 56ш (500 × 56 = 28000ш)' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 500, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -431,7 +449,7 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '0.25',
           base_qty: 1000,
@@ -445,7 +463,9 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Огтлоо (Жижиг)', qty: 2, unit_cost: 1000, notes: 'А5 хэмжээгээр зүсэх' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 250, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: '2 тал өнгөт хэвлэлт' },
+        { operation_name: 'Огтлоо (Жижиг)', qty: 2, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'А5 хэмжээгээр зүсэх' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+4',
@@ -470,7 +490,7 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 300гр A0 (889x1194)',
-          size: 'Custom',
+          size: 'A0',
           print_size: 'A3',
           press_sheet: '1',
           base_qty: 100,
@@ -484,8 +504,10 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Бүрэлт (Матт)', qty: 1, unit_cost: 1500, notes: 'Матт бүрэлт' },
-        { operation_name: 'Огтлоо (Жижиг)', qty: 1, unit_cost: 1000, notes: 'Нэрийн хуудас зүсэлт' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 100, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: '2 тал 4+4 хэвлэх' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 1, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Матт бүрэлт' },
+        { operation_name: 'Огтлоо (Жижиг)', qty: 1, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нэрийн хуудас зүсэлт' },
+        { operation_name: 'Тусгай боодол / Хайрцаглах', qty: 100, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Хайрцаглах' }
       ],
       specifications: {
         cover_color: '4+4',
@@ -504,13 +526,13 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'А5 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    notes: 'А5 хатуу хавтастай ном (160 нүүр, 1000ш standard, Rule 2.K)',
     order_data: {
       sub_size: '148x210mm',
       materials: [
         {
           material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '0.5',
           base_qty: 1000,
@@ -533,7 +555,7 @@ const standardTemplates = [
           divide_by: 14,
           sheet_qty: 72,
           unit_cost: 6300,
-          notes: 'Суурь картон 2мм',
+          notes: 'Суурь картон 2мм (А5: 14 хуваалт)',
           is_cover: false
         },
         {
@@ -547,7 +569,7 @@ const standardTemplates = [
           divide_by: 8,
           sheet_qty: 125,
           unit_cost: 1150,
-          notes: 'Форзац (200гр хэвлэлгүй)',
+          notes: 'Форзац (200гр хэвлэлгүй, А5: 8 хуваалт)',
           is_cover: false
         },
         {
@@ -561,7 +583,7 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 40,
           unit_cost: 0,
-          notes: 'Номын капитал (1000ш / 25)',
+          notes: 'Номын капитал (1000ш / 25 = 40м)',
           is_cover: false
         },
         {
@@ -575,12 +597,12 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 300,
           unit_cost: 0,
-          notes: 'Хавчуурга тууз (1000ш * 0.30м)',
+          notes: 'Хавчуурга тууз (1000ш * 0.30м = 300м)',
           is_cover: false
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '10',
           base_qty: 1000,
@@ -594,15 +616,17 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 500, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (A2 0.006 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 2000, notes: 'Хатуу хавтас угсрах, наах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 500, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (A2 0.006 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 2000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хатуу хавтас угсрах, наах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Номын хавтас, блок шалгах' },
+        { operation_name: 'Тусгай боодол / Хайрцаглах', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Хайрцаглах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -624,13 +648,13 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'В5 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    notes: 'В5 хатуу хавтастай ном (160 нүүр, 1000ш standard, Rule 2.K)',
     order_data: {
       sub_size: '176x250mm',
       materials: [
         {
           material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
-          size: 'B5',
+          size: 'A0',
           print_size: 'B3',
           press_sheet: '1.0',
           base_qty: 1000,
@@ -653,7 +677,7 @@ const standardTemplates = [
           divide_by: 9,
           sheet_qty: 112,
           unit_cost: 6300,
-          notes: 'Суурь картон 2мм',
+          notes: 'Суурь картон 2мм (В5: 9 хуваалт)',
           is_cover: false
         },
         {
@@ -667,7 +691,7 @@ const standardTemplates = [
           divide_by: 5,
           sheet_qty: 200,
           unit_cost: 1150,
-          notes: 'Форзац (200гр хэвлэлгүй)',
+          notes: 'Форзац (200гр хэвлэлгүй, В5: 5 хуваалт)',
           is_cover: false
         },
         {
@@ -681,7 +705,7 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 63,
           unit_cost: 0,
-          notes: 'Номын капитал (1000ш / 16)',
+          notes: 'Номын капитал (1000ш / 16 = 63м)',
           is_cover: false
         },
         {
@@ -695,12 +719,12 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 330,
           unit_cost: 0,
-          notes: 'Хавчуурга тууз (1000ш * 0.33м)',
+          notes: 'Хавчуурга тууз (1000ш * 0.33м = 330м)',
           is_cover: false
         },
         {
-          material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'B5',
+          material_name: 'Офсет цаас 80гр B1 (787x1092)',
+          size: 'B1',
           print_size: 'B2',
           press_sheet: '10',
           base_qty: 1000,
@@ -708,21 +732,22 @@ const standardTemplates = [
           total_qty: 10200,
           divide_by: 2,
           sheet_qty: 5100,
-          unit_cost: 510,
+          unit_cost: 408,
           notes: 'Дотор хуудас (160 нүүр)',
           is_cover: false
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 2500, notes: 'Хатуу хавтас угсрах, наах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хатуу хавтас угсрах, наах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгалт' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -744,13 +769,13 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'А4 хатуу хавтастай ном (160 нүүр, 1000ш standard)',
+    notes: 'А4 хатуу хавтастай ном (160 нүүр, 1000ш standard, Rule 2.K)',
     order_data: {
       sub_size: '210x297mm',
       materials: [
         {
           material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'B3',
           press_sheet: '1.0',
           base_qty: 1000,
@@ -773,7 +798,7 @@ const standardTemplates = [
           divide_by: 7,
           sheet_qty: 143,
           unit_cost: 6300,
-          notes: 'Суурь картон 2мм',
+          notes: 'Суурь картон 2мм (А4: 7 хуваалт)',
           is_cover: false
         },
         {
@@ -787,7 +812,7 @@ const standardTemplates = [
           divide_by: 4,
           sheet_qty: 250,
           unit_cost: 1150,
-          notes: 'Форзац (200гр хэвлэлгүй)',
+          notes: 'Форзац (200гр хэвлэлгүй, А4: 4 хуваалт)',
           is_cover: false
         },
         {
@@ -801,7 +826,7 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 72,
           unit_cost: 0,
-          notes: 'Номын капитал (1000ш / 14)',
+          notes: 'Номын капитал (1000ш / 14 = 72м)',
           is_cover: false
         },
         {
@@ -815,12 +840,12 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 380,
           unit_cost: 0,
-          notes: 'Хавчуурга тууз (1000ш * 0.38м)',
+          notes: 'Хавчуурга тууз (1000ш * 0.38м = 380м)',
           is_cover: false
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '20',
           base_qty: 1000,
@@ -834,15 +859,16 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 3000, notes: 'Хатуу хавтас угсрах, наах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 3000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хатуу хавтас угсрах, наах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгалт' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -870,7 +896,7 @@ const standardTemplates = [
       materials: [
         {
           material_name: 'Шохойтой цаас 157гр B1 (787x1092)',
-          size: 'A4',
+          size: 'B1',
           print_size: 'B2',
           press_sheet: '1.0',
           base_qty: 1000,
@@ -940,7 +966,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '20',
           base_qty: 1000,
@@ -954,15 +980,16 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Хөөсөн хатуу хавтас хийх', qty: 1000, unit_cost: 3500, notes: 'Хөөсөн хатуу хавтас угсрах' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Хөөсөн хатуу хавтас хийх', qty: 1000, unit_cost: 3500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хөөсөн хатуу хавтас угсрах' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -984,7 +1011,7 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'А5 супер хавтастай ном (дэлгээс B3, 1000ш standard)',
+    notes: 'А5 супер хавтастай ном (дэлгээс B3, 1000ш standard, Rule 2.L)',
     order_data: {
       sub_size: '148x210mm',
       materials: [
@@ -1018,7 +1045,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A5',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '10',
           base_qty: 1000,
@@ -1032,15 +1059,16 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А5 супер хавтас нугалах, өмсгөх' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 4, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B3 0.004 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'А5 супер хавтас нугалах, өмсгөх' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -1061,7 +1089,7 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'В5 супер хавтастай ном (дэлгээс 594x280мм, 1000ш standard)',
+    notes: 'В5 супер хавтастай ном (дэлгээс 594x280мм, 1000ш standard, Rule 2.L)',
     order_data: {
       sub_size: '176x250mm',
       materials: [
@@ -1095,7 +1123,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Офсет цаас 80гр B1 (787x1092)',
-          size: 'B5',
+          size: 'B1',
           print_size: 'B2',
           press_sheet: '10',
           base_qty: 1000,
@@ -1103,21 +1131,22 @@ const standardTemplates = [
           total_qty: 10200,
           divide_by: 2,
           sheet_qty: 5100,
-          unit_cost: 510,
+          unit_cost: 408,
           notes: 'Дотор хуудас (160 нүүр)',
           is_cover: false
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, notes: 'Хавтас матт бүрэлт' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'В5 супер хавтас нугалах, өмсгөх' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 10000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 6, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'В5 супер хавтас нугалах, өмсгөх' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -1138,7 +1167,7 @@ const standardTemplates = [
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'А4 супер хавтастай ном (дэлгээс 720x380мм, 1000ш standard)',
+    notes: 'А4 супер хавтастай ном (дэлгээс 720x380мм, 1000ш standard, Rule 2.L)',
     order_data: {
       sub_size: '210x297mm',
       materials: [
@@ -1172,7 +1201,7 @@ const standardTemplates = [
         },
         {
           material_name: 'Офсет цаас 80гр A0 (889x1194)',
-          size: 'A4',
+          size: 'A0',
           print_size: 'A2',
           press_sheet: '20',
           base_qty: 1000,
@@ -1186,15 +1215,16 @@ const standardTemplates = [
         }
       ],
       operations: [
-        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, notes: 'Хавтас хэвлэх' },
-        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, notes: 'Дотор хэвлэх' },
-        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, notes: 'Дотор нугалах' },
-        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, notes: 'Дэвтэрлэх цуглуулга' },
-        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, notes: 'Хуудас шалгах' },
-        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, notes: 'Дотор блок наах' },
-        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
-        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, notes: 'Блок 3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, notes: 'А4 супер хавтас нугалах, өмсгөх' }
+        { operation_name: 'Хэвлэх (4 өнгө)', qty: 1000, unit_cost: 40, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Хавтас хэвлэх' },
+        { operation_name: 'Хэвлэх (1 өнгө)', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'PRINTING', is_manual: false, notes: 'Дотор хэвлэх' },
+        { operation_name: 'Нугалаа', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор нугалах' },
+        { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дэвтэрлэх цуглуулга' },
+        { operation_name: 'Шалгах', qty: 20000, unit_cost: 10, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хуудас шалгах' },
+        { operation_name: 'Наалт', qty: 1000, unit_cost: 150, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Дотор блок наах' },
+        { operation_name: 'Бүрэлт (Матт)', qty: 7, unit_cost: 1500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас матт бүрэлт (B2 0.007 * 1000)' },
+        { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок 3 тал огтлох' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'А4 супер хавтас нугалах, өмсгөх' },
+        { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Шалгах' }
       ],
       specifications: {
         cover_color: '4+0',
@@ -1207,16 +1237,16 @@ const standardTemplates = [
 ];
 
 export async function seedTemplates() {
-  console.log('Seeding standard product templates...');
+  console.log('Seeding standard product templates with latest calculation logic...');
   for (const t of standardTemplates) {
     await prisma.producttemplate.upsert({
       where: { template_name: t.template_name },
       create: t,
       update: t
     });
-    console.log(`✓ Template seeded: ${t.template_name}`);
+    console.log(`✓ Template updated/seeded: ${t.template_name}`);
   }
-  console.log('Templates seeding completed successfully!');
+  console.log(`Templates seeding completed successfully (${standardTemplates.length} templates)!`);
 }
 
 if (require.main === module) {
