@@ -87,7 +87,14 @@ async function main() {
     { size: 'A5', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 6, print_size: 'B3' },
     { size: 'B5', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 6, print_size: '594x280' },
     { size: 'A4', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 3, print_size: '720x380' },
-    { size: 'B4', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 2, print_size: 'B2' }
+    { size: 'B4', binding: 'Супер хавтастай', press_sheet: 1.0, divide_by: 2, print_size: 'B2' },
+    // Блокон оёо (Section sewing)
+    { size: 'A4', binding: 'Блокон оёо', press_sheet: 1.0, divide_by: 6, print_size: 'A3' },
+    { size: 'A5', binding: 'Блокон оёо', press_sheet: 0.5, divide_by: 5, print_size: 'B3' },
+    { size: 'B5', binding: 'Блокон оёо', press_sheet: 0.5, divide_by: 4, print_size: 'A2' },
+    { size: 'B4', binding: 'Блокон оёо', press_sheet: 1.0, divide_by: 4, print_size: 'A2' },
+    { size: 'A6', binding: 'Блокон оёо', press_sheet: 0.25, divide_by: 4, print_size: 'A2' },
+    { size: 'B6', binding: 'Блокон оёо', press_sheet: 0.25, divide_by: 4, print_size: 'A2' }
   ];
 
   for (const r of coverRules) {
