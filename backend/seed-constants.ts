@@ -25,11 +25,18 @@ const initialConstants = [
   { type: 'SIZE', value: 'A5' },
   { type: 'SIZE', value: 'B5' },
   { type: 'SIZE', value: 'Custom' },
-  { type: 'COVER_COLOR', value: '4+0' },
-  { type: 'COVER_COLOR', value: '4+4' },
-  { type: 'INNER_COLOR', value: '1+0' },
-  { type: 'INNER_COLOR', value: '1+1' },
-  { type: 'INNER_COLOR', value: '4+4' },
+  { type: 'COVER_COLOR', value: '4+0', description: 'Нэг тал өнгөт' },
+  { type: 'COVER_COLOR', value: '4+4', description: 'Хоёр тал өнгөт' },
+  { type: 'COVER_COLOR', value: '2+0', description: 'Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй)' },
+  { type: 'COVER_COLOR', value: '2+2', description: 'Хоёр тал 2 өнгөт' },
+  { type: 'COVER_COLOR', value: '1+0', description: 'Нэг тал 1 өнгөт' },
+  { type: 'COVER_COLOR', value: '1+1', description: 'Хоёр тал 1 өнгөт' },
+  { type: 'INNER_COLOR', value: '1+1', description: 'Хоёр тал 1 өнгөт (Хар цагаан)' },
+  { type: 'INNER_COLOR', value: '1+0', description: 'Нэг тал 1 өнгөт' },
+  { type: 'INNER_COLOR', value: '2+2', description: 'Хоёр тал 2 өнгөт' },
+  { type: 'INNER_COLOR', value: '2+0', description: 'Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй)' },
+  { type: 'INNER_COLOR', value: '4+4', description: 'Хоёр тал өнгөт' },
+  { type: 'INNER_COLOR', value: '4+0', description: 'Нэг тал өнгөт' },
   { type: 'PAYMENT_METHOD', value: 'Бэлэн' },
   { type: 'PAYMENT_METHOD', value: 'Данс' },
   { type: 'PAYMENT_METHOD', value: 'Карт' },
@@ -43,7 +50,6 @@ const initialConstants = [
   { type: 'ORDER_STATUS', value: 'Дардас' },
   { type: 'ORDER_STATUS', value: 'Бэлэн' },
   { type: 'ORDER_STATUS', value: 'Олгосон' },
-
 ];
 
 export async function seedConstants(prisma: PrismaClient) {
@@ -56,10 +62,17 @@ export async function seedConstants(prisma: PrismaClient) {
       await prisma.constant.create({
         data: {
           type: c.type,
-          value: c.value
+          value: c.value,
+          description: (c as any).description || null
         }
       });
       console.log(`Added ${c.type}: ${c.value}`);
+    } else if ((c as any).description && existing.description !== (c as any).description) {
+      await prisma.constant.update({
+        where: { id: existing.id },
+        data: { description: (c as any).description }
+      });
+      console.log(`Updated ${c.type}: ${c.value} description`);
     }
   }
   console.log('Done constants!');
