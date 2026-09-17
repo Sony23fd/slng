@@ -1,4 +1,8 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const prices = [
   // Номын шар
@@ -60,6 +64,7 @@ const prices = [
   { category: 'Цаас', item_name: 'Кай цаас 250 A0 (889x1194)', unit_cost: 1300 },
 
   // Нэмэлт материалууд
+  { category: 'Материал', item_name: 'CTP хавтан', unit_cost: 8800 },
   { category: 'Материал', item_name: 'Бүрэлт (Гялгар)', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт (Матт)', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Оосор (Торны оосор)', unit_cost: 80 },
