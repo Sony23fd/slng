@@ -235,6 +235,26 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
   return 'A2';
 }
 
+function isInnerPageMaterial(m: any, category?: string): boolean {
+  if (!m || m.is_cover) return false;
+  const aux = getMaterialType(m.material_name, m.notes);
+  if (aux.isNonPrinted || aux.isAux || aux.type === 'coating' || aux.type === 'strap') {
+    return false;
+  }
+  const cat = (category || '').trim();
+  if (cat === 'Брошур' || cat === 'Тор' || cat === 'Цаасан тор' || cat === 'Флаер' || cat === 'Нэрийн хуудас') {
+    return false;
+  }
+  return true;
+}
+
+function calculateInnerPressSheet(totalPages: number, printSize: string, productSize: string): number {
+  if (totalPages <= 0 || !printSize || !productSize) return 0;
+  const divs = calculatePaperDivision(printSize, productSize);
+  const pagesPerSheet = divs * 2;
+  if (pagesPerSheet <= 0) return 0;
+  return totalPages / pagesPerSheet;
+}
 
 const compactSelectStyles = {
   control: (base: any) => ({
@@ -1049,6 +1069,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
 
       const isCover = m.is_cover || false;
+      const cat = getValues('category');
       const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
       let m4 = 0;
       let divBy = Number(m.divide_by) || 1;
@@ -1061,15 +1082,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (coverLogic.printSize) {
           setValue(`materials.${index}.print_size`, coverLogic.printSize);
         }
-      } else {
+      } else if (isCover) {
+        m4 = Number(m.press_sheet) || 1;
+        let effectivePrintSize = m.print_size || getDefaultPrintSize(cat, a7, true, bt, coverRules);
+        setValue(`materials.${index}.print_size`, effectivePrintSize);
+        const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+        const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
+        if (matDivs > 0) {
+          setValue(`materials.${index}.divide_by`, matDivs);
+          divBy = matDivs;
+        }
+      } else if (isInnerPageMaterial(m, cat)) {
         let effectivePrintSize = m.print_size;
         if (!effectivePrintSize) {
-          effectivePrintSize = getDefaultPrintSize(getValues('category'), a7, false, bt, coverRules);
+          effectivePrintSize = getDefaultPrintSize(cat, a7, false, bt, coverRules);
           setValue(`materials.${index}.print_size`, effectivePrintSize);
         }
-        const targetPages = isCover ? 4 : b4;
         if (effectivePrintSize && a7) {
-          const newDivs = calculatePaperDivision(effectivePrintSize, a7);
           const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
           const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
           if (matDivs > 0) {
@@ -1077,13 +1106,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             divBy = matDivs;
           }
 
-          if (targetPages > 0) {
-            const pagesPerSheet = newDivs * 2;
-            if (pagesPerSheet > 0) {
-              m4 = targetPages / pagesPerSheet;
-              setValue(`materials.${index}.press_sheet`, String(m4));
-            }
-          }
+          m4 = calculateInnerPressSheet(b4, effectivePrintSize, a7);
+          setValue(`materials.${index}.press_sheet`, String(m4));
+        }
+      } else {
+        m4 = Number(m.press_sheet) || 1;
+        let effectivePrintSize = m.print_size || getDefaultPrintSize(cat, a7, false, bt, coverRules);
+        const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+        const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
+        if (matDivs > 0) {
+          setValue(`materials.${index}.divide_by`, matDivs);
+          divBy = matDivs;
         }
       }
 
@@ -1091,7 +1124,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const base = Number(m.base_qty) || a6;
         const extra = calculateMakeready(base);
         setValue(`materials.${index}.extra_qty`, extra);
-        const divs = divBy;
+        const printSizeForDivs = coverLogic?.printSize || m.print_size || getDefaultPrintSize(cat, a7, isCover, bt, coverRules);
+        const divs = calculatePaperDivision(printSizeForDivs, a7) || 1;
         const setups = calculateSetups(m4, divs);
         const total = (base * m4) + (extra * setups);
         setValue(`materials.${index}.total_qty`, total);
@@ -2225,56 +2259,37 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 onChange: (e) => {
                   const b4 = Number(e.target.value) || 0;
                   const a7 = getA7Size();
+                  const category = getValues('category');
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
-                    const aux = getMaterialType(m.material_name, m.notes);
-                    if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap') {
-                      return; // Skip auxiliary materials! Never apply inner page count to cardboard/endpaper/capital/ribbon
+                    // Хэвлэлийн хуудасыг зөвхөн Дотор хуудсан дээр бодно!
+                    // Хавтас болон бусад туслах материалууд огт хөндөгдөхгүй!
+                    if (!isInnerPageMaterial(m, category)) {
+                      return;
                     }
 
-                    const isCover = m.is_cover || false;
-                    const bt = getValues('binding_type') || '';
-                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                    const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
-                    let m4 = 0;
-                    let divBy = Number(m.divide_by) || 1;
+                    let effectivePrintSize = m.print_size;
+                    if (!effectivePrintSize) {
+                      effectivePrintSize = getDefaultPrintSize(category, a7, false, getValues('binding_type'), coverRules);
+                      setValue(`materials.${index}.print_size`, effectivePrintSize);
+                    }
 
-                    if (coverLogic) {
-                      m4 = coverLogic.pressSheet;
-                      divBy = coverLogic.divideBy;
-                      setValue(`materials.${index}.press_sheet`, String(m4));
-                      setValue(`materials.${index}.divide_by`, divBy);
-                      if (coverLogic?.printSize) {
-                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                      }
-                    } else {
-                      let effectivePrintSize = m.print_size;
-                      if (!effectivePrintSize && !isCover) {
-                        effectivePrintSize = getDefaultPrintSize(getValues('category'), a7, false, bt, coverRules);
-                        setValue(`materials.${index}.print_size`, effectivePrintSize);
-                      }
-                      const targetPages = isCover ? 4 : b4;
-                      if (effectivePrintSize && a7 && targetPages > 0) {
-                        const pagesPerSheet = calculatePaperDivision(effectivePrintSize, a7) * 2;
-                        if (pagesPerSheet > 0) {
-                          m4 = targetPages / pagesPerSheet;
-                          setValue(`materials.${index}.press_sheet`, String(m4));
-                        }
-                        const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
-                        const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
-                        if (matDivs > 0) {
-                          setValue(`materials.${index}.divide_by`, matDivs);
-                          divBy = matDivs;
-                        }
-                      }
+                    const m4 = calculateInnerPressSheet(b4, effectivePrintSize, a7);
+                    setValue(`materials.${index}.press_sheet`, String(m4));
+
+                    const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+                    const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
+                    let divBy = Number(m.divide_by) || 1;
+                    if (matDivs > 0) {
+                      setValue(`materials.${index}.divide_by`, matDivs);
+                      divBy = matDivs;
                     }
 
                     if (m4 > 0) {
                       const base = Number(m.base_qty) || 0;
                       const extra = calculateMakeready(base);
                       setValue(`materials.${index}.extra_qty`, extra);
-                      const printSizeToUse = coverLogic?.printSize || m.print_size || getDefaultPrintSize(getValues('category'), a7, isCover, bt, coverRules);
-                      const divs = calculatePaperDivision(printSizeToUse, a7);
+                      const divs = calculatePaperDivision(effectivePrintSize, a7);
                       const setups = calculateSetups(m4, divs);
                       const total = (base * m4) + (extra * setups);
                       setValue(`materials.${index}.total_qty`, total);
@@ -2587,6 +2602,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       }
 
                                       let divBy = 1;
+                                      const sourceSize = firstMatched?.sizeName || 'A0';
+                                      const ratio = calculatePaperDivision(sourceSize, printSize);
+                                      if (ratio > 0) {
+                                        setValue(`materials.${index}.divide_by`, ratio);
+                                        divBy = ratio;
+                                      }
+
                                       if (coverLogic) {
                                         divBy = coverLogic.divideBy;
                                         setValue(`materials.${index}.press_sheet`, String(coverLogic.pressSheet));
@@ -2595,29 +2617,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.print_size`, coverLogic.printSize);
                                           printSize = coverLogic.printSize;
                                         }
-                                      } else {
-                                        const sourceSize = firstMatched?.sizeName || 'A0';
-                                        const ratio = calculatePaperDivision(sourceSize, printSize);
-                                        if (ratio > 0) {
-                                          setValue(`materials.${index}.divide_by`, ratio);
-                                          divBy = ratio;
-                                        }
+                                      } else if (!isCover && isInnerPageMaterial({ material_name: val, notes: formValues.materials?.[index]?.notes, is_cover: false }, formValues.category)) {
                                         const b4 = Number(getValues('total_pages')) || 0;
                                         if (b4 > 0 && printSize && a7) {
-                                          const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
-                                          if (pagesPerSheet > 0) {
-                                            const m4 = b4 / pagesPerSheet;
-                                            setValue(`materials.${index}.press_sheet`, String(m4));
-                                            const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
-                                            const extra = calculateMakeready(base);
-                                            setValue(`materials.${index}.extra_qty`, extra);
-                                            const divs = calculatePaperDivision(printSize, a7);
-                                            const setups = calculateSetups(m4, divs);
-                                            const total = (base * m4) + (extra * setups);
-                                            setValue(`materials.${index}.total_qty`, total);
-                                            setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
-                                            return;
-                                          }
+                                          const m4 = calculateInnerPressSheet(b4, printSize, a7);
+                                          setValue(`materials.${index}.press_sheet`, String(m4));
+                                          const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                          const extra = calculateMakeready(base);
+                                          setValue(`materials.${index}.extra_qty`, extra);
+                                          const divs = calculatePaperDivision(printSize, a7);
+                                          const setups = calculateSetups(m4, divs);
+                                          const total = (base * m4) + (extra * setups);
+                                          setValue(`materials.${index}.total_qty`, total);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                          return;
                                         }
                                       }
 
@@ -2674,8 +2687,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
                                     let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
 
-                                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                                    if ((categoryConfig.calc_mode === 'BOOK_MODE' || !categoryConfig.calc_mode || categoryConfig.calc_mode === 'null') && isCov) {
+                                    const category = getValues('category');
+                                    if (isCov) {
                                       coverLogic = getCoverLogic(a7, bt, coverRules);
                                       if (coverLogic) {
                                         m4 = coverLogic.pressSheet;
@@ -2685,18 +2698,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         if (coverLogic?.printSize) {
                                           setValue(`materials.${index}.print_size`, coverLogic.printSize);
                                         }
+                                      } else {
+                                        m4 = 1;
+                                        setValue(`materials.${index}.press_sheet`, '1');
                                       }
-                                    } else if (categoryConfig.calc_mode === 'STANDARD_MODE') {
-                                      divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
                                     } else {
-                                      const targetPages = isCov ? 4 : b4;
-                                      const printSize = getValues(`materials.${index}.print_size`) || getDefaultPrintSize(getValues('category'), a7, isCov, bt, coverRules);
-                                      if (printSize && a7 && targetPages > 0) {
-                                        const pagesPerSheet = calculatePaperDivision(printSize, a7) * 2;
-                                        if (pagesPerSheet > 0) {
-                                          m4 = targetPages / pagesPerSheet;
-                                          setValue(`materials.${index}.press_sheet`, String(m4));
-                                        }
+                                      const matRow = {
+                                        material_name: getValues(`materials.${index}.material_name`),
+                                        notes: getValues(`materials.${index}.notes`),
+                                        is_cover: false
+                                      };
+                                      const printSize = getValues(`materials.${index}.print_size`) || getDefaultPrintSize(category, a7, false, bt, coverRules);
+                                      setValue(`materials.${index}.print_size`, printSize);
+                                      if (isInnerPageMaterial(matRow, category)) {
+                                        m4 = calculateInnerPressSheet(b4, printSize, a7);
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
+                                      } else {
+                                        m4 = 1;
+                                        setValue(`materials.${index}.press_sheet`, '1');
                                       }
                                     }
 
@@ -2840,15 +2859,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       divBy = coverLogic.divideBy;
                                       setValue(`materials.${index}.press_sheet`, String(m4));
                                       setValue(`materials.${index}.divide_by`, divBy);
-                                    } else {
+                                    } else if (isCover) {
+                                      m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                    } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
                                       const b4 = Number(formValues.total_pages) || 0;
                                       if (val && a7 && b4 > 0) {
-                                        const pagesPerSheet = calculatePaperDivision(val, a7) * 2;
-                                        if (pagesPerSheet > 0) {
-                                          m4 = b4 / pagesPerSheet;
-                                          setValue(`materials.${index}.press_sheet`, String(m4));
-                                        }
+                                        m4 = calculateInnerPressSheet(b4, val, a7);
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
                                       }
+                                    } else {
+                                      m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
                                     }
 
                                     if (m4 > 0) {
@@ -2907,7 +2927,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             {aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '—'}
                           </div>
                         ) : (
-                          <input style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} readOnly title="Автоматаар бодогдоно" {...register(`materials.${index}.press_sheet`, {
+                          <input 
+                            style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} 
+                            readOnly 
+                            title={
+                              isCoverRow 
+                                ? "Хавтасны хэвлэлийн хуудасны норм (Cover Rules Matrix)" 
+                                : isInnerPageMaterial(formValues.materials?.[index], formValues.category)
+                                  ? `Дотор хуудас: Нийт ${formValues.total_pages || 0} нүүр / (${calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', getA7Size())} × 2 нүүр) = ${formValues.materials?.[index]?.press_sheet || 0}`
+                                  : "Хэвлэлийн хуудас"
+                            } 
+                            {...register(`materials.${index}.press_sheet`, {
                             onChange: (e) => {
                               if (isSpecialMat) return;
                               const press = Number(e.target.value) || 1;
