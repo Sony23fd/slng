@@ -78,11 +78,11 @@ const standardTemplates = [
     size: 'A4',
     cover_color: '4+4',
     inner_color: '4+4',
-    total_pages: 32,
+    total_pages: 28,
     needs_design: false,
     design_status: 'Эх бэлэн',
     design_cost: 0,
-    notes: 'Өнгөт сэтгүүл А4 хэмжээтэй, төмөр үдээстэй',
+    notes: 'Өнгөт сэтгүүл А4 хэмжээтэй, төмөр үдээстэй (Хавтас 4 нүүр + Дотор 28 нүүр)',
     order_data: {
       sub_size: '210x297mm',
       materials: [
@@ -126,7 +126,7 @@ const standardTemplates = [
       specifications: {
         cover_color: '4+4',
         inner_color: '4+4',
-        total_pages: 32
+        total_pages: 28
       }
     }
   },
@@ -451,8 +451,8 @@ const standardTemplates = [
           material_name: 'Шохойтой цаас 157гр A0 (889x1194)',
           size: 'A0',
           print_size: 'A2',
-          press_sheet: '0.25',
-          base_qty: 1000,
+          press_sheet: '1',
+          base_qty: 250,
           extra_qty: 100,
           total_qty: 350,
           divide_by: 4,
