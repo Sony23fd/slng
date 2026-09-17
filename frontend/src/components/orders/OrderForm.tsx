@@ -1037,10 +1037,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   useEffect(() => {
     const calcPlates = (colorStr: string, pressSheet: number, divisions: number) => {
       if (!colorStr || !pressSheet) return 0;
-      const parts = colorStr.split('+').map(Number);
-      if (parts.length !== 2) return 0;
-      const front = parts[0] || 0;
-      const back = parts[1] || 0;
+      const match = colorStr.match(/(\d+)\s*\+\s*(\d+)/);
+      if (!match) return 0;
+      const front = parseInt(match[1], 10) || 0;
+      const back = parseInt(match[2], 10) || 0;
       const platesPerFull = front + back;
       if (platesPerFull === 0) return 0;
 
@@ -1184,7 +1184,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     
     const parsePrice = (str: any) => {
       if (!str) return NaN;
-      const num = Number(String(str).replace(/[^0-9.-]+/g, ""));
+      const s = String(str).trim();
+      if (!/^\d+(\.\d+)?$/.test(s)) return NaN;
+      const num = Number(s);
       return isNaN(num) ? NaN : num;
     };
 
@@ -2431,18 +2433,48 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <label>[B1] Хавтасны өнгө (Гадна)</label>
               <select {...register("cover_color")}>
                 <option value="">Сонгох...</option>
-                {groupedConstants['COVER_COLOR']?.map((c: any) => (
-                  <option key={c.id} value={c.value}>{c.value}</option>
-                ))}
+                {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
+                  groupedConstants['COVER_COLOR'].map((c: any) => (
+                    <option key={c.id} value={c.value}>
+                      {c.value} {c.description ? `(${c.description})` : ''}
+                    </option>
+                  ))
+                ) : (
+                  [
+                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
+                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
+                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
+                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
+                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
+                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт)' },
+                  ].map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))
+                )}
               </select>
             </div>
             <div className="erp-field">
               <label>[B2] Хуудасны өнгө</label>
               <select {...register("inner_color")}>
                 <option value="">Сонгох...</option>
-                {groupedConstants['INNER_COLOR']?.map((c: any) => (
-                  <option key={c.id} value={c.value}>{c.value}</option>
-                ))}
+                {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
+                  groupedConstants['INNER_COLOR'].map((c: any) => (
+                    <option key={c.id} value={c.value}>
+                      {c.value} {c.description ? `(${c.description})` : ''}
+                    </option>
+                  ))
+                ) : (
+                  [
+                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт (Хар цагаан))' },
+                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
+                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
+                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
+                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
+                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
+                  ].map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))
+                )}
                 <option value="Custom (Тусгай)">Custom (Тусгай)</option>
               </select>
             </div>

@@ -129,14 +129,48 @@ export default function TemplatesPage() {
               <label className="label">Хавтасны өнгө</label>
               <select value={formData.cover_color} onChange={e => setFormData({...formData, cover_color: e.target.value})} className="input">
                 <option value="">Сонгох...</option>
-                {groupedConstants['COVER_COLOR']?.map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)}
+                {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
+                  groupedConstants['COVER_COLOR'].map((c: any) => (
+                    <option key={c.id} value={c.value}>
+                      {c.value} {c.description ? `(${c.description})` : ''}
+                    </option>
+                  ))
+                ) : (
+                  [
+                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
+                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
+                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
+                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
+                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
+                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт)' },
+                  ].map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))
+                )}
               </select>
             </div>
             <div className="form-group">
               <label className="label">Дотор өнгө</label>
               <select value={formData.inner_color} onChange={e => setFormData({...formData, inner_color: e.target.value})} className="input">
                 <option value="">Сонгох...</option>
-                {groupedConstants['INNER_COLOR']?.map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)}
+                {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
+                  groupedConstants['INNER_COLOR'].map((c: any) => (
+                    <option key={c.id} value={c.value}>
+                      {c.value} {c.description ? `(${c.description})` : ''}
+                    </option>
+                  ))
+                ) : (
+                  [
+                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт (Хар цагаан))' },
+                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
+                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
+                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
+                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
+                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
+                  ].map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))
+                )}
               </select>
             </div>
             <div className="form-group">
