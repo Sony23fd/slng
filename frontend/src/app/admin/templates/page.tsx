@@ -111,7 +111,11 @@ export default function TemplatesPage() {
               <label className="label">Хэмжээ</label>
               <select value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="input">
                 <option value="">Сонгох...</option>
-                {groupedConstants['SIZE']?.map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)}
+                {groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0 ? (
+                  groupedConstants['SIZE'].map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)
+                ) : (
+                  ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'].map(s => <option key={s} value={s}>{s}</option>)
+                )}
               </select>
             </div>
             <div className="form-group">
@@ -123,6 +127,7 @@ export default function TemplatesPage() {
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
+                <option value="Блокон оёо">Блокон оёо</option>
               </select>
             </div>
             <div className="form-group">

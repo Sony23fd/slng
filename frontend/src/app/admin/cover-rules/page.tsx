@@ -133,6 +133,7 @@ export default function CoverRulesPage() {
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
+                <option value="Блокон оёо">Блокон оёо</option>
               </select>
             </div>
             <div className="form-group">

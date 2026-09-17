@@ -106,12 +106,19 @@ function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []
     if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
   }
 
-  if (s === 'A4' && bt === 'наалттай') return { pressSheet: 1.0, divideBy: 6, printSize: 'A3' };
+  const isSoftOrBlock = bt === 'наалттай' || bt === 'блокон оёо' || bt === 'блокон оёотой' || bt === 'блокон';
+  if (s === 'A4' && isSoftOrBlock) return { pressSheet: 1.0, divideBy: 6, printSize: 'A3' };
   if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'A5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
+  if (s === 'A5' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
   if (s === 'A5' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && bt === 'наалттай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   if (s === 'B5' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
+  if (s === 'B4' && isSoftOrBlock) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
+  if (s === 'B4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 2, printSize: 'B2' };
+  if (s === 'A6' && isSoftOrBlock) return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
+  if (s === 'A6' && bt === 'үдээстэй') return { pressSheet: 0.125, divideBy: 4, printSize: 'A2' };
+  if (s === 'B6' && isSoftOrBlock) return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
+  if (s === 'B6' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 5, printSize: 'B3' };
 
   // Hardcover (Хатуу хавтас) fallbacks
   if (s === 'A5' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
@@ -2171,7 +2178,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 control={control}
                 render={({ field }) => {
                   const sizeOptions = groupedConstants['SIZE']?.map((c: any) => ({ value: c.value, label: c.value })) || [
-                    { value: 'A4', label: 'A4' }, { value: 'A5', label: 'A5' }, { value: 'B5', label: 'B5' }, { value: 'Custom', label: 'Custom' }
+                    { value: 'A2', label: 'A2' },
+                    { value: 'A3', label: 'A3' },
+                    { value: 'A4', label: 'A4' },
+                    { value: 'A5', label: 'A5' },
+                    { value: 'A6', label: 'A6' },
+                    { value: 'B2', label: 'B2' },
+                    { value: 'B4', label: 'B4' },
+                    { value: 'B5', label: 'B5' },
+                    { value: 'B6', label: 'B6' },
+                    { value: 'Custom', label: 'Custom' }
                   ];
                   return (
                     <CreatableSelect
@@ -2251,6 +2267,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                     }
                   });
+
+                  if (bt === 'Блокон оёо') {
+                    const ops = getValues('operations') || [];
+                    if (!ops.some(o => o.operation_name === 'Блокон оёо')) {
+                      const mp = masterPrices.find(p => p.item_name === 'Блокон оёо');
+                      const formula = mp?.formula?.expression || 'ceil(total_pages / 16) * total_qty';
+                      const unitCost = mp?.unit_cost ?? 100;
+                      const qty = evaluateOperationFormula(formula);
+                      setValue('operations', [
+                        ...ops,
+                        {
+                          operation_name: 'Блокон оёо',
+                          qty,
+                          unit_cost: unitCost,
+                          is_pricing: true,
+                          production_stage: 'POST_PRESS',
+                          is_manual: false,
+                          notes: 'Утас блокон оёо'
+                        }
+                      ]);
+                    }
+                  }
                 }
               })}>
                 <option value="">Сонгох...</option>
@@ -2259,6 +2297,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
+                <option value="Блокон оёо">Блокон оёо</option>
               </select>
             </div>
             <div className="erp-field">
