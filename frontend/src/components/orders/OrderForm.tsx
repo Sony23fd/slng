@@ -1404,12 +1404,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
-      const name = m.material_name || '';
-      const notes = m.notes || '';
-      return !name.includes('Картон') && !notes.includes('картон') &&
-             !name.includes('Форзац') && !notes.includes('Форзац') && !notes.includes('форзац') &&
-             !name.includes('капитал') && !notes.includes('Капитал') &&
-             !name.includes('Хавчуурга') && !notes.includes('Хавчуурга');
+      const name = (m.material_name || '').toLowerCase();
+      const notes = (m.notes || '').toLowerCase();
+      const isCardboard = name.includes('картон') || notes.includes('картон');
+      const isHardcoverEndpaper = (name.includes('форзац') || notes.includes('форзац')) && !notes.includes('супер хавтас') && !name.includes('супер хавтас');
+      const isCapital = name.includes('капитал') || notes.includes('капитал');
+      const isRibbon = name.includes('хавчуурга') || notes.includes('хавчуурга');
+      return !isCardboard && !isHardcoverEndpaper && !isCapital && !isRibbon;
     });
 
     const cardboardPrice = masterPrices.find(p => p.item_name.includes('Картон 2'))?.unit_cost || 6300;
@@ -1509,16 +1510,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     setValue('materials', newMaterials);
 
     const existingOps = getValues('operations') || [];
-    if (!existingOps.some(o => o.operation_name?.includes('Хатуу хавтас'))) {
-      const opMaster = masterPrices.find(p => p.item_name === opName);
+    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас'));
+    if (existingIndex >= 0) {
+      setValue(`operations.${existingIndex}.qty`, totalQty);
+    } else {
       setValue('operations', [
         ...existingOps,
         {
           operation_name: opName,
           qty: totalQty,
-          unit_cost: opMaster ? opMaster.unit_cost : (size === 'A4' ? 5000 : size === 'B5' ? 4000 : 3500),
+          unit_cost: 0,
           notes: `${size} хатуу хавтас угсрах, наах`,
-          is_pricing: true,
+          is_pricing: false,
           production_stage: 'POST_PRESS'
         }
       ]);
@@ -1559,10 +1562,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
-      const name = m.material_name || '';
-      const notes = m.notes || '';
-      return !notes.includes('Супер хавтас') && !name.includes('Супер хавтас') &&
-             !notes.includes('Супер хавтасны форзац');
+      const name = (m.material_name || '').toLowerCase();
+      const notes = (m.notes || '').toLowerCase();
+      return !notes.includes('супер хавтас') && !name.includes('супер хавтас');
     });
 
     const cover250Price = masterPrices.find(p => p.item_name.includes('250гр'))?.unit_cost || 1150;
@@ -1605,16 +1607,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     setValue('materials', newMaterials);
 
     const existingOps = getValues('operations') || [];
-    if (!existingOps.some(o => o.operation_name?.includes('Супер хавтас'))) {
-      const opMaster = masterPrices.find(p => p.item_name === 'Супер хавтас хийх');
+    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Супер хавтас'));
+    if (existingIndex >= 0) {
+      setValue(`operations.${existingIndex}.qty`, totalQty);
+    } else {
       setValue('operations', [
         ...existingOps,
         {
           operation_name: 'Супер хавтас хийх',
           qty: totalQty,
-          unit_cost: opMaster ? opMaster.unit_cost : 1000,
+          unit_cost: 0,
           notes: `${size} супер хавтас нугалах, өмсгөх`,
-          is_pricing: true,
+          is_pricing: false,
           production_stage: 'POST_PRESS'
         }
       ]);
