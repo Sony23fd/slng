@@ -2805,6 +2805,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.sheet_qty`, totalQty * 2);
                                           return;
                                         }
+                                        if (selectedAux.type === 'coating') {
+                                          const coverMat = (formValues.materials || []).find((m: any) => m.is_cover);
+                                          const coatingPrintSize = coverMat?.print_size || getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) || 'A2';
+                                          setValue(`materials.${index}.print_size`, coatingPrintSize);
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '');
+                                          const base = coverMat?.base_qty || totalQty;
+                                          setValue(`materials.${index}.base_qty`, base);
+                                          setValue(`materials.${index}.extra_qty`, 100);
+                                          const tQty = base + 100;
+                                          setValue(`materials.${index}.total_qty`, tQty);
+                                          let coef = 0.004;
+                                          if (coatingPrintSize === 'A2') coef = 0.006;
+                                          else if (coatingPrintSize === 'B2') coef = 0.007;
+                                          else if (coatingPrintSize === 'A3' || coatingPrintSize === 'B3') coef = 0.004;
+                                          setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                                          setValue(`materials.${index}.notes`, `Хавтасны бүрэлт (${coatingPrintSize} хуулга, коэф: ${coef})`);
+                                          return;
+                                        }
                                       }
 
                                       // Standard paper material
@@ -3065,9 +3084,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   ]}
                                   value={field.value ? { value: field.value, label: field.value } : null}
                                   onChange={(selected: any) => {
-                                    if (isSpecialMat) return;
+                                    if (isSpecialStrap) return;
                                     const val = selected ? selected.value : '';
                                     field.onChange(val);
+
+                                    if (isSpecialCoating) {
+                                      const m3 = val || 'A3';
+                                      let coef = 0.004;
+                                      if (m3 === 'A2') { coef = 0.006; }
+                                      else if (m3 === 'B2') { coef = 0.007; }
+                                      else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
+
+                                      const base = Number(getValues(`materials.${index}.base_qty`)) || Number(getValues('total_qty')) || 0;
+                                      const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
+                                      const tQty = base + extra;
+                                      setValue(`materials.${index}.total_qty`, tQty);
+                                      setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                                      setValue(`materials.${index}.notes`, `Хавтасны бүрэлт (${m3} хуулга, коэф: ${coef})`);
+                                      return;
+                                    }
                                     
                                     const sourceSize = formValues.materials?.[index]?.size || '';
                                     const ratio = calculatePaperDivision(sourceSize, val);
@@ -3208,7 +3243,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
-                            if (isSpecialMat) return;
+                            if (isSpecialStrap) return;
+                            if (isSpecialCoating) {
+                              const base = Number(e.target.value) || 0;
+                              const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                              const tQty = base + extra;
+                              setValue(`materials.${index}.total_qty`, tQty);
+                              const m3 = formValues.materials?.[index]?.print_size || 'A3';
+                              let coef = 0.004;
+                              if (m3 === 'A2') coef = 0.006;
+                              else if (m3 === 'B2') coef = 0.007;
+                              else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
+                              setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                              return;
+                            }
                             const base = Number(e.target.value) || 0;
                             const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
@@ -3227,7 +3275,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
-                            if (isSpecialMat || aux.type === 'ctp') return;
+                            if (isSpecialStrap || aux.type === 'ctp') return;
+                            if (isSpecialCoating) {
+                              const extra = Number(e.target.value) || 0;
+                              const base = Number(formValues.materials?.[index]?.base_qty) || Number(formValues.total_qty) || 0;
+                              const tQty = base + extra;
+                              setValue(`materials.${index}.total_qty`, tQty);
+                              const m3 = formValues.materials?.[index]?.print_size || 'A3';
+                              let coef = 0.004;
+                              if (m3 === 'A2') coef = 0.006;
+                              else if (m3 === 'B2') coef = 0.007;
+                              else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
+                              setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                              return;
+                            }
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
