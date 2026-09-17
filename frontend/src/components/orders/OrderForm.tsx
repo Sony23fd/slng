@@ -144,12 +144,15 @@ function calculateSetups(pressSheet: number, divisions: number) {
 
 function getMaterialType(matName?: string, notes?: string): {
   isAux: boolean;
-  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'none';
+  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'none';
   isNonPrinted: boolean;
 } {
   const n = (matName || '').toLowerCase();
   const note = (notes || '').toLowerCase();
 
+  if (n.includes('хавтан') || n.includes('ctp') || note.includes('хавтан') || note.includes('ctp')) {
+    return { isAux: true, type: 'ctp', isNonPrinted: true };
+  }
   if (n.includes('картон') || note.includes('картон')) {
     return { isAux: true, type: 'cardboard', isNonPrinted: true };
   }
@@ -746,7 +749,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           let totalQty = Number(m.total_qty) || baseQty;
           let sheetQty = Number(m.sheet_qty) || Math.ceil(totalQty / rowDivideBy);
 
-          if (aux.isNonPrinted) {
+          if (aux.type === 'ctp') {
+            rowPrintSize = m.print_size || 'A2';
+            rowPressSheet = String(m.press_sheet || '');
+            rowDivideBy = 1;
+            baseQty = Number(m.sheet_qty || m.base_qty) || 0;
+            extraQty = 0;
+            totalQty = baseQty;
+            sheetQty = baseQty;
+          } else if (aux.isNonPrinted) {
             rowPrintSize = '';
             if (aux.type === 'cardboard') {
               const specs = getHardcoverAuxiliarySpecs(a7);
@@ -869,7 +880,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             extra_qty: extraQty,
             total_qty: totalQty,
             sheet_qty: sheetQty,
-            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : m.unit_cost
+            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : (Number(m.unit_cost) || (aux.type === 'ctp' ? 8800 : 0))
           };
         });
         setValue('materials', smartMaterials);
@@ -884,31 +895,33 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           cover_color: t.cover_color || od.specifications?.cover_color,
           inner_color: t.inner_color || od.specifications?.inner_color
         };
-        const smartOperations = od.operations.map((o: any) => {
-          const mp = masterPrices.find(p => p.item_name === o.operation_name);
-          const isPricing = o.is_pricing !== undefined ? o.is_pricing : (mp ? (mp.is_pricing !== false) : true);
-          const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
-          const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || 0)) : 0;
-          
-          let calcQty = Number(o.qty) || 0;
-          if (mp && mp.formula && mp.formula.expression && !o.is_manual) {
-            try {
-              const res = evaluateOperationFormula(mp.formula.expression, smartMaterials, templateScope);
-              if (res > 0) calcQty = res;
-            } catch(err) {
-              calcQty = Number(o.qty) || 0;
+        const smartOperations = od.operations
+          .filter((o: any) => !(o.operation_name || '').startsWith('CTP хавтан'))
+          .map((o: any) => {
+            const mp = masterPrices.find(p => p.item_name === o.operation_name);
+            const isPricing = o.is_pricing === true;
+            const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
+            const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || 0)) : 0;
+            
+            let calcQty = Number(o.qty) || 0;
+            if (mp && mp.formula && mp.formula.expression && !o.is_manual) {
+              try {
+                const res = evaluateOperationFormula(mp.formula.expression, smartMaterials, templateScope);
+                if (res > 0) calcQty = res;
+              } catch(err) {
+                calcQty = Number(o.qty) || 0;
+              }
             }
-          }
 
-          return {
-            ...o,
-            qty: calcQty,
-            is_pricing: isPricing,
-            production_stage: stage,
-            is_manual: o.is_manual ?? false,
-            unit_cost: cost
-          };
-        });
+            return {
+              ...o,
+              qty: calcQty,
+              is_pricing: isPricing,
+              production_stage: stage,
+              is_manual: o.is_manual ?? false,
+              unit_cost: cost
+            };
+          });
         setValue('operations', smartOperations);
       }
     }
@@ -938,14 +951,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           if (Array.isArray(defaults) && defaults.length > 0) {
             defaults.forEach((opName: string) => {
               const mp = masterPrices.find(m => m.category === 'Ажиллагаа' && m.item_name === opName);
-              const isPricing = mp ? (mp.is_pricing !== false) : true;
+              const isPricing = false;
               newOps.push({
                 operation_name: opName,
                 qty: 0, // will be auto-calculated later by evaluateOperationFormula
-                unit_cost: mp ? (isPricing ? mp.unit_cost : 0) : 0,
+                unit_cost: 0,
                 notes: 'Үндсэн ажиллагаа',
                 is_manual: false,
-                is_pricing: isPricing,
+                is_pricing: false,
                 production_stage: mp?.production_stage || 'POST_PRESS'
               });
             });
@@ -1044,69 +1057,119 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       return (fullSheets * platesPerFull) + (fractionalSetups * platesPerFraction);
     };
 
+    // 1. Purge any lingering CTP from operations (CTP is now exclusively in Materials)
+    const ops = getValues('operations') || [];
+    if (ops.some(o => (o.operation_name || '').startsWith('CTP хавтан'))) {
+      setValue('operations', ops.filter(o => !(o.operation_name || '').startsWith('CTP хавтан')));
+    }
+
     const b1 = formValues.cover_color;
     const b2 = formValues.inner_color;
     const mats = formValues.materials || [];
-    const ops = getValues('operations') || [];
-    
     const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
     const ctpPrice = Number(ctpPriceStr);
-    
-    const requiredCtps: Record<string, number> = {};
-    
+    const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
+    const category = formValues.category || '';
+
+    // Group required CTP plates by role/part
+    const requiredCtpMap: Record<string, {
+      name: string;
+      printSize: string;
+      pressSheet: string;
+      plates: number;
+      notes: string;
+    }> = {};
+
     mats.forEach((m, i) => {
       const aux = getMaterialType(m.material_name, m.notes);
-      if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap') return;
-      const isCover = m.is_cover || false;
-      const colorToUse = isCover ? b1 : b2;
-      const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
-      const a7 = currentA7Size;
-      const divisions = calculatePaperDivision(m.print_size || 'A2', a7);
-      const plates = calcPlates(colorToUse, Number(m.press_sheet) || 0, divisions);
+      if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') return;
+
+      const isCover = Boolean(m.is_cover);
+      const isInner = !isCover && isInnerPageMaterial(m, category);
+      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2));
+      const printSize = m.print_size || (isCover ? 'B3' : 'A2');
+      const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
+      const mPressSheet = Number(m.press_sheet) || 0;
+      const plates = calcPlates(colorToUse, mPressSheet, divisions);
+
       if (plates > 0) {
-        const name = `CTP хавтан - ${m.material_name || `Материал ${i+1}`}`;
-        requiredCtps[name] = (requiredCtps[name] || 0) + plates;
+        let key = '';
+        let ctpName = '';
+        let noteDesc = '';
+
+        if (isCover) {
+          key = 'cover';
+          ctpName = 'CTP хавтан (Хавтас)';
+          noteDesc = `Хавтасны CTP хэвлэлийн хавтан (${colorToUse || '4+0'})`;
+        } else if (isInner) {
+          key = `inner_${i}`;
+          ctpName = mats.filter(x => !x.is_cover && isInnerPageMaterial(x, category)).length > 1
+            ? `CTP хавтан (Дотор ${i + 1})`
+            : 'CTP хавтан (Дотор)';
+          noteDesc = `Дотор хуудасны CTP хэвлэлийн хавтан (${colorToUse || '1+1'}, ${m.press_sheet || 0} х.х)`;
+        } else {
+          key = `main_${i}`;
+          ctpName = 'CTP хавтан (Үндсэн)';
+          noteDesc = `CTP хэвлэлийн хавтан (${colorToUse || 'Өнгө'})`;
+        }
+
+        requiredCtpMap[key] = {
+          name: ctpName,
+          printSize,
+          pressSheet: String(m.press_sheet || ''),
+          plates,
+          notes: noteDesc
+        };
       }
     });
 
-    let opsChanged = false;
-    let newOps = [...ops];
+    const regularMats = mats.filter(m => {
+      const aux = getMaterialType(m.material_name, m.notes);
+      return aux.type !== 'ctp';
+    });
+    const currentCtpMats = mats.filter(m => {
+      const aux = getMaterialType(m.material_name, m.notes);
+      return aux.type === 'ctp';
+    });
 
-    // Устгагдсан эсвэл тоо хэмжээ нь 0 болсон CTP хавтангуудыг устгах
-    newOps = newOps.filter(o => {
-      if ((o.operation_name || '').startsWith('CTP хавтан')) {
-        if (!requiredCtps[o.operation_name]) {
-          opsChanged = true;
-          return false;
+    const targetCtpList = Object.values(requiredCtpMap).map(req => ({
+      material_name: req.name,
+      size: req.printSize,
+      print_size: req.printSize,
+      press_sheet: req.pressSheet,
+      base_qty: req.plates,
+      extra_qty: 0,
+      total_qty: req.plates,
+      divide_by: 1,
+      sheet_qty: req.plates,
+      unit_cost: ctpPrice,
+      notes: req.notes,
+      is_cover: false
+    }));
+
+    // Check if currentCtpMats matches targetCtpList
+    let hasDiff = currentCtpMats.length !== targetCtpList.length;
+    if (!hasDiff) {
+      for (let j = 0; j < targetCtpList.length; j++) {
+        const cur = currentCtpMats[j];
+        const tgt = targetCtpList[j];
+        if (
+          cur.material_name !== tgt.material_name ||
+          cur.print_size !== tgt.print_size ||
+          Number(cur.sheet_qty) !== tgt.sheet_qty ||
+          Number(cur.unit_cost) !== tgt.unit_cost ||
+          Number(cur.divide_by) !== 1
+        ) {
+          hasDiff = true;
+          break;
         }
       }
-      return true;
-    });
-
-    // Шинээр нэмэгдсэн эсвэл тоо нь өөрчлөгдсөн CTP хавтангуудыг шинэчлэх
-    Object.entries(requiredCtps).forEach(([name, qty]) => {
-      const existing = newOps.find(o => o.operation_name === name);
-      if (existing) {
-        if (existing.qty !== qty || existing.unit_cost !== ctpPrice) {
-          const index = newOps.indexOf(existing);
-          newOps[index] = { ...existing, qty, unit_cost: ctpPrice };
-          opsChanged = true;
-        }
-      } else {
-        newOps.push({
-          operation_name: name,
-          qty,
-          unit_cost: ctpPrice,
-          notes: 'Автомат тооцоолол'
-        });
-        opsChanged = true;
-      }
-    });
-
-    if (opsChanged) {
-      setValue('operations', newOps);
     }
-  }, [formValues.materials, formValues.cover_color, formValues.inner_color, constants, getValues, setValue, appendOp]);
+
+    if (hasDiff) {
+      setValue('materials', [...regularMats, ...targetCtpList]);
+    }
+  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, constants, getValues, setValue]);
 
   useEffect(() => {
     const currentRounded = Math.round(prices.unitPrice).toString();
@@ -1138,7 +1201,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const c = groupedConstants['COVER_COLOR']?.find((x: any) => x.value === formValues.cover_color);
       const parsedPrice = c ? parsePrice(c.description) : NaN;
       if (!isNaN(parsedPrice) && parsedPrice > 0) {
-        const coverMats = formValues.materials?.filter((m: any) => m.is_cover) || [];
+        const coverMats = formValues.materials?.filter((m: any) => {
+          if (!m.is_cover) return false;
+          const aux = getMaterialType(m.material_name, m.notes);
+          return aux.type !== 'ctp';
+        }) || [];
         let totalCoverSetups = 0;
         coverMats.forEach((m: any) => {
           const m4 = Number(m.press_sheet) || 0;
@@ -1160,7 +1227,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const innerMats = formValues.materials?.filter((m: any) => {
           if (m.is_cover) return false;
           const aux = getMaterialType(m.material_name, m.notes);
-          return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap';
+          return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap' && aux.type !== 'ctp';
         }) || [];
         let totalInnerSetups = 0;
         innerMats.forEach((m: any) => {
@@ -1248,7 +1315,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           setValue(`materials.${index}.extra_qty`, 0);
           return;
         }
-        if (aux.type === 'coating') {
+        if (aux.type === 'coating' || aux.type === 'ctp') {
           return;
         }
       }
@@ -2666,6 +2733,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                                       if (selectedAux.isAux) {
                                         const specs = getHardcoverAuxiliarySpecs(a7);
+                                        if (selectedAux.type === 'ctp') {
+                                          const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
+                                          const ctpPrice = Number(ctpPriceStr) || 8800;
+                                          setValue(`materials.${index}.unit_cost`, ctpPrice);
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '1');
+                                          setValue(`materials.${index}.print_size`, formValues.materials?.[index]?.print_size || 'A2');
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          const currentBase = Number(formValues.materials?.[index]?.base_qty) || 4;
+                                          setValue(`materials.${index}.base_qty`, currentBase);
+                                          setValue(`materials.${index}.total_qty`, currentBase);
+                                          setValue(`materials.${index}.sheet_qty`, currentBase);
+                                          return;
+                                        }
                                         if (selectedAux.type === 'cardboard') {
                                           setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
                                           setValue(`materials.${index}.press_sheet`, '1');
@@ -2779,7 +2860,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               )}
                             />
                           </div>
-                          {!isSpecialMat && (
+                          {!isSpecialMat && aux.type !== 'ctp' && (
                             <label
                               style={{
                                 display: 'inline-flex',
@@ -2924,7 +3005,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        {aux.isNonPrinted ? (
+                        {aux.type === 'ctp' ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#eff6ff', 
+                              border: '1px solid #bfdbfe', 
+                              borderRadius: '4px', 
+                              fontSize: '11.5px', 
+                              color: '#1d4ed8', 
+                              fontWeight: 600 
+                            }}
+                            title="CTP хавтангийн формат"
+                          >
+                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'} формат
+                          </div>
+                        ) : aux.isNonPrinted ? (
                           <div 
                             style={{ 
                               height: '32px', 
@@ -3037,7 +3136,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        {aux.isNonPrinted ? (
+                        {aux.type === 'ctp' ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#eff6ff', 
+                              border: '1px solid #bfdbfe', 
+                              borderRadius: '4px', 
+                              fontSize: '11.5px', 
+                              color: '#1d4ed8', 
+                              fontWeight: 600 
+                            }}
+                            title="Холбогдох хэвлэлийн хуудас"
+                          >
+                            {formValues.materials?.[index]?.press_sheet ? `${formValues.materials?.[index]?.press_sheet} х.х` : '1'}
+                          </div>
+                        ) : aux.isNonPrinted ? (
                           <div 
                             style={{ 
                               height: '32px', 
@@ -3085,7 +3202,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={isSpecialStrap ? disabledStyle : inputStyle} readOnly={isSpecialStrap} {...register(`materials.${index}.base_qty`, {
+                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
                             if (isSpecialMat) return;
                             const base = Number(e.target.value) || 0;
@@ -3104,9 +3221,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={isSpecialStrap ? disabledStyle : inputStyle} readOnly={isSpecialStrap} {...register(`materials.${index}.extra_qty`, {
+                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
-                            if (isSpecialMat) return;
+                            if (isSpecialMat || aux.type === 'ctp') return;
                             const extra = Number(e.target.value) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) || 0;
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
@@ -3128,14 +3245,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={isSpecialMat ? disabledStyle : inputStyle} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
-                          onChange: (e) => {
-                            if (isSpecialMat) return;
-                            const divBy = Number(e.target.value) || 1;
-                            const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                            if (divBy > 0) if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                          }
-                        })} />
+                        {aux.type === 'ctp' ? (
+                          <input type="number" style={disabledStyle} readOnly value={1} />
+                        ) : (
+                          <input type="number" style={isSpecialMat ? disabledStyle : inputStyle} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
+                            onChange: (e) => {
+                              if (isSpecialMat) return;
+                              const divBy = Number(e.target.value) || 1;
+                              const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                              if (divBy > 0) if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                            }
+                          })} />
+                        )}
                       </td>
                       )}
                       {isExpandedMaterial && (
@@ -3265,8 +3386,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           </div>
         </SectionCard>
 
-        {/* 6. Ажиллагаа */}
-        <SectionCard id="sec7" step="7" title="7. Ажиллагаа ба Технологийн зааварчилгаа">
+        {/* 7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа */}
+        <SectionCard 
+          id="sec7" 
+          step="7" 
+          title="7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа"
+          sub="(Өртөг тооцохгүй, үйлдвэрлэлийн дамжлага ба цехийн технологийн заавар)"
+        >
           
           <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
