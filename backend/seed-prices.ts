@@ -100,6 +100,13 @@ const operationsData: OpSeedData[] = [
   { name: 'Лак (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн лак', cost: 200, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Лак (Барзгар)', expr: 'total_qty', desc: 'Барзгар лак', cost: 250, stage: 'POST_PRESS', is_pricing: true },
 
+  { name: 'Эмбосс', expr: 'total_qty', desc: 'Эмбосс товгор даралт', cost: 150, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Клише (Алтлаг)', expr: 'total_qty', desc: 'Алтлаг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Клише (Мөнгөлөг)', expr: 'total_qty', desc: 'Мөнгөлөг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Клише (Зэс)', expr: 'total_qty', desc: 'Зэс фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Клише (Монет)', expr: 'total_qty', desc: 'Монет / Rose Gold фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Клише (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн талбайн фольга клише даралт', cost: 250, stage: 'POST_PRESS', is_pricing: true },
+
   { name: 'Блокон оёо', expr: 'ceil(total_pages / 16) * total_qty', desc: 'Блокон оёо', cost: 100, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Наалт', expr: 'total_qty', desc: 'Наалт', cost: 150, stage: 'POST_PRESS', is_pricing: true },
 

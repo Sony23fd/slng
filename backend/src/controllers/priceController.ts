@@ -40,7 +40,7 @@ export const getPrices = async (req: Request, res: Response) => {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: [{ category: 'asc' }, { item_name: 'asc' }],
+        orderBy: [{ id: 'asc' }],
         include: { formula: true }
       });
       res.json({
@@ -55,7 +55,7 @@ export const getPrices = async (req: Request, res: Response) => {
     } else {
       const prices = await prisma.masterprice.findMany({
         where,
-        orderBy: [{ category: 'asc' }, { item_name: 'asc' }],
+        orderBy: [{ id: 'asc' }],
         include: { formula: true }
       });
       res.json(prices);
