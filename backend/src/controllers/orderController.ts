@@ -236,7 +236,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
     }
     
     if (isMine && userId) {
-      where.userId = userId;
+      where.sales_person_id = userId;
     }
     
     if (statusType && statusType !== 'ALL') {
