@@ -84,8 +84,9 @@ interface OpSeedData {
 const operationsData: OpSeedData[] = [
   { name: 'Нугалаа', expr: 'total_base_sheets', desc: 'Нугалаа', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Шалгах', expr: 'total_base_sheets', desc: 'Шалгах', cost: 10, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Холио', expr: 'total_base_sheets', desc: 'Холио', cost: 10, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Цуглуулга (Холио)', expr: 'total_base_sheets', desc: 'Цуглуулга буюу Холио', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Цуглуулга', expr: 'total_base_sheets', desc: 'Цуглуулга', cost: 10, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Холио', expr: 'total_base_sheets', desc: 'Холио', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   
   { name: 'Хэвлэх (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 1 өнгө', cost: 10, stage: 'PRINTING', is_pricing: true },
   { name: 'Хэвлэх (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 2 өнгө', cost: 20, stage: 'PRINTING', is_pricing: true },
