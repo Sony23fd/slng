@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import Pagination from '../../../components/Pagination';
 import JobTicketModal from '../../../components/production/JobTicketModal';
+import ProductionInspectorDrawer from '../../../components/production/ProductionInspectorDrawer';
 
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
@@ -17,6 +18,7 @@ export default function AllOrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
+  const [inspectingOrder, setInspectingOrder] = useState<any>(null);
   const limit = 20;
   
   const router = useRouter();
@@ -82,7 +84,10 @@ export default function AllOrdersPage() {
           <h1 className="title">Бүх захиалгууд</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Компанийн бүх захиалгын жагсаалт</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button onClick={() => router.push('/sales/production')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            🏭 Үйлдвэрлэл явц
+          </button>
           <button onClick={() => router.push('/sales/orders/board')} className="btn btn-outline">
             📋 Самбараар харах
           </button>
@@ -202,16 +207,31 @@ export default function AllOrdersPage() {
                 </td>
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
-                <td style={{ padding: '1rem', minWidth: '130px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: hideBar ? '0' : '0.25rem', fontWeight: 600 }}>
-                    <span style={{ color: hideBar ? statusColor : '#334155' }}>{statusText}</span>
-                    {!hideBar && <span>{progress}%</span>}
-                  </div>
-                  {!hideBar && (
-                    <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
-                      <div style={{ background: statusColor, width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
+                <td style={{ padding: '1rem', minWidth: '140px' }}>
+                  <div 
+                    onClick={() => setInspectingOrder(o)}
+                    style={{ cursor: 'pointer' }}
+                    title="Үйлдвэрлэлийн явцыг нарийвчлан харах (7 шатлал, машин, гүйцэтгэгч)"
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: hideBar ? '0' : '0.25rem', fontWeight: 600 }}>
+                      <span style={{ color: hideBar ? statusColor : '#334155' }}>{statusText}</span>
+                      {!hideBar && <span style={{ color: '#2563eb', fontSize: '0.8rem' }}>{progress}% 🔍</span>}
                     </div>
-                  )}
+                    {!hideBar && (
+                      <>
+                        <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', overflow: 'hidden', marginBottom: '4px' }}>
+                          <div style={{ background: statusColor, width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
+                        </div>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'].map((k) => {
+                            const val = o.production_stages?.[k]?.status || 0;
+                            const c = val === 100 ? '#10b981' : val === 50 ? '#3b82f6' : '#cbd5e1';
+                            return <div key={k} style={{ flex: 1, height: '3px', borderRadius: '1.5px', background: c }} />;
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <select 
@@ -283,6 +303,11 @@ export default function AllOrdersPage() {
         />
       </div>
       {viewingOrder && <JobTicketModal order={viewingOrder} onClose={() => setViewingOrder(null)} />}
+      <ProductionInspectorDrawer
+        order={inspectingOrder}
+        isOpen={Boolean(inspectingOrder)}
+        onClose={() => setInspectingOrder(null)}
+      />
     </div>
   );
 }
