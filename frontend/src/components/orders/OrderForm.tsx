@@ -2,7 +2,7 @@
 
 import { PRODUCTION_STAGES } from '../../utils/productionStages';
 import { evaluate } from 'mathjs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { usePriceCalculator } from '../../hooks/usePriceCalculator';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -408,7 +408,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const OP_CATEGORIES = [
     { name: 'Хэвлэл', keywords: ['хэвлэгч', 'хэвлэл', 'хальс', 'эх бэлтгэл', 'cd'] },
     { name: 'Угсралт / Оёдол', keywords: ['нугалаа', 'үдээ', 'наалт', 'оёо', 'дэвтэрлэгээ', 'шугамын', 'гараар'] },
-    { name: 'Хавтас / Гадаргуу', keywords: ['бүрэлт', 'лак', 'клише', 'хатуу хавтас', 'кальк'] },
+    { name: 'Хавтас / Гадаргуу', keywords: ['бүрэлт', 'лак', 'клише', 'эмбосс', 'хатуу хавтас', 'кальк'] },
     { name: 'Зүсэлт / Хэлбэрт', keywords: ['огтлоо', 'хээлэгч', 'сприаль', 'бөгж', 'хэв дарагч', 'суурь', 'шалгах', 'нууцлал', 'тооцогч'] },
     { name: 'Бусад', keywords: [] }
   ];
@@ -1663,6 +1663,69 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   // evaluateOperationFormula is moved above applyFullTemplate for template formula evaluation
 
+  const CLICHE_TYPES = ['Алтлаг', 'Мөнгөлөг', 'Зэс', 'Монет', 'Бүтэн'] as const;
+
+  const toggleFinishingOp = (opName: string, defaultCost: number = 0) => {
+    const currentOps = getValues('operations') || [];
+    const existsIndex = currentOps.findIndex(o => o.operation_name === opName);
+    if (existsIndex >= 0) {
+      setValue('operations', currentOps.filter((_, i) => i !== existsIndex));
+    } else {
+      const mp = masterPrices.find(p => p.item_name === opName);
+      const unitCost = mp?.unit_cost !== undefined ? mp.unit_cost : defaultCost;
+      let calcQty = Number(getValues('total_qty')) || 0;
+      if (mp && mp.formula && mp.formula.expression) {
+        calcQty = evaluateOperationFormula(mp.formula.expression);
+      }
+      setValue('operations', [
+        ...currentOps,
+        {
+          operation_name: opName,
+          qty: calcQty,
+          unit_cost: unitCost,
+          notes: '',
+          is_manual: false,
+          is_pricing: true,
+          production_stage: mp?.production_stage || 'POST_PRESS'
+        }
+      ]);
+    }
+  };
+
+  const toggleAllCliche = () => {
+    const currentOps = getValues('operations') || [];
+    const hasAnyCliche = currentOps.some(o => o.operation_name?.startsWith('Клише ('));
+    if (hasAnyCliche) {
+      setValue('operations', currentOps.filter(o => !o.operation_name?.startsWith('Клише (')));
+    } else {
+      toggleFinishingOp('Клише (Алтлаг)', 200);
+    }
+  };
+
+  const isHardcoverCalculated = useMemo(() => {
+    const mats = formValues.materials || [];
+    const hasCardboard = mats.some(m => {
+      const name = (m.material_name || '').toLowerCase();
+      const notes = (m.notes || '').toLowerCase();
+      return name.includes('картон') || notes.includes('картон');
+    });
+    const hasEndpaper = mats.some(m => {
+      const name = (m.material_name || '').toLowerCase();
+      const notes = (m.notes || '').toLowerCase();
+      return (name.includes('форзац') || notes.includes('форзац')) && !notes.includes('супер') && !name.includes('супер');
+    });
+    return hasCardboard && hasEndpaper;
+  }, [formValues.materials]);
+
+  const isSuperCoverCalculated = useMemo(() => {
+    const mats = formValues.materials || [];
+    return mats.some(m => {
+      const name = (m.material_name || '').toLowerCase();
+      const notes = (m.notes || '').toLowerCase();
+      return notes.includes('супер хавтас') || name.includes('супер хавтас');
+    });
+  }, [formValues.materials]);
+
   useEffect(() => {
     const ops = getValues('operations') || [];
     let changed = false;
@@ -1673,6 +1736,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const mp = masterPrices.find(p => p.item_name === op.operation_name);
       if (mp && mp.formula && mp.formula.expression) {
         const newQty = evaluateOperationFormula(mp.formula.expression);
+        if (newQty !== Number(op.qty)) {
+          changed = true;
+          return { ...op, qty: newQty };
+        }
+      } else if (op.operation_name.startsWith('Лак (') || op.operation_name === 'Эмбосс' || op.operation_name.startsWith('Клише (')) {
+        const newQty = Number(formValues.total_qty) || 0;
         if (newQty !== Number(op.qty)) {
           changed = true;
           return { ...op, qty: newQty };
@@ -2334,42 +2403,126 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           </div>
 
           {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
-          {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном') && (
-            <div className="erp-addon-bar">
-              <span className="erp-addon-title">
-                <span>📘</span>
-                <span>Нэмэлт сонголтууд:</span>
-              </span>
-              
-              <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
-                <input 
-                  type="checkbox" 
-                  {...register("has_super_cover")} 
-                />
-                <span>🧥 Супер хавтастай</span>
-              </label>
+          {(() => {
+            const hasSpotUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Хэсэгчилсэн)'));
+            const hasRoughUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Барзгар)'));
+            const hasEmboss = Boolean(formValues.operations?.some(o => o.operation_name === 'Эмбосс'));
+            const activeClicheTypes = CLICHE_TYPES.filter(type =>
+              formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
+            );
+            const hasCliche = activeClicheTypes.length > 0;
+            const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
 
-              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
-                <>
-                  <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
-                    <input 
-                      type="checkbox" 
-                      {...register("has_printed_endpaper")} 
-                    />
-                    <span>📄 Хэвлэлтэй форзац</span>
-                  </label>
+            return (
+              <div className="erp-addon-bar">
+                <span className="erp-addon-title">
+                  <span>✨</span>
+                  <span>Нэмэлт сонголтууд:</span>
+                </span>
+                
+                {isHardcoverType && (
+                  <>
+                    <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
+                      <input 
+                        type="checkbox" 
+                        {...register("has_super_cover")} 
+                      />
+                      <span>🧥 Супер хавтастай</span>
+                    </label>
 
-                  <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
-                    <input 
-                      type="checkbox" 
-                      {...register("has_bookmark")} 
-                    />
-                    <span>🔖 Хавчуурга туузтай</span>
-                  </label>
-                </>
-              )}
-            </div>
-          )}
+                    {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                      <>
+                        <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
+                          <input 
+                            type="checkbox" 
+                            {...register("has_printed_endpaper")} 
+                          />
+                          <span>📄 Хэвлэлтэй форзац</span>
+                        </label>
+
+                        <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
+                          <input 
+                            type="checkbox" 
+                            {...register("has_bookmark")} 
+                          />
+                          <span>🔖 Хавчуурга туузтай</span>
+                        </label>
+                      </>
+                    )}
+                    <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
+                  </>
+                )}
+
+                {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
+                <label 
+                  className={`erp-toggle-chip ${hasSpotUV ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Хэсэгчилсэн)', 150); }}
+                >
+                  <input type="checkbox" checked={hasSpotUV} readOnly />
+                  <span>✨ Хэсэгчилсэн лак</span>
+                </label>
+
+                <label 
+                  className={`erp-toggle-chip ${hasRoughUV ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Барзгар)', 250); }}
+                >
+                  <input type="checkbox" checked={hasRoughUV} readOnly />
+                  <span>✨ Барзгар лак</span>
+                </label>
+
+                <label 
+                  className={`erp-toggle-chip ${hasEmboss ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Эмбосс', 150); }}
+                >
+                  <input type="checkbox" checked={hasEmboss} readOnly />
+                  <span>✨ Эмбосс</span>
+                </label>
+
+                <label 
+                  className={`erp-toggle-chip ${hasCliche ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleAllCliche(); }}
+                >
+                  <input type="checkbox" checked={hasCliche} readOnly />
+                  <span>✨ Клише {hasCliche ? '▾' : ''}</span>
+                </label>
+
+                {/* Клише задрах 5 дэд сонголтууд */}
+                {hasCliche && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569', marginRight: '2px' }}>Фольга:</span>
+                    {CLICHE_TYPES.map(type => {
+                      const opName = `Клише (${type})`;
+                      const isChecked = formValues.operations?.some(o => o.operation_name === opName);
+                      const cost = type === 'Бүтэн' ? 250 : 200;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => toggleFinishingOp(opName, cost)}
+                          style={{
+                            padding: '2px 7px',
+                            fontSize: '11px',
+                            fontWeight: isChecked ? 700 : 500,
+                            borderRadius: '4px',
+                            border: isChecked ? '1px solid #d97706' : '1px solid #cbd5e1',
+                            background: isChecked ? '#fef3c7' : '#ffffff',
+                            color: isChecked ? '#92400e' : '#475569',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          {isChecked && <span style={{ color: '#d97706', fontWeight: 'bold' }}>✓</span>}
+                          <span>{type}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
@@ -2696,10 +2849,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 ) : (
                   <tr>
                     <th style={{ padding: '0.5rem 0.6rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '48%' }}>Материал</th>
-                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '12%' }}>Нэгж өртөг</th>
-                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '13%' }}>Нийт өртөг</th>
-                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '14%' }}>Нийт үнэ</th>
-                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '13%' }}>Тэмдэглэл</th>
+                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '13%' }}>Нэгж өртөг</th>
+                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '17%' }}>Нийт өртөг</th>
+                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '18%' }}>Тэмдэглэл</th>
                     <th style={{ padding: '0.5rem 0.2rem', width: '38px', textAlign: 'center' }}></th>
                   </tr>
                 )}
@@ -2730,27 +2882,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     return false;
                   };
 
-                  const paperPriority = [
-                    'Шохойтой цаас',
-                    'Мат цаас',
-                    'Офсет цаас',
-                    'Номын шар',
-                    'Картон',
-                    'Кай цаас',
-                    'Хортой цаас',
-                    'Стикер'
-                  ];
+                  const seenPaper = new Set<string>();
+                  const rawPaperNames: string[] = [];
+                  parsedMasterPrices.filter(isPaperItem).forEach(p => {
+                    if (p.baseName && !seenPaper.has(p.baseName)) {
+                      seenPaper.add(p.baseName);
+                      rawPaperNames.push(p.baseName);
+                    }
+                  });
 
-                  const rawPaperNames = Array.from(new Set(parsedMasterPrices.filter(isPaperItem).map(p => p.baseName)));
-                  const rawOtherNames = Array.from(new Set(parsedMasterPrices.filter(p => !isPaperItem(p)).map(p => p.baseName)));
-
-                  rawPaperNames.sort((a, b) => {
-                    const indexA = paperPriority.indexOf(a);
-                    const indexB = paperPriority.indexOf(b);
-                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                    if (indexA !== -1) return -1;
-                    if (indexB !== -1) return 1;
-                    return a.localeCompare(b);
+                  const seenOther = new Set<string>();
+                  const rawOtherNames: string[] = [];
+                  parsedMasterPrices.filter(p => !isPaperItem(p)).forEach(p => {
+                    if (p.baseName && !seenOther.has(p.baseName)) {
+                      seenOther.add(p.baseName);
+                      rawOtherNames.push(p.baseName);
+                    }
                   });
 
                   const uniqueBaseNames = [...rawPaperNames, ...rawOtherNames];
@@ -3453,7 +3600,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.sheet_qty`)} />
                       </td>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '12%' : undefined }}>
+                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '13%' : undefined }}>
                         <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.unit_cost`)} />
                       </td>
                       {isExpandedMaterial ? (
@@ -3461,16 +3608,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           {tCost.toLocaleString()}
                         </td>
                       ) : (
-                        <>
-                          <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: '500', color: '#475569', paddingTop: '0.5rem', width: '13%' }}>
-                            {tCost.toLocaleString()}
-                          </td>
-                          <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem', width: '14%' }}>
-                            {(tCost * (Number(formValues.profit_margin) || 2.3)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </td>
-                        </>
+                        <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem', width: '17%' }}>
+                          {tCost.toLocaleString()}
+                        </td>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', width: !isExpandedMaterial ? '13%' : undefined }}>
+                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', width: !isExpandedMaterial ? '18%' : undefined }}>
                         <input style={inputStyle} {...register(`materials.${index}.notes`)} />
                       </td>
                       <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', textAlign: 'center', width: !isExpandedMaterial ? '38px' : undefined }}>
@@ -3512,22 +3654,44 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <button 
                   type="button" 
                   onClick={handleAddHardcoverAuxiliary} 
+                  disabled={isHardcoverCalculated}
                   className="btn btn-primary"
-                  style={{ background: '#0284c7', borderColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
-                  title="Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"
+                  style={{ 
+                    background: isHardcoverCalculated ? '#94a3b8' : '#0284c7', 
+                    borderColor: isHardcoverCalculated ? '#94a3b8' : '#0284c7', 
+                    color: '#fff', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.4rem', 
+                    fontWeight: 600,
+                    cursor: isHardcoverCalculated ? 'not-allowed' : 'pointer',
+                    opacity: isHardcoverCalculated ? 0.75 : 1
+                  }}
+                  title={isHardcoverCalculated ? "Хатуу хавтасны туслах материалууд хүснэгтэд орсон байна" : "Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"}
                 >
-                  ✨ Хатуу хавтасны туслах материал бодох
+                  {isHardcoverCalculated ? '✓ Хатуу хавтасны материал бодогдсон' : '✨ Хатуу хавтасны туслах материал бодох'}
                 </button>
               )}
               {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
                 <button 
                   type="button" 
                   onClick={handleAddSuperCoverAuxiliary} 
+                  disabled={isSuperCoverCalculated}
                   className="btn btn-primary"
-                  style={{ background: '#7c3aed', borderColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
-                  title="Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"
+                  style={{ 
+                    background: isSuperCoverCalculated ? '#94a3b8' : '#7c3aed', 
+                    borderColor: isSuperCoverCalculated ? '#94a3b8' : '#7c3aed', 
+                    color: '#fff', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.4rem', 
+                    fontWeight: 600,
+                    cursor: isSuperCoverCalculated ? 'not-allowed' : 'pointer',
+                    opacity: isSuperCoverCalculated ? 0.75 : 1
+                  }}
+                  title={isSuperCoverCalculated ? "Супер хавтасны материалууд хүснэгтэд орсон байна" : "Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"}
                 >
-                  🧥 Супер хавтасны материал бодох
+                  {isSuperCoverCalculated ? '✓ Супер хавтасны материал бодогдсон' : '🧥 Супер хавтасны материал бодох'}
                 </button>
               )}
             </div>
@@ -3967,7 +4131,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             <div className="summary-top">
               <div className="lbl">Нийт үнэ (харилцагчид)</div>
               <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
-              <div className="margin-badge">📈 Ашиг {formValues.profit_margin || 2.3}</div>
+              <div className="margin-badge">📈 Ашиг {formValues.profit_margin || 2.3} {formValues.has_vat ? '• НӨАТ-тай' : ''}</div>
             </div>
 
             <div className="summary-body">
@@ -3994,6 +4158,29 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <label>Нэгжийн үнэ (ашигтай)</label>
                 <div className="erp-mini-input"><input type="text" value={`${prices.unitPrice.toLocaleString()} ₮`} readOnly /></div>
               </div>
+
+              {/* НӨАТ тооцох switch */}
+              <div className="erp-field-inline" style={{ marginTop: '8px', marginBottom: '8px', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={{ margin: 0, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                  <span>🏛️ НӨАТ тооцох (10%)</span>
+                </label>
+                <label className="switch" style={{ margin: 0 }}>
+                  <input type="checkbox" {...register("has_vat")} />
+                  <span className="track"></span>
+                </label>
+              </div>
+              {formValues.has_vat && (
+                <div style={{ fontSize: '11.5px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 4px 6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Цэвэр үнэ (НӨАТ-гүй):</span>
+                    <span style={{ fontWeight: 600, color: '#334155' }}>{prices.netPrice.toLocaleString()} ₮</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>НӨАТ (10%):</span>
+                    <span style={{ fontWeight: 600, color: '#0284c7' }}>{(prices.finalPrice - prices.netPrice).toLocaleString()} ₮</span>
+                  </div>
+                </div>
+              )}
 
               <div className="summary-sub">Төлбөрийн хэлбэр & хувь</div>
               <div className="pay-row">
