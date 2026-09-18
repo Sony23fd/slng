@@ -906,9 +906,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           .filter((o: any) => !(o.operation_name || '').startsWith('CTP хавтан'))
           .map((o: any) => {
             const mp = masterPrices.find(p => p.item_name === o.operation_name);
-            const isPricing = o.is_pricing === true;
+            const opName = o.operation_name || '';
+            const isBlockSewingOrLacquer = opName.startsWith('Блокон оёо') || opName.startsWith('Лак');
+            const isPricing = o.is_pricing === true || isBlockSewingOrLacquer;
             const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
-            const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || 0)) : 0;
+            const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || (opName.startsWith('Блокон оёо') ? 100 : 0))) : 0;
             
             let calcQty = Number(o.qty) || 0;
             if (mp && mp.formula && mp.formula.expression && !o.is_manual) {
@@ -1712,7 +1714,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
          else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
 
          const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
-         const extra = Number(m.extra_qty) || 0;
+         let extra = Number(m.extra_qty) || 0;
+         if (extra > 50) { extra = 50; setValue(`materials.${index}.extra_qty`, 50); }
          const tQty = base + extra;
          
          if (Number(m.total_qty) !== tQty) setValue(`materials.${index}.total_qty`, tQty);
@@ -1720,6 +1723,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
          if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
          if (Number(m.base_qty) !== base) setValue(`materials.${index}.base_qty`, base);
          if (Number(m.divide_by) !== 1) setValue(`materials.${index}.divide_by`, 1);
+         if (String(m.press_sheet || '') !== '') setValue(`materials.${index}.press_sheet`, '');
          return;
       }
       
@@ -1934,6 +1938,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <option value="Имэйлээр">Имэйл</option>
                       <option value="Гэрээт байгууллага">Гэрээт</option>
                       <option value="Хуучин харилцагч">Хуучин</option>
+                      <option value="Танил">Танил</option>
                     </select>
                   </div>
                 </div>
@@ -3264,6 +3269,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           >
                             {formValues.materials?.[index]?.press_sheet ? `${formValues.materials?.[index]?.press_sheet} х.х` : '1'}
                           </div>
+                        ) : isSpecialCoating ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f1f5f9', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '4px', 
+                              fontSize: '12px', 
+                              color: '#94a3b8' 
+                            }}
+                            title="Бүрэлтэд хэвлэлийн хуудас тооцохгүй"
+                          >
+                            —
+                          </div>
                         ) : aux.isNonPrinted ? (
                           <div 
                             style={{ 
@@ -3344,11 +3366,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.extra_qty`, {
+                        <input 
+                          type="number" 
+                          style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} 
+                          readOnly={isSpecialStrap || aux.type === 'ctp'} 
+                          min={isSpecialCoating ? 1 : 0}
+                          max={isSpecialCoating ? 50 : undefined}
+                          title={isSpecialCoating ? "Бүрэлтийн хадаас (1-50 хүртэл)" : "Хадаас"}
+                          {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap || aux.type === 'ctp') return;
                             if (isSpecialCoating) {
-                              const extra = Number(e.target.value) || 0;
+                              let extra = Number(e.target.value) || 0;
+                              if (extra > 50) {
+                                extra = 50;
+                                setValue(`materials.${index}.extra_qty`, 50);
+                              } else if (extra < 0) {
+                                extra = 0;
+                                setValue(`materials.${index}.extra_qty`, 0);
+                              }
                               const base = Number(formValues.materials?.[index]?.base_qty) || Number(formValues.total_qty) || 0;
                               const tQty = base + extra;
                               setValue(`materials.${index}.total_qty`, tQty);
@@ -3383,6 +3419,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         {aux.type === 'ctp' ? (
                           <input type="number" style={disabledStyle} readOnly value={1} />
+                        ) : isSpecialCoating ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f1f5f9', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '4px', 
+                              fontSize: '12px', 
+                              color: '#94a3b8' 
+                            }}
+                            title="Бүрэлтэд хуваалт тооцохгүй"
+                          >
+                            —
+                          </div>
                         ) : (
                           <input type="number" style={isSpecialMat ? disabledStyle : inputStyle} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
                             onChange: (e) => {
