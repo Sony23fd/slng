@@ -335,15 +335,19 @@ const tableInputStyle: React.CSSProperties = {
   boxSizing: 'border-box'
 };
 
-const SectionCard = ({ id, step, title, sub, actions, children }: any) => {
+const SectionCard = ({ id, step, title, sub, icon, theme, actions, children }: any) => {
   const [collapsed, setCollapsed] = React.useState(false);
+  const themeClass = theme ? `erp-card--${theme}` : '';
   return (
-    <section className={`erp-card ${collapsed ? 'collapsed' : ''}`} id={id}>
+    <section className={`erp-card ${themeClass} ${collapsed ? 'collapsed' : ''}`} id={id}>
       <div className="erp-card-head" onClick={() => setCollapsed(!collapsed)}>
         <div className="erp-left" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
           <div className="step-badge">{step}</div>
           <div style={{ minWidth: 0 }}>
-            <h2 style={{ margin: 0, fontSize: '13.8px', fontWeight: 700, color: '#1e293b' }}>{title}</h2>
+            <h2 style={{ margin: 0, fontSize: '13.8px', fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {icon && <span className="section-icon">{icon}</span>}
+              <span>{title}</span>
+            </h2>
             {sub && <div className="sub" style={{ fontSize: '11.5px', color: 'var(--muted-2)', fontWeight: 500, marginTop: '1px' }}>{sub}</div>}
           </div>
         </div>
@@ -374,6 +378,42 @@ const SectionCard = ({ id, step, title, sub, actions, children }: any) => {
         {children}
       </div>
     </section>
+  );
+};
+
+const SectionNavRibbon = () => {
+  const scrollToSection = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  return (
+    <div className="erp-section-nav-ribbon" title="Хэсэг хооронд шууд шилжих">
+      <a href="#sec1" onClick={(e) => scrollToSection(e, 'sec1')} className="nav-pill nav-pill--blue">
+        🤝 1. Харилцагч
+      </a>
+      <a href="#sec2" onClick={(e) => scrollToSection(e, 'sec2')} className="nav-pill nav-pill--purple">
+        📋 2. Захиалга
+      </a>
+      <a href="#sec3" onClick={(e) => scrollToSection(e, 'sec3')} className="nav-pill nav-pill--cyan">
+        ⚙️ 3-5. Технологи
+      </a>
+      <a href="#sec6" onClick={(e) => scrollToSection(e, 'sec6')} className="nav-pill nav-pill--emerald">
+        📦 6. Материал
+      </a>
+      <a href="#sec7" onClick={(e) => scrollToSection(e, 'sec7')} className="nav-pill nav-pill--amber">
+        🏭 7. Ажиллагаа
+      </a>
+      <a href="#sec8" onClick={(e) => scrollToSection(e, 'sec8')} className="nav-pill nav-pill--rose">
+        🚚 8. Гадуур
+      </a>
+      <a href="#rail-summary" onClick={(e) => scrollToSection(e, 'rail-summary')} className="nav-pill nav-pill--slate">
+        💰 Үнийн хураангуй
+      </a>
+    </div>
   );
 };
 
@@ -1913,13 +1953,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           
           {/* 1. Left Sidebar: Customer Information Panel */}
           <div className="erp-customer-panel">
-            <div className="erp-card" style={{ borderTop: '3px solid #2563eb' }}>
-              <div className="erp-card-head" style={{ background: '#f1f5f9', cursor: 'default' }}>
-                <div className="left" style={{ gap: '6px' }}>
-                  <span style={{ fontSize: '15px' }}>🤝</span>
+            <div className="erp-card erp-card--blue" id="sec1">
+              <div className="erp-card-head" style={{ cursor: 'default' }}>
+                <div className="erp-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="step-badge">1</div>
                   <div>
-                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>Харилцагчийн мэдээлэл</h2>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Захиалагч & Бүртгэл</div>
+                    <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="section-icon">🤝</span>
+                      <span>1. Харилцагчийн мэдээлэл</span>
+                    </h2>
+                    <div className="sub" style={{ fontSize: '11px', color: '#64748b' }}>Захиалагч & Бүртгэл</div>
                   </div>
                 </div>
               </div>
@@ -2036,6 +2079,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           {/* 2. Center Column: Product & Calculation Workspace */}
           <div className="erp-calc-col">
 
+            {/* Quick Section Navigation Ribbon */}
+            <SectionNavRibbon />
+
             {/* Compact Presets & Templates Bar directly atop the calculation form */}
             <div className="compact-presets-bar">
               <div className="compact-presets-chips">
@@ -2131,7 +2177,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             />
 
             {/* 2. Захиалгын мэдээлэл */}
-            <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл">
+            <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл" theme="purple" icon="📋">
           
           <div className="erp-grid erp-grid-3">
             <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
@@ -2623,7 +2669,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         </SectionCard>
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
-        <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл">
+        <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл" theme="cyan" icon="⚙️">
           
           <div className="erp-grid erp-grid-3">
             <div className="erp-field">
@@ -2741,6 +2787,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           step="6" 
           title="6. Шаардлагатай материал"
           sub="Цаас болон туслах материалын өртөг, хэвлэлийн бодолт"
+          theme="emerald"
+          icon="📦"
           actions={
             <div 
               style={{ 
@@ -3745,6 +3793,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           step="7" 
           title="7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа"
           sub="(Өртөг тооцохгүй, үйлдвэрлэлийн дамжлага ба цехийн технологийн заавар)"
+          theme="amber"
+          icon="🏭"
         >
           
           <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -4061,7 +4111,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         </SectionCard>
 
         {/* 8. Гадуур ажил */}
-        <SectionCard id="sec8" step="8" title="8. Гадуур ажил">
+        <SectionCard id="sec8" step="8" title="8. Гадуур ажил" theme="rose" icon="🚚">
           
           {outFields.map((field, index) => {
             const out = formValues.outsourced?.[index];

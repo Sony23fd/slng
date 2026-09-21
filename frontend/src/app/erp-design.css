@@ -263,6 +263,160 @@
   .erp-card-body{padding:10px 12px 12px;}
   .erp-card.collapsed .erp-card-body{display:none;}
 
+  /* ---------- Section Color Themes ---------- */
+  .erp-card--blue {
+    border-top: 3px solid #2563eb;
+  }
+  .erp-card--blue .erp-card-head {
+    background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #dbeafe;
+  }
+  .erp-card--blue .step-badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .erp-card--purple {
+    border-top: 3px solid #7c3aed;
+  }
+  .erp-card--purple .erp-card-head {
+    background: linear-gradient(90deg, #f5f3ff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #ede9fe;
+  }
+  .erp-card--purple .step-badge {
+    background: #ede9fe;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+  }
+
+  .erp-card--cyan {
+    border-top: 3px solid #0891b2;
+  }
+  .erp-card--cyan .erp-card-head {
+    background: linear-gradient(90deg, #ecfeff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #cffafe;
+  }
+  .erp-card--cyan .step-badge {
+    background: #cffafe;
+    color: #0e7490;
+    border: 1px solid #a5f3fc;
+  }
+
+  .erp-card--emerald {
+    border-top: 3px solid #059669;
+  }
+  .erp-card--emerald .erp-card-head {
+    background: linear-gradient(90deg, #ecfdf5 0%, #f8fafc 100%);
+    border-bottom: 1px solid #d1fae5;
+  }
+  .erp-card--emerald .step-badge {
+    background: #d1fae5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+
+  .erp-card--amber {
+    border-top: 3px solid #d97706;
+  }
+  .erp-card--amber .erp-card-head {
+    background: linear-gradient(90deg, #fffbeb 0%, #f8fafc 100%);
+    border-bottom: 1px solid #fef3c7;
+  }
+  .erp-card--amber .step-badge {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+
+  .erp-card--rose {
+    border-top: 3px solid #e11d48;
+  }
+  .erp-card--rose .erp-card-head {
+    background: linear-gradient(90deg, #fff1f2 0%, #f8fafc 100%);
+    border-bottom: 1px solid #ffe4e6;
+  }
+  .erp-card--rose .step-badge {
+    background: #ffe4e6;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+  }
+
+  .erp-card--slate {
+    border-top: 3px solid #334155;
+  }
+  .erp-card--slate .erp-card-head {
+    background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 100%);
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .erp-card--slate .step-badge {
+    background: #e2e8f0;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+
+  /* Section Header Titles & Icons */
+  .erp-card-head .section-icon {
+    font-size: 15px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Quick Section Navigation Ribbon */
+  .erp-section-nav-ribbon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(22, 33, 62, 0.03);
+    scrollbar-width: thin;
+  }
+  .erp-section-nav-ribbon::-webkit-scrollbar {
+    height: 4px;
+  }
+  .erp-section-nav-ribbon::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.6px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .nav-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  }
+  .nav-pill--blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  .nav-pill--blue:hover { background: #dbeafe; }
+  .nav-pill--purple { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+  .nav-pill--purple:hover { background: #ede9fe; }
+  .nav-pill--cyan { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
+  .nav-pill--cyan:hover { background: #cffafe; }
+  .nav-pill--emerald { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+  .nav-pill--emerald:hover { background: #d1fae5; }
+  .nav-pill--amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .nav-pill--amber:hover { background: #fef3c7; }
+  .nav-pill--rose { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  .nav-pill--rose:hover { background: #ffe4e6; }
+  .nav-pill--slate { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+  .nav-pill--slate:hover { background: #e2e8f0; }
+
   /* field grid - compact gaps */
   .erp-grid{display:grid;gap:8px 10px;}
   .erp-grid-3{grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));}
@@ -427,8 +581,11 @@
   .erp-btn svg{width:14px;height:14px;}
 
   /* ---------- Right rail: summary ---------- */
+  #rail-summary {
+    scroll-margin-top: 100px;
+  }
   .summary-card{
-    background:var(--card);border:1px solid var(--line);border-radius:9px;
+    background:var(--card);border:1px solid var(--line);border-top:3px solid #1e293b;border-radius:9px;
     box-shadow:0 1px 2px rgba(22,33,62,.04);overflow:hidden;
   }
   .summary-top{
