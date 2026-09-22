@@ -169,7 +169,7 @@ function calculateSetups(pressSheet: number, divisions: number) {
 
 function getMaterialType(matName?: string, notes?: string): {
   isAux: boolean;
-  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'none';
+  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'endpaper_super' | 'super_cover' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'none';
   isNonPrinted: boolean;
 } {
   const n = (matName || '').toLowerCase();
@@ -181,7 +181,16 @@ function getMaterialType(matName?: string, notes?: string): {
   if (n.includes('картон') || note.includes('картон')) {
     return { isAux: true, type: 'cardboard', isNonPrinted: true };
   }
+  if (note.includes('супер хавтас') || n.includes('супер хавтас')) {
+    if (n.includes('форзац') || note.includes('форзац') || n.includes('157гр') || note.includes('157гр')) {
+      return { isAux: true, type: 'endpaper_super', isNonPrinted: true };
+    }
+    return { isAux: true, type: 'super_cover', isNonPrinted: false };
+  }
   if (n.includes('форзац') || note.includes('форзац')) {
+    if (n.includes('супер') || note.includes('супер')) {
+      return { isAux: true, type: 'endpaper_super', isNonPrinted: true };
+    }
     if (n.includes('хэвлэлтэй') || note.includes('хэвлэлтэй')) {
       return { isAux: true, type: 'endpaper_printed', isNonPrinted: false };
     }
@@ -201,6 +210,20 @@ function getMaterialType(matName?: string, notes?: string): {
   }
 
   return { isAux: false, type: 'none', isNonPrinted: false };
+}
+
+function getSuperCoverSpecs(size?: string) {
+  const s = (size || 'A5').toUpperCase();
+  if (s.includes('B5')) {
+    return { coverDiv: 6, coverPrintSize: '594x280', endpaperDiv: 10 };
+  } else if (s.includes('A4')) {
+    return { coverDiv: 3, coverPrintSize: '720x380', endpaperDiv: 8 };
+  } else if (s.includes('B4')) {
+    return { coverDiv: 2, coverPrintSize: 'B2', endpaperDiv: 5 };
+  } else {
+    // A5 default
+    return { coverDiv: 6, coverPrintSize: 'B3', endpaperDiv: 16 };
+  }
 }
 
 function getHardcoverAuxiliarySpecs(size?: string) {
@@ -243,6 +266,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
     };
   }
 }
+
 
 function getDefaultPrintSize(category?: string, productSize?: string, isCover?: boolean, bindingType?: string, coverRules?: any[]): string {
   const cat = (category || '').trim();
@@ -832,6 +856,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               extraQty = 0;
               totalQty = tQty;
               sheetQty = Math.ceil(tQty / specs.cardboardDiv);
+            } else if (aux.type === 'endpaper_super') {
+              const superSpecs = getSuperCoverSpecs(a7);
+              rowDivideBy = superSpecs.endpaperDiv;
+              rowPressSheet = '1';
+              baseQty = tQty;
+              extraQty = 0;
+              totalQty = tQty;
+              sheetQty = Math.ceil(tQty / superSpecs.endpaperDiv);
             } else if (aux.type === 'endpaper_plain') {
               const specs = getHardcoverAuxiliarySpecs(a7);
               rowDivideBy = specs.endpaperDiv;
@@ -864,6 +896,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               totalQty = tQty * 2;
               sheetQty = tQty * 2;
             }
+          } else if (aux.type === 'super_cover') {
+            const superSpecs = getSuperCoverSpecs(a7);
+            rowPrintSize = superSpecs.coverPrintSize;
+            rowPressSheet = '1';
+            rowDivideBy = superSpecs.coverDiv;
+            baseQty = tQty;
+            extraQty = 100;
+            totalQty = tQty + 100;
+            sheetQty = Math.ceil((tQty + 100) / superSpecs.coverDiv);
+          } else if (aux.type === 'endpaper_printed') {
+            const specs = getHardcoverAuxiliarySpecs(a7);
+            rowPrintSize = specs.endpaperPrinted.printSize;
+            rowPressSheet = specs.endpaperPrinted.pressSheet;
+            rowDivideBy = specs.endpaperPrinted.divBy;
+            baseQty = tQty;
+            extraQty = specs.endpaperPrinted.extra;
+            totalQty = (tQty * specs.endpaperPrinted.baseMultiplier) + specs.endpaperPrinted.extra;
+            sheetQty = Math.ceil(totalQty / specs.endpaperPrinted.divBy);
           } else if (aux.type === 'coating') {
             rowPressSheet = '';
             rowDivideBy = 1;
@@ -966,9 +1016,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             const mp = masterPrices.find(p => p.item_name === o.operation_name);
             const opName = o.operation_name || '';
             const isBlockSewingOrLacquer = opName.startsWith('Блокон оёо') || opName.startsWith('Лак');
-            const isPricing = o.is_pricing === true || isBlockSewingOrLacquer;
+            const isHardOrSuperCover = opName.includes('Хатуу хавтас') || opName.includes('Супер хавтас') || opName.includes('Хөөсөн хатуу хавтас');
+            const isPricing = o.is_pricing === true || isBlockSewingOrLacquer || isHardOrSuperCover || (mp && mp.is_pricing === true);
             const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
-            const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || (opName.startsWith('Блокон оёо') ? 100 : 0))) : 0;
+            const defaultOpCost = opName.includes('Супер') ? 1000 : (opName.includes('B4') || opName.includes('Хөөсөн') ? 3500 : (opName.includes('A4') ? 3000 : (opName.includes('B5') ? 2500 : 2000)));
+            const cost = isPricing ? ((mp && mp.unit_cost > 0) ? mp.unit_cost : (o.unit_cost || (opName.startsWith('Блокон оёо') ? 100 : defaultOpCost))) : 0;
             
             let calcQty = Number(o.qty) || 0;
             if (mp && mp.formula && mp.formula.expression && !o.is_manual) {
@@ -1365,6 +1417,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           setValue(`materials.${index}.sheet_qty`, epSheets);
           return;
         }
+        if (aux.type === 'endpaper_super') {
+          const superSpecs = getSuperCoverSpecs(a7);
+          setValue(`materials.${index}.divide_by`, superSpecs.endpaperDiv);
+          setValue(`materials.${index}.press_sheet`, '1');
+          setValue(`materials.${index}.print_size`, '');
+          setValue(`materials.${index}.notes`, `Супер хавтасны форзац 157гр (${superSpecs.endpaperDiv} хуваалт)`);
+          const sheets = Math.ceil(a6 / superSpecs.endpaperDiv);
+          setValue(`materials.${index}.sheet_qty`, sheets);
+          setValue(`materials.${index}.total_qty`, a6);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'super_cover') {
+          const superSpecs = getSuperCoverSpecs(a7);
+          const coverTotal = a6 + 100;
+          setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
+          setValue(`materials.${index}.divide_by`, superSpecs.coverDiv);
+          setValue(`materials.${index}.press_sheet`, '1');
+          setValue(`materials.${index}.notes`, `Супер хавтас 250гр (${superSpecs.coverPrintSize}, ${superSpecs.coverDiv} хуваалт)`);
+          setValue(`materials.${index}.extra_qty`, 100);
+          setValue(`materials.${index}.total_qty`, coverTotal);
+          setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
+          return;
+        }
         if (aux.type === 'capital') {
           const capMeters = Math.ceil(a6 / specs.headbandDiv);
           setValue(`materials.${index}.divide_by`, specs.headbandDiv);
@@ -1457,13 +1533,33 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       }
     });
+
+    const existingOps = getValues('operations') || [];
+    const bindingType = getValues('binding_type') || '';
+    const isFoamed = bindingType === 'Хөөсөн хатуу хавтастай';
+    const newOpName = isFoamed ? 'Хөөсөн хатуу хавтас хийх' : getHardcoverAuxiliarySpecs(a7).opName;
+    const opPriceObj = masterPrices.find(p => p.item_name === newOpName);
+    const fallbackCost = isFoamed ? 3500 : (newOpName.includes('B4') ? 3500 : newOpName.includes('A4') ? 3000 : newOpName.includes('B5') ? 2500 : 2000);
+    const newCost = (opPriceObj && opPriceObj.unit_cost > 0) ? Number(opPriceObj.unit_cost) : fallbackCost;
+
+    const opIdx = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас') || o.operation_name?.includes('Хөөсөн хатуу хавтас'));
+    if (opIdx >= 0) {
+      setValue(`operations.${opIdx}.operation_name`, newOpName);
+      setValue(`operations.${opIdx}.unit_cost`, newCost);
+      setValue(`operations.${opIdx}.is_pricing`, true);
+      setValue(`operations.${opIdx}.notes`, isFoamed ? 'Хөөсөн хавтас угсрах' : `${a7} хатуу хавтас угсрах, наах`);
+    }
   };
 
-  const handleAddHardcoverAuxiliary = () => {
+  const handleAddHardcoverAuxiliary = (overrideOptions?: { isPrintedEndpaper?: boolean; hasRibbon?: boolean }) => {
     const size = (getValues('size') || 'A5').toUpperCase();
     const totalQty = Number(getValues('total_qty')) || 1000;
-    const isPrintedEndpaper = !!getValues('has_printed_endpaper');
-    const hasRibbon = !!getValues('has_bookmark');
+    const isPrintedEndpaper = overrideOptions?.isPrintedEndpaper !== undefined 
+      ? overrideOptions.isPrintedEndpaper 
+      : !!getValues('has_printed_endpaper');
+    const hasRibbon = overrideOptions?.hasRibbon !== undefined 
+      ? overrideOptions.hasRibbon 
+      : !!getValues('has_bookmark');
     
     const specs = getHardcoverAuxiliarySpecs(size);
     const cardboardDiv = specs.cardboardDiv;
@@ -1471,14 +1567,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const endpaperPrinted = specs.endpaperPrinted;
     const headbandDiv = specs.headbandDiv;
     const ribbonLength = specs.ribbonLength;
-    const opName = specs.opName;
+
+    const bindingType = getValues('binding_type') || '';
+    const isFoamed = bindingType === 'Хөөсөн хатуу хавтастай';
+    const opName = isFoamed ? 'Хөөсөн хатуу хавтас хийх' : specs.opName;
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
       const name = (m.material_name || '').toLowerCase();
       const notes = (m.notes || '').toLowerCase();
       const isCardboard = name.includes('картон') || notes.includes('картон');
-      const isHardcoverEndpaper = (name.includes('форзац') || notes.includes('форзац')) && !notes.includes('супер хавтас') && !name.includes('супер хавтас');
+      const isHardcoverEndpaper = (name.includes('форзац') || notes.includes('форзац')) && !notes.includes('супер') && !name.includes('супер');
       const isCapital = name.includes('капитал') || notes.includes('капитал');
       const isRibbon = name.includes('хавчуурга') || notes.includes('хавчуурга');
       return !isCardboard && !isHardcoverEndpaper && !isCapital && !isRibbon;
@@ -1580,19 +1679,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     setValue('materials', newMaterials);
 
+    const opPriceObj = masterPrices.find(p => p.item_name === opName);
+    const fallbackCost = isFoamed ? 3500 : (opName.includes('B4') ? 3500 : opName.includes('A4') ? 3000 : opName.includes('B5') ? 2500 : 2000);
+    const opCost = (opPriceObj && opPriceObj.unit_cost > 0) ? Number(opPriceObj.unit_cost) : fallbackCost;
+
     const existingOps = getValues('operations') || [];
-    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас'));
+    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас') || o.operation_name?.includes('Хөөсөн хатуу хавтас'));
     if (existingIndex >= 0) {
+      setValue(`operations.${existingIndex}.operation_name`, opName);
       setValue(`operations.${existingIndex}.qty`, totalQty);
+      setValue(`operations.${existingIndex}.unit_cost`, opCost);
+      setValue(`operations.${existingIndex}.is_pricing`, true);
+      setValue(`operations.${existingIndex}.notes`, isFoamed ? 'Хөөсөн хавтас угсрах' : `${size} хатуу хавтас угсрах, наах`);
     } else {
       setValue('operations', [
         ...existingOps,
         {
           operation_name: opName,
           qty: totalQty,
-          unit_cost: 0,
-          notes: `${size} хатуу хавтас угсрах, наах`,
-          is_pricing: false,
+          unit_cost: opCost,
+          notes: isFoamed ? 'Хөөсөн хавтас угсрах' : `${size} хатуу хавтас угсрах, наах`,
+          is_pricing: true,
           production_stage: 'POST_PRESS'
         }
       ]);
@@ -1608,34 +1715,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     else if (rawSize.includes('A5')) size = 'A5';
 
     const totalQty = Number(getValues('total_qty')) || 1000;
-
-    let coverDiv = 6;
-    let coverPrintSize = 'B3';
-    let endpaperDiv = 16;
-
-    if (size === 'A5') {
-      coverDiv = 6;
-      coverPrintSize = 'B3';
-      endpaperDiv = 16;
-    } else if (size === 'B5') {
-      coverDiv = 6;
-      coverPrintSize = '594x280';
-      endpaperDiv = 10;
-    } else if (size === 'A4') {
-      coverDiv = 3;
-      coverPrintSize = '720x380';
-      endpaperDiv = 8;
-    } else if (size === 'B4') {
-      coverDiv = 2;
-      coverPrintSize = 'B2';
-      endpaperDiv = 5;
-    }
+    const superSpecs = getSuperCoverSpecs(size);
+    const coverDiv = superSpecs.coverDiv;
+    const coverPrintSize = superSpecs.coverPrintSize;
+    const endpaperDiv = superSpecs.endpaperDiv;
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
       const name = (m.material_name || '').toLowerCase();
       const notes = (m.notes || '').toLowerCase();
-      return !notes.includes('супер хавтас') && !name.includes('супер хавтас');
+      return !notes.includes('супер хавтас') && !name.includes('супер хавтас') && !notes.includes('супер');
     });
 
     const cover250Price = masterPrices.find(p => p.item_name.includes('250гр'))?.unit_cost || 1150;
@@ -1677,19 +1766,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const newMaterials = [...cleanMaterials, superCoverRow, endpaperRow];
     setValue('materials', newMaterials);
 
+    const superOpPriceObj = masterPrices.find(p => p.item_name === 'Супер хавтас хийх');
+    const superOpCost = (superOpPriceObj && superOpPriceObj.unit_cost > 0) ? Number(superOpPriceObj.unit_cost) : 1000;
+
     const existingOps = getValues('operations') || [];
     const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Супер хавтас'));
     if (existingIndex >= 0) {
       setValue(`operations.${existingIndex}.qty`, totalQty);
+      setValue(`operations.${existingIndex}.unit_cost`, superOpCost);
+      setValue(`operations.${existingIndex}.is_pricing`, true);
     } else {
       setValue('operations', [
         ...existingOps,
         {
           operation_name: 'Супер хавтас хийх',
           qty: totalQty,
-          unit_cost: 0,
+          unit_cost: superOpCost,
           notes: `${size} супер хавтас нугалах, өмсгөх`,
-          is_pricing: false,
+          is_pricing: true,
           production_stage: 'POST_PRESS'
         }
       ]);
@@ -2261,6 +2355,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.cardboardDiv));
                         return;
                       }
+                      if (aux.type === 'endpaper_super') {
+                        const superSpecs = getSuperCoverSpecs(a7);
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / superSpecs.endpaperDiv));
+                        return;
+                      }
+                      if (aux.type === 'super_cover') {
+                        const superSpecs = getSuperCoverSpecs(a7);
+                        const coverTotal = newBase + 100;
+                        setValue(`materials.${index}.extra_qty`, 100);
+                        setValue(`materials.${index}.total_qty`, coverTotal);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
+                        return;
+                      }
                       if (aux.type === 'endpaper_plain') {
                         setValue(`materials.${index}.extra_qty`, 0);
                         setValue(`materials.${index}.total_qty`, newBase);
@@ -2492,7 +2601,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
                       <input 
                         type="checkbox" 
-                        {...register("has_super_cover")} 
+                        {...register("has_super_cover", {
+                          onChange: (e) => {
+                            if (e.target.checked) {
+                              handleAddSuperCoverAuxiliary();
+                            } else {
+                              const existingMats = getValues('materials') || [];
+                              const cleanMats = existingMats.filter(m => {
+                                const n = (m.material_name || '').toLowerCase();
+                                const notes = (m.notes || '').toLowerCase();
+                                return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
+                              });
+                              setValue('materials', cleanMats);
+                              const existingOps = getValues('operations') || [];
+                              setValue('operations', existingOps.filter(o => !o.operation_name?.includes('Супер хавтас')));
+                            }
+                          }
+                        })} 
                       />
                       <span>🧥 Супер хавтастай</span>
                     </label>
@@ -2502,7 +2627,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
                           <input 
                             type="checkbox" 
-                            {...register("has_printed_endpaper")} 
+                            {...register("has_printed_endpaper", {
+                              onChange: (e) => {
+                                if (isHardcoverCalculated) {
+                                  handleAddHardcoverAuxiliary({ isPrintedEndpaper: e.target.checked });
+                                }
+                              }
+                            })} 
                           />
                           <span>📄 Хэвлэлтэй форзац</span>
                         </label>
@@ -2510,7 +2641,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
                           <input 
                             type="checkbox" 
-                            {...register("has_bookmark")} 
+                            {...register("has_bookmark", {
+                              onChange: (e) => {
+                                if (isHardcoverCalculated) {
+                                  handleAddHardcoverAuxiliary({ hasRibbon: e.target.checked });
+                                }
+                              }
+                            })} 
                           />
                           <span>🔖 Хавчуурга туузтай</span>
                         </label>
@@ -3054,6 +3191,31 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.cardboardDiv));
                                           return;
                                         }
+                                        if (selectedAux.type === 'endpaper_super') {
+                                          const superSpecs = getSuperCoverSpecs(a7);
+                                          setValue(`materials.${index}.divide_by`, superSpecs.endpaperDiv);
+                                          setValue(`materials.${index}.press_sheet`, '1');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Супер хавтасны форзац 157гр (${superSpecs.endpaperDiv} хуваалт)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / superSpecs.endpaperDiv));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'super_cover') {
+                                          const superSpecs = getSuperCoverSpecs(a7);
+                                          const coverTotal = totalQty + 100;
+                                          setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
+                                          setValue(`materials.${index}.divide_by`, superSpecs.coverDiv);
+                                          setValue(`materials.${index}.press_sheet`, '1');
+                                          setValue(`materials.${index}.notes`, `Супер хавтас 250гр (${superSpecs.coverPrintSize}, ${superSpecs.coverDiv} хуваалт)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 100);
+                                          setValue(`materials.${index}.total_qty`, coverTotal);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
+                                          return;
+                                        }
                                         if (selectedAux.type === 'endpaper_plain') {
                                           setValue(`materials.${index}.divide_by`, specs.endpaperDiv);
                                           setValue(`materials.${index}.press_sheet`, '1');
@@ -3285,9 +3447,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   if (aux.isNonPrinted) {
                                     const specs = getHardcoverAuxiliarySpecs(a7);
                                     if (aux.type === 'cardboard') finalDivBy = specs.cardboardDiv;
+                                    else if (aux.type === 'endpaper_super') finalDivBy = getSuperCoverSpecs(a7).endpaperDiv;
                                     else if (aux.type === 'endpaper_plain') finalDivBy = specs.endpaperDiv;
                                     else if (aux.type === 'capital') finalDivBy = specs.headbandDiv;
                                     setValue(`materials.${index}.divide_by`, finalDivBy);
+                                  } else if (aux.type === 'super_cover') {
+                                    const superSpecs = getSuperCoverSpecs(a7);
+                                    finalDivBy = superSpecs.coverDiv;
+                                    setValue(`materials.${index}.divide_by`, finalDivBy);
+                                    setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
                                   } else {
                                     let printSize = formValues.materials?.[index]?.print_size;
                                     if (!printSize) {
@@ -3731,45 +3899,43 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
                 <button 
                   type="button" 
-                  onClick={handleAddHardcoverAuxiliary} 
-                  disabled={isHardcoverCalculated}
+                  onClick={() => handleAddHardcoverAuxiliary()} 
                   className="btn btn-primary"
                   style={{ 
-                    background: isHardcoverCalculated ? '#94a3b8' : '#0284c7', 
-                    borderColor: isHardcoverCalculated ? '#94a3b8' : '#0284c7', 
+                    background: '#0284c7', 
+                    borderColor: '#0284c7', 
                     color: '#fff', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.4rem', 
                     fontWeight: 600,
-                    cursor: isHardcoverCalculated ? 'not-allowed' : 'pointer',
-                    opacity: isHardcoverCalculated ? 0.75 : 1
+                    cursor: 'pointer',
+                    opacity: 1
                   }}
-                  title={isHardcoverCalculated ? "Хатуу хавтасны туслах материалууд хүснэгтэд орсон байна" : "Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"}
+                  title={isHardcoverCalculated ? "Хатуу хавтасны туслах материалуудыг шинэчлэх" : "Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"}
                 >
-                  {isHardcoverCalculated ? '✓ Хатуу хавтасны материал бодогдсон' : '✨ Хатуу хавтасны туслах материал бодох'}
+                  {isHardcoverCalculated ? '✓ Хатуу хавтас шинэчлэх' : '✨ Хатуу хавтасны туслах материал бодох'}
                 </button>
               )}
               {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
                 <button 
                   type="button" 
-                  onClick={handleAddSuperCoverAuxiliary} 
-                  disabled={isSuperCoverCalculated}
+                  onClick={() => handleAddSuperCoverAuxiliary()} 
                   className="btn btn-primary"
                   style={{ 
-                    background: isSuperCoverCalculated ? '#94a3b8' : '#7c3aed', 
-                    borderColor: isSuperCoverCalculated ? '#94a3b8' : '#7c3aed', 
+                    background: '#7c3aed', 
+                    borderColor: '#7c3aed', 
                     color: '#fff', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.4rem', 
                     fontWeight: 600,
-                    cursor: isSuperCoverCalculated ? 'not-allowed' : 'pointer',
-                    opacity: isSuperCoverCalculated ? 0.75 : 1
+                    cursor: 'pointer',
+                    opacity: 1
                   }}
-                  title={isSuperCoverCalculated ? "Супер хавтасны материалууд хүснэгтэд орсон байна" : "Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"}
+                  title={isSuperCoverCalculated ? "Супер хавтасны материалуудыг шинэчлэх" : "Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"}
                 >
-                  {isSuperCoverCalculated ? '✓ Супер хавтасны материал бодогдсон' : '🧥 Супер хавтасны материал бодох'}
+                  {isSuperCoverCalculated ? '✓ Супер хавтас шинэчлэх' : '🧥 Супер хавтасны материал бодох'}
                 </button>
               )}
             </div>
