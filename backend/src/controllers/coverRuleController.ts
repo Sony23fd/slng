@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 export const getAllRules = async (req: Request, res: Response) => {
   try {
-    // @ts-ignore
     const rules = await prisma.coverrule.findMany();
     res.json(rules);
   } catch (error) {
@@ -17,7 +16,6 @@ export const getAllRules = async (req: Request, res: Response) => {
 export const createRule = async (req: Request, res: Response) => {
   try {
     const { size, binding, press_sheet, divide_by, print_size } = req.body;
-    // @ts-ignore
     const rule = await prisma.coverrule.create({
       data: {
         size,
@@ -38,7 +36,6 @@ export const updateRule = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { size, binding, press_sheet, divide_by, print_size } = req.body;
-    // @ts-ignore
     const rule = await prisma.coverrule.update({
       where: { id: Number(id) },
       data: {
@@ -59,7 +56,6 @@ export const updateRule = async (req: Request, res: Response) => {
 export const deleteRule = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    // @ts-ignore
     await prisma.coverrule.delete({ where: { id: Number(id) } });
     res.status(204).send();
   } catch (error) {
