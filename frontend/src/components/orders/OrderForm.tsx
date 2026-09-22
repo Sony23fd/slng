@@ -97,48 +97,66 @@ function popcount(n: number) {
 }
 
 
-function getCoverLogic(size: string, bindingType: string, coverRules: any[] = []) {
+function normalizeBinding(bt?: string): string {
+  const s = (bt || '').trim().toLowerCase();
+  if (!s) return '';
+  if (s.includes('хөөсөн')) return 'Хөөсөн хатуу хавтастай';
+  if (s.includes('хөндлөн')) return 'Хөндлөн хатуу хавтастай';
+  if (s.includes('хатуу')) return 'Хатуу хавтастай';
+  if (s.includes('супер')) return 'Супер хавтастай';
+  if (s.includes('блок')) return 'Блокон оёо';
+  if (s.includes('үдээс')) return 'Үдээстэй';
+  if (s.includes('наалт')) return 'Наалттай';
+  return (bt || '').trim();
+}
+
+function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = []) {
   const s = size?.trim().toUpperCase() || '';
-  const bt = bindingType?.trim().toLowerCase() || '';
+  const normalizedBt = normalizeBinding(bindingType);
+  const btLower = normalizedBt.toLowerCase();
 
   if (coverRules && coverRules.length > 0) {
-    const rule = coverRules.find((r: any) => r.size?.trim().toUpperCase() === s && r.binding?.trim().toLowerCase() === bt);
+    const rule = coverRules.find((r: any) => 
+      r.size?.trim().toUpperCase() === s && 
+      (normalizeBinding(r.binding).toLowerCase() === btLower || r.binding?.trim().toLowerCase() === btLower)
+    );
     if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
   }
 
-  const isSoftOrBlock = bt === 'наалттай' || bt === 'блокон оёо' || bt === 'блокон оёотой' || bt === 'блокон';
+  const isSoftOrBlock = btLower === 'наалттай' || btLower === 'блокон оёо';
   if (s === 'A4' && isSoftOrBlock) return { pressSheet: 1.0, divideBy: 6, printSize: 'A3' };
-  if (s === 'A4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'A4' && btLower === 'үдээстэй') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   if (s === 'A5' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
-  if (s === 'A5' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
+  if (s === 'A5' && btLower === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
   if (s === 'B5' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
+  if (s === 'B5' && btLower === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
   if (s === 'B4' && isSoftOrBlock) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
-  if (s === 'B4' && bt === 'үдээстэй') return { pressSheet: 0.5, divideBy: 2, printSize: 'B2' };
+  if (s === 'B4' && btLower === 'үдээстэй') return { pressSheet: 0.5, divideBy: 2, printSize: 'B2' };
   if (s === 'A6' && isSoftOrBlock) return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
-  if (s === 'A6' && bt === 'үдээстэй') return { pressSheet: 0.125, divideBy: 4, printSize: 'A2' };
+  if (s === 'A6' && btLower === 'үдээстэй') return { pressSheet: 0.125, divideBy: 4, printSize: 'A2' };
   if (s === 'B6' && isSoftOrBlock) return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
-  if (s === 'B6' && bt === 'үдээстэй') return { pressSheet: 0.25, divideBy: 5, printSize: 'B3' };
+  if (s === 'B6' && btLower === 'үдээстэй') return { pressSheet: 0.25, divideBy: 5, printSize: 'B3' };
 
   // Hardcover (Хатуу хавтас) fallbacks
-  if (s === 'A5' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
-  if (s === 'A4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
-  if (s === 'B4' && (bt === 'хатуу хавтастай' || bt === 'хатуу')) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
+  if (s === 'A5' && btLower === 'хатуу хавтастай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
+  if (s === 'A4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
+  if (s === 'B4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
 
-  // Landscape Hardcover (Хөндлөн хатуу хавтас - xx2.jpg) fallbacks
-  if (s === 'A4' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
-  if (s === 'A5' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && (bt === 'хөндлөн хатуу хавтастай' || bt === 'хөндлөн' || bt === 'хөөсөн хатуу хавтастай' || bt === 'хөөсөн')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  // Landscape Hardcover (Хөндлөн хатуу хавтас) & Foamed Hardcover (Хөөсөн хатуу хавтас) fallbacks
+  if (s === 'A4' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
+  if (s === 'A5' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
 
-  // Super Cover (Супер хавтас - sx.jpg) fallbacks
-  if (s === 'A5' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 6, printSize: 'B3' };
-  if (s === 'B5' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 6, printSize: '594x280' };
-  if (s === 'A4' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 3, printSize: '720x380' };
-  if (s === 'B4' && (bt === 'супер хавтастай' || bt === 'супер')) return { pressSheet: 1.0, divideBy: 2, printSize: 'B2' };
+  // Super Cover (Супер хавтас) fallbacks
+  if (s === 'A5' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 6, printSize: 'B3' };
+  if (s === 'B5' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 6, printSize: '594x280' };
+  if (s === 'A4' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 3, printSize: '720x380' };
+  if (s === 'B4' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 2, printSize: 'B2' };
   
   return null;
 }
+
 
 function calculateSetups(pressSheet: number, divisions: number) {
   const fullSheets = Math.floor(pressSheet);
@@ -1258,9 +1276,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           return aux.type !== 'ctp';
         }) || [];
         let totalCoverSetups = 0;
+        const a7 = getA7Size();
         coverMats.forEach((m: any) => {
           const m4 = Number(m.press_sheet) || 0;
-          const divs = Number(m.divide_by) || 1;
+          const divs = calculatePaperDivision(m.print_size || 'A2', a7) || 1;
           totalCoverSetups += calculateSetups(m4, divs);
         });
         if (totalCoverSetups === 0) totalCoverSetups = 1;
@@ -1281,9 +1300,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap' && aux.type !== 'ctp';
         }) || [];
         let totalInnerSetups = 0;
+        const a7 = getA7Size();
         innerMats.forEach((m: any) => {
           const m4 = Number(m.press_sheet) || 0;
-          const divs = Number(m.divide_by) || 1;
+          const divs = calculatePaperDivision(m.print_size || 'A2', a7) || 1;
           totalInnerSetups += calculateSetups(m4, divs);
         });
         if (totalInnerSetups === 0) totalInnerSetups = 1;
@@ -2416,6 +2436,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
+                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
                 <option value="Блокон оёо">Блокон оёо</option>
               </select>
@@ -3273,10 +3294,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       printSize = getDefaultPrintSize(formValues.category, a7, isCoverRow, formValues.binding_type, coverRules);
                                       setValue(`materials.${index}.print_size`, printSize);
                                     }
-                                    const ratio = calculatePaperDivision(val, printSize);
-                                    if (ratio > 0) {
-                                      setValue(`materials.${index}.divide_by`, ratio);
-                                      finalDivBy = ratio;
+                                    const coverLogic = isCoverRow ? getCoverLogic(a7, formValues.binding_type, coverRules) : null;
+                                    if (coverLogic) {
+                                      finalDivBy = coverLogic.divideBy;
+                                      setValue(`materials.${index}.divide_by`, finalDivBy);
+                                      if (coverLogic.printSize && !formValues.materials?.[index]?.print_size) {
+                                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                                      }
+                                    } else {
+                                      const ratio = calculatePaperDivision(val, printSize);
+                                      if (ratio > 0) {
+                                        setValue(`materials.${index}.divide_by`, ratio);
+                                        finalDivBy = ratio;
+                                      }
                                     }
                                   }
                                   const totalQty = Number(formValues.materials?.[index]?.total_qty) || 0;
@@ -3377,35 +3407,35 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     
                                     const sourceSize = formValues.materials?.[index]?.size || '';
                                     const ratio = calculatePaperDivision(sourceSize, val);
-                                    const _isCov = formValues.materials?.[index]?.is_cover;
-                                    const bt = formValues.binding_type || '';
-                                    if (ratio > 0) {
-                                      setValue(`materials.${index}.divide_by`, ratio);
-                                    }
-                                    
-                                    // Trigger M4 calculation
                                     const a7Raw = formValues.size || '';
                                     const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
                                     const isCover = formValues.materials?.[index]?.is_cover || false;
+                                    const bt = formValues.binding_type || '';
                                     const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
                                     let m4 = 0;
-                                    let divBy = ratio > 0 ? ratio : (Number(formValues.materials?.[index]?.divide_by) || 1);
+                                    let divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
 
                                     if (coverLogic) {
                                       m4 = coverLogic.pressSheet;
                                       divBy = coverLogic.divideBy;
                                       setValue(`materials.${index}.press_sheet`, String(m4));
                                       setValue(`materials.${index}.divide_by`, divBy);
-                                    } else if (isCover) {
-                                      m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                                    } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
-                                      const b4 = Number(formValues.total_pages) || 0;
-                                      if (val && a7 && b4 > 0) {
-                                        m4 = calculateInnerPressSheet(b4, val, a7);
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
-                                      }
                                     } else {
-                                      m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                      if (ratio > 0) {
+                                        setValue(`materials.${index}.divide_by`, ratio);
+                                        divBy = ratio;
+                                      }
+                                      if (isCover) {
+                                        m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                      } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
+                                        const b4 = Number(formValues.total_pages) || 0;
+                                        if (val && a7 && b4 > 0) {
+                                          m4 = calculateInnerPressSheet(b4, val, a7);
+                                          setValue(`materials.${index}.press_sheet`, String(m4));
+                                        }
+                                      } else {
+                                        m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                      }
                                     }
 
                                     if (m4 > 0) {
