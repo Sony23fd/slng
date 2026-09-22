@@ -7,8 +7,12 @@
 ## 🔴 1. ХАТУУ ХОРИГЛОХ ДҮРЭМ (CRITICAL CALCULATION SAFEGUARDS)
 
 1. **Тооцооллын логикт дураараа хүрэхийг ХАТУУ ХОРИГЛОНО**:
-   - Захиалгын маягтын (`OrderForm.tsx`) цаас тооцох (`calculatePaperDivision`, `calculateSetups`), бүрэлт тооцох (`calculateCoatingOperation`), ажиллагааны томьёо бодох (`evaluateOperationFormula`) болон `useEffect` доторх тусгайлсан бодолтуудыг UI шинэчлэх, загвар (style) засах эсвэл код цэгцлэх (refactor) нэрийдлээр өөрчлөх, устгах, хөндөхийг эрс хориглоно.
-2. **Тооцоололд өөрчлөлт оруулах журам**:
+   - Захиалгын маягтын (`OrderForm.tsx`) цаас тооцох (`calculatePaperDivision`, `calculateSetups`), бүрэлт тооцох (`calculateCoatingOperation`), ажиллагааны томьёо бодох (`evaluateOperationFormula`), хатуу хавтас болон супер хавтасны туслах бодолтууд (`getHardcoverAuxiliarySpecs`, `getSuperCoverSpecs`), болон `useEffect` доторх бодолтуудыг UI шинэчлэх, загвар (style) засах эсвэл код цэгцлэх (refactor) нэрийдлээр өөрчлөх, устгах, хөндөхийг ХАТУУ ХОРИГЛОНО.
+   - Энэ дүрмийг зөрчиж бодолтын логик, хуваалт эсвэл үнийн томьёог эвдсэн аливаа кодын өөрчлөлт нь ноцтой гэмтэлд (system regression) тооцогдоно.
+2. **Ажиллагааны өртөг ба Үнийн саналд оролцох заавал шаардлага (NO ZERO-COST OPERATIONS)**:
+   - Бүх туслах ажиллагаанууд (`Хатуу хавтас (A5/B5/A4/B4)`, `Хөөсөн хатуу хавтас хийх`, `Супер хавтас хийх`, `Блокон оёо`, `Лак`, `Клише`)-ыг маягт болон загварт нэмэхдээ `unit_cost: 0` эсвэл `is_pricing: false` гэж үнэгүй оруулахыг ЭРС ХОРИГЛОНО.
+   - Үргэлж `masterPrices` сангаас бодит нэгж өртгийг авч, `is_pricing: true` болгон үнийн саналд бодитоор тусгана.
+3. **Тооцоололд өөрчлөлт оруулах журам**:
    - Хэрэв тооцооллын томьёо эсвэл логикт өөрчлөлт оруулах шаардлага гарвал **ЗААВАЛ** хэрэглэгчээс (USER) урьдчилан тодорхой зөвшөөрөл авч, хэвлэлийн үйлдвэрлэлийн физик бодолтоор (цаасны хуваалт, талбай гэх мэт) баталгаажуулсны дараа л хэрэгжүүлнэ.
 
 ---
@@ -106,7 +110,7 @@
 5. $\text{Нэгжийн үнэ} = \text{Эцсийн үнэ} / \text{Нийт тоо}$
 
 ### К. Хатуу хавтасны туслах материалын стандарт (Hardcover Auxiliary Materials Matrix)
-Хатуу хавтастай болон Хөндлөн хатуу хавтастай номд дараах технологийн нормоор картон, форзац, капитал, хавчуурга тооцогдоно:
+Хатуу хавтастай болон Хөндлөн хатуу хавтастай номд дараах технологийн нормоор картон, форзац, капитал, хавчуурга, болон угсралтын ажиллагаа тооцогдоно:
 - **А5**:
   - Картон (Суурь 2мм): $\text{DivideBy} = 14 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 14 \rceil$
   - Форзац (200гр матт):
@@ -114,6 +118,7 @@
     - Хэвлэлтэй: $\text{PrintSize} = \text{A2}, \text{DivideBy} = 4, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} \times 0.5 + 100) / 4 \rceil$
   - Номын капитал: $\lceil \text{TotalQty} / 25 \rceil$ метр
   - Хавчуурга утас (хэрэв хавчуургатай бол): $\lceil \text{TotalQty} \times 0.30 \rceil$ метр
+  - Ажиллагаа: `Хатуу хавтас (A5)`: **2,000₮** / ширхэг (`is_pricing: true`).
 - **В5**:
   - Картон: $\text{DivideBy} = 9 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 9 \rceil$
   - Форзац:
@@ -121,6 +126,7 @@
     - Хэвлэлтэй: $\text{DivideBy} = 5, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} + 100) / 5 \rceil$
   - Номын капитал: $\lceil \text{TotalQty} / 16 \rceil$ метр
   - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.33 \rceil$ метр
+  - Ажиллагаа: `Хатуу хавтас (B5)`: **2,500₮** / ширхэг (`is_pricing: true`).
 - **А4**:
   - Картон: $\text{DivideBy} = 7 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 7 \rceil$
   - Форзац:
@@ -128,6 +134,7 @@
     - Хэвлэлтэй: $\text{DivideBy} = 4, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} + 100) / 4 \rceil$
   - Номын капитал: $\lceil \text{TotalQty} / 14 \rceil$ метр
   - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.38 \rceil$ метр
+  - Ажиллагаа: `Хатуу хавтас (A4)`: **3,000₮** / ширхэг (`is_pricing: true`).
 - **В4**:
   - Картон: $\text{DivideBy} = 4.5 \rightarrow \text{SheetQty} = \lceil \text{TotalQty} / 4.5 \rceil$
   - Форзац:
@@ -135,22 +142,27 @@
     - Хэвлэлтэй: $\text{DivideBy} = 5, \text{Base} = \text{TotalQty} \times 2, \text{Extra} = 100 \rightarrow \lceil (\text{TotalQty} \times 2 + 100) / 5 \rceil$
   - Номын капитал: $\lceil \text{TotalQty} / 12 \rceil$ метр
   - Хавчуурга утас: $\lceil \text{TotalQty} \times 0.44 \rceil$ метр
+  - Ажиллагаа: `Хатуу хавтас (B4)`: **3,500₮** / ширхэг (`is_pricing: true`).
 
-### Л. Супер хавтасны физик стандарт (Dust Jacket / Super Cover Matrix - sx.jpg)
+### Л. Супер хавтасны физик стандарт (Dust Jacket / Super Cover Matrix)
 Супер хавтас нь номын үндсэн хавтасны гадуур нэмэлт материал болж өмсгөгдөх ба дараах дэлгээс, хуваалтын стандартыг мөрдөнө:
 - **А5**:
-  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = \text{B3}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
-  - Форзац (157гр матт): $\text{DivideBy} = 16 \rightarrow \lceil \text{TotalQty} / 16 \rceil$
+  - Үндсэн хавтасны цаас (250гр B1): $\text{PrintSize} = \text{B3}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
+  - Форзац (157гр матт А0): $\text{DivideBy} = 16 \rightarrow \lceil \text{TotalQty} / 16 \rceil$
 - **В5**:
-  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = 594\times 280\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
-  - Форзац (157гр матт): $\text{DivideBy} = 10 \rightarrow \lceil \text{TotalQty} / 10 \rceil$
+  - Үндсэн хавтасны цаас (250гр B1): $\text{PrintSize} = 594\times 280\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 6, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 6 \rceil$
+  - Форзац (157гр матт А0): $\text{DivideBy} = 10 \rightarrow \lceil \text{TotalQty} / 10 \rceil$
 - **А4**:
-  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = 720\times 380\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 3, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 3 \rceil$
-  - Форзац (157гр матт): $\text{DivideBy} = 8 \rightarrow \lceil \text{TotalQty} / 8 \rceil$
+  - Үндсэн хавтасны цаас (250гр B1): $\text{PrintSize} = 720\times 380\text{мм}, \text{PressSheet} = 1.0, \text{DivideBy} = 3, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 3 \rceil$
+  - Форзац (157гр матт А0): $\text{DivideBy} = 8 \rightarrow \lceil \text{TotalQty} / 8 \rceil$
 - **В4**:
-  - Үндсэн хавтасны цаас (250гр): $\text{PrintSize} = \text{B2} (720\times 520\text{мм}), \text{PressSheet} = 1.0, \text{DivideBy} = 2, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 2 \rceil$
-  - Форзац (157гр матт): $\text{DivideBy} = 5 \rightarrow \lceil \text{TotalQty} / 5 \rceil$
-- **Ажиллагаа**: `Супер хавтас хийх` (1000₮ / ширхэг).
+  - Үндсэн хавтасны цаас (250гр B1): $\text{PrintSize} = \text{B2} (720\times 520\text{мм}), \text{PressSheet} = 1.0, \text{DivideBy} = 2, \text{Extra} = 100 \rightarrow \lceil (\text{Base} + 100) / 2 \rceil$
+  - Форзац (157гр матт А0): $\text{DivideBy} = 5 \rightarrow \lceil \text{TotalQty} / 5 \rceil$
+- **Ажиллагаа**: `Супер хавтас хийх` (**1,000₮** / ширхэг, `is_pricing: true`).
+
+### М. Хөөсөн хатуу хавтасны стандарт (Foamed Hardcover Standard)
+- Картон, форзац, капитал, хавчуурга туузны норм нь стандарт хатуу хавтастай ижил.
+- Ажиллагаа: `Хөөсөн хатуу хавтас хийх`: **3,500₮** / ширхэг (`is_pricing: true`). Үүнийг дураараа энгийн хатуу хавтасны үнээр солихыг хориглоно.
 
 ---
 
