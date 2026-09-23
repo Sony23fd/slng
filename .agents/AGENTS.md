@@ -93,7 +93,9 @@
   - $\text{Sheet Qty (Том цаасны тоо)} = \lceil \text{Total Qty} / \text{DivideBy} \rceil$
 
 ### Ж. CTP Хавтан тооцох физик стандарт (CTP Plates Calculation)
-- **Тогтмол үнэ**: `CTP_PLATE_PRICE = 8,800₮`
+- **Тогтмол үнэ**:
+  - `CTP_PLATE_PRICE = 8,800₮`: Том CTP хавтан 76*60.5 / 74.5*60.5 (Komori 4 өнгөт машин, 4+4, 4+0 өнгө, B2/A2 формат).
+  - `CTP_PLATE_PRICE_SMALL = 6,800₮`: Жижиг CTP хавтан 65*55 (Ryobi 1 өнгөт машин, 1+1, 1+0 өнгө, B3/A3/65*55 формат).
 - **Хавтангийн тоо**:
   - Бүрэн хуудас: $\text{FullSheets} \times (\text{FrontColors} + \text{BackColors})$
   - Бутархай хуудас: Татаж хөмрөх (Work-and-turn) зарчмаар 1 хэвэнд хоёр тал багтдаг тул $\text{FractionalSetups} \times \max(\text{FrontColors}, \text{BackColors})$
