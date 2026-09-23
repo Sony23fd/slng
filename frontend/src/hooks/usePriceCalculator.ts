@@ -39,8 +39,9 @@ export function usePriceCalculator(params: PricingParams) {
 
     // 2. Ажиллагааны өртөг
     const totalOperationCost = params.operations.reduce((sum, op) => {
-      if (op.is_pricing === false) return sum;
-      return sum + ((op.qty || 0) * (op.unit_cost || 0));
+      const cost = Number(op.unit_cost) || 0;
+      if (cost <= 0 || op.is_pricing === false) return sum;
+      return sum + ((op.qty || 0) * cost);
     }, 0);
 
     // 3. Гадуур ажлын өртөг
