@@ -1183,16 +1183,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const b2 = formValues.inner_color;
     const mats = formValues.materials || [];
     const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
-    const ctpPrice = Number(ctpPriceStr);
+    const ctpPrice = Number(ctpPriceStr) || 8800;
+    const ctpPriceSmallStr = constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800';
+    const ctpPriceSmall = Number(ctpPriceSmallStr) || 6800;
     const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
     const category = formValues.category || '';
 
     // Group required CTP plates by role/part
     const requiredCtpMap: Record<string, {
       name: string;
+      plateFormat: string;
       printSize: string;
       pressSheet: string;
       plates: number;
+      unitCost: number;
       notes: string;
     }> = {};
 
@@ -1213,27 +1217,42 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         let ctpName = '';
         let noteDesc = '';
 
+        // Plate sizing logic based on printing press standards:
+        // 1-color (1+1, 1+0) or small format size (65*55, 65x43) -> Ryobi press: 65*55 plate (6,800₮)
+        // Multi-color (4+4, 4+0, etc.) on B-size -> Komori B-format: 74.5*60.5 plate (8,800₮)
+        // Multi-color on A-size or others -> Komori A-format: 76*60.5 plate (8,800₮)
+        const is1Color = colorToUse === '1+1' || colorToUse === '1+0' || colorToUse === '0+1';
+        const isSmallFormatSize = printSize === '65*55' || printSize === '65x55' || printSize === '65x43' || printSize === '65*43';
+        const isSmallPlate = is1Color || (isSmallFormatSize && !colorToUse?.startsWith('4+'));
+
+        const plateFormat = isSmallPlate
+          ? '65*55'
+          : (printSize.toUpperCase().startsWith('B') ? '74.5*60.5' : '76*60.5');
+        const platePrice = isSmallPlate ? ctpPriceSmall : ctpPrice;
+
         if (isCover) {
           key = 'cover';
           ctpName = 'CTP хавтан (Хавтас)';
-          noteDesc = `Хавтасны CTP хэвлэлийн хавтан (${colorToUse || '4+0'})`;
+          noteDesc = `Хавтасны CTP хэвлэлийн хавтан (${colorToUse || '4+0'}, ${plateFormat})`;
         } else if (isInner) {
           key = `inner_${i}`;
           ctpName = mats.filter(x => !x.is_cover && isInnerPageMaterial(x, category)).length > 1
             ? `CTP хавтан (Дотор ${i + 1})`
             : 'CTP хавтан (Дотор)';
-          noteDesc = `Дотор хуудасны CTP хэвлэлийн хавтан (${colorToUse || '1+1'}, ${m.press_sheet || 0} х.х)`;
+          noteDesc = `Дотор хуудасны CTP хэвлэлийн хавтан (${colorToUse || '1+1'}, ${m.press_sheet || 0} х.х, ${plateFormat})`;
         } else {
           key = `main_${i}`;
           ctpName = 'CTP хавтан (Үндсэн)';
-          noteDesc = `CTP хэвлэлийн хавтан (${colorToUse || 'Өнгө'})`;
+          noteDesc = `CTP хэвлэлийн хавтан (${colorToUse || 'Өнгө'}, ${plateFormat})`;
         }
 
         requiredCtpMap[key] = {
           name: ctpName,
+          plateFormat,
           printSize,
           pressSheet: String(m.press_sheet || ''),
           plates,
+          unitCost: platePrice,
           notes: noteDesc
         };
       }
@@ -1250,7 +1269,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const targetCtpList = Object.values(requiredCtpMap).map(req => ({
       material_name: req.name,
-      size: req.printSize,
+      size: req.plateFormat,
       print_size: req.printSize,
       press_sheet: req.pressSheet,
       base_qty: req.plates,
@@ -1258,7 +1277,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       total_qty: req.plates,
       divide_by: 1,
       sheet_qty: req.plates,
-      unit_cost: ctpPrice,
+      unit_cost: req.unitCost,
       notes: req.notes,
       is_cover: false
     }));
@@ -1271,6 +1290,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const tgt = targetCtpList[j];
         if (
           cur.material_name !== tgt.material_name ||
+          cur.size !== tgt.size ||
           cur.print_size !== tgt.print_size ||
           Number(cur.sheet_qty) !== tgt.sheet_qty ||
           Number(cur.unit_cost) !== tgt.unit_cost ||
@@ -3157,12 +3177,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       if (selectedAux.isAux) {
                                         const specs = getHardcoverAuxiliarySpecs(a7);
                                         if (selectedAux.type === 'ctp') {
-                                          const ctpPriceStr = constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800';
-                                          const ctpPrice = Number(ctpPriceStr) || 8800;
+                                          const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
+                                          const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
+                                          const curPrintSize = formValues.materials?.[index]?.print_size || 'A2';
+                                          const curColor = formValues.inner_color || formValues.cover_color || '4+0';
+                                          const is1Col = curColor === '1+1' || curColor === '1+0' || curColor === '0+1';
+                                          const isSmSize = curPrintSize === '65*55' || curPrintSize === '65x55' || curPrintSize === '65x43' || curPrintSize === '65*43';
+                                          const isSm = is1Col || (isSmSize && !curColor?.startsWith('4+'));
+                                          const ctpPrice = isSm ? ctpPriceSmall : ctpPriceLarge;
+                                          const plateFormat = isSm ? '65*55' : (curPrintSize.toUpperCase().startsWith('B') ? '74.5*60.5' : '76*60.5');
+
+                                          setValue(`materials.${index}.size`, plateFormat);
                                           setValue(`materials.${index}.unit_cost`, ctpPrice);
                                           setValue(`materials.${index}.divide_by`, 1);
                                           setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.print_size`, formValues.materials?.[index]?.print_size || 'A2');
+                                          setValue(`materials.${index}.print_size`, curPrintSize);
                                           setValue(`materials.${index}.extra_qty`, 0);
                                           const currentBase = Number(formValues.materials?.[index]?.base_qty) || 4;
                                           setValue(`materials.${index}.base_qty`, currentBase);
@@ -3419,6 +3448,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                        {aux.type === 'ctp' ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f0fdf4', 
+                              border: '1px solid #bbf7d0', 
+                              borderRadius: '4px', 
+                              fontSize: '11.5px', 
+                              color: '#15803d', 
+                              fontWeight: 600 
+                            }}
+                            title="CTP хавтангийн физик формат"
+                          >
+                            💿 {formValues.materials?.[index]?.size || '76*60.5'}
+                          </div>
+                        ) : (
                         <Controller
                           name={`materials.${index}.size`}
                           control={control}
@@ -3483,6 +3531,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             />
                           )}
                         />
+                        )}
                       </td>
                       )}
                       {isExpandedMaterial && (
@@ -3503,7 +3552,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             }}
                             title="CTP хавтангийн формат"
                           >
-                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'} формат
+                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'} хэвлэл
                           </div>
                         ) : aux.isNonPrinted ? (
                           <div 
