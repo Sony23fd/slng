@@ -937,10 +937,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 2000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
+        { operation_name: 'Хатуу хавтас (A5)', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн согог шалгалт' },
         { operation_name: 'Тусгай боодол / Хайрцаглах', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Баглаж хайрцаглах' }
       ],
@@ -1100,10 +1100,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 2500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
+        { operation_name: 'Хатуу хавтас (B5)', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
@@ -1262,10 +1262,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 3000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
+        { operation_name: 'Хатуу хавтас (A4)', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хавтас угсрах' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
@@ -1424,10 +1424,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Утас оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Блок наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Хөөсөн хатуу хавтас хийх', qty: 1000, unit_cost: 3500, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хөөсөн хавтас угсрах' },
+        { operation_name: 'Хөөсөн хатуу хавтас хийх', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Хөөсөн хавтас угсрах' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
@@ -1544,10 +1544,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
@@ -1663,10 +1663,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {
@@ -1782,10 +1782,10 @@ const standardTemplates = [
         { operation_name: 'Нугалаа', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Нугалаа' },
         { operation_name: 'Цуглуулга', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Цуглуулга' },
         { operation_name: 'Шалгах', qty: 20000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Шалгах' },
-        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 100, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
+        { operation_name: 'Блокон оёо', qty: 10000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Оёо' },
         { operation_name: 'Наалт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Наалт' },
         { operation_name: 'Огтлоо (Гурван талт)', qty: 2, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: '3 тал огтлох' },
-        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 1000, is_pricing: true, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
+        { operation_name: 'Супер хавтас хийх', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'POST_PRESS', is_manual: false, notes: 'Өмсгөх' },
         { operation_name: 'Чанарын эцсийн хяналт', qty: 1000, unit_cost: 0, is_pricing: false, production_stage: 'PACKAGING', is_manual: false, notes: 'Эцсийн шалгалт' }
       ],
       specifications: {

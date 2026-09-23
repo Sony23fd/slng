@@ -108,9 +108,10 @@ export const createOrder = async (req: Request, res: Response) => {
         },
         operations: {
           create: (data.operations || []).map((o: any) => {
-            const isPricing = o.is_pricing !== false;
+            const rawCost = Number(o.unit_cost) || 0;
+            const isPricing = rawCost > 0 && o.is_pricing !== false;
             const qty = o.qty ? Number(o.qty) : 0;
-            const unit_cost = isPricing ? (o.unit_cost ? Number(o.unit_cost) : 0) : 0;
+            const unit_cost = isPricing ? rawCost : 0;
             return {
               operation_name: o.operation_name || '',
               qty,
@@ -532,9 +533,10 @@ export const updateOrder = async (req: Request, res: Response) => {
           },
           operations: {
             create: (data.operations || []).map((o: any) => {
-              const isPricing = o.is_pricing !== false;
+              const rawCost = Number(o.unit_cost) || 0;
+              const isPricing = rawCost > 0 && o.is_pricing !== false;
               const qty = o.qty ? Number(o.qty) : 0;
-              const unit_cost = isPricing ? (o.unit_cost ? Number(o.unit_cost) : 0) : 0;
+              const unit_cost = isPricing ? rawCost : 0;
               return {
                 operation_name: o.operation_name || '',
                 qty,
