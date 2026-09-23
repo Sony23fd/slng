@@ -1111,18 +1111,41 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               } else {
                 rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
               }
+              const curQty = Number(getValues('total_qty')) || 0;
+              const curPages = Number(getValues('total_pages')) || 0;
+              let rowBase = curQty;
+              let rowExtra = calculateMakeready(rowBase);
+              let rowPress = aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '';
+              let rowTotal = 0;
+              let rowSheets = 0;
+
+              if (rowPrintSize && a7 && curPages > 0 && !aux.isAux) {
+                const innerPress = calculateInnerPressSheet(curPages, rowPrintSize, a7);
+                if (innerPress > 0) {
+                  rowPress = String(innerPress);
+                  const divs = calculatePaperDivision(rowPrintSize, a7);
+                  const setups = calculateSetups(innerPress, divs);
+                  rowTotal = (rowBase * innerPress) + (rowExtra * setups);
+                  rowSheets = Math.ceil(rowTotal / rowDivideBy);
+                }
+              } else if (aux.isAux) {
+                rowTotal = rowBase;
+                rowExtra = 0;
+                rowSheets = Math.ceil(rowTotal / rowDivideBy);
+              }
+
               newMats.push({
                 material_name: matName,
                 is_cover: false, 
                 print_size: rowPrintSize,
                 size: matSize,
-                press_sheet: aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '',
-                base_qty: 0,
-                extra_qty: 0,
+                press_sheet: rowPress,
+                base_qty: rowBase,
+                extra_qty: rowExtra,
                 divide_by: rowDivideBy,
-                sheet_qty: 0,
+                sheet_qty: rowSheets,
                 unit_cost: mp ? mp.unit_cost : 0,
-                total_qty: 0,
+                total_qty: rowTotal,
                 notes: 'Үндсэн материал'
               });
             });
@@ -1537,7 +1560,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
 
       if (m4 > 0) {
-        const base = Number(m.base_qty) || a6;
+        const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
+        if (base > 0 && Number(m.base_qty) !== base) {
+          setValue(`materials.${index}.base_qty`, base);
+        }
         const extra = calculateMakeready(base);
         setValue(`materials.${index}.extra_qty`, extra);
         const printSizeForDivs = coverLogic?.printSize || m.print_size || getDefaultPrintSize(cat, a7, isCover, bt, coverRules);
@@ -2501,6 +2527,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const bt = e.target.value;
                   const b4 = Number(getValues('total_pages')) || 0;
                   const a7 = getA7Size();
+                  const totalQ = Number(getValues('total_qty')) || 0;
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
                     const isCover = m.is_cover || false;
@@ -2518,8 +2545,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         setValue(`materials.${index}.print_size`, coverLogic.printSize);
                       }
                       
-                      const base = Number(m.base_qty) || 0;
-                      const extra = Number(m.extra_qty) || 0;
+                      const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
+                      if (base > 0 && Number(m.base_qty) !== base) {
+                        setValue(`materials.${index}.base_qty`, base);
+                      }
+                      const extra = calculateMakeready(base);
+                      setValue(`materials.${index}.extra_qty`, extra);
                       const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
                       const setups = calculateSetups(m4, divs);
                       const total = (base * m4) + (extra * setups);
@@ -2527,6 +2558,33 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
                     }
                   });
+
+                  if (bt.includes('хатуу')) {
+                    handleAddHardcoverAuxiliary();
+                  } else if (bt === 'Супер хавтастай') {
+                    handleAddSuperCoverAuxiliary();
+                  } else {
+                    // Changing to softcover: clean up leftover hardcover / supercover auxiliaries
+                    const currentMats = getValues('materials') || [];
+                    const cleanMats = currentMats.filter((m: any) => {
+                      const aux = getMaterialType(m.material_name, m.notes);
+                      if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
+                        return false;
+                      }
+                      return true;
+                    });
+                    if (cleanMats.length !== currentMats.length) {
+                      setValue('materials', cleanMats);
+                    }
+                    const currentOps = getValues('operations') || [];
+                    const cleanOps = currentOps.filter((o: any) => {
+                      const name = o.operation_name || '';
+                      return !name.includes('Хатуу хавтас') && !name.includes('Хөөсөн хатуу хавтас') && !name.includes('Супер хавтас');
+                    });
+                    if (cleanOps.length !== currentOps.length) {
+                      setValue('operations', cleanOps);
+                    }
+                  }
 
                   if (bt === 'Блокон оёо') {
                     const ops = getValues('operations') || [];
@@ -2928,7 +2986,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     }
 
                     if (m4 > 0) {
-                      const base = Number(m.base_qty) || 0;
+                      const totalQ = Number(getValues('total_qty')) || 0;
+                      const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
+                      if (base > 0 && Number(m.base_qty) !== base) {
+                        setValue(`materials.${index}.base_qty`, base);
+                      }
                       const extra = calculateMakeready(base);
                       setValue(`materials.${index}.extra_qty`, extra);
                       const divs = calculatePaperDivision(effectivePrintSize, a7);
@@ -3316,12 +3378,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                                       if (coverLogic) {
                                         divBy = coverLogic.divideBy;
-                                        setValue(`materials.${index}.press_sheet`, String(coverLogic.pressSheet));
+                                        const m4 = coverLogic.pressSheet;
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
                                         setValue(`materials.${index}.divide_by`, divBy);
-                                        if (coverLogic.printSize) {
-                                          setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                                          printSize = coverLogic.printSize;
+                                        const coverPrintSize = coverLogic.printSize || printSize;
+                                        if (coverPrintSize) {
+                                          setValue(`materials.${index}.print_size`, coverPrintSize);
+                                          printSize = coverPrintSize;
                                         }
+                                        const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                        setValue(`materials.${index}.base_qty`, base);
+                                        const extra = calculateMakeready(base);
+                                        setValue(`materials.${index}.extra_qty`, extra);
+                                        const divs = calculatePaperDivision(coverPrintSize, a7);
+                                        const setups = calculateSetups(m4, divs);
+                                        const total = (base * m4) + (extra * setups);
+                                        setValue(`materials.${index}.total_qty`, total);
+                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                        return;
                                       } else if (!isCover && isInnerPageMaterial({ material_name: val, notes: formValues.materials?.[index]?.notes, is_cover: false }, formValues.category)) {
                                         const b4 = Number(getValues('total_pages')) || 0;
                                         if (b4 > 0 && printSize && a7) {
@@ -3424,7 +3498,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       }
                                     }
 
-                                    const base = Number(getValues(`materials.${index}.base_qty`)) || 0;
+                                    const totalQ = Number(getValues('total_qty')) || 0;
+                                    const base = Number(getValues(`materials.${index}.base_qty`)) > 0 ? Number(getValues(`materials.${index}.base_qty`)) : totalQ;
+                                    if (base > 0 && Number(getValues(`materials.${index}.base_qty`)) !== base) {
+                                      setValue(`materials.${index}.base_qty`, base);
+                                    }
                                     const currentMaterialName = getValues(`materials.${index}.material_name`) || '';
                                     const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
                                     setValue(`materials.${index}.extra_qty`, extra);
@@ -3646,8 +3724,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     }
 
                                     if (m4 > 0) {
-                                      const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                      const totalQ = Number(getValues('total_qty')) || 0;
+                                      const base = Number(formValues.materials?.[index]?.base_qty) || totalQ;
+                                      const extra = calculateMakeready(base);
+                                      setValue(`materials.${index}.extra_qty`, extra);
                                       const divs = calculatePaperDivision(val || 'A2', a7);
                                       const setups = calculateSetups(m4, divs);
                                       const total = (base * m4) + (extra * setups);
@@ -3750,8 +3830,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             onChange: (e) => {
                               if (isSpecialMat) return;
                               const press = Number(e.target.value) || 1;
-                              const base = Number(formValues.materials?.[index]?.base_qty) || 0;
-                              const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                              const totalQ = Number(getValues('total_qty')) || 0;
+                              const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
+                              if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                setValue(`materials.${index}.base_qty`, base);
+                              }
+                              const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base);
+                              setValue(`materials.${index}.extra_qty`, extra);
                               const a7 = getA7Size();
                               const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
                               const setups = calculateSetups(press, divs);
@@ -3829,7 +3914,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               return;
                             }
                             const extra = Number(e.target.value) || 0;
-                            const base = Number(formValues.materials?.[index]?.base_qty) || 0;
+                            const totalQ = Number(getValues('total_qty')) || 0;
+                            const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
+                            if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
+                              setValue(`materials.${index}.base_qty`, base);
+                            }
                             const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
                             const a7 = getA7Size();
                             const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
