@@ -420,8 +420,30 @@ export default function SalesReportPage() {
       )}
 
       {error && (
-        <div style={{ padding: '1.5rem', background: '#fef2f2', color: '#b91c1c', borderRadius: '8px', border: '1px solid #fecaca' }}>
-          ⚠️ Алдаа: {error}
+        <div style={{ padding: '1.5rem', background: '#fef2f2', color: '#b91c1c', borderRadius: '8px', border: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>⚠️ Алдаа: {error}</div>
+            <div style={{ fontSize: '0.85rem', color: '#7f1d1d' }}>
+              {error.includes('404')
+                ? 'Серверийн шинэ хувилбар байршиж (deploy) байгаа эсвэл тайлангийн эндпойнт түр холбогдохгүй байна. Сервер шинэчлэгдсэний дараа дахин оролдоно уу.'
+                : 'Сүлжээ эсвэл сервертэй холбогдоход алдаа гарлаа.'}
+            </div>
+          </div>
+          <button
+            onClick={() => fetchReport()}
+            style={{
+              padding: '0.45rem 1rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              background: '#b91c1c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Дахин оролдох
+          </button>
         </div>
       )}
 
