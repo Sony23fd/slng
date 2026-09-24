@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../db';
+import { getCachedStatuses, clearStatusCache } from './orderController';
 
 export const getOrderStatuses = async (req: Request, res: Response) => {
   try {
-    const statuses = await prisma.order_status.findMany({
-      orderBy: { sequence: 'asc' }
-    });
+    const statuses = await getCachedStatuses();
     res.json(statuses);
   } catch (error: any) {
     console.error('Error fetching order statuses:', error);
@@ -42,6 +39,7 @@ export const createOrderStatus = async (req: Request, res: Response) => {
         is_system: false
       }
     });
+    clearStatusCache();
     res.status(201).json(newStatus);
   } catch (error: any) {
     console.error('Error creating order status:', error);
@@ -60,6 +58,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     // Check if status exists
     const existing = await prisma.order_status.findUnique({ where: { id: Number(id) } });
     if (!existing) return res.status(404).json({ error: 'Status not found' });
+
+    clearStatusCache();
 
     // If changing name, we must update all orders with this current_status
     if (name && name !== existing.name) {
@@ -114,6 +114,7 @@ export const deleteOrderStatus = async (req: Request, res: Response) => {
       });
     }
 
+    clearStatusCache();
     await prisma.order_status.delete({ where: { id: Number(id) } });
     res.status(204).send();
   } catch (error) {

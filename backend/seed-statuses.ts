@@ -5,9 +5,13 @@ const prisma = new PrismaClient();
 const initialStatuses = [
   { name: 'Үнийн санал', color: '#94a3b8', sequence: 10, type: 'QUOTE', is_system: true },
   { name: 'Санхүү хүлээгдэж буй', color: '#f59e0b', sequence: 20, type: 'PENDING', is_system: true },
-  { name: 'Үйлдвэрлэлд', color: '#3b82f6', sequence: 30, type: 'ACTIVE', is_system: true },
+  { name: 'Хүлээгдэж буй', color: '#f59e0b', sequence: 25, type: 'PENDING', is_system: false },
+  { name: 'Үйлдвэрлэлд', color: '#3b82f6', sequence: 30, type: 'IN_PRODUCTION', is_system: true },
   { name: 'Бэлэн болсон', color: '#10b981', sequence: 60, type: 'READY', is_system: true },
+  { name: 'Бэлэн', color: '#10b981', sequence: 65, type: 'READY', is_system: false },
   { name: 'Хүлээлгэн өгсөн', color: '#64748b', sequence: 70, type: 'DELIVERED', is_system: true },
+  { name: 'Хүлээлгэж өгсөн', color: '#64748b', sequence: 75, type: 'DELIVERED', is_system: false },
+  { name: 'Олгосон', color: '#64748b', sequence: 78, type: 'DELIVERED', is_system: false },
   { name: 'Цуцлагдсан', color: '#ef4444', sequence: 80, type: 'CANCELLED', is_system: true },
 ];
 
@@ -26,19 +30,6 @@ async function main() {
       create: status
     });
   }
-  
-  // Update any existing edge cases
-  await prisma.order_status.upsert({
-    where: { name: 'Бэлэн болсон' },
-    update: {},
-    create: { name: 'Бэлэн болсон', color: '#10b981', sequence: 65, type: 'READY', is_system: false }
-  });
-  
-  await prisma.order_status.upsert({
-    where: { name: 'Хүлээлгэж өгсөн' },
-    update: {},
-    create: { name: 'Хүлээлгэж өгсөн', color: '#64748b', sequence: 75, type: 'DELIVERED', is_system: false }
-  });
 
   console.log('Finished seeding order statuses.');
 }

@@ -29,6 +29,28 @@ const generateOrderNumber = async (): Promise<string> => {
   return `${prefix}${String(sequence).padStart(5, '0')}`;
 };
 
+let cachedStatuses: any[] | null = null;
+let lastCacheTime = 0;
+const STATUS_CACHE_TTL = 60 * 1000;
+
+export const getCachedStatuses = async () => {
+  const now = Date.now();
+  if (cachedStatuses && now - lastCacheTime < STATUS_CACHE_TTL) {
+    return cachedStatuses;
+  }
+  try {
+    cachedStatuses = await prisma.order_status.findMany({ orderBy: { sequence: 'asc' } });
+    lastCacheTime = now;
+    return cachedStatuses;
+  } catch (e) {
+    return cachedStatuses || [];
+  }
+};
+
+export const clearStatusCache = () => {
+  cachedStatuses = null;
+};
+
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const data = req.body;
@@ -45,6 +67,16 @@ export const createOrder = async (req: Request, res: Response) => {
         }
       }
     }
+
+    const defaultStages = {
+      design: { status: (data.design_status === 'Эх бэлэн' || !data.needs_design) ? 100 : 0 },
+      raw_material: { status: 0 },
+      ctp: { status: 0 },
+      print: { status: 0 },
+      inspect: { status: 0 },
+      fold: { status: 0 },
+      bind: { status: 0 }
+    };
 
     const order = await prisma.order.create({
       data: {
@@ -79,6 +111,7 @@ export const createOrder = async (req: Request, res: Response) => {
         payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
         finance_notes: data.finance_notes || null,
         current_status: current_status,
+        production_stages: data.production_stages || defaultStages,
         
         specifications: {
           create: {
@@ -192,11 +225,35 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       order_number = await generateOrderNumber();
     }
 
+    const updateData: any = { current_status: targetStatus, order_number };
+
+    if (['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(targetStatus)) {
+      updateData.production_stages = {
+        design: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        raw_material: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        ctp: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        print: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        inspect: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        fold: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() },
+        bind: { status: 100, operator: 'Автомат систем', updatedAt: new Date().toISOString() }
+      };
+    } else if (targetStatus === 'Үйлдвэрлэлд' && !order.production_stages) {
+      updateData.production_stages = {
+        design: { status: order.design_status === 'Эх бэлэн' ? 100 : 0 },
+        raw_material: { status: 0 },
+        ctp: { status: 0 },
+        print: { status: 0 },
+        inspect: { status: 0 },
+        fold: { status: 0 },
+        bind: { status: 0 }
+      };
+    }
+
     // Use Prisma Transaction
     const result = await prisma.$transaction([
       prisma.order.update({
         where: { id: orderId },
-        data: { current_status: targetStatus, order_number }
+        data: updateData
       }),
       prisma.orderstatuslog.create({
         data: {
@@ -224,15 +281,17 @@ export const getAllOrders = async (req: Request, res: Response) => {
     const statusType = req.query.statusType as string; // e.g. 'ALL', 'QUOTE', 'PENDING', 'IN_PRODUCTION', 'READY', 'DELIVERED'
     const isMine = req.query.isMine === 'true';
     const kanbanLimit = req.query.kanbanLimit === 'true';
+    const includeDetails = req.query.includeDetails === 'true';
     const userId = (req as any).user?.id;
     
     let where: any = {};
     
-    if (search) {
+    if (search && search.trim()) {
+      const term = search.trim();
       where.OR = [
-        { customer_name: { contains: search } },
-        { product_name: { contains: search } },
-        { order_number: { contains: search } }
+        { customer_name: { contains: term, mode: 'insensitive' } },
+        { product_name: { contains: term, mode: 'insensitive' } },
+        { order_number: { contains: term, mode: 'insensitive' } }
       ];
     }
     
@@ -240,61 +299,72 @@ export const getAllOrders = async (req: Request, res: Response) => {
       where.sales_person_id = userId;
     }
     
+    const allStatuses = await getCachedStatuses();
+
     if (statusType && statusType !== 'ALL') {
-      const statuses = await prisma.order_status.findMany({
-        where: { type: statusType }
-      }).catch(() => []); // Fallback if table doesn't exist
-      const statusNames = statuses.map((s: any) => s.name);
+      const targetTypes = (statusType === 'IN_PRODUCTION' || statusType === 'ACTIVE')
+        ? ['IN_PRODUCTION', 'ACTIVE']
+        : [statusType];
+      
+      const matching = allStatuses.filter((s: any) => targetTypes.includes(s.type));
+      let statusNames = matching.map((s: any) => s.name);
+      
+      if (statusNames.length === 0) {
+        if (statusType === 'DELIVERED') statusNames = ['Хүлээлгэн өгсөн', 'Олгосон', 'Хүлээлгэж өгсөн'];
+        else if (statusType === 'READY') statusNames = ['Бэлэн болсон', 'Бэлэн'];
+        else if (statusType === 'PENDING') statusNames = ['Санхүү хүлээгдэж буй', 'Хүлээгдэж буй'];
+        else if (statusType === 'IN_PRODUCTION' || statusType === 'ACTIVE') statusNames = ['Үйлдвэрлэлд'];
+        else if (statusType === 'QUOTE') statusNames = ['Үнийн санал'];
+      }
+      
       if (statusNames.length > 0) {
         where.current_status = { in: statusNames };
-      } else {
-        // Hardcoded fallbacks
-        if (statusType === 'DELIVERED') where.current_status = { in: ['Хүлээлгэн өгсөн', 'Олгосон'] };
-        else if (statusType === 'READY') where.current_status = { in: ['Бэлэн болсон', 'Бэлэн'] };
-        else if (statusType === 'PENDING') where.current_status = 'Хүлээгдэж буй';
-        else if (statusType === 'QUOTE') where.current_status = 'Үнийн санал';
       }
+    } else if (statusType === 'ALL') {
+      // In Sales Orders, ALL orders excludes Quotes
+      where.current_status = { not: 'Үнийн санал' };
     }
 
+    const orderInclude = includeDetails ? {
+      user: { select: { id: true, name: true, phone: true } },
+      materials: true,
+      operations: true,
+      outsourcedJobs: true,
+    } : {
+      user: { select: { id: true, name: true, phone: true } }
+    };
+
     if (kanbanLimit) {
-      // Kanban mode: return only active orders without pagination, limited to 200
-      const activeStatuses = await prisma.order_status.findMany({
-        where: { type: { notIn: ['QUOTE', 'DELIVERED'] } }
-      });
-      
-      const activeStatusNames = activeStatuses.map(s => s.name);
-      
-      // If a specific statusType was requested along with kanbanLimit, respect it 
-      // but only if it is within active statuses (handled naturally by AND logic)
-      if (where.current_status) {
-         // keep it as is
-      } else {
-         where.current_status = { in: activeStatusNames };
+      const activeStatuses = allStatuses.filter((s: any) => !['QUOTE', 'DELIVERED', 'CANCELLED'].includes(s.type));
+      const activeNames = activeStatuses.length > 0
+        ? activeStatuses.map((s: any) => s.name)
+        : ['Санхүү хүлээгдэж буй', 'Хүлээгдэж буй', 'Үйлдвэрлэлд', 'Бэлэн болсон', 'Бэлэн'];
+
+      if (!where.current_status) {
+        where.current_status = { in: activeNames };
       }
       
       const orders = await prisma.order.findMany({
         where,
         take: 200,
         orderBy: { createdAt: 'desc' },
-        include: { user: true, materials: true, operations: true, outsourcedJobs: true }
+        include: orderInclude
       });
       
       return res.json({ data: orders, meta: { total: orders.length, page: 1, limit: 200, totalPages: 1 } });
     }
 
-    const total = await prisma.order.count({ where });
-    const orders = await prisma.order.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: true,
-        materials: true,
-        operations: true,
-        outsourcedJobs: true,
-      }
-    });
+    // Parallel count and findMany for lightning-fast response
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: orderInclude
+      })
+    ]);
     
     res.json({
       data: orders,

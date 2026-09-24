@@ -103,6 +103,8 @@ model order {
   payments          payment[]
 
   @@index([sales_person_id])
+  @@index([createdAt])
+  @@index([current_status])
 }
 
 model ordermaterial {
