@@ -41,21 +41,38 @@ export const STAGES_META = [
   { key: 'bind', label: 'Үдэх / Наах / Савлах', shortLabel: 'Үдэх/Савлах', icon: '📚', desc: 'Хавтаслах, үдэх, наах, савлаж бэлэн болгох' },
 ];
 
-export const getOverallProgress = (stages?: ProductionStages) => {
+export const getStageStatusValue = (stages?: any, key?: string) => {
+  if (!stages || !key) return 0;
+  if (stages[key]?.status !== undefined) return Number(stages[key].status);
+  const legacyMap: Record<string, string> = {
+    design: 'prep',
+    raw_material: 'material',
+    ctp: 'plate',
+    inspect: 'check'
+  };
+  const lk = legacyMap[key];
+  if (lk && stages[lk]?.status !== undefined) return Number(stages[lk].status);
+  return 0;
+};
+
+export const getOverallProgress = (stages?: ProductionStages, orderStatus?: string) => {
+  if (['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(orderStatus || '')) return 100;
   if (!stages) return 0;
   let total = 0;
   STAGES_META.forEach(s => {
-    const val = stages[s.key]?.status || 0;
-    total += val;
+    total += getStageStatusValue(stages, s.key);
   });
   return Math.round(total / STAGES_META.length);
 };
 
-export const getActiveStageInfo = (stages?: ProductionStages) => {
+export const getActiveStageInfo = (stages?: ProductionStages, orderStatus?: string) => {
+  if (['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(orderStatus || '')) {
+    return { ...STAGES_META[STAGES_META.length - 1], state: 'COMPLETED' };
+  }
   if (!stages) return { ...STAGES_META[0], state: 'PENDING' };
-  const inProg = STAGES_META.find(s => stages[s.key]?.status === 50);
+  const inProg = STAGES_META.find(s => getStageStatusValue(stages, s.key) === 50);
   if (inProg) return { ...inProg, state: 'IN_PROGRESS' };
-  const pending = STAGES_META.find(s => (stages[s.key]?.status || 0) === 0);
+  const pending = STAGES_META.find(s => getStageStatusValue(stages, s.key) === 0);
   if (pending) return { ...pending, state: 'PENDING' };
   return { ...STAGES_META[STAGES_META.length - 1], state: 'COMPLETED' };
 };
@@ -105,8 +122,8 @@ export default function ProductionInspectorDrawer({ order, isOpen, onClose, onOp
 
   if (!isOpen || !order) return null;
 
-  const progress = getOverallProgress(order.production_stages);
-  const activeStage = getActiveStageInfo(order.production_stages);
+  const progress = getOverallProgress(order.production_stages, order.current_status);
+  const activeStage = getActiveStageInfo(order.production_stages, order.current_status);
   const deadlineInfo = getDeadlineStatus(order.deadline, order.is_urgent, progress);
 
   const formattedDeadline = order.deadline
@@ -327,14 +344,21 @@ export default function ProductionInspectorDrawer({ order, isOpen, onClose, onOp
                   ⚙️ 7 Шатлалт процессын нарийвчилсан явц
                 </h3>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  {STAGES_META.filter(s => (order.production_stages?.[s.key]?.status || 0) === 100).length} / 7 дууссан
+                  {STAGES_META.filter(s => {
+                    const isDone = ['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(order.current_status) 
+                      || getStageStatusValue(order.production_stages, s.key) === 100;
+                    return isDone;
+                  }).length} / 7 дууссан
                 </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 {STAGES_META.map((stage, idx) => {
-                  const stageData: OrderStageData | undefined = order.production_stages?.[stage.key];
-                  const statusVal = stageData?.status || 0;
+                  const isCompletedOrder = ['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(order.current_status);
+                  const rawData: OrderStageData | undefined = order.production_stages?.[stage.key] 
+                    || (stage.key === 'design' ? order.production_stages?.prep : stage.key === 'raw_material' ? order.production_stages?.material : stage.key === 'ctp' ? order.production_stages?.plate : stage.key === 'inspect' ? order.production_stages?.check : undefined);
+                  const statusVal = isCompletedOrder ? 100 : (getStageStatusValue(order.production_stages, stage.key));
+                  const stageData = isCompletedOrder ? { ...rawData, status: 100, operator: rawData?.operator || 'Автомат систем' } : rawData;
                   
                   let badgeBg = '#f1f5f9';
                   let badgeColor = '#64748b';

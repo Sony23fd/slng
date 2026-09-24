@@ -19,9 +19,59 @@ export default function AllOrdersPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [inspectingOrder, setInspectingOrder] = useState<any>(null);
+  const [loadingTicketId, setLoadingTicketId] = useState<number | null>(null);
   const limit = 20;
   
   const router = useRouter();
+
+  const STAGE_KEYS = [
+    { key: 'design', legacy: 'prep', label: 'Эх бэлтгэл' },
+    { key: 'raw_material', legacy: 'material', label: 'Цаас/Материал' },
+    { key: 'ctp', legacy: 'plate', label: 'CTP Хавтан' },
+    { key: 'print', legacy: 'print', label: 'Хэвлэх' },
+    { key: 'inspect', legacy: 'check', label: 'Шалгаа' },
+    { key: 'fold', legacy: 'fold', label: 'Нугалаа' },
+    { key: 'bind', legacy: 'bind', label: 'Үдэх/Савлах' },
+  ];
+
+  const getStageVal = (stages: any, item: { key: string, legacy: string }, status?: string) => {
+    if (['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(status || '')) return 100;
+    if (!stages) return 0;
+    if (stages[item.key]?.status !== undefined) return Number(stages[item.key].status);
+    if (stages[item.legacy]?.status !== undefined) return Number(stages[item.legacy].status);
+    return 0;
+  };
+
+  const getCalculatedProgress = (o: any) => {
+    if (['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(o.current_status || '')) return 100;
+    const stages = o.production_stages;
+    if (!stages) return 0;
+    const total = STAGE_KEYS.reduce((acc, item) => acc + getStageVal(stages, item, o.current_status), 0);
+    return Math.round(total / STAGE_KEYS.length);
+  };
+
+  const handleOpenTicket = async (orderSummary: any) => {
+    if (orderSummary.materials && orderSummary.operations) {
+      setViewingOrder(orderSummary);
+      return;
+    }
+    setLoadingTicketId(orderSummary.id);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderSummary.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const fullOrder = await res.json();
+        setViewingOrder(fullOrder);
+      } else {
+        setViewingOrder(orderSummary);
+      }
+    } catch {
+      setViewingOrder(orderSummary);
+    } finally {
+      setLoadingTicketId(null);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -68,14 +118,18 @@ export default function AllOrdersPage() {
   }, [filterTab, showOnlyMine, searchTerm]);
 
   // Color functions
-  const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name) || ['Олгосон', 'Хүлээлгэж өгсөн'];
-  const readyStatusNames = orderStatuses.filter(s => s.type === 'READY').map(s => s.name) || ['Бэлэн', 'Бэлэн болсон'];
-  const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name) || ['Үнийн санал'];
-  const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name) || ['Санхүү хүлээгдэж буй'];
-  const isDeliveredOrder = (o: any) => deliveredStatusNames.includes(o.current_status || '');
-  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (readyStatusNames.includes(o.current_status || '') || (o.production_stages && Math.round(['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'].reduce((acc, k) => acc + (o.production_stages[k]?.status || 0), 0) / 7) >= 100));
-  const isQuoteOrder = (o: any) => quoteStatusNames.includes(o.current_status || '');
-  const isPendingOrder = (o: any) => pendingStatusNames.includes(o.current_status || '');
+  const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name);
+  const effectiveDeliveredNames = deliveredStatusNames.length > 0 ? deliveredStatusNames : ['Олгосон', 'Хүлээлгэж өгсөн', 'Хүлээлгэн өгсөн'];
+  const readyStatusNames = orderStatuses.filter(s => s.type === 'READY').map(s => s.name);
+  const effectiveReadyNames = readyStatusNames.length > 0 ? readyStatusNames : ['Бэлэн', 'Бэлэн болсон'];
+  const quoteStatusNames = orderStatuses.filter(s => s.type === 'QUOTE').map(s => s.name);
+  const effectiveQuoteNames = quoteStatusNames.length > 0 ? quoteStatusNames : ['Үнийн санал'];
+  const pendingStatusNames = orderStatuses.filter(s => s.type === 'PENDING').map(s => s.name);
+  const effectivePendingNames = pendingStatusNames.length > 0 ? pendingStatusNames : ['Санхүү хүлээгдэж буй', 'Хүлээгдэж буй'];
+  const isDeliveredOrder = (o: any) => effectiveDeliveredNames.includes(o.current_status || '');
+  const isReadyOrder = (o: any) => !isDeliveredOrder(o) && (effectiveReadyNames.includes(o.current_status || '') || getCalculatedProgress(o) >= 100);
+  const isQuoteOrder = (o: any) => effectiveQuoteNames.includes(o.current_status || '');
+  const isPendingOrder = (o: any) => effectivePendingNames.includes(o.current_status || '');
 
   return (
     <div>
@@ -165,36 +219,24 @@ export default function AllOrdersPage() {
           </thead>
           <tbody>
             {orders.map(o => {
-              const stages = o.production_stages || {};
-              const stageKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
-              const totalVal = stageKeys.reduce((acc, k) => acc + (stages[k]?.status || 0), 0);
-              const calculatedProgress = Math.round(totalVal / stageKeys.length);
+              const progress = getCalculatedProgress(o);
+              const isFinished = progress >= 100 || ['Бэлэн болсон', 'Бэлэн', 'Хүлээлгэн өгсөн', 'Олгосон'].includes(o.current_status || '');
+              const isCancelled = o.current_status === 'Цуцлагдсан';
+              const isPending = o.current_status === 'Санхүү хүлээгдэж буй' || o.current_status === 'Хүлээгдэж буй';
+              const inProduction = o.current_status === 'Үйлдвэрлэлд';
               
-              let progress = calculatedProgress;
-              let statusText = o.current_status || 'Тодорхойгүй';
-              
-              const statusObj = orderStatuses.find(s => s.name === o.current_status);
-              let statusColor = statusObj?.color || '#3b82f6';
-              let hideBar = false;
-
-              if (!statusObj) {
-                if (isDeliveredOrder(o)) {
-                  statusColor = '#64748b'; 
-                  hideBar = true;
-                } else if (o.current_status === 'Цуцлагдсан') {
-                  statusColor = '#ef4444'; 
-                  hideBar = true;
-                } else if (isPendingOrder(o)) {
-                  statusColor = '#f59e0b';
-                  hideBar = true;
-                } else if (isQuoteOrder(o)) {
-                  statusColor = '#94a3b8';
-                  hideBar = true;
-                } else if (isReadyOrder(o)) {
-                  statusColor = '#10b981';
-                  hideBar = true;
-                }
+              let activeStageLabel = 'Бэлэн';
+              if (!isFinished && !isCancelled) {
+                const activeItem = STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 50) 
+                  || STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 0) 
+                  || STAGE_KEYS[0];
+                activeStageLabel = activeItem.label;
               }
+
+              const statusObj = orderStatuses.find(s => s.name === o.current_status);
+              const statusColor = statusObj?.color || (isFinished ? '#10b981' : isCancelled ? '#ef4444' : inProduction ? '#3b82f6' : '#f59e0b');
+              const barColor = isFinished ? '#10b981' : isCancelled ? '#ef4444' : inProduction ? '#3b82f6' : '#f59e0b';
+              
               return (
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
@@ -207,30 +249,49 @@ export default function AllOrdersPage() {
                 </td>
                 <td style={{ padding: '1rem' }}>{o.product_name}</td>
                 <td style={{ padding: '1rem' }}>{o.total_qty}</td>
-                <td style={{ padding: '1rem', minWidth: '140px' }}>
+                <td style={{ padding: '0.85rem 1rem', minWidth: '175px' }}>
                   <div 
                     onClick={() => setInspectingOrder(o)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', padding: '0.25rem 0.4rem', borderRadius: '0.375rem', transition: 'background 0.15s' }}
                     title="Үйлдвэрлэлийн явцыг нарийвчлан харах (7 шатлал, машин, гүйцэтгэгч)"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: hideBar ? '0' : '0.25rem', fontWeight: 600 }}>
-                      <span style={{ color: hideBar ? statusColor : '#334155' }}>{statusText}</span>
-                      {!hideBar && <span style={{ color: '#2563eb', fontSize: '0.8rem' }}>{progress}% 🔍</span>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', marginBottom: '0.35rem', fontWeight: 600 }}>
+                      <span style={{ 
+                        color: isFinished ? '#15803d' : isCancelled ? '#b91c1c' : inProduction ? '#1d4ed8' : '#b45309',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        {isFinished ? '✓ Бэлэн (100%)' : isCancelled ? '✕ Цуцлагдсан' : isPending && progress === 0 ? '⏳ Эхлээгүй' : `⚙️ ${activeStageLabel}`}
+                      </span>
+                      <span style={{ color: barColor, fontSize: '0.8rem', fontWeight: 700 }}>
+                        {progress}% 🔍
+                      </span>
                     </div>
-                    {!hideBar && (
-                      <>
-                        <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', overflow: 'hidden', marginBottom: '4px' }}>
-                          <div style={{ background: statusColor, width: `${progress}%`, height: '100%', transition: 'width 0.3s ease' }} />
-                        </div>
-                        <div style={{ display: 'flex', gap: '2px' }}>
-                          {['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'].map((k) => {
-                            const val = o.production_stages?.[k]?.status || 0;
-                            const c = val === 100 ? '#10b981' : val === 50 ? '#3b82f6' : '#cbd5e1';
-                            return <div key={k} style={{ flex: 1, height: '3px', borderRadius: '1.5px', background: c }} />;
-                          })}
-                        </div>
-                      </>
-                    )}
+
+                    <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', overflow: 'hidden', marginBottom: '5px' }}>
+                      <div style={{ 
+                        background: barColor, 
+                        width: `${progress}%`, 
+                        height: '100%', 
+                        transition: 'width 0.3s ease',
+                        borderRadius: '999px' 
+                      }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      {STAGE_KEYS.map((item, idx) => {
+                        const val = getStageVal(o.production_stages, item, o.current_status);
+                        const c = val === 100 ? '#10b981' : val === 50 ? '#3b82f6' : '#cbd5e1';
+                        return (
+                          <div 
+                            key={item.key} 
+                            title={`${idx + 1}. ${item.label}: ${val}%`}
+                            style={{ flex: 1, height: '4px', borderRadius: '2px', background: c, transition: 'background 0.2s' }} 
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 </td>
                 <td style={{ padding: '1rem' }}>
@@ -272,8 +333,8 @@ export default function AllOrdersPage() {
                       Засах
                     </button>
                   ) : (
-                    <button onClick={() => setViewingOrder(o)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                      Харах
+                    <button onClick={() => handleOpenTicket(o)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={loadingTicketId === o.id}>
+                      {loadingTicketId === o.id ? '...' : 'Харах'}
                     </button>
                   )}
                   <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
