@@ -1,10 +1,45 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
 
+const compareProductSizes = (a: string, b: string): number => {
+  const normA = (a || '').trim().replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').toUpperCase();
+  const normB = (b || '').trim().replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').toUpperCase();
+  
+  if (normA === 'CUSTOM') return 1;
+  if (normB === 'CUSTOM') return -1;
+  
+  const matchA = normA.match(/^([AB])(\d+)/);
+  const matchB = normB.match(/^([AB])(\d+)/);
+  
+  if (matchA && matchB) {
+    if (matchA[1] !== matchB[1]) {
+      return matchA[1] === 'A' ? -1 : 1;
+    }
+    const numA = parseInt(matchA[2], 10);
+    const numB = parseInt(matchB[2], 10);
+    if (numA !== numB) return numA - numB;
+  } else if (matchA) {
+    return -1;
+  } else if (matchB) {
+    return 1;
+  }
+  
+  return normA.localeCompare(normB);
+};
+
 export const getConstants = async (req: Request, res: Response) => {
   try {
-    const constants = await prisma.constant.findMany();
-    res.json(constants);
+    const constants = await prisma.constant.findMany({
+      orderBy: { id: 'asc' }
+    });
+    
+    const sizeConstants = constants
+      .filter(c => c.type === 'SIZE')
+      .sort((a, b) => compareProductSizes(a.value, b.value));
+    
+    const otherConstants = constants.filter(c => c.type !== 'SIZE');
+    
+    res.json([...otherConstants, ...sizeConstants]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch constants' });
   }
