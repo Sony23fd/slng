@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { parseMaterial } from '../../utils/parseMaterial';
-import { calculatePaperDivision } from '../../utils/paperSizes';
+import { calculatePaperDivision, compareProductSizes } from '../../utils/paperSizes';
 import CalculationHelpBadge from '../common/CalculationHelpBadge';
 import TemplateCatalogModal from './TemplateCatalogModal';
 
@@ -2463,18 +2463,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 name="size"
                 control={control}
                 render={({ field }) => {
-                  const sizeOptions = groupedConstants['SIZE']?.map((c: any) => ({ value: c.value, label: c.value })) || [
-                    { value: 'A2', label: 'A2' },
-                    { value: 'A3', label: 'A3' },
-                    { value: 'A4', label: 'A4' },
-                    { value: 'A5', label: 'A5' },
-                    { value: 'A6', label: 'A6' },
-                    { value: 'B2', label: 'B2' },
-                    { value: 'B4', label: 'B4' },
-                    { value: 'B5', label: 'B5' },
-                    { value: 'B6', label: 'B6' },
-                    { value: 'Custom', label: 'Custom' }
-                  ];
+                  const rawSizes: string[] = (groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0)
+                    ? groupedConstants['SIZE'].map((c: any) => c.value)
+                    : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
+                  const sizeOptions = [...rawSizes]
+                    .sort(compareProductSizes)
+                    .map(val => ({ value: val, label: val }));
                   return (
                     <CreatableSelect
                       {...field}

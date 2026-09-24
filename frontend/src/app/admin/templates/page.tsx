@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import { compareProductSizes } from '../../../utils/paperSizes';
 
 export default function TemplatesPage() {
   const { user, token } = useAuthStore();
@@ -111,11 +112,14 @@ export default function TemplatesPage() {
               <label className="label">Хэмжээ</label>
               <select value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="input">
                 <option value="">Сонгох...</option>
-                {groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0 ? (
-                  groupedConstants['SIZE'].map((c: any) => <option key={c.id} value={c.value}>{c.value}</option>)
-                ) : (
-                  ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'].map(s => <option key={s} value={s}>{s}</option>)
-                )}
+                {(() => {
+                  const raw = groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0
+                    ? groupedConstants['SIZE'].map((c: any) => c.value)
+                    : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
+                  return [...raw].sort(compareProductSizes).map((s: string) => (
+                    <option key={s} value={s}>{s}</option>
+                  ));
+                })()}
               </select>
             </div>
             <div className="form-group">

@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { compareProductSizes } from '../../../utils/paperSizes';
 
 function SettingsContent() {
   const { user, token } = useAuthStore();
@@ -72,7 +73,14 @@ function SettingsContent() {
     if (res.ok) fetchConstants();
   };
 
-  const filteredConstants = constants.filter(c => c.type === activeType);
+  const filteredConstants = constants
+    .filter(c => c.type === activeType)
+    .sort((a, b) => {
+      if (activeType === 'SIZE') {
+        return compareProductSizes(a.value, b.value);
+      }
+      return 0;
+    });
 
   const typeLabels: any = {
     CATEGORY: 'Бүтээгдэхүүний ангилал',

@@ -81,3 +81,36 @@ export function calculatePaperDivision(sourceStr: string, targetStr: string): nu
   
   return 1;
 }
+
+/**
+ * Sorts product sizes:
+ * 1. A sizes first (A1, A2, A3, A4, A5, A6...) ascending
+ * 2. B sizes next (B1, B2, B3, B4, B5, B6...) ascending
+ * 3. Other formats
+ * 4. 'Custom' always at the very end
+ */
+export function compareProductSizes(a: string, b: string): number {
+  const normA = (a || '').trim().replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').toUpperCase();
+  const normB = (b || '').trim().replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').toUpperCase();
+  
+  if (normA === 'CUSTOM') return 1;
+  if (normB === 'CUSTOM') return -1;
+  
+  const matchA = normA.match(/^([AB])(\d+)/);
+  const matchB = normB.match(/^([AB])(\d+)/);
+  
+  if (matchA && matchB) {
+    if (matchA[1] !== matchB[1]) {
+      return matchA[1] === 'A' ? -1 : 1;
+    }
+    const numA = parseInt(matchA[2], 10);
+    const numB = parseInt(matchB[2], 10);
+    if (numA !== numB) return numA - numB;
+  } else if (matchA) {
+    return -1;
+  } else if (matchB) {
+    return 1;
+  }
+  
+  return normA.localeCompare(normB);
+}

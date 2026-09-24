@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
+import { compareProductSizes } from '../../../utils/paperSizes';
 
 interface CoverRule {
   id: number;
@@ -99,7 +100,7 @@ export default function CoverRulesPage() {
     }
   };
 
-  const sizes = constants.filter(c => c.type === 'SIZE');
+  const sizes = constants.filter(c => c.type === 'SIZE').sort((a, b) => compareProductSizes(a.value, b.value));
 
   return (
     <div>
