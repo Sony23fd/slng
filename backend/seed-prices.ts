@@ -65,6 +65,9 @@ const prices = [
 
   // Нэмэлт материалууд
   { category: 'Материал', item_name: 'CTP хавтан', unit_cost: 8800 },
+  { category: 'Материал', item_name: 'CTP хавтан (65x55)', unit_cost: 6800 },
+  { category: 'Материал', item_name: 'CTP хавтан (74.5x60.5)', unit_cost: 8800 },
+  { category: 'Материал', item_name: 'CTP хавтан (76x60.5)', unit_cost: 8800 },
   { category: 'Материал', item_name: 'CTP хавтан (76*60.5)', unit_cost: 8800 },
   { category: 'Материал', item_name: 'CTP хавтан (65*55)', unit_cost: 6800 },
   { category: 'Материал', item_name: 'Бүрэлт (Гялгар)', unit_cost: 1500 },

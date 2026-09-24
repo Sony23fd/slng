@@ -65,8 +65,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'B3',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B3',
           press_sheet: '0.5',
           base_qty: 4,
@@ -79,8 +79,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '10',
           base_qty: 20,
@@ -89,7 +89,7 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 20,
           unit_cost: 6800,
-          notes: 'Дотор хуудасны CTP хэвлэлийн хавтан (1+1, 10 х.х, 65*55)',
+          notes: 'Дотор хуудасны CTP хэвлэлийн хавтан (1+1, 10 х.х)',
           is_cover: false
         }
       ],
@@ -170,31 +170,17 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
-          press_sheet: '0.5',
-          base_qty: 4,
+          press_sheet: '4',
+          base_qty: 32,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 32,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 32,
           unit_cost: 8800,
-          notes: 'Хавтасны CTP хэвлэлийн хавтан (4+4)',
-          is_cover: false
-        },
-        {
-          material_name: 'CTP хавтан (Дотор)',
-          size: 'A2',
-          print_size: 'A2',
-          press_sheet: '3.5',
-          base_qty: 28,
-          extra_qty: 0,
-          total_qty: 28,
-          divide_by: 1,
-          sheet_qty: 28,
-          unit_cost: 8800,
-          notes: 'Дотор хуудасны CTP хэвлэлийн хавтан (4+4, 3.5 х.х)',
+          notes: 'Хавтас (4 ш) + Дотор (28 ш)',
           is_cover: false
         }
       ],
@@ -256,8 +242,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Үндсэн)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '1',
           base_qty: 8,
@@ -341,8 +327,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Үндсэн)',
-          size: 'B2',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B2',
           press_sheet: '1',
           base_qty: 4,
@@ -441,8 +427,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хуудас)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '1.625',
           base_qty: 16,
@@ -451,12 +437,12 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 16,
           unit_cost: 8800,
-          notes: 'Хуудасны CTP хэвлэлийн хавтан (4+4, 1.625 х.х)',
+          notes: 'Хуудасны CTP хэвлэлийн хавтан (4+4)',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Суурь)',
-          size: 'B3',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B3',
           press_sheet: '1',
           base_qty: 4,
@@ -554,8 +540,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хуудас)',
-          size: 'B2',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B2',
           press_sheet: '1.625',
           base_qty: 16,
@@ -564,12 +550,12 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 16,
           unit_cost: 8800,
-          notes: 'Хуудасны CTP хэвлэлийн хавтан (4+4, 1.625 х.х)',
+          notes: 'Хуудасны CTP хэвлэлийн хавтан (4+4)',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Суурь)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '1',
           base_qty: 4,
@@ -639,8 +625,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Үндсэн)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '7',
           base_qty: 28,
@@ -695,8 +681,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Үндсэн)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '1',
           base_qty: 4,
@@ -764,8 +750,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Үндсэн)',
-          size: 'A3',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A3',
           press_sheet: '1',
           base_qty: 4,
@@ -903,8 +889,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'A2',
+          material_name: 'CTP хавтан (76x60.5)',
+          size: '76x60.5',
           print_size: 'A2',
           press_sheet: '0.5',
           base_qty: 4,
@@ -917,8 +903,8 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '10',
           base_qty: 20,
@@ -927,7 +913,7 @@ const standardTemplates = [
           divide_by: 1,
           sheet_qty: 20,
           unit_cost: 6800,
-          notes: 'Дотор хуудасны CTP хэвлэлийн хавтан (1+1, 10 х.х, 65*55)',
+          notes: 'Дотор хуудасны CTP хэвлэлийн хавтан (1+1, 10 х.х)',
           is_cover: false
         }
       ],
@@ -1066,22 +1052,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'B3',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B3',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: 'B3',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '10',
           base_qty: 20,
@@ -1228,22 +1214,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'B3',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B3',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: 'B3',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '20',
           base_qty: 40,
@@ -1390,22 +1376,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'B2',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B2',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: 'B2',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '20',
           base_qty: 40,
@@ -1510,22 +1496,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: 'B3',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: 'B3',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: 'B3',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Супер хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '10',
           base_qty: 20,
@@ -1629,22 +1615,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: '594x280',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: '594x280',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: '594x280',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Супер хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '10',
           base_qty: 20,
@@ -1748,22 +1734,22 @@ const standardTemplates = [
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Хавтас)',
-          size: '720x380',
+          material_name: 'CTP хавтан (74.5x60.5)',
+          size: '74.5x60.5',
           print_size: '720x380',
-          press_sheet: '1.0',
-          base_qty: 4,
+          press_sheet: '720x380',
+          base_qty: 1.0,
           extra_qty: 0,
-          total_qty: 4,
+          total_qty: 1.0,
           divide_by: 1,
-          sheet_qty: 4,
+          sheet_qty: 1.0,
           unit_cost: 8800,
-          notes: 'Супер хавтасны CTP хэвлэлийн хавтан (4+0)',
+          notes: '4',
           is_cover: false
         },
         {
-          material_name: 'CTP хавтан (Дотор)',
-          size: '65*55',
+          material_name: 'CTP хавтан (65x55)',
+          size: '65x55',
           print_size: '65*55',
           press_sheet: '20',
           base_qty: 40,
