@@ -56,6 +56,7 @@ interface OrderFormValues {
     material_name: string; size: string; print_size: string; press_sheet: string; 
     base_qty: number; extra_qty: number; total_qty: number; divide_by: number; 
     sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
+    is_manual_size?: boolean;
   }[];
   
   // 6. Ажиллагаа
@@ -211,6 +212,23 @@ function getMaterialType(matName?: string, notes?: string): {
 
   return { isAux: false, type: 'none', isNonPrinted: false };
 }
+
+function normalizeCtpSize(s?: string): '65x55' | '74.5x60.5' | '76x60.5' {
+  if (!s) return '76x60.5';
+  const clean = s.trim().replace('*', 'x');
+  if (clean === '65x55') return '65x55';
+  if (clean === '74.5x60.5') return '74.5x60.5';
+  if (clean === '76x60.5') return '76x60.5';
+  if (clean.includes('65')) return '65x55';
+  if (clean.includes('74.5')) return '74.5x60.5';
+  return '76x60.5';
+}
+
+const CTP_PLATE_SIZE_OPTIONS: { value: '65x55' | '74.5x60.5' | '76x60.5'; label: string }[] = [
+  { value: '65x55', label: '65x55 (6,800₮)' },
+  { value: '74.5x60.5', label: '74.5x60.5 (8,800₮)' },
+  { value: '76x60.5', label: '76x60.5 (8,800₮)' }
+];
 
 function getSuperCoverSpecs(size?: string) {
   const s = (size || 'A5').toUpperCase();
@@ -593,6 +611,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     return acc;
   }, {} as Record<string, any[]>);
 
+  const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
+  const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
+  const ctpPrice = ctpPriceLarge;
+
   const categoryOptions = React.useMemo(() => {
     const map = new Map<string, { value: string; label: string }>();
 
@@ -838,7 +860,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           let totalQty = Number(m.total_qty) || baseQty;
           let sheetQty = Number(m.sheet_qty) || Math.ceil(totalQty / rowDivideBy);
 
+          let rowMatName = m.material_name;
           if (aux.type === 'ctp') {
+            const normSize = normalizeCtpSize(m.size);
+            rowSize = normSize;
+            rowMatName = `CTP хавтан (${normSize})`;
             rowPrintSize = m.print_size || 'A2';
             rowPressSheet = String(m.press_sheet || '');
             rowDivideBy = 1;
@@ -987,6 +1013,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
           return {
             ...m,
+            material_name: rowMatName,
             size: rowSize,
             print_size: rowPrintSize,
             divide_by: rowDivideBy,
@@ -995,7 +1022,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             extra_qty: extraQty,
             total_qty: totalQty,
             sheet_qty: sheetQty,
-            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : (Number(m.unit_cost) || (aux.type === 'ctp' ? 8800 : 0))
+            unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : (Number(m.unit_cost) || (aux.type === 'ctp' ? (normalizeCtpSize(rowSize) === '65x55' ? 6800 : 8800) : 0))
           };
         });
         setValue('materials', smartMaterials);
@@ -1212,16 +1239,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
     const category = formValues.category || '';
 
-    // Group required CTP plates by role/part
-    const requiredCtpMap: Record<string, {
-      name: string;
-      plateFormat: string;
+    // Group required CTP plates by plate size (65x55, 74.5x60.5, 76x60.5)
+    interface CtpComp {
+      role: 'cover' | 'inner' | 'main';
+      roleLabel: string;
       printSize: string;
       pressSheet: string;
       plates: number;
-      unitCost: number;
-      notes: string;
-    }> = {};
+      defaultSize: '65x55' | '74.5x60.5' | '76x60.5';
+    }
+
+    const ctpComponents: CtpComp[] = [];
 
     mats.forEach((m, i) => {
       const aux = getMaterialType(m.material_name, m.notes);
@@ -1236,48 +1264,26 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const plates = calcPlates(colorToUse, mPressSheet, divisions);
 
       if (plates > 0) {
-        let key = '';
-        let ctpName = '';
-        let noteDesc = '';
-
         // Plate sizing logic based on printing press standards:
-        // 1-color (1+1, 1+0) or small format size (65*55, 65x43) -> Ryobi press: 65*55 plate (6,800₮)
+        // 1-color (1+1, 1+0) or small format size (65*55, 65x43) -> Ryobi press: 65x55 plate (6,800₮)
         // Multi-color (4+4, 4+0, etc.) on B-size -> Komori B-format: 74.5*60.5 plate (8,800₮)
         // Multi-color on A-size or others -> Komori A-format: 76*60.5 plate (8,800₮)
         const is1Color = colorToUse === '1+1' || colorToUse === '1+0' || colorToUse === '0+1';
         const isSmallFormatSize = printSize === '65*55' || printSize === '65x55' || printSize === '65x43' || printSize === '65*43';
         const isSmallPlate = is1Color || (isSmallFormatSize && !colorToUse?.startsWith('4+'));
 
-        const plateFormat = isSmallPlate
-          ? '65*55'
-          : (printSize.toUpperCase().startsWith('B') ? '74.5*60.5' : '76*60.5');
-        const platePrice = isSmallPlate ? ctpPriceSmall : ctpPrice;
+        const defaultSize: '65x55' | '74.5x60.5' | '76x60.5' = isSmallPlate
+          ? '65x55'
+          : (printSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5');
 
-        if (isCover) {
-          key = 'cover';
-          ctpName = 'CTP хавтан (Хавтас)';
-          noteDesc = `Хавтасны CTP хэвлэлийн хавтан (${colorToUse || '4+0'}, ${plateFormat})`;
-        } else if (isInner) {
-          key = `inner_${i}`;
-          ctpName = mats.filter(x => !x.is_cover && isInnerPageMaterial(x, category)).length > 1
-            ? `CTP хавтан (Дотор ${i + 1})`
-            : 'CTP хавтан (Дотор)';
-          noteDesc = `Дотор хуудасны CTP хэвлэлийн хавтан (${colorToUse || '1+1'}, ${m.press_sheet || 0} х.х, ${plateFormat})`;
-        } else {
-          key = `main_${i}`;
-          ctpName = 'CTP хавтан (Үндсэн)';
-          noteDesc = `CTP хэвлэлийн хавтан (${colorToUse || 'Өнгө'}, ${plateFormat})`;
-        }
-
-        requiredCtpMap[key] = {
-          name: ctpName,
-          plateFormat,
+        ctpComponents.push({
+          role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
+          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : 'Үндсэн'),
           printSize,
           pressSheet: String(m.press_sheet || ''),
           plates,
-          unitCost: platePrice,
-          notes: noteDesc
-        };
+          defaultSize
+        });
       }
     });
 
@@ -1290,20 +1296,70 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       return aux.type === 'ctp';
     });
 
-    const targetCtpList = Object.values(requiredCtpMap).map(req => ({
-      material_name: req.name,
-      size: req.plateFormat,
-      print_size: req.printSize,
-      press_sheet: req.pressSheet,
-      base_qty: req.plates,
-      extra_qty: 0,
-      total_qty: req.plates,
-      divide_by: 1,
-      sheet_qty: req.plates,
-      unit_cost: req.unitCost,
-      notes: req.notes,
-      is_cover: false
-    }));
+    // Group components by final CTP plate size
+    // Standard rule: Same size plates are merged into 1 row with combined plate count.
+    // Different size plates are kept in separate rows.
+    const groupedByPlateSize: Record<string, {
+      size: '65x55' | '74.5x60.5' | '76x60.5';
+      totalPlates: number;
+      notesList: string[];
+      printSizes: string[];
+      pressSheets: string[];
+      isManual: boolean;
+    }> = {};
+
+    ctpComponents.forEach((comp, idx) => {
+      let finalSize = comp.defaultSize;
+
+      // Check if user manually selected a size on existing CTP rows
+      if (currentCtpMats.length === 1 && (currentCtpMats[0] as any).is_manual_size) {
+        finalSize = normalizeCtpSize(currentCtpMats[0].size);
+      } else if (currentCtpMats.length > 1) {
+        const matchingCtp = currentCtpMats.find(c => (c.notes || '').includes(comp.roleLabel)) || currentCtpMats[idx];
+        if (matchingCtp && (matchingCtp as any).is_manual_size) {
+          finalSize = normalizeCtpSize(matchingCtp.size);
+        }
+      }
+
+      if (!groupedByPlateSize[finalSize]) {
+        groupedByPlateSize[finalSize] = {
+          size: finalSize,
+          totalPlates: 0,
+          notesList: [],
+          printSizes: [],
+          pressSheets: [],
+          isManual: currentCtpMats.some(c => normalizeCtpSize(c.size) === finalSize && (c as any).is_manual_size)
+        };
+      }
+
+      groupedByPlateSize[finalSize].totalPlates += comp.plates;
+      groupedByPlateSize[finalSize].notesList.push(`${comp.roleLabel} (${comp.plates} ш)`);
+      if (comp.printSize && !groupedByPlateSize[finalSize].printSizes.includes(comp.printSize)) {
+        groupedByPlateSize[finalSize].printSizes.push(comp.printSize);
+      }
+      if (comp.pressSheet) {
+        groupedByPlateSize[finalSize].pressSheets.push(comp.pressSheet);
+      }
+    });
+
+    const targetCtpList = Object.values(groupedByPlateSize).map(g => {
+      const platePrice = g.size === '65x55' ? ctpPriceSmall : ctpPrice;
+      return {
+        material_name: `CTP хавтан (${g.size})`,
+        size: g.size,
+        print_size: g.printSizes.join(', ') || 'A2',
+        press_sheet: g.pressSheets[0] || '1',
+        base_qty: g.totalPlates,
+        extra_qty: 0,
+        total_qty: g.totalPlates,
+        divide_by: 1,
+        sheet_qty: g.totalPlates,
+        unit_cost: platePrice,
+        notes: g.notesList.join(' + '),
+        is_cover: false,
+        is_manual_size: g.isManual
+      };
+    });
 
     // Check if currentCtpMats matches targetCtpList
     let hasDiff = currentCtpMats.length !== targetCtpList.length;
@@ -1313,7 +1369,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const tgt = targetCtpList[j];
         if (
           cur.material_name !== tgt.material_name ||
-          cur.size !== tgt.size ||
+          normalizeCtpSize(cur.size) !== tgt.size ||
           cur.print_size !== tgt.print_size ||
           Number(cur.sheet_qty) !== tgt.sheet_qty ||
           Number(cur.unit_cost) !== tgt.unit_cost ||
@@ -3240,11 +3296,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const is1Col = curColor === '1+1' || curColor === '1+0' || curColor === '0+1';
                                           const isSmSize = curPrintSize === '65*55' || curPrintSize === '65x55' || curPrintSize === '65x43' || curPrintSize === '65*43';
                                           const isSm = is1Col || (isSmSize && !curColor?.startsWith('4+'));
-                                          const ctpPrice = isSm ? ctpPriceSmall : ctpPriceLarge;
-                                          const plateFormat = isSm ? '65*55' : (curPrintSize.toUpperCase().startsWith('B') ? '74.5*60.5' : '76*60.5');
+                                          const explicitSize = val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : ''));
+                                          const plateFormat = explicitSize || (isSm ? '65x55' : (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5'));
+                                          const ctpPrice = plateFormat === '65x55' ? ctpPriceSmall : ctpPriceLarge;
 
+                                          setValue(`materials.${index}.material_name`, `CTP хавтан (${plateFormat})`);
                                           setValue(`materials.${index}.size`, plateFormat);
                                           setValue(`materials.${index}.unit_cost`, ctpPrice);
+                                          setValue(`materials.${index}.is_manual_size`, true as any);
                                           setValue(`materials.${index}.divide_by`, 1);
                                           setValue(`materials.${index}.press_sheet`, '1');
                                           setValue(`materials.${index}.print_size`, curPrintSize);
@@ -3516,28 +3575,83 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               <span>{isCoverRow ? '📘 Хавтас' : 'Хавтас'}</span>
                             </label>
                           )}
+                          {aux.type === 'ctp' && !isExpandedMaterial && (
+                            <div style={{ width: '130px', flexShrink: 0 }}>
+                              <Controller
+                                name={`materials.${index}.size`}
+                                control={control}
+                                render={({ field }) => {
+                                  const curNorm = normalizeCtpSize(field.value);
+                                  const selectedOpt = CTP_PLATE_SIZE_OPTIONS.find(o => o.value === curNorm) || { value: curNorm, label: curNorm };
+                                  return (
+                                    <Select
+                                      value={selectedOpt}
+                                      options={CTP_PLATE_SIZE_OPTIONS}
+                                      onChange={(opt: any) => {
+                                        const val = opt ? normalizeCtpSize(opt.value) : '76x60.5';
+                                        field.onChange(val);
+                                        const newPrice = val === '65x55' ? ctpPriceSmall : ctpPrice;
+                                        setValue(`materials.${index}.size`, val);
+                                        setValue(`materials.${index}.material_name`, `CTP хавтан (${val})`);
+                                        setValue(`materials.${index}.unit_cost`, newPrice);
+                                        setValue(`materials.${index}.is_manual_size`, true as any);
+                                      }}
+                                      styles={{
+                                        ...tableSelectStyles,
+                                        control: (base: any, state: any) => ({
+                                          ...base,
+                                          minHeight: '28px',
+                                          height: '28px',
+                                          fontSize: '11px',
+                                          borderRadius: '4px',
+                                          borderColor: state.isFocused ? '#2563eb' : '#cbd5e1'
+                                        }),
+                                        valueContainer: (base: any) => ({ ...base, padding: '0 4px', height: '28px' }),
+                                        indicatorsContainer: (base: any) => ({ ...base, height: '28px' })
+                                      }}
+                                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                      menuPosition="fixed"
+                                      isSearchable={false}
+                                      placeholder="Хэмжээ..."
+                                    />
+                                  );
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
                       </td>
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
                         {aux.type === 'ctp' ? (
-                          <div 
-                            style={{ 
-                              height: '32px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #bbf7d0', 
-                              borderRadius: '4px', 
-                              fontSize: '11.5px', 
-                              color: '#15803d', 
-                              fontWeight: 600 
+                          <Controller
+                            name={`materials.${index}.size`}
+                            control={control}
+                            render={({ field }) => {
+                              const curNorm = normalizeCtpSize(field.value);
+                              const selectedOpt = CTP_PLATE_SIZE_OPTIONS.find(o => o.value === curNorm) || { value: curNorm, label: curNorm };
+                              return (
+                                <Select
+                                  value={selectedOpt}
+                                  options={CTP_PLATE_SIZE_OPTIONS}
+                                  onChange={(opt: any) => {
+                                    const val = opt ? normalizeCtpSize(opt.value) : '76x60.5';
+                                    field.onChange(val);
+                                    const newPrice = val === '65x55' ? ctpPriceSmall : ctpPrice;
+                                    setValue(`materials.${index}.size`, val);
+                                    setValue(`materials.${index}.material_name`, `CTP хавтан (${val})`);
+                                    setValue(`materials.${index}.unit_cost`, newPrice);
+                                    setValue(`materials.${index}.is_manual_size`, true as any);
+                                  }}
+                                  styles={tableSelectStyles}
+                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                  menuPosition="fixed"
+                                  isSearchable={false}
+                                  placeholder="Хавтан сонгох..."
+                                />
+                              );
                             }}
-                            title="CTP хавтангийн физик формат"
-                          >
-                            💿 {formValues.materials?.[index]?.size || '76*60.5'}
-                          </div>
+                          />
                         ) : (
                         <Controller
                           name={`materials.${index}.size`}
