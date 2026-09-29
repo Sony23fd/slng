@@ -57,6 +57,7 @@ interface OrderFormValues {
     base_qty: number; extra_qty: number; total_qty: number; divide_by: number; 
     sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
     is_manual_size?: boolean;
+    is_manual_extra?: boolean;
   }[];
   
   // 6. Ажиллагаа
@@ -229,6 +230,33 @@ const CTP_PLATE_SIZE_OPTIONS: { value: '65x55' | '74.5x60.5' | '76x60.5'; label:
   { value: '74.5x60.5', label: '74.5x60.5 (8,800₮)' },
   { value: '76x60.5', label: '76x60.5 (8,800₮)' }
 ];
+
+export function calculateCoatingMakeready(
+  baseQty: number,
+  operations: Array<{ operation_name?: string }> = [],
+  materialNotes?: string
+): number {
+  const hasVarnish = operations.some(o => {
+    const name = (o.operation_name || '').toLowerCase();
+    return name.includes('лак');
+  }) || (materialNotes || '').toLowerCase().includes('лак');
+
+  if (hasVarnish) {
+    return 60; // Лактай бүрэлт: үргэлж 60 хадаас
+  }
+
+  const hasEmboss = operations.some(o => {
+    const name = (o.operation_name || '').toLowerCase();
+    return name.includes('эмбосс');
+  }) || (materialNotes || '').toLowerCase().includes('эмбосс');
+
+  if (hasEmboss) {
+    return baseQty > 3000 ? 50 : 40; // Эмбосс бүрэлт: <=3000 -> 40, >3000 -> 50
+  }
+
+  // Энгийн бүрэлт: <=3000 -> 20, >3000 -> 50
+  return baseQty > 3000 ? 50 : 20;
+}
 
 function getSuperCoverSpecs(size?: string) {
   const s = (size || 'A5').toUpperCase();
@@ -944,11 +972,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             rowPressSheet = '';
             rowDivideBy = 1;
             baseQty = tQty;
-            extraQty = Number(m.extra_qty) || 100;
+            const tOps = (od.operations || []).map((o: any) => ({ operation_name: o.operation_name || o.name }));
+            extraQty = calculateCoatingMakeready(baseQty, tOps, m.notes);
             const mult = (rowPrintSize === 'B2' || a7.includes('B2')) ? 0.007 : ((rowPrintSize === 'A2' || a7.includes('A2')) ? 0.006 : 0.004);
-            const coatTotal = Math.round((baseQty + extraQty) * mult * 10) / 10;
-            totalQty = coatTotal;
-            sheetQty = coatTotal;
+            totalQty = baseQty + extraQty;
+            sheetQty = Number((totalQty * mult).toFixed(2));
           } else {
             // Standard printed materials (Cover, Inner, Single-sheet)
             if (!rowSize || ['A5', 'A4', 'B5', 'A2', 'B4', 'Custom'].includes(rowSize)) {
@@ -1916,15 +1944,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const toggleFinishingOp = (opName: string, defaultCost: number = 0) => {
     const currentOps = getValues('operations') || [];
     const existsIndex = currentOps.findIndex(o => o.operation_name === opName);
+    let nextOps: any[] = [];
     if (existsIndex >= 0) {
-      setValue('operations', currentOps.filter((_, i) => i !== existsIndex));
+      nextOps = currentOps.filter((_, i) => i !== existsIndex);
+      setValue('operations', nextOps);
     } else {
       const mp = masterPrices.find(p => p.item_name === opName);
       let calcQty = Number(getValues('total_qty')) || 0;
       if (mp && mp.formula && mp.formula.expression) {
         calcQty = evaluateOperationFormula(mp.formula.expression);
       }
-      setValue('operations', [
+      nextOps = [
         ...currentOps,
         {
           operation_name: opName,
@@ -1935,8 +1965,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           is_pricing: false,
           production_stage: mp?.production_stage || 'POST_PRESS'
         }
-      ]);
+      ];
+      setValue('operations', nextOps);
     }
+
+    // Auto-update coating rows when finishing ops toggle
+    const currentMats = getValues('materials') || [];
+    currentMats.forEach((m: any, idx: number) => {
+      if ((m.material_name || '').includes('Бүрэлт')) {
+        const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : (Number(getValues('total_qty')) || 0);
+        const newExtra = calculateCoatingMakeready(base, nextOps, m.notes);
+        setValue(`materials.${idx}.extra_qty`, newExtra);
+        setValue(`materials.${idx}.is_manual_extra`, false as any);
+        const tQty = base + newExtra;
+        setValue(`materials.${idx}.total_qty`, tQty);
+        const m3 = m.print_size || 'A3';
+        let coef = 0.004;
+        if (m3 === 'A2') coef = 0.006;
+        else if (m3 === 'B2') coef = 0.007;
+        setValue(`materials.${idx}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+      }
+    });
   };
 
   const toggleAllCliche = () => {
@@ -2030,8 +2079,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
          else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
 
          const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
-         let extra = Number(m.extra_qty) || 0;
-         if (extra > 50) { extra = 50; setValue(`materials.${index}.extra_qty`, 50); }
+         const currentOps = formValues.operations || [];
+         let extra = Number(m.extra_qty);
+         if (isNaN(extra) || extra < 0 || !m.is_manual_extra) {
+           extra = calculateCoatingMakeready(base, currentOps, m.notes);
+           if (Number(m.extra_qty) !== extra) setValue(`materials.${index}.extra_qty`, extra);
+         }
          const tQty = base + extra;
          
          if (Number(m.total_qty) !== tQty) setValue(`materials.${index}.total_qty`, tQty);
@@ -2081,7 +2134,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
       }
     });
-  }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, bagDims, setValue, getValues]);
+  }, [formValues.category, formValues.total_qty, formValues.size, formValues.materials, formValues.operations, bagDims, setValue, getValues]);
 
   const [submitType, setSubmitType] = useState<string>('');
   const [showOperationsModal, setShowOperationsModal] = useState(false);
@@ -2492,6 +2545,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         setValue(`materials.${index}.extra_qty`, specs.endpaperPrinted.extra);
                         setValue(`materials.${index}.total_qty`, epTotal);
                         setValue(`materials.${index}.sheet_qty`, Math.ceil(epTotal / specs.endpaperPrinted.divBy));
+                        return;
+                      }
+                      if (aux.type === 'coating') {
+                        const ops = getValues('operations') || [];
+                        const coatExtra = calculateCoatingMakeready(newBase, ops, m.notes);
+                        setValue(`materials.${index}.base_qty`, newBase);
+                        setValue(`materials.${index}.extra_qty`, coatExtra);
+                        setValue(`materials.${index}.is_manual_extra`, false as any);
+                        const tQty = newBase + coatExtra;
+                        setValue(`materials.${index}.total_qty`, tQty);
+                        const m3 = m.print_size || 'A3';
+                        let coef = 0.004;
+                        if (m3 === 'A2') coef = 0.006;
+                        else if (m3 === 'B2') coef = 0.007;
+                        setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
                         return;
                       }
                     }
@@ -3401,8 +3469,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.press_sheet`, '');
                                           const base = coverMat?.base_qty || totalQty;
                                           setValue(`materials.${index}.base_qty`, base);
-                                          setValue(`materials.${index}.extra_qty`, 100);
-                                          const tQty = base + 100;
+                                          const currentOps = getValues('operations') || [];
+                                          const extra = calculateCoatingMakeready(base, currentOps, formValues.materials?.[index]?.notes);
+                                          setValue(`materials.${index}.extra_qty`, extra);
+                                          setValue(`materials.${index}.is_manual_extra`, false as any);
+                                          const tQty = base + extra;
                                           setValue(`materials.${index}.total_qty`, tQty);
                                           let coef = 0.004;
                                           if (coatingPrintSize === 'A2') coef = 0.006;
@@ -3995,21 +4066,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           type="number" 
                           style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} 
                           readOnly={isSpecialStrap || aux.type === 'ctp'} 
-                          min={isSpecialCoating ? 1 : 0}
-                          max={isSpecialCoating ? 50 : undefined}
-                          title={isSpecialCoating ? "Бүрэлтийн хадаас (1-50 хүртэл)" : "Хадаас"}
+                          min={0}
+                          max={isSpecialCoating ? 500 : undefined}
+                          title={isSpecialCoating ? "Бүрэлтийн хадаас (Энгийн: 20/50, Эмбосс: 40/50, Лак: 60)" : "Хадаас"}
                           {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap || aux.type === 'ctp') return;
                             if (isSpecialCoating) {
                               let extra = Number(e.target.value) || 0;
-                              if (extra > 50) {
-                                extra = 50;
-                                setValue(`materials.${index}.extra_qty`, 50);
-                              } else if (extra < 0) {
+                              if (extra < 0) {
                                 extra = 0;
                                 setValue(`materials.${index}.extra_qty`, 0);
                               }
+                              setValue(`materials.${index}.is_manual_extra`, true as any);
                               const base = Number(formValues.materials?.[index]?.base_qty) || Number(formValues.total_qty) || 0;
                               const tQty = base + extra;
                               setValue(`materials.${index}.total_qty`, tQty);
