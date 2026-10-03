@@ -705,7 +705,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       customer_name: '', phone: '', company_name: '', company_registry: '', order_type: 'STANDARD', lead_source: 'Шууд харилцагч', deadline: '', product_name: '', category: '', total_qty: 0,
       size: '', sub_size: '', custom_width: 0, custom_height: 0, needs_design: false, design_status: 'Эх бэлэн', design_cost: 0, is_urgent: false, sales_person_name: user?.full_name || user?.name || '', notes: '',
       cover_color: '', inner_color: '', has_bookmark: '', total_pages: 0, print_cost: 0,
-      materials: [{ material_name: '', size: '', print_size: '', press_sheet: '', base_qty: 0, extra_qty: 0, total_qty: 0, divide_by: 1, sheet_qty: 0, unit_cost: 0, notes: '' }],
+      materials: [],
       operations: [],
       outsourced: [],
       profit_margin: 2.3, payment_method_1: '', payment_percent_1: 50, payment_method_2: '', payment_percent_2: 50,
@@ -1146,7 +1146,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             : JSON.parse(catConfig.default_materials)) : [];
           
           const currentMats = getValues('materials') || [];
-          let newMats = currentMats.filter((m: any) => m.notes !== 'Үндсэн материал');
+          let newMats = currentMats.filter((m: any) => 
+            m.notes !== 'Үндсэн материал' && m.material_name && m.material_name.trim() !== ''
+          );
 
           if (Array.isArray(defMats) && defMats.length > 0) {
             const a7 = getA7Size();
@@ -1203,6 +1205,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 total_qty: rowTotal,
                 notes: 'Үндсэн материал'
               });
+            });
+          } else if (newMats.length === 0) {
+            const a7 = getA7Size();
+            const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, getValues('binding_type'), coverRules);
+            const defRatio = calculatePaperDivision('A0', defPrintSize) || 4;
+            newMats.push({
+              material_name: '',
+              size: 'A0',
+              print_size: defPrintSize,
+              press_sheet: '',
+              base_qty: Number(getValues('total_qty')) || 0,
+              extra_qty: 0,
+              total_qty: 0,
+              divide_by: defRatio,
+              sheet_qty: 0,
+              unit_cost: 0,
+              notes: ''
             });
           }
           setValue('materials', newMats);
@@ -2069,6 +2088,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     mats.forEach((m: any, index: number) => {
       const matName = m.material_name || '';
+      if (!matName.trim()) return;
       
       // Special logic for Бүрэлт
       if (matName.includes('Бүрэлт')) {
@@ -2160,8 +2180,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       targetStatus = 'Санхүү хүлээгдэж буй';
     }
 
+    const cleanMaterials = (data.materials || []).filter(m => m.material_name && m.material_name.trim() !== '');
+    const cleanOperations = (data.operations || []).filter(o => o.operation_name && o.operation_name.trim() !== '');
+
     const payload = { 
       ...data, 
+      materials: cleanMaterials,
+      operations: cleanOperations,
       ...prices, 
       final_price: prices?.finalPrice || 0,
       current_status: targetStatus
@@ -2486,6 +2511,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const oldA6 = Number(getValues('total_qty')) || 0;
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
+                    if (!m.material_name || !m.material_name.trim()) return;
                     const currentBase = Number(m.base_qty) || 0;
                     const isManualBase = currentBase > 0 && currentBase !== oldA6;
                     const newBase = isManualBase ? currentBase : a6;
@@ -3253,6 +3279,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 )}
               </thead>
               <tbody>
+                {materialFields.length === 0 && (
+                  <tr>
+                    <td colSpan={isExpandedMaterial ? 12 : 5} style={{ textAlign: 'center', padding: '1.2rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                      Материал оруулаагүй байна. Доорх "+ Материал нэмэх" товчийг дарж материал нэмнэ үү.
+                    </td>
+                  </tr>
+                )}
                 {materialFields.map((field, index) => {
                   const m = formValues.materials?.[index];
                   const amt = m?.sheet_qty || 0;
