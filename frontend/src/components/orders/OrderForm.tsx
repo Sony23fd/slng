@@ -333,14 +333,25 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
   return 'A2';
 }
 
-function isInnerPageMaterial(m: any, category?: string): boolean {
+function isInnerPageMaterial(m: any, category?: string, productCategories: any[] = []): boolean {
   if (!m || m.is_cover) return false;
   const aux = getMaterialType(m.material_name, m.notes);
-  if (aux.isNonPrinted || aux.isAux || aux.type === 'coating' || aux.type === 'strap') {
+  if (aux.isNonPrinted || aux.isAux || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') {
     return false;
   }
   const cat = (category || '').trim();
-  if (cat === 'Брошур' || cat === 'Тор' || cat === 'Цаасан тор' || cat === 'Флаер' || cat === 'Нэрийн хуудас') {
+  if (productCategories && productCategories.length > 0) {
+    const catConfig = productCategories.find((c: any) => c.name === cat);
+    if (catConfig && !catConfig.has_pages) {
+      return false;
+    }
+  }
+  const nonPageCategories = [
+    'Брошур', 'Тор', 'Цаасан тор', 'Флаер', 'Нэрийн хуудас',
+    'Урилга', 'Постер', 'Сертификат', 'Хавтас', 'Хайрцаг',
+    'Билет', 'Стикер', 'Шошго', 'Албан бланк', 'Дугтуй', 'Түргэн хэвлэл'
+  ];
+  if (nonPageCategories.includes(cat)) {
     return false;
   }
   return true;
@@ -1245,7 +1256,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               material_name: '',
               size: 'A0',
               print_size: defPrintSize,
-              press_sheet: '',
+              press_sheet: (!catConfig?.has_cover && !catConfig?.has_pages) ? '1' : '',
               base_qty: Number(getValues('total_qty')) || 0,
               extra_qty: 0,
               total_qty: 0,
@@ -1337,11 +1348,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') return;
 
       const isCover = Boolean(m.is_cover);
-      const isInner = !isCover && isInnerPageMaterial(m, category);
+      const isInner = !isCover && isInnerPageMaterial(m, category, productCategories);
       const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2));
       const printSize = m.print_size || (isCover ? 'B3' : 'A2');
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
-      const mPressSheet = Number(m.press_sheet) || 0;
+      const mPressSheet = Number(m.press_sheet) || 1;
       const plates = calcPlates(colorToUse, mPressSheet, divisions);
 
       if (plates > 0) {
@@ -1467,7 +1478,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials', nextMats);
       replaceMaterials(nextMats);
     }
-  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.binding_type, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, constants, getValues, setValue]);
+  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.binding_type, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, productCategories, constants, getValues, setValue]);
 
   useEffect(() => {
     const currentRounded = Math.round(prices.unitPrice).toString();
@@ -1670,7 +1681,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           setValue(`materials.${index}.divide_by`, matDivs);
           divBy = matDivs;
         }
-      } else if (isInnerPageMaterial(m, cat)) {
+      } else if (isInnerPageMaterial(m, cat, productCategories)) {
         let effectivePrintSize = m.print_size;
         if (!effectivePrintSize) {
           effectivePrintSize = getDefaultPrintSize(cat, a7, false, bt, coverRules);
@@ -2000,9 +2011,101 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     });
   };
 
-  // evaluateOperationFormula is moved above applyFullTemplate for template formula evaluation
-
   const CLICHE_TYPES = ['Алтлаг', 'Мөнгөлөг', 'Зэс', 'Монет', 'Бүтэн'] as const;
+
+  const toggleCoating = (type: 'Матт' | 'Гялгар') => {
+    const currentMats = getValues('materials') || [];
+    const currentOps = getValues('operations') || [];
+    const existingCoatingIdx = currentMats.findIndex((m: any) => (m.material_name || '').includes('Бүрэлт'));
+    const isSameType = existingCoatingIdx >= 0 && currentMats[existingCoatingIdx].material_name.includes(type);
+
+    if (isSameType) {
+      const nextMats = currentMats.filter((_, i) => i !== existingCoatingIdx);
+      setValue('materials', nextMats);
+      replaceMaterials(nextMats);
+
+      const nextOps = currentOps.filter((o: any) => !(o.operation_name || '').includes('Бүрэлт'));
+      setValue('operations', nextOps);
+      replaceOps(nextOps);
+      return;
+    }
+
+    const a7 = getA7Size();
+    const bt = getValues('binding_type') || '';
+    const totalQty = Number(getValues('total_qty')) || 1000;
+
+    const coverMat = currentMats.find((m: any) => m.is_cover);
+    const mainMat = currentMats.find((m: any) => {
+      const aux = getMaterialType(m.material_name, m.notes);
+      return !aux.isNonPrinted && !aux.isAux && aux.type !== 'coating' && aux.type !== 'ctp';
+    });
+
+    const targetMat = coverMat || mainMat;
+    const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
+
+    let coef = 0.004;
+    if (coatingPrintSize === 'A2') coef = 0.006;
+    else if (coatingPrintSize === 'B2') coef = 0.007;
+    else if (coatingPrintSize === 'A3' || coatingPrintSize === 'B3') coef = 0.004;
+
+    const base = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
+    const extra = calculateCoatingMakeready(base, currentOps, `Хавтасны бүрэлт (${coatingPrintSize})`);
+    const tQty = base + extra;
+    const sQty = Number((tQty * coef).toFixed(2));
+
+    const coatingMatRow = {
+      material_name: `Бүрэлт (${type})`,
+      size: coatingPrintSize,
+      print_size: coatingPrintSize,
+      press_sheet: '',
+      base_qty: base,
+      extra_qty: extra,
+      total_qty: tQty,
+      divide_by: 1,
+      sheet_qty: sQty,
+      unit_cost: 1500,
+      notes: `Хавтасны бүрэлт (${coatingPrintSize} хуулга, коэф: ${coef})`,
+      is_cover: false,
+      is_manual_size: true as any
+    };
+
+    let nextMats: any[] = [];
+    if (existingCoatingIdx >= 0) {
+      nextMats = currentMats.map((m: any, idx: number) => idx === existingCoatingIdx ? coatingMatRow : m);
+    } else {
+      const nonCtp = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type !== 'ctp');
+      const ctp = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type === 'ctp');
+      nextMats = [...nonCtp, coatingMatRow, ...ctp];
+    }
+    setValue('materials', nextMats);
+    replaceMaterials(nextMats);
+
+    const hasCoatingOp = currentOps.some((o: any) => (o.operation_name || '').includes('Бүрэлт'));
+    let nextOps = currentOps;
+    if (!hasCoatingOp) {
+      nextOps = [
+        ...currentOps,
+        {
+          operation_name: `Бүрэлт (${type})`,
+          qty: tQty,
+          unit_cost: 0,
+          notes: 'Бүрэлтийн хуулга',
+          is_manual: false,
+          is_pricing: false,
+          production_stage: 'POST_PRESS'
+        }
+      ];
+    } else {
+      nextOps = currentOps.map((o: any) => {
+        if ((o.operation_name || '').includes('Бүрэлт')) {
+          return { ...o, operation_name: `Бүрэлт (${type})`, qty: tQty };
+        }
+        return o;
+      });
+    }
+    setValue('operations', nextOps);
+    replaceOps(nextOps);
+  };
 
   const toggleFinishingOp = (opName: string, defaultCost: number = 0) => {
     const currentOps = getValues('operations') || [];
@@ -2144,13 +2247,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       
       // Special logic for Бүрэлт
       if (matName.includes('Бүрэлт')) {
-         const m3 = m.print_size || 'A3';
+         const coverMat = mats.find((row: any) => row.is_cover);
+         const mainMat = mats.find((row: any) => {
+           const a = getMaterialType(row.material_name, row.notes);
+           return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+         });
+         const targetMat = coverMat || mainMat;
+         const m3 = m.print_size || targetMat?.print_size || 'A3';
+         if (!m.print_size && targetMat?.print_size) {
+           setValue(`materials.${index}.print_size`, targetMat.print_size);
+         }
          let coef = 0.004;
          if (m3 === 'A2') { coef = 0.006; }
          else if (m3 === 'B2') { coef = 0.007; }
          else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
 
-         const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
+         const expectedBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : a6;
+         const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : (expectedBase > 0 ? expectedBase : a6);
          const currentOps = formValues.operations || [];
          let extra = Number(m.extra_qty);
          if (isNaN(extra) || extra < 0 || !m.is_manual_extra) {
@@ -2632,14 +2745,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         return;
                       }
                       if (aux.type === 'coating') {
+                        const coverMat = materials.find((row: any) => row.is_cover);
+                        const mainMat = materials.find((row: any) => {
+                          const a = getMaterialType(row.material_name, row.notes);
+                          return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+                        });
+                        const targetMat = coverMat || mainMat;
+                        const targetBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : newBase;
                         const ops = getValues('operations') || [];
-                        const coatExtra = calculateCoatingMakeready(newBase, ops, m.notes);
-                        setValue(`materials.${index}.base_qty`, newBase);
+                        const coatExtra = calculateCoatingMakeready(targetBase, ops, m.notes);
+                        setValue(`materials.${index}.base_qty`, targetBase);
                         setValue(`materials.${index}.extra_qty`, coatExtra);
                         setValue(`materials.${index}.is_manual_extra`, false as any);
-                        const tQty = newBase + coatExtra;
+                        const tQty = targetBase + coatExtra;
                         setValue(`materials.${index}.total_qty`, tQty);
-                        const m3 = m.print_size || 'A3';
+                        const m3 = m.print_size || targetMat?.print_size || 'A3';
                         let coef = 0.004;
                         if (m3 === 'A2') coef = 0.006;
                         else if (m3 === 'B2') coef = 0.007;
@@ -2861,6 +2981,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
             );
             const hasCliche = activeClicheTypes.length > 0;
+            const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
+            const isMattCoating = Boolean(coatingMat && coatingMat.material_name.includes('Матт'));
+            const isGlossCoating = Boolean(coatingMat && coatingMat.material_name.includes('Гялгар'));
             const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
 
             return (
@@ -2933,6 +3056,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
                   </>
                 )}
+
+                {/* Бүрэлтийн сонголтууд (Матт, Гялгар) */}
+                <label 
+                  className={`erp-toggle-chip ${isMattCoating ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleCoating('Матт'); }}
+                  title="Матт бүрэлт нэмэх / хасах"
+                >
+                  <input type="checkbox" checked={isMattCoating} readOnly />
+                  <span>✨ Матт бүрэлт</span>
+                </label>
+
+                <label 
+                  className={`erp-toggle-chip ${isGlossCoating ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleCoating('Гялгар'); }}
+                  title="Гялгар бүрэлт нэмэх / хасах"
+                >
+                  <input type="checkbox" checked={isGlossCoating} readOnly />
+                  <span>✨ Гялгар бүрэлт</span>
+                </label>
+
+                <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
 
                 {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
                 <label 
@@ -3561,11 +3705,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         }
                                         if (selectedAux.type === 'coating') {
                                           const coverMat = (formValues.materials || []).find((m: any) => m.is_cover);
-                                          const coatingPrintSize = coverMat?.print_size || getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) || 'A2';
+                                          const mainMat = (formValues.materials || []).find((m: any) => {
+                                            const a = getMaterialType(m.material_name, m.notes);
+                                            return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+                                          });
+                                          const targetMat = coverMat || mainMat;
+                                          const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
                                           setValue(`materials.${index}.print_size`, coatingPrintSize);
                                           setValue(`materials.${index}.divide_by`, 1);
                                           setValue(`materials.${index}.press_sheet`, '');
-                                          const base = coverMat?.base_qty || totalQty;
+                                          const base = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
                                           setValue(`materials.${index}.base_qty`, base);
                                           const currentOps = getValues('operations') || [];
                                           const extra = calculateCoatingMakeready(base, currentOps, formValues.materials?.[index]?.notes);
@@ -4298,11 +4447,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const currentMats = getValues('materials') || [];
                   const nonCtpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type !== 'ctp');
                   const ctpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type === 'ctp');
+                  const catConfig = productCategories.find((c: any) => c.name === formValues.category);
+                  const defPress = (!catConfig?.has_cover && !catConfig?.has_pages) ? '1' : '';
                   const newRow = { 
                     material_name: '', 
                     size: 'A0', 
                     print_size: defPrintSize, 
-                    press_sheet: '', 
+                    press_sheet: defPress, 
                     base_qty: Number(getValues('total_qty')) || 0, 
                     extra_qty: 0, 
                     total_qty: 0, 
