@@ -1303,7 +1303,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const [displayUnitPrice, setDisplayUnitPrice] = useState<string>('');
 
   useEffect(() => {
-    const calcPlates = (colorStr: string, pressSheet: number, divisions: number) => {
+    const calcPlates = (colorStr: string, pressSheet: number, divisions: number, isCover: boolean = false) => {
       if (!colorStr || !pressSheet) return 0;
       const match = colorStr.match(/(\d+)\s*\+\s*(\d+)/);
       if (!match) return 0;
@@ -1312,6 +1312,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const platesPerFull = front + back;
       if (platesPerFull === 0) return 0;
 
+      // 1. Хавтас (Cover) - Хэзээ ч татаж хөмрөх (work-and-turn) нэг хэвэнд хоёр талыг хуваадаггүй:
+      // Урд өнгө (front) + арын өнгө (back, +-ийн ард авсан утга) = front + back хавтан бүтнээр шаардагдана.
+      // Жишээ нь: 4+0 -> 4, 4+1 -> 5, 4+2 -> 6, 4+4 -> 8, 1+1 -> 2 хавтан.
+      if (isCover) {
+        const fullSheets = Math.floor(pressSheet);
+        const fraction = pressSheet - fullSheets;
+        const totalSetups = fullSheets + (fraction > 0 ? 1 : 0);
+        return totalSetups * platesPerFull;
+      }
+
+      // 2. Дотор хуудас (Inner pages):
       const fullSheets = Math.floor(pressSheet);
       const fraction = pressSheet - fullSheets;
 
@@ -1321,7 +1332,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         fractionalSetups = popcount(fractionLeaves);
       }
       
-      const platesPerFraction = Math.max(front, back);
+      // Дотор хуудасны бутархай хуудас нь зөвхөн урд ар өнгө ижил (1+1, 4+4) үед л
+      // татаж хөмрөх (work-and-turn) боломжтой (front хавтан).
+      // Харин 4+1, 4+2, 2+1 гэх мэт урд ар өнгө зөрүүтэй үед татаж хөмрөх боломжгүй тул
+      // заавал front + back хавтан бүтнээр шаардагдана.
+      const platesPerFraction = (front === back && front > 0) ? front : (front + back);
       return (fullSheets * platesPerFull) + (fractionalSetups * platesPerFraction);
     };
 
@@ -1365,7 +1380,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const printSize = m.print_size || (isCover ? 'B3' : 'A2');
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
       const mPressSheet = Number(m.press_sheet) || 1;
-      const plates = calcPlates(colorToUse, mPressSheet, divisions);
+      const plates = calcPlates(colorToUse, mPressSheet, divisions, isCover);
 
       if (plates > 0) {
         // Plate sizing logic based on printing press standards:
@@ -3317,8 +3332,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 ) : (
                   [
                     { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
+                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
+                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
                     { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
                     { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
+                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
                     { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
                     { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
                     { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт)' },
@@ -3343,8 +3361,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт (Хар цагаан))' },
                     { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
                     { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
+                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
                     { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
                     { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
+                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
+                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
                     { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
                   ].map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
