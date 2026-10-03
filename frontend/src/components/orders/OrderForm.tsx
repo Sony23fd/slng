@@ -2138,6 +2138,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     mats.forEach((m: any, index: number) => {
       const matName = m.material_name || '';
       if (!matName.trim()) return;
+
+      const aux = getMaterialType(matName, m.notes);
+      if (aux.type === 'ctp') return;
       
       // Special logic for Бүрэлт
       if (matName.includes('Бүрэлт')) {
@@ -2175,8 +2178,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
          return;
       }
 
+      if (aux.isAux || aux.isNonPrinted) return;
+
       if (isBag || isBrochure) {
-        const m3 = m.print_size || 'B2';
+        const defPs = isBag ? 'B2' : (a7.startsWith('B') ? 'B2' : 'A2');
+        const m3 = m.print_size || defPs;
         let div = 1;
         let m5 = a6;
         if (isBag) {
@@ -2186,6 +2192,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         } else {
           div = calculatePaperDivision(m3, a7) || 1;
           m5 = Math.ceil(a6 / div);
+          if (!m.print_size) setValue(`materials.${index}.print_size`, m3);
         }
         const m4 = '1';
 
@@ -2193,7 +2200,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
         const extra = calculateMakeready(m5);
-        setValue(`materials.${index}.extra_qty`, extra);
+        if (Number(m.extra_qty) !== extra) setValue(`materials.${index}.extra_qty`, extra);
         const setups = isBag ? 1 : calculateSetups(1, div);
         const total = (m5 * 1) + (extra * setups);
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
@@ -2561,12 +2568,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const materials = getValues('materials') || [];
                   materials.forEach((m, index) => {
                     if (!m.material_name || !m.material_name.trim()) return;
+                    const aux = getMaterialType(m.material_name, m.notes);
+                    if (aux.type === 'ctp') return;
+
                     const currentBase = Number(m.base_qty) || 0;
                     const isManualBase = currentBase > 0 && currentBase !== oldA6;
                     const newBase = isManualBase ? currentBase : a6;
                     setValue(`materials.${index}.base_qty`, newBase);
 
-                    const aux = getMaterialType(m.material_name, m.notes);
                     if (aux.isAux) {
                       const a7 = getA7Size();
                       const specs = getHardcoverAuxiliarySpecs(a7);
@@ -3626,10 +3635,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         }
                                       } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
                                         setValue(`materials.${index}.press_sheet`, '1');
-                                        const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                        const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер') 
+                                          ? (calculatePaperDivision(printSize, a7) || 1) 
+                                          : 1;
+                                        const base = Math.ceil(totalQty / pDiv);
+                                        setValue(`materials.${index}.base_qty`, base);
                                         const extra = calculateMakeready(base);
                                         setValue(`materials.${index}.extra_qty`, extra);
-                                        const total = base + extra;
+                                        const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер') ? calculateSetups(1, pDiv) : 1;
+                                        const total = (base * 1) + (extra * setups);
                                         setValue(`materials.${index}.total_qty`, total);
                                         setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
                                         return;
