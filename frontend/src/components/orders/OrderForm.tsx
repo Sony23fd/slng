@@ -713,8 +713,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
   });
 
-  const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({ control, name: 'materials' });
-  const { fields: opFields, append: appendOp, remove: removeOp, update: updateOp } = useFieldArray({ control, name: 'operations' });
+  const { fields: materialFields, append: appendMaterial, remove: removeMaterial, replace: replaceMaterials } = useFieldArray({ control, name: 'materials' });
+  const { fields: opFields, append: appendOp, remove: removeOp, update: updateOp, replace: replaceOps } = useFieldArray({ control, name: 'operations' });
   const [opModalTab, setOpModalTab] = useState<'ALL' | 'BILLABLE' | 'NON_BILLABLE'>('ALL');
   const [opModalStage, setOpModalStage] = useState<string>('All');
   const [opModalSearch, setOpModalSearch] = useState<string>('');
@@ -1054,6 +1054,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           };
         });
         setValue('materials', smartMaterials);
+        replaceMaterials(smartMaterials);
       }
 
       // Operations with live prices and pre-evaluated formulas based on smartMaterials
@@ -1094,6 +1095,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             };
           });
         setValue('operations', smartOperations);
+        replaceOps(smartOperations);
       }
     }
   };
@@ -1136,6 +1138,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           }
 
           setValue('operations', newOps);
+          replaceOps(newOps);
         } catch(e) {
           console.error("Failed to parse default operations", e);
         }
@@ -1147,36 +1150,58 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           
           const currentMats = getValues('materials') || [];
           let newMats = currentMats.filter((m: any) => 
-            m.notes !== 'Үндсэн материал' && m.material_name && m.material_name.trim() !== ''
+            m.notes !== 'Үндсэн материал' && m.notes !== 'Хавтас' && m.material_name && m.material_name.trim() !== ''
           );
 
           if (Array.isArray(defMats) && defMats.length > 0) {
             const a7 = getA7Size();
-            const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, getValues('binding_type'), coverRules);
-            defMats.forEach((matName: string) => {
+            const bt = getValues('binding_type') || '';
+            const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, bt, coverRules);
+            const curQty = Number(getValues('total_qty')) || 0;
+            const curPages = Number(getValues('total_pages')) || 0;
+            const hasCover = Boolean(catConfig.has_cover);
+
+            defMats.forEach((matName: string, idx: number) => {
               const mp = masterPrices.find(m => m.item_name === matName || (m.category === 'Материал' && m.item_name === matName));
               const aux = getMaterialType(matName);
               const pMat = parseMaterial(matName);
               const matSize = pMat.sizeName || 'A0';
               let rowPrintSize = aux.isNonPrinted ? '' : defPrintSize;
               let rowDivideBy = 1;
+              let isCoverRow = false;
+              let rowBase = curQty;
+              let rowExtra = calculateMakeready(rowBase);
+              let rowPress = '';
+              let rowTotal = 0;
+              let rowSheets = 0;
+
               if (aux.isAux) {
                 const specs = getHardcoverAuxiliarySpecs(a7);
                 if (aux.type === 'cardboard') rowDivideBy = specs.cardboardDiv;
                 else if (aux.type === 'endpaper_plain') rowDivideBy = specs.endpaperDiv;
                 else if (aux.type === 'capital') rowDivideBy = specs.headbandDiv;
-              } else {
+                rowPress = aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '';
+                rowTotal = rowBase;
+                rowExtra = 0;
+                rowSheets = Math.ceil(rowTotal / rowDivideBy);
+              } else if (hasCover && idx === 0) {
+                isCoverRow = true;
+                const coverLogic = getCoverLogic(a7, bt, coverRules);
+                if (coverLogic) {
+                  rowPress = String(coverLogic.pressSheet);
+                  rowDivideBy = coverLogic.divideBy;
+                  rowPrintSize = coverLogic.printSize || getDefaultPrintSize(formValues.category, a7, true, bt, coverRules);
+                } else {
+                  rowPress = '1';
+                  rowPrintSize = getDefaultPrintSize(formValues.category, a7, true, bt, coverRules);
+                  rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
+                }
+                const coverDivs = calculatePaperDivision(rowPrintSize, a7) || 1;
+                const coverSetups = calculateSetups(Number(rowPress) || 1, coverDivs);
+                rowTotal = (rowBase * (Number(rowPress) || 1)) + (rowExtra * coverSetups);
+                rowSheets = Math.ceil(rowTotal / rowDivideBy);
+              } else if (curPages > 0 && isInnerPageMaterial({ material_name: matName, notes: '', is_cover: false }, formValues.category)) {
                 rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
-              }
-              const curQty = Number(getValues('total_qty')) || 0;
-              const curPages = Number(getValues('total_pages')) || 0;
-              let rowBase = curQty;
-              let rowExtra = calculateMakeready(rowBase);
-              let rowPress = aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '';
-              let rowTotal = 0;
-              let rowSheets = 0;
-
-              if (rowPrintSize && a7 && curPages > 0 && !aux.isAux) {
                 const innerPress = calculateInnerPressSheet(curPages, rowPrintSize, a7);
                 if (innerPress > 0) {
                   rowPress = String(innerPress);
@@ -1185,15 +1210,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   rowTotal = (rowBase * innerPress) + (rowExtra * setups);
                   rowSheets = Math.ceil(rowTotal / rowDivideBy);
                 }
-              } else if (aux.isAux) {
-                rowTotal = rowBase;
-                rowExtra = 0;
+              } else if (!hasCover && !catConfig.has_pages) {
+                rowPress = '1';
+                rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
+                rowTotal = rowBase + rowExtra;
                 rowSheets = Math.ceil(rowTotal / rowDivideBy);
+              } else {
+                rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
+                rowPress = '';
+                rowTotal = 0;
+                rowSheets = 0;
               }
 
               newMats.push({
                 material_name: matName,
-                is_cover: false, 
+                is_cover: isCoverRow, 
                 print_size: rowPrintSize,
                 size: matSize,
                 press_sheet: rowPress,
@@ -1203,7 +1234,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 sheet_qty: rowSheets,
                 unit_cost: mp ? mp.unit_cost : 0,
                 total_qty: rowTotal,
-                notes: 'Үндсэн материал'
+                notes: isCoverRow ? 'Хавтас' : 'Үндсэн материал'
               });
             });
           } else if (newMats.length === 0) {
@@ -1225,6 +1256,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             });
           }
           setValue('materials', newMats);
+          replaceMaterials(newMats);
         } catch(e) {
           console.error("Failed to parse default materials", e);
         }
@@ -1273,7 +1305,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     // 1. Purge any lingering CTP from operations (CTP is now exclusively in Materials)
     const ops = getValues('operations') || [];
     if (ops.some(o => (o.operation_name || '').startsWith('CTP хавтан'))) {
-      setValue('operations', ops.filter(o => !(o.operation_name || '').startsWith('CTP хавтан')));
+      const cleanOps = ops.filter(o => !(o.operation_name || '').startsWith('CTP хавтан'));
+      setValue('operations', cleanOps);
+      replaceOps(cleanOps);
     }
 
     const b1 = formValues.cover_color;
@@ -1429,9 +1463,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
 
     if (hasDiff) {
-      setValue('materials', [...regularMats, ...targetCtpList]);
+      const nextMats = [...regularMats, ...targetCtpList];
+      setValue('materials', nextMats);
+      replaceMaterials(nextMats);
     }
-  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, constants, getValues, setValue]);
+  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.binding_type, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, constants, getValues, setValue]);
 
   useEffect(() => {
     const currentRounded = Math.round(prices.unitPrice).toString();
@@ -1653,7 +1689,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       } else {
         m4 = Number(m.press_sheet) || 1;
+        setValue(`materials.${index}.press_sheet`, String(m4));
         let effectivePrintSize = m.print_size || getDefaultPrintSize(cat, a7, false, bt, coverRules);
+        setValue(`materials.${index}.print_size`, effectivePrintSize);
         const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
         const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
         if (matDivs > 0) {
@@ -1822,6 +1860,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
 
     setValue('materials', newMaterials);
+    replaceMaterials(newMaterials);
 
     const existingOps = getValues('operations') || [];
     const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас') || o.operation_name?.includes('Хөөсөн хатуу хавтас'));
@@ -1833,7 +1872,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue(`operations.${existingIndex}.is_pricing`, curCost > 0);
       setValue(`operations.${existingIndex}.notes`, isFoamed ? 'Хөөсөн хавтас угсрах' : `${size} хатуу хавтас угсрах, наах`);
     } else {
-      setValue('operations', [
+      const nextOps = [
         ...existingOps,
         {
           operation_name: opName,
@@ -1843,7 +1882,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           is_pricing: false,
           production_stage: 'POST_PRESS'
         }
-      ]);
+      ];
+      setValue('operations', nextOps);
+      replaceOps(nextOps);
     }
   };
 
@@ -1906,6 +1947,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const newMaterials = [...cleanMaterials, superCoverRow, endpaperRow];
     setValue('materials', newMaterials);
+    replaceMaterials(newMaterials);
 
     const existingOps = getValues('operations') || [];
     const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Супер хавтас'));
@@ -1915,7 +1957,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue(`operations.${existingIndex}.unit_cost`, curCost);
       setValue(`operations.${existingIndex}.is_pricing`, curCost > 0);
     } else {
-      setValue('operations', [
+      const nextOps = [
         ...existingOps,
         {
           operation_name: 'Супер хавтас хийх',
@@ -1925,7 +1967,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           is_pricing: false,
           production_stage: 'POST_PRESS'
         }
-      ]);
+      ];
+      setValue('operations', nextOps);
+      replaceOps(nextOps);
     }
   };
 
@@ -1967,6 +2011,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     if (existsIndex >= 0) {
       nextOps = currentOps.filter((_, i) => i !== existsIndex);
       setValue('operations', nextOps);
+      replaceOps(nextOps);
     } else {
       const mp = masterPrices.find(p => p.item_name === opName);
       let calcQty = Number(getValues('total_qty')) || 0;
@@ -1986,6 +2031,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       ];
       setValue('operations', nextOps);
+      replaceOps(nextOps);
     }
 
     // Auto-update coating rows when finishing ops toggle
@@ -2011,7 +2057,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const currentOps = getValues('operations') || [];
     const hasAnyCliche = currentOps.some(o => o.operation_name?.startsWith('Клише ('));
     if (hasAnyCliche) {
-      setValue('operations', currentOps.filter(o => !o.operation_name?.startsWith('Клише (')));
+      const nextOps = currentOps.filter(o => !o.operation_name?.startsWith('Клише ('));
+      setValue('operations', nextOps);
+      replaceOps(nextOps);
     } else {
       toggleFinishingOp('Клише (Алтлаг)');
     }
@@ -2067,6 +2115,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     if (changed) {
       setValue('operations', newOps);
+      replaceOps(newOps);
     }
   }, [formValues.materials, formValues.total_qty, formValues.total_pages, formValues.cover_color, formValues.inner_color, formValues.category, masterPrices, setValue]);
 
@@ -2719,6 +2768,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     });
                     if (cleanMats.length !== currentMats.length) {
                       setValue('materials', cleanMats);
+                      replaceMaterials(cleanMats);
                     }
                     const currentOps = getValues('operations') || [];
                     const cleanOps = currentOps.filter((o: any) => {
@@ -2727,6 +2777,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     });
                     if (cleanOps.length !== currentOps.length) {
                       setValue('operations', cleanOps);
+                      replaceOps(cleanOps);
                     }
                   }
 
@@ -2736,7 +2787,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       const mp = masterPrices.find(p => p.item_name === 'Блокон оёо');
                       const formula = mp?.formula?.expression || 'ceil(total_pages / 16) * total_qty';
                       const qty = evaluateOperationFormula(formula);
-                      setValue('operations', [
+                      const nextOps = [
                         ...ops,
                         {
                           operation_name: 'Блокон оёо',
@@ -2747,7 +2798,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           is_manual: false,
                           notes: 'Утас блокон оёо'
                         }
-                      ]);
+                      ];
+                      setValue('operations', nextOps);
+                      replaceOps(nextOps);
                     }
                   }
                 }
@@ -2825,8 +2878,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
                               });
                               setValue('materials', cleanMats);
+                              replaceMaterials(cleanMats);
                               const existingOps = getValues('operations') || [];
-                              setValue('operations', existingOps.filter(o => !o.operation_name?.includes('Супер хавтас')));
+                              const nextOps = existingOps.filter(o => !o.operation_name?.includes('Супер хавтас'));
+                              setValue('operations', nextOps);
+                              replaceOps(nextOps);
                             }
                           }
                         })} 
@@ -3568,6 +3624,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
                                           return;
                                         }
+                                      } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
+                                        setValue(`materials.${index}.press_sheet`, '1');
+                                        const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                        const extra = calculateMakeready(base);
+                                        setValue(`materials.${index}.extra_qty`, extra);
+                                        const total = base + extra;
+                                        setValue(`materials.${index}.total_qty`, total);
+                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                        return;
                                       }
 
                                       const currentTotal = Number(formValues.materials?.[index]?.total_qty) || totalQty;
@@ -4216,7 +4281,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const a7 = getA7Size();
                   const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules);
                   const defRatio = calculatePaperDivision('A0', defPrintSize) || 4;
-                  appendMaterial({ 
+                  const currentMats = getValues('materials') || [];
+                  const nonCtpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type !== 'ctp');
+                  const ctpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type === 'ctp');
+                  const newRow = { 
                     material_name: '', 
                     size: 'A0', 
                     print_size: defPrintSize, 
@@ -4228,7 +4296,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     sheet_qty: 0, 
                     unit_cost: 0, 
                     notes: '' 
-                  });
+                  };
+                  const updated = [...nonCtpMats, newRow, ...ctpMats];
+                  setValue('materials', updated);
+                  replaceMaterials(updated);
                 }} 
                 className="btn btn-outline"
               >
