@@ -61,7 +61,7 @@ const ALL_PRODUCT_CATEGORIES = [
     has_bookmark: false,
     waste_qty: 50,
     default_operations: ['Бөгж цоологч', 'Гараар хийх ажил', 'Хэв дарах (A3)'],
-    default_materials: ['Шохойтой цаас 250гр B1 (787x1092)', 'Оосор (Торны оосор)']
+    default_materials: ['Шохойтой цаас 250гр B1 (787x1092)', 'Бүрэлт (Матт)', 'Оосор (Торны оосор)']
   },
   {
     name: 'Хайрцаг',
@@ -73,7 +73,7 @@ const ALL_PRODUCT_CATEGORIES = [
     has_bookmark: false,
     waste_qty: 50,
     default_operations: ['Хэв дарах (A2)', 'Бүрэлт (Мат)', 'Гараар хийх ажил'],
-    default_materials: ['Хайрцагны картон 350гр B1 (787x1092)']
+    default_materials: ['Хайрцагны картон 350гр B1 (787x1092)', 'Бүрэлт (Матт)']
   },
   {
     name: 'Түргэн хэвлэл',
@@ -133,7 +133,7 @@ const ALL_PRODUCT_CATEGORIES = [
     has_bookmark: false,
     waste_qty: 50,
     default_operations: ['Бүрэлт (Мат)', 'Нуруу (Спирал үдээс А5)', 'Нугалаа'],
-    default_materials: ['Шохойтой цаас 300гр A0 (889x1194)']
+    default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)']
   },
   {
     name: 'Билет',
@@ -181,7 +181,7 @@ const ALL_PRODUCT_CATEGORIES = [
     has_bookmark: false,
     waste_qty: 50,
     default_operations: ['Хэв дарах (A2)', 'Бүрэлт (Мат)', 'Гараар хийх ажил'],
-    default_materials: ['Шохойтой цаас 350гр B1 (787x1092)']
+    default_materials: ['Шохойтой цаас 350гр B1 (787x1092)', 'Бүрэлт (Матт)']
   },
   {
     name: 'Стикер',
@@ -229,7 +229,7 @@ const ALL_PRODUCT_CATEGORIES = [
     has_bookmark: false,
     waste_qty: 10,
     default_operations: ['Огтлоо (Том)', 'Бүрэлт (Гялгар)'],
-    default_materials: ['Шохойтой цаас 200гр A0 (889x1194)']
+    default_materials: ['Шохойтой цаас 200гр A0 (889x1194)', 'Бүрэлт (Гялгар)']
   },
   {
     name: 'Шошго',
