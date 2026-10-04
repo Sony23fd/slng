@@ -462,6 +462,51 @@ const tableSelectStyles = {
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
 
+const printSizeSelectStyles = {
+  control: (base: any, state: any) => ({
+    ...base,
+    background: state?.isDisabled ? '#f1f5f9' : 'white',
+    borderRadius: '4px',
+    borderColor: '#cbd5e1',
+    minHeight: '32px',
+    height: '32px',
+    maxHeight: '32px',
+    boxSizing: 'border-box',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#1e293b',
+    boxShadow: 'none',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    '&:hover': { borderColor: '#94a3b8' }
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: '32px',
+    padding: '0 4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap'
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    margin: 0,
+    fontWeight: 600,
+    color: '#0f172a',
+    textAlign: 'center',
+    fontSize: '12px'
+  }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '32px', paddingRight: '2px' }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '2px 2px', width: '16px', color: '#64748b' }),
+  clearIndicator: () => ({ display: 'none' }),
+  menu: (base: any) => ({ ...base, zIndex: 99999, minWidth: '85px' }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
+};
+
 const tableInputStyle: React.CSSProperties = {
   width: '100%',
   minWidth: '40px',
@@ -4334,7 +4379,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     <tr>
                       <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '220px' }}>Материал</th>
                       <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>Хэмжээ</th>
-                      <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '70px' }}>Хэв. хэмжээ</th>
+                      <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '78px', minWidth: '78px' }}>Хэв. хэмжээ</th>
                       <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <span title="[M4] Хэв. хуудас">Хэв. хуудас</span>
@@ -5101,7 +5146,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '78px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
@@ -5119,6 +5164,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             title="CTP хавтангийн формат"
                           >
                             🏷️ {formValues.materials?.[index]?.print_size || 'A2'} хэвлэл
+                          </div>
+                        ) : isSpecialCoating ? (
+                          <div 
+                            style={{ 
+                              height: '32px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f0fdf4', 
+                              border: '1px solid #bbf7d0', 
+                              borderRadius: '4px', 
+                              fontSize: '11.5px', 
+                              color: '#15803d', 
+                              fontWeight: 600 
+                            }}
+                            title={`Хавтасны хэвлэх форматтай синхрон: ${formValues.materials?.[index]?.print_size || 'B3'}`}
+                          >
+                            🏷️ {formValues.materials?.[index]?.print_size || 'B3'} хэвлэл
                           </div>
                         ) : aux.isNonPrinted ? (
                           <div 
@@ -5162,22 +5225,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     const val = selected ? selected.value : '';
                                     field.onChange(val);
 
-                                    if (isSpecialCoating) {
-                                      const m3 = val || 'A3';
-                                      let coef = 0.004;
-                                      if (m3 === 'A2') { coef = 0.006; }
-                                      else if (m3 === 'B2') { coef = 0.007; }
-                                      else if (m3 === 'A3' || m3 === 'B3') { coef = 0.004; }
-
-                                      const base = Number(getValues(`materials.${index}.base_qty`)) || Number(getValues('total_qty')) || 0;
-                                      const extra = Number(getValues(`materials.${index}.extra_qty`)) || 0;
-                                      const tQty = base + extra;
-                                      setValue(`materials.${index}.total_qty`, tQty);
-                                      setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                                      setValue(`materials.${index}.notes`, `Хавтасны бүрэлт (${m3} хуулга, коэф: ${coef})`);
-                                      return;
-                                    }
-                                    
                                     const sourceSize = formValues.materials?.[index]?.size || '';
                                     const ratio = calculatePaperDivision(sourceSize, val);
                                     const a7Raw = formValues.size || '';
@@ -5226,22 +5273,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
                                     }
                                   }}
-                                  isClearable
+                                  isClearable={false}
                                   isDisabled={isSpecialStrap || formValues.category === 'Түргэн хэвлэл'}
-                                  placeholder="Сонгох..."
+                                  placeholder="Формат"
                                   menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                   menuPosition="fixed"
-                                  styles={{ 
-                                    control: (base) => ({ 
-                                      ...base, 
-                                      background: (isSpecialStrap || formValues.category === 'Түргэн хэвлэл') ? '#f1f5f9' : 'white', 
-                                      borderRadius: '0.25rem', 
-                                      borderColor: '#cbd5e1', 
-                                      minHeight: '34px', 
-                                      fontSize: '0.85rem' 
-                                    }), 
-                                    menuPortal: base => ({ ...base, zIndex: 9999 }) 
-                                  }}
+                                  styles={printSizeSelectStyles}
                                 />
                               </div>
                             )}
