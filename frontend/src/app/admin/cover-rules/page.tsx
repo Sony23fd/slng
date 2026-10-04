@@ -133,7 +133,6 @@ export default function CoverRulesPage() {
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
-                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
                 <option value="Блокон оёо">Блокон оёо</option>
               </select>

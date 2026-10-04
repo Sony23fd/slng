@@ -111,7 +111,7 @@ export default function TemplateCatalogModal({
     if (name.includes('Зөөлөн хавтас') || name.includes('А5 (Хатуу') || name.includes('В5 (Хатуу') || name.includes('А5 (Супер') || name.includes('В5 (Супер')) {
       return '24 хавтан';
     }
-    if (name.includes('А4 (Хатуу') || name.includes('А4 (Хөөсөн') || name.includes('А4 (Супер')) {
+    if (name.includes('А4 (Хатуу') || name.includes('А4 (Супер')) {
       return '44 хавтан';
     }
     if (name.includes('Тор')) return '4 хавтан';

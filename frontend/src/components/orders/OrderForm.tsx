@@ -102,7 +102,7 @@ function popcount(n: number) {
 function normalizeBinding(bt?: string): string {
   const s = (bt || '').trim().toLowerCase();
   if (!s) return '';
-  if (s.includes('хөөсөн')) return 'Хөөсөн хатуу хавтастай';
+  if (s.includes('хөөсөн')) return 'Хатуу хавтастай';
   if (s.includes('хөндлөн')) return 'Хөндлөн хатуу хавтастай';
   if (s.includes('хатуу')) return 'Хатуу хавтастай';
   if (s.includes('супер')) return 'Супер хавтастай';
@@ -145,10 +145,10 @@ function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = [
   if (s === 'A4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
   if (s === 'B4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
 
-  // Landscape Hardcover (Хөндлөн хатуу хавтас) & Foamed Hardcover (Хөөсөн хатуу хавтас) fallbacks
-  if (s === 'A4' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
-  if (s === 'A5' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && (btLower === 'хөндлөн хатуу хавтастай' || btLower === 'хөөсөн хатуу хавтастай')) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  // Landscape Hardcover (Хөндлөн хатуу хавтас) fallbacks
+  if (s === 'A4' && btLower === 'хөндлөн хатуу хавтастай') return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
+  if (s === 'A5' && btLower === 'хөндлөн хатуу хавтастай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
+  if (s === 'B5' && btLower === 'хөндлөн хатуу хавтастай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
 
   // Super Cover (Супер хавтас) fallbacks
   if (s === 'A5' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 6, printSize: 'B3' };
@@ -1007,6 +1007,224 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
   };
 
+  const syncStandardProductionOperations = (
+    currentOps: any[],
+    scopeOverrides?: {
+      category?: string;
+      binding_type?: string;
+      total_qty?: number;
+      total_pages?: number;
+      cover_color?: string;
+      inner_color?: string;
+      materials?: any[];
+      size?: string;
+    }
+  ) => {
+    const cat = scopeOverrides?.category || getValues('category') || '';
+    const bt = normalizeBinding(scopeOverrides?.binding_type !== undefined ? scopeOverrides.binding_type : getValues('binding_type'));
+    const totalQty = Number(scopeOverrides?.total_qty !== undefined ? scopeOverrides.total_qty : getValues('total_qty')) || 0;
+    const totalPages = Number(scopeOverrides?.total_pages !== undefined ? scopeOverrides.total_pages : getValues('total_pages')) || 0;
+    const coverColor = scopeOverrides?.cover_color !== undefined ? scopeOverrides.cover_color : (getValues('cover_color') || '');
+    const innerColor = scopeOverrides?.inner_color !== undefined ? scopeOverrides.inner_color : (getValues('inner_color') || '');
+    const mats = scopeOverrides?.materials || getValues('materials') || [];
+    const size = (scopeOverrides?.size || getValues('size') || 'A5').trim().toUpperCase();
+
+    // 1. Purge obsolete operations
+    const obsoleteList = [
+      'Холио',
+      'Цуглуулга (Холио)',
+      'Хөөсөн хатуу хавтас хийх',
+      'Хөөсөн хатуу хавтас',
+      'Цаас амраах / Хэвэнд бэлтгэх',
+      'Цаас амраах',
+      'Өнгө тааруулах / Сигнатур тулгах',
+      'Өнгө тааруулах',
+      'Хатаалт хүлээх',
+      'QR / Баркод уншиж шалгах',
+      'QR унших',
+      'Тусгай боодол / Хайрцаглах',
+      'Тусгай боодол'
+    ];
+
+    let ops = (currentOps || []).filter((o: any) => {
+      const name = (o.operation_name || '').trim();
+      return !obsoleteList.includes(name);
+    });
+
+    const isNonOffset = ['Түргэн хэвлэл Konica', 'EPSON', 'Шуурхай принт', 'Бал', 'Даралт', 'Промо'].includes(cat);
+    const catConfig = productCategories.find(c => c.name === cat);
+    const isBookMode = catConfig?.calc_mode === 'BOOK_MODE' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Сэтгүүл' || cat === 'Танилцуулга' || cat === 'Дэвтэр' || cat === 'Сонин' || cat === 'Календар';
+
+    // Calculate base sheets
+    const innerMats = mats.filter((m: any) => {
+      if (isCoverMaterial(m)) return false;
+      const aux = getMaterialType(m.material_name, m.notes);
+      return !aux.isNonPrinted && aux.type !== 'coating' && aux.type !== 'strap';
+    });
+    const coverMats = mats.filter((m: any) => isCoverMaterial(m));
+
+    const inner_base_sheets = innerMats.reduce((acc: number, m: any) => acc + ((Number(m.base_qty) || 0) * (Number(m.press_sheet) || 0)), 0);
+    const cover_base_sheets = coverMats.reduce((acc: number, m: any) => acc + ((Number(m.base_qty) || 0) * (Number(m.press_sheet) || 0)), 0);
+    const total_base_sheets = inner_base_sheets + cover_base_sheets;
+    const effectiveBaseSheets = total_base_sheets > 0 ? total_base_sheets : totalQty;
+
+    // Helper to find or upsert operation
+    const upsertOp = (
+      name: string,
+      targetQty: number,
+      stage: string = 'POST_PRESS',
+      notes: string = '',
+      preferredUnitCost: number = 0
+    ) => {
+      const idx = ops.findIndex((o: any) => o.operation_name === name);
+      if (idx >= 0) {
+        const cur = ops[idx];
+        const cost = Number(cur.unit_cost) || 0;
+        ops[idx] = {
+          ...cur,
+          qty: cur.is_manual ? cur.qty : targetQty,
+          unit_cost: cost,
+          is_pricing: cost > 0,
+          production_stage: cur.production_stage || stage,
+          notes: cur.notes || notes
+        };
+      } else {
+        ops.push({
+          operation_name: name,
+          qty: targetQty,
+          unit_cost: preferredUnitCost,
+          is_pricing: preferredUnitCost > 0,
+          production_stage: stage,
+          is_manual: false,
+          notes: notes
+        });
+      }
+    };
+
+    const removeOpIfNotManual = (namePattern: string) => {
+      ops = ops.filter((o: any) => {
+        if (o.is_manual) return true;
+        return !o.operation_name?.includes(namePattern);
+      });
+    };
+
+    // 2. Хэвлэх (Printing operations)
+    if (!isNonOffset) {
+      const getNumColors = (colorStr: string) => {
+        if (!colorStr) return 4;
+        const match = colorStr.match(/(\d+)/);
+        return match ? Number(match[1]) : 4;
+      };
+
+      const existingPrintOps = ops.filter((o: any) => (o.operation_name || '').startsWith('Хэвлэх ('));
+      if (existingPrintOps.length > 0) {
+        existingPrintOps.forEach((po: any) => {
+          if (!po.is_manual) {
+            const isCoverPrint = (po.notes || '').toLowerCase().includes('хавтас') || po.operation_name.includes('4 өнгө') && cover_base_sheets > 0 && inner_base_sheets > 0;
+            const isInnerPrint = (po.notes || '').toLowerCase().includes('дотор') || po.operation_name.includes('1 өнгө') && inner_base_sheets > 0;
+            if (isCoverPrint && cover_base_sheets > 0 && inner_base_sheets > 0) {
+              po.qty = cover_base_sheets;
+            } else if (isInnerPrint && inner_base_sheets > 0) {
+              po.qty = inner_base_sheets;
+            } else {
+              po.qty = effectiveBaseSheets;
+            }
+          }
+        });
+      } else {
+        const cCol = getNumColors(coverColor);
+        const iCol = getNumColors(innerColor);
+        if (coverMats.length > 0 && innerMats.length > 0 && cCol !== iCol) {
+          upsertOp(`Хэвлэх (${cCol} өнгө)`, cover_base_sheets > 0 ? cover_base_sheets : totalQty, 'PRINTING', 'Хавтас хэвлэх');
+          upsertOp(`Хэвлэх (${iCol} өнгө)`, inner_base_sheets > 0 ? inner_base_sheets : totalQty, 'PRINTING', 'Дотор хэвлэх');
+        } else {
+          const col = coverMats.length > 0 ? cCol : (innerMats.length > 0 ? iCol : 4);
+          upsertOp(`Хэвлэх (${col} өнгө)`, effectiveBaseSheets, 'PRINTING', 'Хэвлэх');
+        }
+      }
+    } else {
+      removeOpIfNotManual('Хэвлэх (');
+    }
+
+    // 3. Шалгах (Sheet inspection)
+    if (!isNonOffset) {
+      upsertOp('Шалгах', effectiveBaseSheets, 'POST_PRESS', 'Хуудас шалгах');
+    } else {
+      removeOpIfNotManual('Шалгах');
+    }
+
+    // 4. Цуглуулга (Collation)
+    const needsCollation = isBookMode || totalPages > 4 || cat === 'Хортой маягт' || cat === 'Сонин';
+    if (needsCollation) {
+      upsertOp('Цуглуулга', effectiveBaseSheets, 'POST_PRESS', 'Цуглуулга');
+    } else {
+      removeOpIfNotManual('Цуглуулга');
+    }
+
+    // 5. Binding: Үдээ vs Наалт vs Хатуу хавтас
+    if (bt === 'Үдээстэй') {
+      removeOpIfNotManual('Наалт');
+      upsertOp('Үдээ (Унаа үдээ)', totalQty, 'POST_PRESS', 'Төмөр үдээс');
+    } else if (bt === 'Наалттай') {
+      removeOpIfNotManual('Үдээ');
+      upsertOp('Наалт', totalQty, 'POST_PRESS', 'Термо цавуун наалт');
+    } else if (bt === 'Хатуу хавтастай' || bt === 'Хөндлөн хатуу хавтастай') {
+      removeOpIfNotManual('Үдээ');
+      upsertOp('Наалт', totalQty, 'POST_PRESS', 'Блок наалт');
+      const hcOpName = getHardcoverAuxiliarySpecs(size).opName;
+      upsertOp(hcOpName, totalQty, 'POST_PRESS', `${size} хатуу хавтас угсрах, наах`);
+    } else if (bt === 'Супер хавтастай') {
+      upsertOp('Супер хавтас хийх', totalQty, 'POST_PRESS', 'Супер хавтас нугалах, өмсгөх');
+    } else if (bt === 'Блокон оёо') {
+      const sewingQty = Math.ceil(totalPages / 16) * totalQty;
+      upsertOp('Блокон оёо', sewingQty > 0 ? sewingQty : totalQty, 'POST_PRESS', 'Утас блокон оёо');
+    }
+
+    // 6. Огтлоо (Trimming/Cutting)
+    const hasCutting = ops.some((o: any) => (o.operation_name || '').startsWith('Огтлоо'));
+    let defaultCuttingName = 'Огтлоо (Жижиг)';
+    let defaultCuttingQty = 1;
+
+    if (isBookMode || cat === 'Сэтгүүл' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Дэвтэр' || cat === 'Танилцуулга') {
+      defaultCuttingName = 'Огтлоо (Гурван талт)';
+      defaultCuttingQty = 2;
+    } else if (cat === 'Зурагт хуудас' || cat === 'Сонин' || cat === 'Тор' || cat === 'Хавтас' || cat === 'EPSON') {
+      defaultCuttingName = 'Огтлоо (Том)';
+      defaultCuttingQty = 1;
+    }
+
+    if (!hasCutting) {
+      upsertOp(defaultCuttingName, defaultCuttingQty, 'POST_PRESS', 'Огтлох');
+    } else {
+      if (isBookMode) {
+        const cIdx = ops.findIndex((o: any) => (o.operation_name || '').startsWith('Огтлоо'));
+        if (cIdx >= 0 && !ops[cIdx].is_manual && ops[cIdx].operation_name !== 'Огтлоо (Гурван талт)') {
+          ops[cIdx].operation_name = 'Огтлоо (Гурван талт)';
+          ops[cIdx].qty = 2;
+        }
+      }
+    }
+
+    // 7. Чанарын эцсийн хяналт (Universal Final QC)
+    upsertOp('Чанарын эцсийн хяналт', totalQty, 'PACKAGING', 'Эцсийн согог шалгалт');
+
+    // Stage order: PRE_PRESS, PRINTING, POST_PRESS, PACKAGING
+    const stageOrder: Record<string, number> = {
+      PRE_PRESS: 1,
+      PRINTING: 2,
+      POST_PRESS: 3,
+      PACKAGING: 4
+    };
+
+    ops.sort((a: any, b: any) => {
+      const sa = stageOrder[a.production_stage || 'POST_PRESS'] || 3;
+      const sb = stageOrder[b.production_stage || 'POST_PRESS'] || 3;
+      return sa - sb;
+    });
+
+    return ops;
+  };
+
   const applyFullTemplate = (t: any) => {
     if (!t) return;
     isApplyingTemplateRef.current = true;
@@ -1282,8 +1500,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               unit_cost: cost
             };
           });
-        setValue('operations', smartOperations);
-        replaceOps(smartOperations);
+        const fullySyncedOps = syncStandardProductionOperations(smartOperations, {
+          category: t.category,
+          binding_type: t.binding_type,
+          total_qty: tQty,
+          total_pages: Number(t.total_pages || od.specifications?.total_pages) || 0,
+          cover_color: t.cover_color || od.specifications?.cover_color,
+          inner_color: t.inner_color || od.specifications?.inner_color,
+          materials: smartMaterials,
+          size: t.size
+        });
+        setValue('operations', fullySyncedOps);
+        replaceOps(fullySyncedOps);
       }
     }
   };
@@ -1331,8 +1559,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             });
           }
 
-          setValue('operations', newOps);
-          replaceOps(newOps);
+          const syncedOps = syncStandardProductionOperations(newOps, {
+            category: formValues.category,
+            binding_type: formValues.binding_type,
+            total_qty: formValues.total_qty,
+            total_pages: formValues.total_pages,
+            cover_color: formValues.cover_color,
+            inner_color: formValues.inner_color,
+            size: formValues.size
+          });
+          setValue('operations', syncedOps);
+          replaceOps(syncedOps);
         } catch(e) {
           console.error("Failed to parse default operations", e);
         }
@@ -1973,17 +2210,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     });
 
     const existingOps = getValues('operations') || [];
-    const bindingType = getValues('binding_type') || '';
-    const isFoamed = bindingType === 'Хөөсөн хатуу хавтастай';
-    const newOpName = isFoamed ? 'Хөөсөн хатуу хавтас хийх' : getHardcoverAuxiliarySpecs(a7).opName;
+    const newOpName = getHardcoverAuxiliarySpecs(a7).opName;
 
-    const opIdx = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас') || o.operation_name?.includes('Хөөсөн хатуу хавтас'));
+    const opIdx = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас'));
     if (opIdx >= 0) {
       const curCost = Number(existingOps[opIdx].unit_cost) || 0;
       setValue(`operations.${opIdx}.operation_name`, newOpName);
       setValue(`operations.${opIdx}.unit_cost`, curCost);
       setValue(`operations.${opIdx}.is_pricing`, curCost > 0);
-      setValue(`operations.${opIdx}.notes`, isFoamed ? 'Хөөсөн хавтас угсрах' : `${a7} хатуу хавтас угсрах, наах`);
+      setValue(`operations.${opIdx}.notes`, `${a7} хатуу хавтас угсрах, наах`);
     }
   };
 
@@ -2004,9 +2239,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const headbandDiv = specs.headbandDiv;
     const ribbonLength = specs.ribbonLength;
 
-    const bindingType = getValues('binding_type') || '';
-    const isFoamed = bindingType === 'Хөөсөн хатуу хавтастай';
-    const opName = isFoamed ? 'Хөөсөн хатуу хавтас хийх' : specs.opName;
+    const opName = specs.opName;
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
@@ -2117,14 +2350,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     replaceMaterials(newMaterials);
 
     const existingOps = getValues('operations') || [];
-    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас') || o.operation_name?.includes('Хөөсөн хатуу хавтас'));
+    const existingIndex = existingOps.findIndex(o => o.operation_name?.includes('Хатуу хавтас'));
     const curCost = existingIndex >= 0 ? (Number(existingOps[existingIndex].unit_cost) || 0) : 0;
     if (existingIndex >= 0) {
       setValue(`operations.${existingIndex}.operation_name`, opName);
       setValue(`operations.${existingIndex}.qty`, totalQty);
       setValue(`operations.${existingIndex}.unit_cost`, curCost);
       setValue(`operations.${existingIndex}.is_pricing`, curCost > 0);
-      setValue(`operations.${existingIndex}.notes`, isFoamed ? 'Хөөсөн хавтас угсрах' : `${size} хатуу хавтас угсрах, наах`);
+      setValue(`operations.${existingIndex}.notes`, `${size} хатуу хавтас угсрах, наах`);
     } else {
       const nextOps = [
         ...existingOps,
@@ -2132,7 +2365,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           operation_name: opName,
           qty: totalQty,
           unit_cost: 0,
-          notes: isFoamed ? 'Хөөсөн хавтас угсрах' : `${size} хатуу хавтас угсрах, наах`,
+          notes: `${size} хатуу хавтас угсрах, наах`,
           is_pricing: false,
           production_stage: 'POST_PRESS'
         }
@@ -2436,9 +2669,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   }, [formValues.materials]);
 
   useEffect(() => {
+    if (isApplyingTemplateRef.current) return;
+
     const ops = getValues('operations') || [];
-    let changed = false;
-    const newOps = ops.map((op: any) => {
+    if (ops.length === 0 && !formValues.category) return;
+
+    const formulaEvaluatedOps = ops.map((op: any) => {
       if (!op.operation_name) return op;
       if (op.is_manual) return op; // Гараар оруулсан бол тоог өөрчлөхгүй
 
@@ -2446,24 +2682,60 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (mp && mp.formula && mp.formula.expression) {
         const newQty = evaluateOperationFormula(mp.formula.expression);
         if (newQty !== Number(op.qty)) {
-          changed = true;
           return { ...op, qty: newQty };
         }
       } else if (op.operation_name.startsWith('Лак (') || op.operation_name === 'Эмбосс' || op.operation_name.startsWith('Клише (')) {
         const newQty = Number(formValues.total_qty) || 0;
         if (newQty !== Number(op.qty)) {
-          changed = true;
           return { ...op, qty: newQty };
         }
       }
       return op;
     });
 
-    if (changed) {
-      setValue('operations', newOps);
-      replaceOps(newOps);
+    const fullySynced = syncStandardProductionOperations(formulaEvaluatedOps, {
+      category: formValues.category,
+      binding_type: formValues.binding_type,
+      total_qty: Number(formValues.total_qty) || 0,
+      total_pages: Number(formValues.total_pages) || 0,
+      cover_color: formValues.cover_color,
+      inner_color: formValues.inner_color,
+      materials: formValues.materials,
+      size: formValues.size
+    });
+
+    const areOpsEqual = (a: any[], b: any[]) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        const oA = a[i];
+        const oB = b[i];
+        if (oA.operation_name !== oB.operation_name) return false;
+        if (Number(oA.qty) !== Number(oB.qty)) return false;
+        if (Number(oA.unit_cost) !== Number(oB.unit_cost)) return false;
+        if (!!oA.is_pricing !== !!oB.is_pricing) return false;
+        if (!!oA.is_manual !== !!oB.is_manual) return false;
+        if ((oA.production_stage || '') !== (oB.production_stage || '')) return false;
+        if ((oA.notes || '') !== (oB.notes || '')) return false;
+      }
+      return true;
+    };
+
+    if (!areOpsEqual(ops, fullySynced)) {
+      setValue('operations', fullySynced);
+      replaceOps(fullySynced);
     }
-  }, [formValues.materials, formValues.total_qty, formValues.total_pages, formValues.cover_color, formValues.inner_color, formValues.category, masterPrices, setValue]);
+  }, [
+    formValues.materials,
+    formValues.total_qty,
+    formValues.total_pages,
+    formValues.cover_color,
+    formValues.inner_color,
+    formValues.category,
+    formValues.binding_type,
+    formValues.size,
+    masterPrices,
+    setValue
+  ]);
 
   useEffect(() => {
     const cat = formValues.category;
@@ -3194,7 +3466,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     const currentOps = getValues('operations') || [];
                     const cleanOps = currentOps.filter((o: any) => {
                       const name = o.operation_name || '';
-                      return !name.includes('Хатуу хавтас') && !name.includes('Хөөсөн хатуу хавтас') && !name.includes('Супер хавтас');
+                      return !name.includes('Хатуу хавтас') && !name.includes('Супер хавтас');
                     });
                     if (cleanOps.length !== currentOps.length) {
                       setValue('operations', cleanOps);
@@ -3231,7 +3503,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Үдээстэй">Үдээстэй</option>
                 <option value="Хатуу хавтастай">Хатуу хавтастай</option>
                 <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
-                <option value="Хөөсөн хатуу хавтастай">Хөөсөн хатуу хавтастай</option>
                 <option value="Супер хавтастай">Супер хавтастай</option>
                 <option value="Блокон оёо">Блокон оёо</option>
               </select>
@@ -3276,7 +3547,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
             const isMattCoating = Boolean(coatingMat && coatingMat.material_name.includes('Матт'));
             const isGlossCoating = Boolean(coatingMat && coatingMat.material_name.includes('Гялгар'));
-            const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
+            const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
 
             return (
               <div className="erp-addon-bar">
@@ -3314,7 +3585,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <span>🧥 Супер хавтастай</span>
                     </label>
 
-                    {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+                    {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
                       <>
                         <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
                           <input 
@@ -4852,7 +5123,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               >
                 + Материал нэмэх
               </button>
-              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Хөөсөн хатуу хавтастай') && (
+              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
                 <button 
                   type="button" 
                   onClick={() => handleAddHardcoverAuxiliary()} 
