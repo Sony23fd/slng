@@ -1207,21 +1207,9 @@ export const deleteCustomerGift = async (req: Request, res: Response) => {
   }
 };
 
-// 5. SALESPERSON DEDICATED REPORT DATA & PRESENTATION
+// 5. SALES TEAM DEDICATED REPORT DATA & MEETING PRESENTATION
 export const aggregateSalespersonReport = async (currentUser: any, query: any) => {
   const { period, startDate, endDate, salesPersonId } = query;
-
-  // Determine target salesperson
-  let targetUser = currentUser;
-  const canSwitchManager = ['ADMIN', 'FINANCE', 'MANAGER'].includes(currentUser.role);
-  if (canSwitchManager && salesPersonId) {
-    const found = await prisma.user.findUnique({
-      where: { id: parseInt(salesPersonId as string, 10) }
-    });
-    if (found) {
-      targetUser = found;
-    }
-  }
 
   // Determine Date Range
   const now = new Date();
@@ -1250,36 +1238,151 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
     end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
   }
 
-  // Filter by salesperson
-  const userOrConditions: any[] = [];
-  if (targetUser.id) {
-    userOrConditions.push({ sales_person_id: targetUser.id });
-  }
-  if (targetUser.name) {
-    userOrConditions.push({ sales_person_name: targetUser.name });
-  }
+  // 1. Fetch all sales & admin users for team breakdown
+  const salesUsers = await prisma.user.findMany({
+    where: { role: { in: ['SALES', 'ADMIN'] } },
+    select: { id: true, name: true, role: true },
+    orderBy: { name: 'asc' }
+  });
 
-  const where: any = {
-    createdAt: { gte: start, lte: end }
-  };
+  // 2. Fetch targets
+  const targetYear = start.getFullYear();
+  const targetMonth = start.getMonth() + 1;
+  const targetRecord = await prisma.sales_target.findUnique({
+    where: { year_month: { year: targetYear, month: targetMonth } }
+  });
+  const totalTarget = targetRecord?.target_amount || 0;
+  const managerTargets = (targetRecord?.manager_targets as Array<{ manager_name: string; target: number }>) || [];
 
-  if (userOrConditions.length > 0) {
-    where.OR = userOrConditions;
-  }
-
-  // Query orders with payments
-  const orders = await prisma.order.findMany({
-    where,
+  // 3. Query all orders in this date range
+  const allOrders = await prisma.order.findMany({
+    where: {
+      createdAt: { gte: start, lte: end }
+    },
     include: {
-      payments: true
+      payments: true,
+      user: true
     },
     orderBy: { createdAt: 'desc' }
   });
 
-  const nonCancelled = orders.filter(o => o.current_status !== 'Цуцлагдсан');
+  // 4. Compute managerStats (performance for every manager in the team)
+  const managerMap = new Map<string, {
+    id?: number;
+    name: string;
+    target: number;
+    actual: number;
+    achievementRate: number;
+    orderCount: number;
+    completedRevenue: number;
+    inProductionRevenue: number;
+    paidAmount: number;
+    receivables: number;
+    barterAmount: number;
+    donationAmount: number;
+  }>();
+
+  salesUsers.forEach(u => {
+    const t = managerTargets.find(mt => mt.manager_name === u.name);
+    managerMap.set(u.name, {
+      id: u.id,
+      name: u.name,
+      target: t ? Number(t.target) || 0 : 0,
+      actual: 0,
+      achievementRate: 0,
+      orderCount: 0,
+      completedRevenue: 0,
+      inProductionRevenue: 0,
+      paidAmount: 0,
+      receivables: 0,
+      barterAmount: 0,
+      donationAmount: 0
+    });
+  });
+
+  managerTargets.forEach(mt => {
+    if (!managerMap.has(mt.manager_name)) {
+      managerMap.set(mt.manager_name, {
+        name: mt.manager_name,
+        target: Number(mt.target) || 0,
+        actual: 0,
+        achievementRate: 0,
+        orderCount: 0,
+        completedRevenue: 0,
+        inProductionRevenue: 0,
+        paidAmount: 0,
+        receivables: 0,
+        barterAmount: 0,
+        donationAmount: 0
+      });
+    }
+  });
+
+  allOrders.forEach(o => {
+    if (o.current_status === 'Цуцлагдсан') return;
+
+    const mgrName = o.sales_person_name || (o.user ? o.user.name : 'Бусад');
+    const existing = managerMap.get(mgrName) || {
+      name: mgrName,
+      target: 0,
+      actual: 0,
+      achievementRate: 0,
+      orderCount: 0,
+      completedRevenue: 0,
+      inProductionRevenue: 0,
+      paidAmount: 0,
+      receivables: 0,
+      barterAmount: 0,
+      donationAmount: 0
+    };
+
+    const price = o.final_price || 0;
+    const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    const balance = Math.max(0, price - paid);
+
+    existing.orderCount += 1;
+    existing.actual += price;
+    existing.paidAmount += paid;
+    existing.receivables += balance;
+
+    if (['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || '')) {
+      existing.completedRevenue += price;
+    } else if (!['Үнийн санал', 'Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || '')) {
+      existing.inProductionRevenue += price;
+    }
+
+    if (o.order_type === 'BARTER') {
+      existing.barterAmount += price;
+    } else if (o.order_type === 'DONATION') {
+      existing.donationAmount += price;
+    }
+
+    managerMap.set(mgrName, existing);
+  });
+
+  const managerStats = Array.from(managerMap.values()).map(m => ({
+    ...m,
+    achievementRate: m.target > 0 ? (m.actual / m.target) * 100 : 0
+  })).sort((a, b) => b.actual - a.actual);
+
+  // 5. Determine active view (Team view vs Specific Salesperson)
+  const isTeamView = !salesPersonId || salesPersonId === 'ALL' || salesPersonId === '0';
+  let targetUser = { id: 0, name: 'Борлуулалтын баг (Бүгд)', role: 'TEAM' };
+
+  let displayedOrders = allOrders;
+  if (!isTeamView) {
+    const found = salesUsers.find(u => u.id === parseInt(salesPersonId as string, 10));
+    if (found) {
+      targetUser = found;
+      displayedOrders = allOrders.filter(o => o.sales_person_id === found.id || o.sales_person_name === found.name);
+    }
+  }
+
+  // 6. Aggregate displayedOrders
+  const nonCancelled = displayedOrders.filter(o => o.current_status !== 'Цуцлагдсан');
   const totalRevenue = nonCancelled.reduce((sum, o) => sum + (o.final_price || 0), 0);
   const totalOrders = nonCancelled.length;
-  const cancelledOrders = orders.filter(o => o.current_status === 'Цуцлагдсан');
+  const cancelledOrders = displayedOrders.filter(o => o.current_status === 'Цуцлагдсан');
   const cancelledRevenue = cancelledOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
 
   const completedOrders = nonCancelled.filter(o => ['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || ''));
@@ -1288,10 +1391,8 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
   const inProductionOrders = nonCancelled.filter(o => !['Үнийн санал', 'Хүлээлгэн өгсөн', 'Олгосон', 'Бэлэн'].includes(o.current_status || ''));
   const inProductionRevenue = inProductionOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
 
-  // Payments & Receivables
   let totalPaid = 0;
   let totalReceivables = 0;
-
   nonCancelled.forEach(o => {
     const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
     totalPaid += paid;
@@ -1299,22 +1400,11 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
     totalReceivables += balance;
   });
 
-  // Monthly Target & Achievement
-  const targetYear = start.getFullYear();
-  const targetMonth = start.getMonth() + 1;
-  const targetRecord = await prisma.sales_target.findUnique({
-    where: { year_month: { year: targetYear, month: targetMonth } }
-  });
+  const target = isTeamView
+    ? (totalTarget > 0 ? totalTarget : managerStats.reduce((sum, m) => sum + m.target, 0))
+    : (managerStats.find(m => m.name === targetUser.name)?.target || 0);
 
-  let myTarget = 0;
-  if (targetRecord && targetRecord.manager_targets) {
-    const mgrList = targetRecord.manager_targets as Array<{ manager_name: string; target: number }>;
-    const matched = mgrList.find(m => m.manager_name === targetUser.name);
-    if (matched) {
-      myTarget = Number(matched.target) || 0;
-    }
-  }
-  const achievementRate = myTarget > 0 ? (totalRevenue / myTarget) * 100 : 0;
+  const achievementRate = target > 0 ? (totalRevenue / target) * 100 : 0;
 
   // Daily Trend
   const trendMap = new Map<string, { date: string; revenue: number; count: number }>();
@@ -1333,7 +1423,6 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
       entry.count += 1;
     }
   });
-
   const trend = Array.from(trendMap.values());
 
   // Category Breakdown
@@ -1345,7 +1434,6 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
     existing.revenue += (o.final_price || 0);
     catMap.set(cat, existing);
   });
-
   const categoryBreakdown = Array.from(catMap.values()).map(c => ({
     ...c,
     percent: totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0
@@ -1353,7 +1441,7 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
 
   // Status Breakdown
   const statusMap = new Map<string, { status: string; count: number; revenue: number }>();
-  orders.forEach(o => {
+  displayedOrders.forEach(o => {
     const st = o.current_status || 'Тодорхойгүй';
     const existing = statusMap.get(st) || { status: st, count: 0, revenue: 0 };
     existing.count += 1;
@@ -1376,7 +1464,7 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
     .slice(0, 10);
 
   // Formatted Order Items
-  const orderItems = orders.map(o => {
+  const orderItems = displayedOrders.map(o => {
     const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
     const balance = Math.max(0, (o.final_price || 0) - paid);
     return {
@@ -1394,22 +1482,14 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
       createdAt: o.createdAt,
       deadline: o.deadline,
       is_urgent: o.is_urgent,
-      order_type: o.order_type || 'STANDARD'
+      order_type: o.order_type || 'STANDARD',
+      sales_person_name: o.sales_person_name || (o.user ? o.user.name : '')
     };
   });
 
-  // Available Salespersons for dropdown (for Admin/Manager)
-  let availableSalespersons: Array<{ id: number; name: string; role: string }> = [];
-  if (canSwitchManager) {
-    availableSalespersons = await prisma.user.findMany({
-      where: { role: { in: ['SALES', 'ADMIN'] } },
-      select: { id: true, name: true, role: true },
-      orderBy: { name: 'asc' }
-    });
-  }
-
   return {
     targetUser,
+    isTeamView,
     period: {
       type: period || 'this_month',
       startDate: start.toISOString(),
@@ -1427,15 +1507,16 @@ export const aggregateSalespersonReport = async (currentUser: any, query: any) =
       cancelledRevenue,
       totalPaid,
       totalReceivables,
-      target: myTarget,
+      target,
       achievementRate
     },
+    managerStats, // <--- ALL salespersons performance breakdown
     trend,
     categoryBreakdown,
     statusBreakdown,
     topCustomers,
     orders: orderItems,
-    availableSalespersons
+    availableSalespersons: salesUsers
   };
 };
 
@@ -1458,7 +1539,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     if (!currentUser) return res.status(401).json({ error: 'Unauthorized' });
 
     const data = await aggregateSalespersonReport(currentUser, req.query);
-    const { targetUser, dates, summary, trend, categoryBreakdown, statusBreakdown, topCustomers } = data;
+    const { targetUser, isTeamView, dates, summary, managerStats, trend, categoryBreakdown, statusBreakdown, topCustomers } = data;
 
     const startDateStr = `${dates.start.getFullYear()}.${String(dates.start.getMonth() + 1).padStart(2, '0')}.${String(dates.start.getDate()).padStart(2, '0')}`;
     const endDateStr = `${dates.end.getFullYear()}.${String(dates.end.getMonth() + 1).padStart(2, '0')}.${String(dates.end.getDate()).padStart(2, '0')}`;
@@ -1468,7 +1549,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     pptx.layout = 'LAYOUT_16x9';
     pptx.author = 'Selenge Press LLC';
     pptx.company = 'Сэлэнгэ Пресс ХХК';
-    pptx.title = `Борлуулалтын тайлан - ${targetUser.name} (${periodLabel})`;
+    pptx.title = `Борлуулалтын багийн тайлан танилцуулга (${periodLabel})`;
 
     const C = {
       darkBg: '0F172A',      // Slate 900
@@ -1508,10 +1589,10 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
         fontFace: 'Arial',
         color: C.textMuted
       });
-      slide.addText(`СЭЛЭНГЭ ПРЕСС | ${targetUser.name}`, {
-        x: 9.5,
+      slide.addText('СЭЛЭНГЭ ПРЕСС | БОРЛУУЛАЛТЫН АЛБА', {
+        x: 8.5,
         y: 0.4,
-        w: 3.2,
+        w: 4.2,
         h: 0.4,
         fontSize: 10,
         fontFace: 'Arial',
@@ -1551,10 +1632,10 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       color: '94A3B8',
       charSpacing: 3
     });
-    s1.addText('БОРЛУУЛАЛТЫН ТАЙЛАН ТАНИЛЦУУЛГА', {
+    s1.addText('БОРЛУУЛАЛТЫН БАГИЙН ТАЙЛАН ТАНИЛЦУУЛГА', {
       x: 1.2,
       y: 2.4,
-      w: 10.5,
+      w: 10.8,
       h: 1.1,
       fontSize: 32,
       fontFace: 'Arial',
@@ -1577,7 +1658,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       h: 0.03,
       fill: { color: '334155' }
     });
-    s1.addText(`Борлуулалтын менежер: ${targetUser.name}`, {
+    s1.addText(`Танилцуулга: Борлуулалтын алба ${!isTeamView ? `(${targetUser.name})` : ''}`, {
       x: 1.2,
       y: 4.7,
       w: 8,
@@ -1587,7 +1668,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       bold: true,
       color: 'E2E8F0'
     });
-    s1.addText(`Тайлан бэлтгэсэн огноо: ${new Date().toLocaleDateString('mn-MN')}`, {
+    s1.addText(`Тайлан татсан огноо: ${new Date().toLocaleDateString('mn-MN')}`, {
       x: 1.2,
       y: 5.2,
       w: 8,
@@ -1598,16 +1679,16 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 2: KPI & TARGET ACHIEVEMENT
+    // SLIDE 2: TEAM KPI & OVERALL SUMMARY
     // ==========================================
     const s2 = pptx.addSlide();
     s2.background = { color: C.lightBg };
-    addHeader(s2, 'ГҮЙЦЭТГЭЛИЙН ХУРААНГУЙ (KPI)', `${periodLabel} хоорондох борлуулалтын гол үзүүлэлт, зорилтын биелэлт`);
+    addHeader(s2, 'БАГИЙН НИЙТ ГҮЙЦЭТГЭЛ (KPI)', `${periodLabel} хоорондох борлуулалтын багийн нэгдсэн үзүүлэлт, зорилтын биелэлт`);
 
     const avgOrderVal = summary.totalOrders > 0 ? summary.totalRevenue / summary.totalOrders : 0;
     const cards = [
       { title: 'Нийт борлуулалт', value: formatMNT(summary.totalRevenue), sub: `Биелэлт: ${summary.achievementRate.toFixed(1)}%`, color: C.primary },
-      { title: 'Сар / Хугацааны төлөвлөгөө', value: formatMNT(summary.target), sub: summary.target > 0 ? `Зөрүү: ${formatMNT(summary.totalRevenue - summary.target)}` : 'Төлөвлөгөө тохируулаагүй', color: C.textDark },
+      { title: 'Багийн төлөвлөгөө', value: formatMNT(summary.target), sub: summary.target > 0 ? `Зөрүү: ${formatMNT(summary.totalRevenue - summary.target)}` : 'Төлөвлөгөө тохируулаагүй', color: C.textDark },
       { title: 'Нийт захиалгын тоо', value: `${summary.totalOrders} ш`, sub: `Дундаж захиалга: ${formatMNT(avgOrderVal)}`, color: C.textDark },
       { title: 'Төлбөр цугларалт', value: formatMNT(summary.totalPaid), sub: `Үлдэгдэл авлага: ${formatMNT(summary.totalReceivables)}`, color: C.success }
     ];
@@ -1659,7 +1740,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       fill: { color: 'FFFFFF' },
       line: { color: C.border, width: 1 }
     });
-    s2.addText('ТАЙЛАНТ ХУГАЦААНЫ ДҮГНЭЛТ', {
+    s2.addText('БАГИЙН НИЙТ ТОЙМ ДҮГНЭЛТ', {
       x: 0.9,
       y: 4.15,
       w: 11.5,
@@ -1669,12 +1750,12 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       color: C.primary
     });
     const summaryBullets = [
-      `Тайлант хугацаанд ${targetUser.name} нийт ${summary.totalOrders} захиалга дээр ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт амжилттай хийсэн байна.`,
+      `Тайлант хугацаанд борлуулалтын баг нийт ${summary.totalOrders} захиалга гүйцэтгэж, ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт хийсэн байна.`,
       summary.target > 0
-        ? `Төлөвлөгөөт зорилт ${formatMNT(summary.target)} байснаас биелэлт ${summary.achievementRate.toFixed(1)}%-тай биелэсэн байна.`
-        : `Төлөвлөгөө тогтоогоогүй бөгөөд нийт захиалгын дундаж дүн ${formatMNT(avgOrderVal)} төгрөг байна.`,
-      `Үйлдвэрлэлд ${summary.inProductionCount} захиалга (${formatMNT(summary.inProductionRevenue)}) гүйцэтгэгдэж буй бөгөөд ${summary.completedCount} захиалга (${formatMNT(summary.completedRevenue)}) бүрэн бэлэн болж хүлээлгэн өгөгдсөн.`,
-      `Борлуулалтын төлбөрөөс ${formatMNT(summary.totalPaid)} төлөгдөж, харилцагчийн үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байна.`
+        ? `Багийн нэгдсэн төлөвлөгөөт зорилт ${formatMNT(summary.target)} байснаас биелэлт ${summary.achievementRate.toFixed(1)}%-тай гарлаа.`
+        : `Борлуулалтын нэгдсэн төлөвлөгөө бүртгэгдээгүй бөгөөд захиалга бүрийн дундаж дүн ${formatMNT(avgOrderVal)} байна.`,
+      `Үйлдвэрлэлд ${summary.inProductionCount} захиалга (${formatMNT(summary.inProductionRevenue)}) хэвлэгдэж буй бөгөөд ${summary.completedCount} захиалга (${formatMNT(summary.completedRevenue)}) бүрэн бэлэн болсон.`,
+      `Нийт борлуулалтаас ${formatMNT(summary.totalPaid)} төгрөг дансанд цугларсан ба харилцагчдаас авах үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байна.`
     ];
     s2.addText(summaryBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
       x: 0.9,
@@ -1684,11 +1765,53 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 3: DAILY SALES DYNAMICS
+    // SLIDE 3: ALL SALES MANAGERS BREAKDOWN (CRITICAL MEETING SLIDE)
     // ==========================================
     const s3 = pptx.addSlide();
     s3.background = { color: C.lightBg };
-    addHeader(s3, 'БОРЛУУЛАЛТЫН ӨДӨР ТУТМЫН ЯВЦ', 'Тайлант хугацааны өдөр бүрийн борлуулалтын динамик болон захиалгын тоо');
+    addHeader(s3, 'БОРЛУУЛАЛТЫН МЕНЕЖЕРҮҮДИЙН ГҮЙЦЭТГЭЛ БА ЭРЭМБЭ', 'Бүх борлуулагчдын төлөвлөгөө, бодит борлуулалт, биелэлтийн хувь болон авлагын харьцуулалт');
+
+    const mgrRows: PptxGenJS.TableRow[] = [
+      [
+        { text: '№', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Менежерийн нэр', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'left' } },
+        { text: 'Зорилт (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Бодит гүйцэтгэл (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Биелэлт %', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Захиалга', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Төлөгдсөн (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Үлдэгдэл авлага (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } }
+      ]
+    ];
+
+    managerStats.forEach((m, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      mgrRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: m.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: formatMNT(m.target), options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
+        { text: formatMNT(m.actual), options: { fill: { color: rf }, bold: true, align: 'right', fontSize: 10, color: C.primary } },
+        { text: `${m.achievementRate.toFixed(1)}%`, options: { fill: { color: rf }, bold: true, align: 'center', fontSize: 10, color: m.achievementRate >= 100 ? C.success : (m.achievementRate >= 70 ? C.warning : C.danger) } },
+        { text: `${m.orderCount} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(m.paidAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
+        { text: formatMNT(m.receivables), options: { fill: { color: rf }, bold: m.receivables > 0, align: 'right', fontSize: 10, color: m.receivables > 0 ? C.danger : C.success } }
+      ]);
+    });
+
+    s3.addTable(mgrRows, {
+      x: 0.6,
+      y: 1.6,
+      w: 12.13,
+      colW: [0.6, 2.3, 1.8, 2.0, 1.2, 1.0, 1.6, 1.63],
+      border: { type: 'solid', color: C.border, pt: 0.5 }
+    });
+
+    // ==========================================
+    // SLIDE 4: DAILY SALES DYNAMICS
+    // ==========================================
+    const s4 = pptx.addSlide();
+    s4.background = { color: C.lightBg };
+    addHeader(s4, 'БОРЛУУЛАЛТЫН ӨДӨР ТУТМЫН ЯВЦ', 'Тайлант хугацааны өдөр бүрийн борлуулалтын динамик болон захиалгын тоо');
 
     const activeTrend = trend.filter(t => t.revenue > 0 || t.count > 0);
     const trendToShow = activeTrend.length > 0 ? activeTrend : trend.slice(-14);
@@ -1713,7 +1836,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       ]);
     });
 
-    s3.addTable(trendRows, {
+    s4.addTable(trendRows, {
       x: 0.6,
       y: 1.6,
       w: 7.5,
@@ -1722,7 +1845,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // Right Info Box
-    s3.addShape(pptx.ShapeType.rect, {
+    s4.addShape(pptx.ShapeType.rect, {
       x: 8.4,
       y: 1.6,
       w: 4.3,
@@ -1730,7 +1853,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       fill: { color: 'FFFFFF' },
       line: { color: C.border, width: 1 }
     });
-    s3.addText('ӨДРИЙН ДУНДАЖ БА ИДЭВХЖИЛТ', {
+    s4.addText('ӨДРИЙН ДУНДАЖ БА ИДЭВХЖИЛТ', {
       x: 8.7,
       y: 1.9,
       w: 3.7,
@@ -1742,7 +1865,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     const daysCount = Math.max(1, Math.round((dates.end.getTime() - dates.start.getTime()) / (1000 * 3600 * 24)) + 1);
     const dailyAvgRev = summary.totalRevenue / daysCount;
     const activeDays = trend.filter(t => t.revenue > 0).length;
-    s3.addText([
+    s4.addText([
       { text: `Нийт хугацаа: `, options: { bold: true, color: C.textDark } },
       { text: `${daysCount} хоног\n\n`, options: { color: C.textMuted } },
       { text: `Идэвхтэй борлуулалтын өдөр: `, options: { bold: true, color: C.textDark } },
@@ -1760,11 +1883,11 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 4: PRODUCT CATEGORY BREAKDOWN
+    // SLIDE 5: PRODUCT CATEGORY BREAKDOWN
     // ==========================================
-    const s4 = pptx.addSlide();
-    s4.background = { color: C.lightBg };
-    addHeader(s4, 'БҮТЭЭГДЭХҮҮНИЙ АНГИЛЛЫН БОРЛУУЛАЛТ', 'Хамгийн их захиалагдсан бүтээгдэхүүний төрөл, эзлэх хувь');
+    const s5 = pptx.addSlide();
+    s5.background = { color: C.lightBg };
+    addHeader(s5, 'БҮТЭЭГДЭХҮҮНИЙ АНГИЛЛЫН БОРЛУУЛАЛТ', 'Багийн борлуулалтын бүтээгдэхүүний төрөл, эзлэх хувь');
 
     const catRows: PptxGenJS.TableRow[] = [
       [
@@ -1787,7 +1910,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       ]);
     });
 
-    s4.addTable(catRows, {
+    s5.addTable(catRows, {
       x: 0.6,
       y: 1.6,
       w: 12.13,
@@ -1796,11 +1919,11 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 5: ORDER PIPELINE & STATUSES
+    // SLIDE 6: ORDER PIPELINE & STATUSES
     // ==========================================
-    const s5 = pptx.addSlide();
-    s5.background = { color: C.lightBg };
-    addHeader(s5, 'ЗАХИАЛГЫН ЯВЦ БА СТАТУС', 'Үйлдвэрлэлд яваа болон хүлээлгэн өгсөн захиалгуудын төлөв');
+    const s6 = pptx.addSlide();
+    s6.background = { color: C.lightBg };
+    addHeader(s6, 'ЗАХИАЛГЫН ЯВЦ БА СТАТУС', 'Үйлдвэрлэлд яваа болон хүлээлгэн өгсөн захиалгуудын төлөв');
 
     const statusCards = [
       { title: 'Үйлдвэрлэлд яваа', count: `${summary.inProductionCount} ш`, amount: formatMNT(summary.inProductionRevenue), color: C.warning },
@@ -1810,7 +1933,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
 
     statusCards.forEach((sc, idx) => {
       const cx = 0.6 + idx * 4.15;
-      s5.addShape(pptx.ShapeType.rect, {
+      s6.addShape(pptx.ShapeType.rect, {
         x: cx,
         y: 1.6,
         w: 3.85,
@@ -1818,9 +1941,9 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
         fill: { color: 'FFFFFF' },
         line: { color: C.border, width: 1 }
       });
-      s5.addText(sc.title, { x: cx + 0.3, y: 1.8, w: 3.2, h: 0.3, fontSize: 12, bold: true, color: C.textDark });
-      s5.addText(sc.count, { x: cx + 0.3, y: 2.15, w: 3.2, h: 0.5, fontSize: 20, bold: true, color: sc.color });
-      s5.addText(`Нийт дүн: ${sc.amount}`, { x: cx + 0.3, y: 2.7, w: 3.2, h: 0.3, fontSize: 11, color: C.textMuted });
+      s6.addText(sc.title, { x: cx + 0.3, y: 1.8, w: 3.2, h: 0.3, fontSize: 12, bold: true, color: C.textDark });
+      s6.addText(sc.count, { x: cx + 0.3, y: 2.15, w: 3.2, h: 0.5, fontSize: 20, bold: true, color: sc.color });
+      s6.addText(`Нийт дүн: ${sc.amount}`, { x: cx + 0.3, y: 2.7, w: 3.2, h: 0.3, fontSize: 11, color: C.textMuted });
     });
 
     // Status Detail Table
@@ -1840,7 +1963,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       ]);
     });
 
-    s5.addTable(stRows, {
+    s6.addTable(stRows, {
       x: 0.6,
       y: 3.7,
       w: 12.13,
@@ -1849,11 +1972,11 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 6: FINANCIALS & RECEIVABLES
+    // SLIDE 7: FINANCIALS & RECEIVABLES
     // ==========================================
-    const s6 = pptx.addSlide();
-    s6.background = { color: C.lightBg };
-    addHeader(s6, 'ТӨЛБӨРИЙН ЦУГЛАРАЛТ БА АВЛАГА', 'Нэхэмжилсэн дүн, бодит орлого, үлдэгдэл авлагын хяналт');
+    const s7 = pptx.addSlide();
+    s7.background = { color: C.lightBg };
+    addHeader(s7, 'ТӨЛБӨРИЙН ЦУГЛАРАЛТ БА АВЛАГА', 'Нэхэмжилсэн дүн, бодит орлого, үлдэгдэл авлагын хяналт');
 
     const colRate = summary.totalRevenue > 0 ? (summary.totalPaid / summary.totalRevenue) * 100 : 0;
     const finCards = [
@@ -1865,7 +1988,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
 
     finCards.forEach((fc, idx) => {
       const cx = 0.6 + idx * 3.1;
-      s6.addShape(pptx.ShapeType.rect, {
+      s7.addShape(pptx.ShapeType.rect, {
         x: cx,
         y: 1.6,
         w: 2.85,
@@ -1873,12 +1996,12 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
         fill: { color: 'FFFFFF' },
         line: { color: C.border, width: 1 }
       });
-      s6.addText(fc.title, { x: cx + 0.2, y: 1.8, w: 2.45, h: 0.3, fontSize: 11, bold: true, color: C.textMuted });
-      s6.addText(fc.value, { x: cx + 0.2, y: 2.2, w: 2.45, h: 0.6, fontSize: 18, bold: true, color: fc.color });
+      s7.addText(fc.title, { x: cx + 0.2, y: 1.8, w: 2.45, h: 0.3, fontSize: 11, bold: true, color: C.textMuted });
+      s7.addText(fc.value, { x: cx + 0.2, y: 2.2, w: 2.45, h: 0.6, fontSize: 18, bold: true, color: fc.color });
     });
 
     // Callout box on Collection
-    s6.addShape(pptx.ShapeType.rect, {
+    s7.addShape(pptx.ShapeType.rect, {
       x: 0.6,
       y: 3.9,
       w: 12.13,
@@ -1886,7 +2009,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       fill: { color: 'FFFFFF' },
       line: { color: C.border, width: 1 }
     });
-    s6.addText('САНХҮҮ, АВЛАГЫН ЧИГЛЭЛ БА ЗӨВЛӨМЖ', {
+    s7.addText('САНХҮҮ, АВЛАГЫН ЧИГЛЭЛ БА ЗӨВЛӨМЖ', {
       x: 0.9,
       y: 4.15,
       w: 11.5,
@@ -1898,11 +2021,11 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     const finBullets = [
       `Тайлант хугацааны нийт борлуулалтаас ${colRate.toFixed(1)}%-ийн төлбөр амжилттай дансанд орсон байна.`,
       summary.totalReceivables > 0
-        ? `Харилцагчдаас авах үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байгаа тул олгосон болон үйлдвэрлэлд яваа захиалгуудын төлбөрийг шуурхай барагдуулах шаардлагатай.`
+        ? `Багийн нийт үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байгаа тул олгосон болон үйлдвэрлэлд яваа захиалгуудын төлбөрийг шуурхай барагдуулах шаардлагатай.`
         : `Бүх захиалгын төлбөр бүрэн төлөгдсөн, үлдэгдэл авлагагүй байна.`,
       `Дараагийн төлөвлөгөөт үед авлагын хэмжээг бууруулж, урьдчилгаа төлбөрийн харьцааг 70%+ түвшинд хадгалахыг зөвлөж байна.`
     ];
-    s6.addText(finBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
+    s7.addText(finBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
       x: 0.9,
       y: 4.6,
       w: 11.5,
@@ -1910,11 +2033,11 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     });
 
     // ==========================================
-    // SLIDE 7: TOP 10 CUSTOMERS
+    // SLIDE 8: TOP 10 CUSTOMERS
     // ==========================================
-    const s7 = pptx.addSlide();
-    s7.background = { color: C.lightBg };
-    addHeader(s7, 'ШИЛДЭГ ХАРИЛЦАГЧИД (TOP 10)', 'Хамгийн их дүнгээр захиалга өгсөн гол харилцагч, түншүүдийн жагсаалт');
+    const s8 = pptx.addSlide();
+    s8.background = { color: C.lightBg };
+    addHeader(s8, 'ШИЛДЭГ ХАРИЛЦАГЧИД (TOP 10)', 'Компанийн хэмжээнд хамгийн их дүнгээр захиалга өгсөн гол харилцагч, түншүүд');
 
     const custRows: PptxGenJS.TableRow[] = [
       [
@@ -1938,7 +2061,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       ]);
     });
 
-    s7.addTable(custRows, {
+    s8.addTable(custRows, {
       x: 0.6,
       y: 1.6,
       w: 12.13,
@@ -1946,13 +2069,103 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
       border: { type: 'solid', color: C.border, pt: 0.5 }
     });
 
+    // ==========================================
+    // SLIDE 9: MEETING CONCLUSIONS & NEXT GOALS
+    // ==========================================
+    const s9 = pptx.addSlide();
+    s9.background = { color: C.darkBg };
+
+    s9.addText('ДҮГНЭЛТ БА ЦААШДЫН ЗОРИЛТ', {
+      x: 0.8,
+      y: 0.8,
+      w: 11.5,
+      h: 0.6,
+      fontSize: 24,
+      bold: true,
+      color: C.textWhite
+    });
+    s9.addText(`${periodLabel} хурлын шийдвэр, анхаарах асуудал ба хамтын зорилт`, {
+      x: 0.8,
+      y: 1.4,
+      w: 11.5,
+      h: 0.4,
+      fontSize: 12,
+      color: '94A3B8'
+    });
+
+    // Left Box: Key Achievements
+    s9.addShape(pptx.ShapeType.rect, {
+      x: 0.8,
+      y: 2.1,
+      w: 5.6,
+      h: 4.6,
+      fill: { color: C.cardDark },
+      line: { color: '334155', width: 1 }
+    });
+    s9.addText('ГОЛ АМЖИЛТ & ОЛОЛТУУД', {
+      x: 1.1,
+      y: 2.4,
+      w: 5.0,
+      h: 0.4,
+      fontSize: 14,
+      bold: true,
+      color: '34D399'
+    });
+    const achievements = [
+      `Нийт ${summary.totalOrders} захиалга дээр ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт амжилттай хийгдсэн.`,
+      `Борлуулалтын багийн зорилтын биелэлт ${summary.achievementRate.toFixed(1)}%-д хүрсэн.`,
+      `Бүтээгдэхүүний ангиллууд жигд борлуулалттай явагдаж байна.`,
+      `Хамгийн өндөр борлуулалттай менежерээр ${managerStats[0]?.name || 'Менежер'} (${formatMNT(managerStats[0]?.actual || 0)}) шалгарсан.`
+    ];
+    s9.addText(achievements.map(a => ({ text: `✓  ${a}\n\n`, options: { fontSize: 11, color: 'E2E8F0' } })), {
+      x: 1.1,
+      y: 3.0,
+      w: 5.0,
+      h: 3.4
+    });
+
+    // Right Box: Action Items & Goals
+    s9.addShape(pptx.ShapeType.rect, {
+      x: 6.9,
+      y: 2.1,
+      w: 5.6,
+      h: 4.6,
+      fill: { color: C.cardDark },
+      line: { color: '334155', width: 1 }
+    });
+    s9.addText('ЦААШДЫН ЗОРИЛТ & АНХААРАХ ЗҮЙЛС', {
+      x: 7.2,
+      y: 2.4,
+      w: 5.0,
+      h: 0.4,
+      fontSize: 14,
+      bold: true,
+      color: '60A5FA'
+    });
+    const goals = [
+      `Үлдэгдэл авлагын хэмжээг бууруулж, төлбөрийн цуглуулалтын хувийг 90%+ дээш гаргах.`,
+      `Шинэ захиалагч, байгууллагуудыг татах харилцагчийн харилцааг идэвхжүүлэх.`,
+      `Үйлдвэрлэлийн хугацаа болон хүргэлтийн сахилга батыг өндөр түвшинд хангах.`,
+      `Дараагийн төлөвлөгөөт үеийн борлуулалтын төлөвлөгөөг менежер бүрээр нарийвчлан хуваарилж батлах.`
+    ];
+    s9.addText(goals.map(g => ({ text: `→  ${g}\n\n`, options: { fontSize: 11, color: 'E2E8F0' } })), {
+      x: 7.2,
+      y: 3.0,
+      w: 5.0,
+      h: 3.4
+    });
+
     const buffer = await pptx.write({ outputType: 'nodebuffer' });
 
+    const fileName = isTeamView
+      ? `Borluulaltiin_bagin_tailan_${startDateStr}_${endDateStr}.pptx`
+      : `Borluulaltiin_tailan_${encodeURIComponent(targetUser.name)}_${startDateStr}_${endDateStr}.pptx`;
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-    res.setHeader('Content-Disposition', `attachment; filename="Borluulaltiin_tailan_${encodeURIComponent(targetUser.name)}_${startDateStr}_${endDateStr}.pptx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(buffer);
   } catch (error: any) {
-    console.error('Error generating salesperson report PPTX:', error);
+    console.error('Error generating sales report PPTX:', error);
     res.status(500).json({ error: 'Failed to generate PowerPoint presentation', details: error.message });
   }
 };
