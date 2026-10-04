@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import JobTicketModal from './JobTicketModal';
+import { getOrderNotesList } from './ProductionMatrix';
 
 export interface OrderStageData {
   status: number; // 0 = 0%, 50 = 50%, 100 = 100%
@@ -524,20 +525,31 @@ export default function ProductionInspectorDrawer({ order, isOpen, onClose, onOp
             </div>
 
             {/* Special Notes / Tech Directives if present */}
-            {order.notes && (
-              <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fef3c7',
-                borderRadius: '0.5rem',
-                padding: '0.85rem 1rem',
-                fontSize: '0.85rem'
-              }}>
-                <strong style={{ color: '#92400e', display: 'block', marginBottom: '0.25rem' }}>
-                  📝 Захиалгын онцгой тэмдэглэл:
-                </strong>
-                <span style={{ color: '#78350f' }}>{order.notes}</span>
-              </div>
-            )}
+            {(() => {
+              const notesList = getOrderNotesList(order);
+              if (notesList.length === 0) return null;
+              return (
+                <div style={{
+                  background: '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  borderLeft: '4px solid #0284c7',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.85rem'
+                }}>
+                  <strong style={{ color: '#0369a1', display: 'block', marginBottom: '0.35rem' }}>
+                    📝 Борлуулагчийн зааварчилгаа ({notesList.length}):
+                  </strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {notesList.map((n, i) => (
+                      <div key={i} style={{ fontSize: '0.82rem', color: '#1e293b' }}>
+                        <b style={{ color: '#0284c7' }}>{n.category}:</b> {n.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
 

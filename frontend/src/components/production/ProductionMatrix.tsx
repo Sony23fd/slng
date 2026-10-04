@@ -106,6 +106,41 @@ export const getAdditionalOps = (order: Order) => {
   return [...ops, ...outsourced];
 };
 
+export interface OrderNoteItem {
+  category: string;
+  text: string;
+}
+
+export const getOrderNotesList = (order: any): OrderNoteItem[] => {
+  if (!order) return [];
+  const list: OrderNoteItem[] = [];
+  const seen = new Set<string>();
+
+  const add = (category: string, text?: string | null) => {
+    if (!text) return;
+    const trimmed = text.trim();
+    if (!trimmed || seen.has(trimmed.toLowerCase())) return;
+    seen.add(trimmed.toLowerCase());
+    list.push({ category, text: trimmed });
+  };
+
+  add('Ерөнхий', order.notes);
+
+  (order.materials || []).forEach((m: any) => {
+    if (m.notes) add(`Материал (${m.material_name || 'Цаас'})`, m.notes);
+  });
+
+  (order.operations || []).forEach((o: any) => {
+    if (o.notes) add(`Ажиллагаа (${o.operation_name || 'Ажил'})`, o.notes);
+  });
+
+  (order.outsourcedJobs || []).forEach((j: any) => {
+    if (j.notes) add(`Гадуур (${j.job_name || 'Ажил'})`, j.notes);
+  });
+
+  return list;
+};
+
 interface Props {
   orders: Order[];
   statuses: any[];
@@ -118,8 +153,13 @@ export default function ProductionMatrix({ orders, statuses, operators = [], onU
   const [filterUrgent, setFilterUrgent] = useState(false);
   const [statusTab, setStatusTab] = useState<'ACTIVE' | 'COMPLETED' | 'DELIVERED'>('ACTIVE');
   const [selectedMachine, setSelectedMachine] = useState<string>('ALL');
+  const [expandedNotes, setExpandedNotes] = useState<Record<number, boolean>>({});
   const [activeModal, setActiveModal] = useState<{ orderId: number; stageKey: string; data: OrderStageData } | null>(null);
   const [ticketOrder, setTicketOrder] = useState<Order | null>(null);
+
+  const toggleNotes = (orderId: number) => {
+    setExpandedNotes(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
 
   // Helper to calculate overall % of an order
   const getOverallProgress = (stages?: ProductionStages, order?: Order) => {
@@ -368,7 +408,8 @@ export default function ProductionMatrix({ orders, statuses, operators = [], onU
                 if (readyStatusNames.includes(order.current_status || '') || deliveredStatusNames.includes(order.current_status || '')) {
                   progress = 100;
                 }
-                const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
+                const notesList = getOrderNotesList(order);
+                const isNotesExpanded = Boolean(expandedNotes[order.id]);
                 const additionalOps = getAdditionalOps(order);
 
                 // Financial Confidentiality: STRICTLY NO ₮ FIGURES
@@ -378,7 +419,7 @@ export default function ProductionMatrix({ orders, statuses, operators = [], onU
 
                 return (
                   <React.Fragment key={order.id}>
-                    <tr style={{ background: index % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s', borderBottom: hasNotes ? 'none' : '1px solid var(--border-color)' }}>
+                    <tr style={{ background: index % 2 === 0 ? '#fff' : '#f8fafc', transition: 'background 0.2s', borderBottom: '1px solid var(--border-color)' }}>
                       {/* Order Number & Ticket */}
                       <td style={{ padding: '0.6rem 0.4rem', fontWeight: 700, color: 'var(--primary-color)', borderRight: '1px solid var(--border-color)' }}>
                         {order.order_number || `#${order.id}`}
@@ -443,6 +484,46 @@ export default function ProductionMatrix({ orders, statuses, operators = [], onU
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           Тоо: <b>{order.total_qty.toLocaleString()} ш</b>
                         </div>
+                        {notesList.length > 0 && (
+                          <div style={{ marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => toggleNotes(order.id)}
+                              style={{
+                                padding: '0.15rem 0.45rem',
+                                borderRadius: '4px',
+                                border: '1px solid #bfdbfe',
+                                background: isNotesExpanded ? '#dbeafe' : '#eff6ff',
+                                color: '#1e40af',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.2rem',
+                                transition: 'all 0.15s'
+                              }}
+                              title="Борлуулагчийн зааварчилгааг харах / хураах"
+                            >
+                              💬 Заавар ({notesList.length}) {isNotesExpanded ? '▴' : '▾'}
+                            </button>
+                            {!isNotesExpanded && (
+                              <span
+                                style={{
+                                  fontSize: '0.7rem',
+                                  color: '#64748b',
+                                  maxWidth: '120px',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                title={`${notesList[0].category}: ${notesList[0].text}`}
+                              >
+                                {notesList[0].text}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Render 9 Stages */}
@@ -547,26 +628,39 @@ export default function ProductionMatrix({ orders, statuses, operators = [], onU
                       </td>
                     </tr>
 
-                    {/* Urgent Notes Section */}
-                    {hasNotes && (
-                      <tr style={{ background: '#fef2f2', borderBottom: '2px solid var(--border-color)', animation: 'pulse-light 2s infinite' }}>
-                        <td colSpan={13} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.9rem', color: '#b91c1c', borderLeft: '4px solid #ef4444' }}>
-                          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                            <div style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                              <span style={{ animation: 'bounce-light 1s infinite' }}>🚨</span> ОНЦГОЙ АНХААРАХ:
+                    {/* Clean Collapsible Sales Directives / Notes Row */}
+                    {notesList.length > 0 && isNotesExpanded && (
+                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border-color)' }}>
+                        <td colSpan={13} style={{ padding: '0.45rem 1rem', textAlign: 'left' }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem',
+                            background: '#ffffff',
+                            border: '1px solid #bae6fd',
+                            borderLeft: '4px solid #0284c7',
+                            borderRadius: '0.375rem',
+                            padding: '0.45rem 0.75rem',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                          }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.78rem', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap' }}>
+                              📝 Борлуулагчийн зааварчилгаа:
                             </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                              {order.notes && <div style={{ fontWeight: 600 }}><b>Ерөнхий:</b> {order.notes}</div>}
-                              {order.materials?.filter(m => m.notes).map((m, i) => (
-                                <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> <span style={{ fontWeight: 600 }}>{m.notes}</span></div>
-                              ))}
-                              {order.operations?.filter(o => o.notes).map((o, i) => (
-                                <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> <span style={{ fontWeight: 600 }}>{o.notes}</span></div>
-                              ))}
-                              {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
-                                <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> <span style={{ fontWeight: 600 }}>{oj.notes}</span></div>
+                            <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: '0.45rem', fontSize: '0.78rem' }}>
+                              {notesList.map((n, i) => (
+                                <span key={i} style={{ background: '#f0f9ff', padding: '0.15rem 0.5rem', borderRadius: '4px', border: '1px solid #e0f2fe' }}>
+                                  <b style={{ color: '#0284c7' }}>{n.category}:</b> <span style={{ color: '#334155' }}>{n.text}</span>
+                                </span>
                               ))}
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleNotes(order.id)}
+                              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', padding: '0 0.25rem' }}
+                              title="Хураах"
+                            >
+                              ✕
+                            </button>
                           </div>
                         </td>
                       </tr>

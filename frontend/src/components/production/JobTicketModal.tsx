@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from 'react';
+import { getOrderNotesList } from './ProductionMatrix';
 
 interface Props {
   order: any;
@@ -25,8 +26,7 @@ export default function JobTicketModal({ order, onClose }: Props) {
 
   const techDirectives = (order.operations || []).filter((o: any) => o.is_pricing === false);
   const standardOps = (order.operations || []).filter((o: any) => o.is_pricing !== false);
-
-  const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
+  const notesList = getOrderNotesList(order);
 
   return (
     <div style={{
@@ -121,23 +121,34 @@ export default function JobTicketModal({ order, onClose }: Props) {
           </div>
 
           {/* Notes Warning Block */}
-          {hasNotes && (
-            <div style={{ border: '2px dashed #ef4444', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', background: '#fff' }}>
-              <h3 style={{ color: '#ef4444', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                ⚠️ ОНЦГОЙ АНХААРАХ ЗҮЙЛС (Борлуулагчаас)
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#b91c1c', fontWeight: 'bold', fontSize: '1rem' }}>
-                {order.notes && <li>{order.notes}</li>}
-                {order.materials?.filter((m: any) => m.notes).map((m: any, i: number) => (
-                  <li key={`mn-${i}`}>Материал [{m.material_name}]: {m.notes}</li>
+          {notesList.length > 0 && (
+            <div style={{
+              border: '1.5px solid #0284c7',
+              borderRadius: '6px',
+              marginBottom: '1.5rem',
+              overflow: 'hidden',
+              background: '#fff'
+            }}>
+              <div style={{
+                background: '#f0f9ff',
+                padding: '0.5rem 0.8rem',
+                borderBottom: '1.5px solid #0284c7',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                color: '#0369a1'
+              }}>
+                📝 Борлуулагчийн санамж, тусгай зааварчилгаа ({notesList.length})
+              </div>
+              <div style={{ padding: '0.6rem 0.8rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                {notesList.map((n: any, i: number) => (
+                  <div key={i} style={{ fontSize: '0.88rem', color: '#1e293b' }}>
+                    <strong style={{ color: '#0369a1' }}>{n.category}:</strong> <span>{n.text}</span>
+                  </div>
                 ))}
-                {order.operations?.filter((o: any) => o.notes).map((o: any, i: number) => (
-                  <li key={`on-${i}`}>Ажиллагаа [{o.operation_name}]: {o.notes}</li>
-                ))}
-                {order.outsourcedJobs?.filter((oj: any) => oj.notes).map((oj: any, i: number) => (
-                  <li key={`ojn-${i}`}>Гадуур ажил [{oj.job_name}]: {oj.notes}</li>
-                ))}
-              </ul>
+              </div>
             </div>
           )}
 

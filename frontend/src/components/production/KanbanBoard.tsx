@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Order } from './ProductionMatrix';
+import { Order, getOrderNotesList } from './ProductionMatrix';
 import JobTicketModal from './JobTicketModal';
 
 interface Props {
@@ -12,6 +12,11 @@ interface Props {
 
 export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
   const [ticketOrder, setTicketOrder] = useState<Order | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+
+  const toggleCardNotes = (orderId: number) => {
+    setExpandedCards(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', alignItems: 'start' }}>
@@ -80,17 +85,16 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
                         return (
                           <div style={{
                             background: '#fef2f2',
-                            border: '1.5px solid #ef4444',
+                            border: '1px solid #f87171',
                             borderRadius: '4px',
-                            padding: '4px 6px',
-                            marginBottom: '0.5rem',
-                            fontSize: '0.75rem',
-                            color: '#b91c1c',
+                            padding: '3px 6px',
+                            marginBottom: '0.4rem',
+                            fontSize: '0.72rem',
+                            color: '#dc2626',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            fontWeight: 800,
-                            animation: 'pulse-light 2s infinite'
+                            fontWeight: 700
                           }}>
                             ⚠️ ҮЛДЭГДЭЛ ТӨЛБӨРТЭЙ!
                           </div>
@@ -116,27 +120,61 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
                       return null;
                     })()}
 
-                    {/* Notes Warning Block */}
+                    {/* Clean Collapsible Sales Directives / Notes Block */}
                     {(() => {
-                      const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));
-                      if (!hasNotes) return null;
+                      const notesList = getOrderNotesList(order);
+                      if (notesList.length === 0) return null;
+                      const isExpanded = Boolean(expandedCards[order.id]);
+
                       return (
-                        <div style={{ background: '#fef2f2', border: '2px solid #ef4444', borderRadius: '0.375rem', padding: '0.6rem', marginBottom: '0.75rem', fontSize: '0.8rem', color: '#b91c1c', animation: 'pulse-light 2s infinite' }}>
-                          <div style={{ fontWeight: 800, marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem' }}>
-                            <span style={{ animation: 'bounce-light 1s infinite' }}>🚨</span> ОНЦГОЙ АНХААРАХ
+                        <div style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderLeft: '3px solid #0284c7',
+                          borderRadius: '0.375rem',
+                          padding: '0.35rem 0.5rem',
+                          marginBottom: '0.5rem',
+                          fontSize: '0.75rem'
+                        }}>
+                          <div
+                            onClick={() => toggleCardNotes(order.id)}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              color: '#0369a1'
+                            }}
+                          >
+                            <span>💬 Заавар ({notesList.length})</span>
+                            <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                              {isExpanded ? '▲ Хураах' : '▼ Дэлгэх'}
+                            </span>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                            {order.notes && <div style={{ fontWeight: 600 }}><b>Ерөнхий:</b> {order.notes}</div>}
-                            {order.materials?.filter(m => m.notes).map((m, i) => (
-                              <div key={`m-${m.id || i}`}><b>Материал ({m.material_name}):</b> <span style={{ fontWeight: 600 }}>{m.notes}</span></div>
-                            ))}
-                            {order.operations?.filter(o => o.notes).map((o, i) => (
-                              <div key={`o-${o.id || i}`}><b>Ажиллагаа ({o.operation_name}):</b> <span style={{ fontWeight: 600 }}>{o.notes}</span></div>
-                            ))}
-                            {order.outsourcedJobs?.filter(oj => oj.notes).map((oj, i) => (
-                              <div key={`oj-${oj.id || i}`}><b>Гадуур ажил ({oj.job_name}):</b> <span style={{ fontWeight: 600 }}>{oj.notes}</span></div>
-                            ))}
-                          </div>
+                          {isExpanded ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.35rem', paddingTop: '0.35rem', borderTop: '1px dashed #cbd5e1' }}>
+                              {notesList.map((n, i) => (
+                                <div key={i} style={{ color: '#334155' }}>
+                                  <b style={{ color: '#0284c7' }}>{n.category}:</b> {n.text}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                color: '#64748b',
+                                fontSize: '0.7rem',
+                                marginTop: '0.15rem',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                              title={notesList[0].text}
+                            >
+                              {notesList[0].text}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
