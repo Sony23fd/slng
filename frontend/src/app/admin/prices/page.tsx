@@ -12,6 +12,7 @@ interface PriceItem {
   formula_id?: number | null;
   formula?: { id: number; name: string } | null;
   is_pricing?: boolean;
+  is_post_profit?: boolean;
   production_stage?: string | null;
   updatedAt?: string;
 }
@@ -42,6 +43,7 @@ export default function AdminPrices() {
   // Category & Filter
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activeStage, setActiveStage] = useState<string>('All');
+  const [activeProfitPhase, setActiveProfitPhase] = useState<'All' | 'PRE' | 'POST'>('All');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Bulk Selection
@@ -73,6 +75,7 @@ export default function AdminPrices() {
     unit_cost: '',
     formula_id: '',
     is_pricing: true,
+    is_post_profit: false,
     production_stage: 'POST_PRESS'
   });
 
@@ -169,11 +172,18 @@ export default function AdminPrices() {
         matchStage = (p.production_stage || 'POST_PRESS') === activeStage;
       }
 
+      let matchProfitPhase = true;
+      if (activeProfitPhase === 'PRE') {
+        matchProfitPhase = !p.is_post_profit;
+      } else if (activeProfitPhase === 'POST') {
+        matchProfitPhase = !!p.is_post_profit;
+      }
+
       const matchSearch = !searchTerm || 
         p.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.category.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchCategory && matchStage && matchSearch;
+      return matchCategory && matchStage && matchProfitPhase && matchSearch;
     });
   }, [prices, activeCategory, activeStage, searchTerm]);
 
@@ -282,6 +292,49 @@ export default function AdminPrices() {
     }
   };
 
+  // Dynamic Toggle for Profit Phase (Pre-profit <-> Post-profit)
+  const handleToggleProfitPhase = async (p: PriceItem) => {
+    const nextVal = !p.is_post_profit;
+    setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_post_profit: nextVal } : item));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/${p.id}/toggle-profit-phase`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast(`"${p.item_name}" -> ${nextVal ? '🔵 Ашгийн дараах (+ Шууд)' : '🟢 Ашгийн өмнөх (× Ашиг)'} боллоо`, 'success');
+      } else {
+        setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_post_profit: !nextVal } : item));
+        showToast('Ашгийн үе шат солиход алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      setPrices(prev => prev.map(item => item.id === p.id ? { ...item, is_post_profit: !nextVal } : item));
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
+  };
+
+  // Bulk set profit phase
+  const handleBulkSetProfitPhase = async (isPostProfit: boolean) => {
+    if (selectedItemIds.length === 0) return;
+    const itemsToUpdate = selectedItemIds.map(id => ({ id, is_post_profit: isPostProfit }));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/prices/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ items: itemsToUpdate })
+      });
+      if (res.ok) {
+        showToast(`Сонгосон ${selectedItemIds.length} зүйл ${isPostProfit ? '🔵 Ашгийн дараах' : '🟢 Ашгийн өмнөх'} боллоо!`, 'success');
+        setSelectedItemIds([]);
+        fetchAllPrices();
+      } else {
+        showToast('Олноор өөрчлөхөд алдаа гарлаа', 'error');
+      }
+    } catch (e) {
+      showToast('Сүлжээний алдаа гарлаа', 'error');
+    }
+  };
+
   // Save single item
   const handleSaveSingle = async (p: PriceItem) => {
     const newCost = editedPrices[p.id] !== undefined ? editedPrices[p.id] : p.unit_cost;
@@ -374,13 +427,14 @@ export default function AdminPrices() {
           unit_cost: (isOp && !newFormData.is_pricing) ? 0 : Number(newFormData.unit_cost || 0),
           formula_id: newFormData.formula_id ? Number(newFormData.formula_id) : null,
           is_pricing: isOp ? newFormData.is_pricing : true,
+          is_post_profit: Boolean(newFormData.is_post_profit),
           production_stage: isOp ? newFormData.production_stage : 'POST_PRESS'
         })
       });
       if (res.ok) {
         showToast(`"${newFormData.item_name}" амжилттай нэмэгдлээ`, 'success');
         setShowAddModal(false);
-        setNewFormData({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '', is_pricing: true, production_stage: 'POST_PRESS' });
+        setNewFormData({ category: 'Цаас', item_name: '', unit_cost: '', formula_id: '', is_pricing: true, is_post_profit: false, production_stage: 'POST_PRESS' });
         fetchAllPrices();
       } else {
         showToast('Нэмэхэд алдаа гарлаа', 'error');
@@ -415,13 +469,14 @@ export default function AdminPrices() {
   // Export to CSV with UTF-8 BOM
   const handleExportCSV = () => {
     try {
-      const headers = ['ID', 'Ангилал', 'Бараа/Үйлчилгээний нэр', 'Дамжлага', 'Зориулалт (Үнэ/Заавар)', 'Нэгж өртөг (₮)'];
+      const headers = ['ID', 'Ангилал', 'Бараа/Үйлчилгээний нэр', 'Дамжлага', 'Зориулалт (Үнэ/Заавар)', 'Ашгийн үе шат', 'Нэгж өртөг (₮)'];
       const rows = prices.map(p => [
         p.id,
         `"${(p.category || '').replace(/"/g, '""')}"`,
         `"${(p.item_name || '').replace(/"/g, '""')}"`,
         `"${p.production_stage || 'POST_PRESS'}"`,
         `"${p.is_pricing !== false ? 'Үнэ бодно' : 'Технологийн заавар'}"`,
+        `"${p.is_post_profit ? 'Ашгийн дараах (+ Шууд)' : 'Ашгийн өмнөх (× Ашиг)'}"`,
         p.unit_cost
       ]);
 
@@ -882,6 +937,39 @@ export default function AdminPrices() {
           </div>
         )}
 
+        {/* Profit Phase Filter Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', padding: '0.4rem 0.6rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginRight: '4px' }}>
+            📈 Ашгийн тооцоолол:
+          </span>
+          {[
+            { id: 'All', label: 'Бүгд' },
+            { id: 'PRE', label: '🟢 Ашгийн өмнөх (× Ашиг)' },
+            { id: 'POST', label: '🔵 Ашгийн дараах (+ Шууд)' }
+          ].map(phase => (
+            <button
+              key={phase.id}
+              type="button"
+              onClick={() => setActiveProfitPhase(phase.id as any)}
+              style={{
+                padding: '3px 10px',
+                borderRadius: '14px',
+                fontSize: '0.75rem',
+                fontWeight: activeProfitPhase === phase.id ? 700 : 500,
+                color: activeProfitPhase === phase.id ? '#ffffff' : '#475569',
+                background: activeProfitPhase === phase.id 
+                  ? (phase.id === 'POST' ? '#2563eb' : (phase.id === 'PRE' ? '#16a34a' : '#0284c7')) 
+                  : '#ffffff',
+                border: '1px solid ' + (activeProfitPhase === phase.id ? 'transparent' : '#cbd5e1'),
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {phase.label}
+            </button>
+          ))}
+        </div>
+
         {/* Bulk Actions Toolbar (when items selected) */}
         {selectedItemIds.length > 0 && (
           <div style={{
@@ -917,6 +1005,24 @@ export default function AdminPrices() {
                 title="Сонгосон ажиллагаануудыг 0₮ үнэтэй технологийн заавар болгох"
               >
                 ⚙️ Технологийн заавар болгох (0₮)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkSetProfitPhase(false)}
+                className="btn btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', color: '#166534', borderColor: '#86efac', background: '#f0fdf4' }}
+                title="Сонгосон ажиллагаануудыг ашгийн өмнөх (үржигдэх) болгох"
+              >
+                🟢 Ашгийн өмнөх (× Ашиг)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkSetProfitPhase(true)}
+                className="btn btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem', color: '#1d4ed8', borderColor: '#93c5fd', background: '#eff6ff' }}
+                title="Сонгосон ажиллагаануудыг ашгийн дараах (шууд нэмэгдэх) болгох"
+              >
+                🔵 Ашгийн дараах (+ Шууд)
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
                 <span style={{ fontSize: '0.75rem', color: '#475569' }}>Дамжлага:</span>
@@ -972,7 +1078,8 @@ export default function AdminPrices() {
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '110px' }}>Ангилал</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700 }}>Бараа / Үйлчилгээний нэр</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Дамжлага</th>
-                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Зориулалт (Төрөл)</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '145px' }}>Зориулалт (Төрөл)</th>
+                <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Ашгийн үе шат</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '120px' }}>Одоогийн өртөг</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '160px' }}>Шинэ өртөг (₮)</th>
                 <th style={{ padding: '0.75rem 0.6rem', color: '#475569', fontWeight: 700, width: '150px' }}>Томьёо</th>
@@ -982,13 +1089,13 @@ export default function AdminPrices() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  <td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                     Уншиж байна...
                   </td>
                 </tr>
               ) : filteredPrices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  <td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                     Үнийн мэдээлэл олдсонгүй
                   </td>
                 </tr>
@@ -1102,6 +1209,32 @@ export default function AdminPrices() {
                         ) : (
                           <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Үндсэн өртөг</span>
                         )}
+                      </td>
+
+                      {/* Profit Phase Column */}
+                      <td style={{ padding: '0.6rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleProfitPhase(p)}
+                          title="Дарж ашгийн тооцооллыг солих (Ашгийн өмнөх <-> Ашгийн дараах)"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '3px 8px',
+                            borderRadius: '14px',
+                            border: p.is_post_profit ? '1px solid #93c5fd' : '1px solid #86efac',
+                            background: p.is_post_profit ? '#eff6ff' : '#f0fdf4',
+                            color: p.is_post_profit ? '#1d4ed8' : '#15803d',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <span>{p.is_post_profit ? '🔵 Ашгийн дараах' : '🟢 Ашгийн өмнөх'}</span>
+                          <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>⇄</span>
+                        </button>
                       </td>
 
                       {/* Current Cost */}
@@ -1330,6 +1463,44 @@ export default function AdminPrices() {
                         <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="label">Ашгийн тооцоолол</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setNewFormData({ ...newFormData, is_post_profit: false })}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: !newFormData.is_post_profit ? '2px solid #16a34a' : '1px solid #cbd5e1',
+                          background: !newFormData.is_post_profit ? '#f0fdf4' : '#fff',
+                          color: !newFormData.is_post_profit ? '#15803d' : '#475569',
+                          fontWeight: !newFormData.is_post_profit ? 700 : 500,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🟢 Ашгийн өмнөх (× Ашиг)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewFormData({ ...newFormData, is_post_profit: true })}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: newFormData.is_post_profit ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                          background: newFormData.is_post_profit ? '#eff6ff' : '#fff',
+                          color: newFormData.is_post_profit ? '#1d4ed8' : '#475569',
+                          fontWeight: newFormData.is_post_profit ? 700 : 500,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🔵 Ашгийн дараах (+ Шууд)
+                      </button>
+                    </div>
                   </div>
                 </>
               )}

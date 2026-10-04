@@ -68,6 +68,7 @@ interface OrderFormValues {
     notes: string; 
     is_manual?: boolean;
     is_pricing?: boolean;
+    is_post_profit?: boolean;
     production_stage?: string;
   }[];
   
@@ -1107,6 +1108,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       preferredUnitCost: number = 0
     ) => {
       const idx = ops.findIndex((o: any) => o.operation_name === name);
+      const mp = masterPrices.find(p => p.item_name === name);
+      const isPostProfit = mp?.is_post_profit ?? false;
       if (idx >= 0) {
         const cur = ops[idx];
         const cost = Number(cur.unit_cost) || 0;
@@ -1115,6 +1118,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           qty: cur.is_manual ? cur.qty : targetQty,
           unit_cost: cost,
           is_pricing: cost > 0,
+          is_post_profit: cur.is_post_profit !== undefined ? cur.is_post_profit : isPostProfit,
           production_stage: cur.production_stage || stage,
           notes: cur.notes || notes
         };
@@ -1124,6 +1128,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           qty: targetQty,
           unit_cost: preferredUnitCost,
           is_pricing: preferredUnitCost > 0,
+          is_post_profit: isPostProfit,
           production_stage: stage,
           is_manual: false,
           notes: notes
@@ -1525,6 +1530,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               ...o,
               qty: calcQty,
               is_pricing: isPricing,
+              is_post_profit: o.is_post_profit !== undefined ? Boolean(o.is_post_profit) : Boolean(mp?.is_post_profit),
               production_stage: stage,
               is_manual: o.is_manual ?? false,
               unit_cost: cost
@@ -1584,6 +1590,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 notes: 'Үндсэн ажиллагаа',
                 is_manual: false,
                 is_pricing: false,
+                is_post_profit: Boolean(mp?.is_post_profit),
                 production_stage: mp?.production_stage || 'POST_PRESS'
               });
             });
@@ -2506,6 +2513,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     if (calcQty === 0) {
       calcQty = Number(getValues('total_qty')) || 1;
     }
+    const matchingMp = masterPrices.find(p => p.item_name === op.item_name);
     appendOp({
       operation_name: op.item_name,
       qty: calcQty,
@@ -2513,7 +2521,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       notes: op.item_name.startsWith('Бүрэлт') ? 'Бүрэлтийн хуулга' : '',
       is_manual: false,
       is_pricing: false,
-      production_stage: op.production_stage || 'POST_PRESS'
+      is_post_profit: op.is_post_profit !== undefined ? Boolean(op.is_post_profit) : Boolean(matchingMp?.is_post_profit),
+      production_stage: op.production_stage || matchingMp?.production_stage || 'POST_PRESS'
     });
   };
 
@@ -5396,6 +5405,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Ажиллагааны нэр</th>
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '130px' }}>Тоо хэмжээ</th>
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '175px' }}>Нэгж өртөг</th>
+                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '110px' }}>Ашгийн үе шат</th>
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '125px' }}>Нийт өртөг</th>
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Цехийн зааварчилгаа / Тайлбар</th>
                       <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '50px' }}>Устгах</th>
@@ -5522,7 +5532,36 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             </div>
                           </td>
 
-                          {/* 5. Total Cost */}
+                          {/* 5. Profit Phase Badge */}
+                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setValue(`operations.${index}.is_post_profit`, !o?.is_post_profit);
+                              }}
+                              title="Дарж ашгийн тооцооллын үе шатыг солих (Ашгийн өмнөх <-> Ашгийн дараах)"
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                border: o?.is_post_profit ? '1px solid #93c5fd' : '1px solid #86efac',
+                                background: o?.is_post_profit ? '#eff6ff' : '#f0fdf4',
+                                color: o?.is_post_profit ? '#1d4ed8' : '#15803d',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}
+                            >
+                              <span>{o?.is_post_profit ? '🔵 Дараах (+)' : '🟢 Өмнөх (×)'}</span>
+                              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>⇄</span>
+                            </button>
+                            <input type="hidden" {...register(`operations.${index}.is_post_profit`)} />
+                          </td>
+
+                          {/* 6. Total Cost */}
                           <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
                             {isPricing ? (
                               <span style={{ fontWeight: 700, color: '#166534' }}>
@@ -5650,8 +5689,50 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <div className="stat-grid">
                 <div className="stat"><div className="l">Материалын өртөг</div><div className="v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
                 <div className="stat"><div className="l">Ажиллагааны өртөг</div><div className="v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
-                <div className="stat"><div className="l">Нийт өртөг</div><div className="v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
+                <div className="stat"><div className="l">Нийт бодит өртөг</div><div className="v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
                 <div className="stat profit"><div className="l">Цэвэр ашиг</div><div className="v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
+              </div>
+
+              {/* Pre & Post Profit Cost Breakdown */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                margin: '8px 0',
+                fontSize: '11.5px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🟢 Ашгийн өмнөх суурь:
+                  </span>
+                  <span style={{ fontWeight: 700, color: '#166534' }}>
+                    {prices.preProfitBaseCost.toLocaleString()} ₮
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#1d4ed8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🔵 Ашгийн дараах өртөг:
+                  </span>
+                  <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
+                    {prices.postProfitTotalCost.toLocaleString()} ₮
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '10px',
+                  color: '#64748b',
+                  background: '#ffffff',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                  border: '1px dashed #cbd5e1',
+                  marginTop: '2px',
+                  textAlign: 'center'
+                }}>
+                  Томьёо: ({prices.preProfitBaseCost.toLocaleString()} ₮ × {formValues.profit_margin || 2.3}) + {prices.postProfitTotalCost.toLocaleString()} ₮
+                </div>
               </div>
 
               <div className="row-line"><span className="l">Нэгжийн өртөг:</span><span className="v">{prices.unitCost.toLocaleString()} ₮</span></div>

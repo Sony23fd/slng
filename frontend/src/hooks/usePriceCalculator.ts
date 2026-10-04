@@ -11,6 +11,7 @@ export interface OperationInput {
   qty: number;
   unit_cost: number;
   is_pricing?: boolean;
+  is_post_profit?: boolean;
 }
 
 export interface OutsourcedInput {
@@ -31,51 +32,79 @@ export interface PricingParams {
 
 export function usePriceCalculator(params: PricingParams) {
   const calculations = useMemo(() => {
-    // 1. Материалын тооцоо
+    // 1. Материалын тооцоо (Бүх материал нь ашгийн өмнөх суурь өртөгт орно)
     const totalMaterialCost = params.materials.reduce((sum, mat) => {
       const amountNeeded = mat.sheet_qty || 0;
       return sum + (amountNeeded * (mat.unit_cost || 0));
     }, 0);
 
-    // 2. Ажиллагааны өртөг
-    const totalOperationCost = params.operations.reduce((sum, op) => {
-      const cost = Number(op.unit_cost) || 0;
-      if (cost <= 0 || op.is_pricing === false) return sum;
-      return sum + ((op.qty || 0) * cost);
-    }, 0);
+    // 2. Ажиллагааны өртөг: Ашгийн өмнөх ба Ашгийн дараах гэж ангилах
+    let preProfitOpsCost = 0;
+    let postProfitOpsCost = 0;
 
-    // 3. Гадуур ажлын өртөг
-    const totalOutsourcedCost = params.outsourced.reduce((sum, out) => {
+    (params.operations || []).forEach(op => {
+      const cost = Number(op.unit_cost) || 0;
+      if (cost <= 0 || op.is_pricing === false) return;
+      const totalOpCost = (op.qty || 0) * cost;
+      if (op.is_post_profit) {
+        postProfitOpsCost += totalOpCost;
+      } else {
+        preProfitOpsCost += totalOpCost;
+      }
+    });
+
+    const totalOperationCost = preProfitOpsCost + postProfitOpsCost;
+
+    // 3. Гадуур ажлын өртөг (Хэрэглэгчийн тодруулгаар Ашгийн өмнөх суурь өртөгт орно)
+    const totalOutsourcedCost = (params.outsourced || []).reduce((sum, out) => {
       return sum + ((out.qty || 0) * (out.unit_cost || 0));
     }, 0);
 
-    // 4. Үйлдвэрийн нийт өртөг
-    const factoryTotalCost = totalMaterialCost + totalOperationCost + totalOutsourcedCost + (params.print_cost || 0) + (params.design_cost || 0);
+    const printCost = Number(params.print_cost) || 0;   // Үндсэн хэвлэлтийн зардал (Ашгийн өмнөх)
+    const designCost = Number(params.design_cost) || 0; // Эх бэлтгэлийн зардал (Ашгийн дараах)
+
+    // 4. Суурь болон Шууд өртгийн задаргаа
+    // Ашгийн өмнөх нийт суурь өртөг:
+    const preProfitBaseCost = totalMaterialCost + preProfitOpsCost + totalOutsourcedCost + printCost;
+
+    // Ашгийн дараах нийт шууд өртөг:
+    const postProfitTotalCost = postProfitOpsCost + designCost;
+
+    // Үйлдвэрийн бодит нийт өртөг:
+    const factoryTotalCost = preProfitBaseCost + postProfitTotalCost;
 
     // 5. Нэгжийн өртөг
     const qty = params.total_product_qty > 0 ? params.total_product_qty : 1;
     const unitCost = factoryTotalCost / qty;
 
-    // 6. Цэвэр үнэ (Үнийн үржүүлэгч коэф: жишээ нь 2.3, 1.8)
+    // 6. Цэвэр үнэ (Шинэ томьёо: Үндсэн өртөг * Ашиг + Ашгийн дараах)
     const margin = Number(params.profit_margin);
     const multiplier = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);
-    const netPrice = factoryTotalCost * multiplier;
+    const netPrice = (preProfitBaseCost * multiplier) + postProfitTotalCost;
 
-    // 7. Эцсийн үнэ (НӨАТ)
+    // 7. Эцсийн үнэ (Хэрэв has_vat сонгосон бол 10% НӨАТ нэмэгдэнэ)
     const finalPrice = params.has_vat ? netPrice * 1.10 : netPrice;
 
     // 8. Нэгжийн үнэ
     const unitPrice = finalPrice / qty;
 
+    // 9. Үйлдвэрийн цэвэр ашиг
+    const netProfit = netPrice - factoryTotalCost;
+
     return {
       totalMaterialCost,
       totalOperationCost,
+      preProfitOpsCost,
+      postProfitOpsCost,
       totalOutsourcedCost,
+      preProfitBaseCost,
+      postProfitTotalCost,
       factoryTotalCost,
       unitCost,
       netPrice,
       finalPrice,
-      unitPrice
+      unitPrice,
+      netProfit
     };
   }, [params]);
 
