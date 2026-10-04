@@ -1207,247 +1207,753 @@ export const deleteCustomerGift = async (req: Request, res: Response) => {
   }
 };
 
-// 5. SALESPERSON DEDICATED REPORT DATA
+// 5. SALESPERSON DEDICATED REPORT DATA & PRESENTATION
+export const aggregateSalespersonReport = async (currentUser: any, query: any) => {
+  const { period, startDate, endDate, salesPersonId } = query;
+
+  // Determine target salesperson
+  let targetUser = currentUser;
+  const canSwitchManager = ['ADMIN', 'FINANCE', 'MANAGER'].includes(currentUser.role);
+  if (canSwitchManager && salesPersonId) {
+    const found = await prisma.user.findUnique({
+      where: { id: parseInt(salesPersonId as string, 10) }
+    });
+    if (found) {
+      targetUser = found;
+    }
+  }
+
+  // Determine Date Range
+  const now = new Date();
+  let start: Date;
+  let end: Date;
+
+  if (period === 'today') {
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  } else if (period === 'this_week') {
+    const day = now.getDay();
+    const diffToMonday = (day === 0 ? -6 : 1) - day;
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday, 0, 0, 0, 0);
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  } else if (period === 'last_month') {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+    end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  } else if (period === 'custom' && startDate && endDate) {
+    start = new Date(startDate as string);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(endDate as string);
+    end.setHours(23, 59, 59, 999);
+  } else {
+    // Default: 'this_month'
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  }
+
+  // Filter by salesperson
+  const userOrConditions: any[] = [];
+  if (targetUser.id) {
+    userOrConditions.push({ sales_person_id: targetUser.id });
+  }
+  if (targetUser.name) {
+    userOrConditions.push({ sales_person_name: targetUser.name });
+  }
+
+  const where: any = {
+    createdAt: { gte: start, lte: end }
+  };
+
+  if (userOrConditions.length > 0) {
+    where.OR = userOrConditions;
+  }
+
+  // Query orders with payments
+  const orders = await prisma.order.findMany({
+    where,
+    include: {
+      payments: true
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const nonCancelled = orders.filter(o => o.current_status !== 'Цуцлагдсан');
+  const totalRevenue = nonCancelled.reduce((sum, o) => sum + (o.final_price || 0), 0);
+  const totalOrders = nonCancelled.length;
+  const cancelledOrders = orders.filter(o => o.current_status === 'Цуцлагдсан');
+  const cancelledRevenue = cancelledOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+  const completedOrders = nonCancelled.filter(o => ['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || ''));
+  const completedRevenue = completedOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+  const inProductionOrders = nonCancelled.filter(o => !['Үнийн санал', 'Хүлээлгэн өгсөн', 'Олгосон', 'Бэлэн'].includes(o.current_status || ''));
+  const inProductionRevenue = inProductionOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
+
+  // Payments & Receivables
+  let totalPaid = 0;
+  let totalReceivables = 0;
+
+  nonCancelled.forEach(o => {
+    const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    totalPaid += paid;
+    const balance = Math.max(0, (o.final_price || 0) - paid);
+    totalReceivables += balance;
+  });
+
+  // Monthly Target & Achievement
+  const targetYear = start.getFullYear();
+  const targetMonth = start.getMonth() + 1;
+  const targetRecord = await prisma.sales_target.findUnique({
+    where: { year_month: { year: targetYear, month: targetMonth } }
+  });
+
+  let myTarget = 0;
+  if (targetRecord && targetRecord.manager_targets) {
+    const mgrList = targetRecord.manager_targets as Array<{ manager_name: string; target: number }>;
+    const matched = mgrList.find(m => m.manager_name === targetUser.name);
+    if (matched) {
+      myTarget = Number(matched.target) || 0;
+    }
+  }
+  const achievementRate = myTarget > 0 ? (totalRevenue / myTarget) * 100 : 0;
+
+  // Daily Trend
+  const trendMap = new Map<string, { date: string; revenue: number; count: number }>();
+  const dIter = new Date(start);
+  while (dIter <= end) {
+    const dateKey = dIter.toISOString().split('T')[0];
+    trendMap.set(dateKey, { date: dateKey, revenue: 0, count: 0 });
+    dIter.setDate(dIter.getDate() + 1);
+  }
+
+  nonCancelled.forEach(o => {
+    const dateKey = o.createdAt.toISOString().split('T')[0];
+    const entry = trendMap.get(dateKey);
+    if (entry) {
+      entry.revenue += (o.final_price || 0);
+      entry.count += 1;
+    }
+  });
+
+  const trend = Array.from(trendMap.values());
+
+  // Category Breakdown
+  const catMap = new Map<string, { category: string; count: number; revenue: number }>();
+  nonCancelled.forEach(o => {
+    const cat = o.category || 'Бусад';
+    const existing = catMap.get(cat) || { category: cat, count: 0, revenue: 0 };
+    existing.count += 1;
+    existing.revenue += (o.final_price || 0);
+    catMap.set(cat, existing);
+  });
+
+  const categoryBreakdown = Array.from(catMap.values()).map(c => ({
+    ...c,
+    percent: totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0
+  })).sort((a, b) => b.revenue - a.revenue);
+
+  // Status Breakdown
+  const statusMap = new Map<string, { status: string; count: number; revenue: number }>();
+  orders.forEach(o => {
+    const st = o.current_status || 'Тодорхойгүй';
+    const existing = statusMap.get(st) || { status: st, count: 0, revenue: 0 };
+    existing.count += 1;
+    existing.revenue += (o.final_price || 0);
+    statusMap.set(st, existing);
+  });
+  const statusBreakdown = Array.from(statusMap.values()).sort((a, b) => b.count - a.count);
+
+  // Top Customers
+  const custMap = new Map<string, { name: string; count: number; totalAmount: number }>();
+  nonCancelled.forEach(o => {
+    const name = o.customer_name || 'Нэргүй харилцагч';
+    const existing = custMap.get(name) || { name, count: 0, totalAmount: 0 };
+    existing.count += 1;
+    existing.totalAmount += (o.final_price || 0);
+    custMap.set(name, existing);
+  });
+  const topCustomers = Array.from(custMap.values())
+    .sort((a, b) => b.totalAmount - a.totalAmount)
+    .slice(0, 10);
+
+  // Formatted Order Items
+  const orderItems = orders.map(o => {
+    const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    const balance = Math.max(0, (o.final_price || 0) - paid);
+    return {
+      id: o.id,
+      order_number: o.order_number || `ORD-${o.id}`,
+      customer_name: o.customer_name,
+      company_name: o.company_name,
+      product_name: o.product_name,
+      category: o.category || 'Бусад',
+      total_qty: o.total_qty,
+      final_price: o.final_price || 0,
+      paid_amount: paid,
+      balance: balance,
+      current_status: o.current_status,
+      createdAt: o.createdAt,
+      deadline: o.deadline,
+      is_urgent: o.is_urgent,
+      order_type: o.order_type || 'STANDARD'
+    };
+  });
+
+  // Available Salespersons for dropdown (for Admin/Manager)
+  let availableSalespersons: Array<{ id: number; name: string; role: string }> = [];
+  if (canSwitchManager) {
+    availableSalespersons = await prisma.user.findMany({
+      where: { role: { in: ['SALES', 'ADMIN'] } },
+      select: { id: true, name: true, role: true },
+      orderBy: { name: 'asc' }
+    });
+  }
+
+  return {
+    targetUser,
+    period: {
+      type: period || 'this_month',
+      startDate: start.toISOString(),
+      endDate: end.toISOString()
+    },
+    dates: { start, end },
+    summary: {
+      totalRevenue,
+      totalOrders,
+      completedRevenue,
+      completedCount: completedOrders.length,
+      inProductionRevenue,
+      inProductionCount: inProductionOrders.length,
+      cancelledCount: cancelledOrders.length,
+      cancelledRevenue,
+      totalPaid,
+      totalReceivables,
+      target: myTarget,
+      achievementRate
+    },
+    trend,
+    categoryBreakdown,
+    statusBreakdown,
+    topCustomers,
+    orders: orderItems,
+    availableSalespersons
+  };
+};
+
 export const getSalespersonReportData = async (req: Request, res: Response) => {
   try {
     const currentUser = (req as any).user;
     if (!currentUser) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { period, startDate, endDate, salesPersonId } = req.query;
-
-    // Determine target salesperson
-    let targetUser = currentUser;
-    const canSwitchManager = ['ADMIN', 'FINANCE', 'MANAGER'].includes(currentUser.role);
-    if (canSwitchManager && salesPersonId) {
-      const found = await prisma.user.findUnique({
-        where: { id: parseInt(salesPersonId as string, 10) }
-      });
-      if (found) {
-        targetUser = found;
-      }
-    }
-
-    // Determine Date Range
-    const now = new Date();
-    let start: Date;
-    let end: Date;
-
-    if (period === 'today') {
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    } else if (period === 'this_week') {
-      const day = now.getDay(); // 0 is Sunday, 1 is Monday...
-      const diffToMonday = (day === 0 ? -6 : 1) - day;
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday, 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    } else if (period === 'last_month') {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    } else if (period === 'custom' && startDate && endDate) {
-      start = new Date(startDate as string);
-      start.setHours(0, 0, 0, 0);
-      end = new Date(endDate as string);
-      end.setHours(23, 59, 59, 999);
-    } else {
-      // Default: 'this_month'
-      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    }
-
-    // Filter by salesperson
-    const userOrConditions: any[] = [];
-    if (targetUser.id) {
-      userOrConditions.push({ sales_person_id: targetUser.id });
-    }
-    if (targetUser.name) {
-      userOrConditions.push({ sales_person_name: targetUser.name });
-    }
-
-    const where: any = {
-      createdAt: { gte: start, lte: end }
-    };
-
-    if (userOrConditions.length > 0) {
-      where.OR = userOrConditions;
-    }
-
-    // Query orders with payments
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        payments: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const nonCancelled = orders.filter(o => o.current_status !== 'Цуцлагдсан');
-    const totalRevenue = nonCancelled.reduce((sum, o) => sum + (o.final_price || 0), 0);
-    const totalOrders = nonCancelled.length;
-    const cancelledOrders = orders.filter(o => o.current_status === 'Цуцлагдсан');
-    const cancelledRevenue = cancelledOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
-
-    const completedOrders = nonCancelled.filter(o => ['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || ''));
-    const completedRevenue = completedOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
-
-    const inProductionOrders = nonCancelled.filter(o => !['Үнийн санал', 'Хүлээлгэн өгсөн', 'Олгосон', 'Бэлэн'].includes(o.current_status || ''));
-    const inProductionRevenue = inProductionOrders.reduce((sum, o) => sum + (o.final_price || 0), 0);
-
-    // Payments & Receivables
-    let totalPaid = 0;
-    let totalReceivables = 0;
-
-    nonCancelled.forEach(o => {
-      const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
-      totalPaid += paid;
-      const balance = Math.max(0, (o.final_price || 0) - paid);
-      totalReceivables += balance;
-    });
-
-    // Monthly Target & Achievement
-    const targetYear = start.getFullYear();
-    const targetMonth = start.getMonth() + 1;
-    const targetRecord = await prisma.sales_target.findUnique({
-      where: { year_month: { year: targetYear, month: targetMonth } }
-    });
-
-    let myTarget = 0;
-    if (targetRecord && targetRecord.manager_targets) {
-      const mgrList = targetRecord.manager_targets as Array<{ manager_name: string; target: number }>;
-      const matched = mgrList.find(m => m.manager_name === targetUser.name);
-      if (matched) {
-        myTarget = Number(matched.target) || 0;
-      }
-    }
-    const achievementRate = myTarget > 0 ? (totalRevenue / myTarget) * 100 : 0;
-
-    // Daily Trend
-    const trendMap = new Map<string, { date: string; revenue: number; count: number }>();
-    const dIter = new Date(start);
-    while (dIter <= end) {
-      const dateKey = dIter.toISOString().split('T')[0];
-      trendMap.set(dateKey, { date: dateKey, revenue: 0, count: 0 });
-      dIter.setDate(dIter.getDate() + 1);
-    }
-
-    nonCancelled.forEach(o => {
-      const dateKey = o.createdAt.toISOString().split('T')[0];
-      const entry = trendMap.get(dateKey);
-      if (entry) {
-        entry.revenue += (o.final_price || 0);
-        entry.count += 1;
-      }
-    });
-
-    const trend = Array.from(trendMap.values());
-
-    // Category Breakdown
-    const catMap = new Map<string, { category: string; count: number; revenue: number }>();
-    nonCancelled.forEach(o => {
-      const cat = o.category || 'Бусад';
-      const existing = catMap.get(cat) || { category: cat, count: 0, revenue: 0 };
-      existing.count += 1;
-      existing.revenue += (o.final_price || 0);
-      catMap.set(cat, existing);
-    });
-
-    const categoryBreakdown = Array.from(catMap.values()).map(c => ({
-      ...c,
-      percent: totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0
-    })).sort((a, b) => b.revenue - a.revenue);
-
-    // Status Breakdown
-    const statusMap = new Map<string, { status: string; count: number; revenue: number }>();
-    orders.forEach(o => {
-      const st = o.current_status || 'Тодорхойгүй';
-      const existing = statusMap.get(st) || { status: st, count: 0, revenue: 0 };
-      existing.count += 1;
-      existing.revenue += (o.final_price || 0);
-      statusMap.set(st, existing);
-    });
-    const statusBreakdown = Array.from(statusMap.values()).sort((a, b) => b.count - a.count);
-
-    // Top Customers
-    const custMap = new Map<string, { name: string; count: number; totalAmount: number }>();
-    nonCancelled.forEach(o => {
-      const name = o.customer_name || 'Нэргүй харилцагч';
-      const existing = custMap.get(name) || { name, count: 0, totalAmount: 0 };
-      existing.count += 1;
-      existing.totalAmount += (o.final_price || 0);
-      custMap.set(name, existing);
-    });
-    const topCustomers = Array.from(custMap.values())
-      .sort((a, b) => b.totalAmount - a.totalAmount)
-      .slice(0, 10);
-
-    // Formatted Order Items
-    const orderItems = orders.map(o => {
-      const paid = (o.payments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
-      const balance = Math.max(0, (o.final_price || 0) - paid);
-      return {
-        id: o.id,
-        order_number: o.order_number || `ORD-${o.id}`,
-        customer_name: o.customer_name,
-        company_name: o.company_name,
-        product_name: o.product_name,
-        category: o.category || 'Бусад',
-        total_qty: o.total_qty,
-        final_price: o.final_price || 0,
-        paid_amount: paid,
-        balance: balance,
-        current_status: o.current_status,
-        createdAt: o.createdAt,
-        deadline: o.deadline,
-        is_urgent: o.is_urgent,
-        order_type: o.order_type || 'STANDARD'
-      };
-    });
-
-    // Available Salespersons for dropdown (for Admin/Manager)
-    let availableSalespersons: Array<{ id: number; name: string; role: string }> = [];
-    if (canSwitchManager) {
-      availableSalespersons = await prisma.user.findMany({
-        where: { role: { in: ['SALES', 'ADMIN'] } },
-        select: { id: true, name: true, role: true },
-        orderBy: { name: 'asc' }
-      });
-    }
-
-    res.json({
-      targetUser: {
-        id: targetUser.id,
-        name: targetUser.name,
-        role: targetUser.role
-      },
-      period: {
-        type: period || 'this_month',
-        startDate: start.toISOString(),
-        endDate: end.toISOString()
-      },
-      summary: {
-        totalRevenue,
-        totalOrders,
-        completedRevenue,
-        completedCount: completedOrders.length,
-        inProductionRevenue,
-        inProductionCount: inProductionOrders.length,
-        cancelledCount: cancelledOrders.length,
-        cancelledRevenue,
-        totalPaid,
-        totalReceivables,
-        target: myTarget,
-        achievementRate
-      },
-      trend,
-      categoryBreakdown,
-      statusBreakdown,
-      topCustomers,
-      orders: orderItems,
-      availableSalespersons
-    });
-
+    const data = await aggregateSalespersonReport(currentUser, req.query);
+    res.json(data);
   } catch (error: any) {
     console.error('Salesperson Report Error:', error);
     res.status(500).json({ error: 'Failed to fetch sales report', details: error.message });
+  }
+};
+
+export const downloadSalespersonReportPptx = async (req: Request, res: Response) => {
+  try {
+    const currentUser = (req as any).user;
+    if (!currentUser) return res.status(401).json({ error: 'Unauthorized' });
+
+    const data = await aggregateSalespersonReport(currentUser, req.query);
+    const { targetUser, dates, summary, trend, categoryBreakdown, statusBreakdown, topCustomers } = data;
+
+    const startDateStr = `${dates.start.getFullYear()}.${String(dates.start.getMonth() + 1).padStart(2, '0')}.${String(dates.start.getDate()).padStart(2, '0')}`;
+    const endDateStr = `${dates.end.getFullYear()}.${String(dates.end.getMonth() + 1).padStart(2, '0')}.${String(dates.end.getDate()).padStart(2, '0')}`;
+    const periodLabel = `${startDateStr} - ${endDateStr}`;
+
+    const pptx = new PptxGenJS();
+    pptx.layout = 'LAYOUT_16x9';
+    pptx.author = 'Selenge Press LLC';
+    pptx.company = 'Сэлэнгэ Пресс ХХК';
+    pptx.title = `Борлуулалтын тайлан - ${targetUser.name} (${periodLabel})`;
+
+    const C = {
+      darkBg: '0F172A',      // Slate 900
+      cardDark: '1E293B',    // Slate 800
+      lightBg: 'F8FAFC',     // Slate 50
+      cardLight: 'FFFFFF',   // Pure White
+      primary: '2563EB',     // Blue 600
+      primaryLight: 'EEF2FF',// Indigo 50
+      success: '059669',     // Emerald 600
+      warning: 'D97706',     // Amber 600
+      danger: 'DC2626',      // Red 600
+      textWhite: 'FFFFFF',
+      textDark: '0F172A',
+      textMuted: '64748B',
+      border: 'E2E8F0',
+      headerFill: '1E293B',
+      altRowFill: 'F1F5F9'
+    };
+
+    const addHeader = (slide: any, title: string, subtitle: string) => {
+      slide.addText(title, {
+        x: 0.6,
+        y: 0.4,
+        w: 9.5,
+        h: 0.5,
+        fontSize: 20,
+        fontFace: 'Arial',
+        bold: true,
+        color: C.textDark
+      });
+      slide.addText(subtitle, {
+        x: 0.6,
+        y: 0.85,
+        w: 9.5,
+        h: 0.35,
+        fontSize: 11,
+        fontFace: 'Arial',
+        color: C.textMuted
+      });
+      slide.addText(`СЭЛЭНГЭ ПРЕСС | ${targetUser.name}`, {
+        x: 9.5,
+        y: 0.4,
+        w: 3.2,
+        h: 0.4,
+        fontSize: 10,
+        fontFace: 'Arial',
+        bold: true,
+        color: C.primary,
+        align: 'right'
+      });
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0.6,
+        y: 1.25,
+        w: 12.13,
+        h: 0.02,
+        fill: { color: C.border }
+      });
+    };
+
+    // ==========================================
+    // SLIDE 1: COVER SLIDE
+    // ==========================================
+    const s1 = pptx.addSlide();
+    s1.background = { color: C.darkBg };
+    s1.addShape(pptx.ShapeType.rect, {
+      x: 0,
+      y: 0,
+      w: 0.4,
+      h: 7.5,
+      fill: { color: C.primary }
+    });
+    s1.addText('СЭЛЭНГЭ ПРЕСС ХХК', {
+      x: 1.2,
+      y: 1.8,
+      w: 10,
+      h: 0.5,
+      fontSize: 16,
+      fontFace: 'Arial',
+      bold: true,
+      color: '94A3B8',
+      charSpacing: 3
+    });
+    s1.addText('БОРЛУУЛАЛТЫН ТАЙЛАН ТАНИЛЦУУЛГА', {
+      x: 1.2,
+      y: 2.4,
+      w: 10.5,
+      h: 1.1,
+      fontSize: 32,
+      fontFace: 'Arial',
+      bold: true,
+      color: C.textWhite
+    });
+    s1.addText(`Тайлант хугацаа: ${periodLabel}`, {
+      x: 1.2,
+      y: 3.6,
+      w: 10,
+      h: 0.5,
+      fontSize: 16,
+      fontFace: 'Arial',
+      color: '38BDF8'
+    });
+    s1.addShape(pptx.ShapeType.rect, {
+      x: 1.2,
+      y: 4.4,
+      w: 6.5,
+      h: 0.03,
+      fill: { color: '334155' }
+    });
+    s1.addText(`Борлуулалтын менежер: ${targetUser.name}`, {
+      x: 1.2,
+      y: 4.7,
+      w: 8,
+      h: 0.4,
+      fontSize: 14,
+      fontFace: 'Arial',
+      bold: true,
+      color: 'E2E8F0'
+    });
+    s1.addText(`Тайлан бэлтгэсэн огноо: ${new Date().toLocaleDateString('mn-MN')}`, {
+      x: 1.2,
+      y: 5.2,
+      w: 8,
+      h: 0.4,
+      fontSize: 11,
+      fontFace: 'Arial',
+      color: '94A3B8'
+    });
+
+    // ==========================================
+    // SLIDE 2: KPI & TARGET ACHIEVEMENT
+    // ==========================================
+    const s2 = pptx.addSlide();
+    s2.background = { color: C.lightBg };
+    addHeader(s2, 'ГҮЙЦЭТГЭЛИЙН ХУРААНГУЙ (KPI)', `${periodLabel} хоорондох борлуулалтын гол үзүүлэлт, зорилтын биелэлт`);
+
+    const avgOrderVal = summary.totalOrders > 0 ? summary.totalRevenue / summary.totalOrders : 0;
+    const cards = [
+      { title: 'Нийт борлуулалт', value: formatMNT(summary.totalRevenue), sub: `Биелэлт: ${summary.achievementRate.toFixed(1)}%`, color: C.primary },
+      { title: 'Сар / Хугацааны төлөвлөгөө', value: formatMNT(summary.target), sub: summary.target > 0 ? `Зөрүү: ${formatMNT(summary.totalRevenue - summary.target)}` : 'Төлөвлөгөө тохируулаагүй', color: C.textDark },
+      { title: 'Нийт захиалгын тоо', value: `${summary.totalOrders} ш`, sub: `Дундаж захиалга: ${formatMNT(avgOrderVal)}`, color: C.textDark },
+      { title: 'Төлбөр цугларалт', value: formatMNT(summary.totalPaid), sub: `Үлдэгдэл авлага: ${formatMNT(summary.totalReceivables)}`, color: C.success }
+    ];
+
+    cards.forEach((c, idx) => {
+      const cardX = 0.6 + idx * 3.1;
+      s2.addShape(pptx.ShapeType.rect, {
+        x: cardX,
+        y: 1.6,
+        w: 2.85,
+        h: 2.0,
+        fill: { color: 'FFFFFF' },
+        line: { color: C.border, width: 1 }
+      });
+      s2.addText(c.title, {
+        x: cardX + 0.2,
+        y: 1.8,
+        w: 2.45,
+        h: 0.3,
+        fontSize: 11,
+        color: C.textMuted,
+        bold: true
+      });
+      s2.addText(c.value, {
+        x: cardX + 0.2,
+        y: 2.2,
+        w: 2.45,
+        h: 0.6,
+        fontSize: 17,
+        color: c.color,
+        bold: true
+      });
+      s2.addText(c.sub, {
+        x: cardX + 0.2,
+        y: 2.9,
+        w: 2.45,
+        h: 0.4,
+        fontSize: 10,
+        color: C.textMuted
+      });
+    });
+
+    // Summary Box
+    s2.addShape(pptx.ShapeType.rect, {
+      x: 0.6,
+      y: 3.9,
+      w: 12.13,
+      h: 2.8,
+      fill: { color: 'FFFFFF' },
+      line: { color: C.border, width: 1 }
+    });
+    s2.addText('ТАЙЛАНТ ХУГАЦААНЫ ДҮГНЭЛТ', {
+      x: 0.9,
+      y: 4.15,
+      w: 11.5,
+      h: 0.35,
+      fontSize: 13,
+      bold: true,
+      color: C.primary
+    });
+    const summaryBullets = [
+      `Тайлант хугацаанд ${targetUser.name} нийт ${summary.totalOrders} захиалга дээр ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт амжилттай хийсэн байна.`,
+      summary.target > 0
+        ? `Төлөвлөгөөт зорилт ${formatMNT(summary.target)} байснаас биелэлт ${summary.achievementRate.toFixed(1)}%-тай биелэсэн байна.`
+        : `Төлөвлөгөө тогтоогоогүй бөгөөд нийт захиалгын дундаж дүн ${formatMNT(avgOrderVal)} төгрөг байна.`,
+      `Үйлдвэрлэлд ${summary.inProductionCount} захиалга (${formatMNT(summary.inProductionRevenue)}) гүйцэтгэгдэж буй бөгөөд ${summary.completedCount} захиалга (${formatMNT(summary.completedRevenue)}) бүрэн бэлэн болж хүлээлгэн өгөгдсөн.`,
+      `Борлуулалтын төлбөрөөс ${formatMNT(summary.totalPaid)} төлөгдөж, харилцагчийн үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байна.`
+    ];
+    s2.addText(summaryBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
+      x: 0.9,
+      y: 4.6,
+      w: 11.5,
+      h: 1.9
+    });
+
+    // ==========================================
+    // SLIDE 3: DAILY SALES DYNAMICS
+    // ==========================================
+    const s3 = pptx.addSlide();
+    s3.background = { color: C.lightBg };
+    addHeader(s3, 'БОРЛУУЛАЛТЫН ӨДӨР ТУТМЫН ЯВЦ', 'Тайлант хугацааны өдөр бүрийн борлуулалтын динамик болон захиалгын тоо');
+
+    const activeTrend = trend.filter(t => t.revenue > 0 || t.count > 0);
+    const trendToShow = activeTrend.length > 0 ? activeTrend : trend.slice(-14);
+
+    const trendRows: PptxGenJS.TableRow[] = [
+      [
+        { text: 'Огноо', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Захиалгын тоо', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Борлуулалтын дүн (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Эзлэх хувь %', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } }
+      ]
+    ];
+
+    trendToShow.slice(0, 12).forEach((t, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      const pct = summary.totalRevenue > 0 ? (t.revenue / summary.totalRevenue) * 100 : 0;
+      trendRows.push([
+        { text: t.date, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: `${t.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(t.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+
+    s3.addTable(trendRows, {
+      x: 0.6,
+      y: 1.6,
+      w: 7.5,
+      colW: [2.0, 1.8, 2.5, 1.2],
+      border: { type: 'solid', color: C.border, pt: 0.5 }
+    });
+
+    // Right Info Box
+    s3.addShape(pptx.ShapeType.rect, {
+      x: 8.4,
+      y: 1.6,
+      w: 4.3,
+      h: 4.8,
+      fill: { color: 'FFFFFF' },
+      line: { color: C.border, width: 1 }
+    });
+    s3.addText('ӨДРИЙН ДУНДАЖ БА ИДЭВХЖИЛТ', {
+      x: 8.7,
+      y: 1.9,
+      w: 3.7,
+      h: 0.35,
+      fontSize: 12,
+      bold: true,
+      color: C.primary
+    });
+    const daysCount = Math.max(1, Math.round((dates.end.getTime() - dates.start.getTime()) / (1000 * 3600 * 24)) + 1);
+    const dailyAvgRev = summary.totalRevenue / daysCount;
+    const activeDays = trend.filter(t => t.revenue > 0).length;
+    s3.addText([
+      { text: `Нийт хугацаа: `, options: { bold: true, color: C.textDark } },
+      { text: `${daysCount} хоног\n\n`, options: { color: C.textMuted } },
+      { text: `Идэвхтэй борлуулалтын өдөр: `, options: { bold: true, color: C.textDark } },
+      { text: `${activeDays} өдөр\n\n`, options: { color: C.textMuted } },
+      { text: `Өдрийн дундаж борлуулалт: `, options: { bold: true, color: C.textDark } },
+      { text: `${formatMNT(dailyAvgRev)}\n\n`, options: { color: C.primary, bold: true } },
+      { text: `Захиалга орсон өдрүүдийн дундаж: `, options: { bold: true, color: C.textDark } },
+      { text: `${formatMNT(activeDays > 0 ? summary.totalRevenue / activeDays : 0)}\n\n`, options: { color: C.textMuted } }
+    ], {
+      x: 8.7,
+      y: 2.5,
+      w: 3.7,
+      h: 3.6,
+      fontSize: 11
+    });
+
+    // ==========================================
+    // SLIDE 4: PRODUCT CATEGORY BREAKDOWN
+    // ==========================================
+    const s4 = pptx.addSlide();
+    s4.background = { color: C.lightBg };
+    addHeader(s4, 'БҮТЭЭГДЭХҮҮНИЙ АНГИЛЛЫН БОРЛУУЛАЛТ', 'Хамгийн их захиалагдсан бүтээгдэхүүний төрөл, эзлэх хувь');
+
+    const catRows: PptxGenJS.TableRow[] = [
+      [
+        { text: '№', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Бүтээгдэхүүний төрөл', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'left' } },
+        { text: 'Захиалга', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Борлуулалтын дүн (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Эзлэх хувь %', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } }
+      ]
+    ];
+
+    categoryBreakdown.slice(0, 10).forEach((c, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      catRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: c.category, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: `${c.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(c.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${c.percent.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+
+    s4.addTable(catRows, {
+      x: 0.6,
+      y: 1.6,
+      w: 12.13,
+      colW: [0.8, 4.0, 1.8, 3.5, 2.03],
+      border: { type: 'solid', color: C.border, pt: 0.5 }
+    });
+
+    // ==========================================
+    // SLIDE 5: ORDER PIPELINE & STATUSES
+    // ==========================================
+    const s5 = pptx.addSlide();
+    s5.background = { color: C.lightBg };
+    addHeader(s5, 'ЗАХИАЛГЫН ЯВЦ БА СТАТУС', 'Үйлдвэрлэлд яваа болон хүлээлгэн өгсөн захиалгуудын төлөв');
+
+    const statusCards = [
+      { title: 'Үйлдвэрлэлд яваа', count: `${summary.inProductionCount} ш`, amount: formatMNT(summary.inProductionRevenue), color: C.warning },
+      { title: 'Бэлэн / Хүлээлгэн өгсөн', count: `${summary.completedCount} ш`, amount: formatMNT(summary.completedRevenue), color: C.success },
+      { title: 'Цуцлагдсан захиалга', count: `${summary.cancelledCount} ш`, amount: formatMNT(summary.cancelledRevenue), color: C.danger }
+    ];
+
+    statusCards.forEach((sc, idx) => {
+      const cx = 0.6 + idx * 4.15;
+      s5.addShape(pptx.ShapeType.rect, {
+        x: cx,
+        y: 1.6,
+        w: 3.85,
+        h: 1.8,
+        fill: { color: 'FFFFFF' },
+        line: { color: C.border, width: 1 }
+      });
+      s5.addText(sc.title, { x: cx + 0.3, y: 1.8, w: 3.2, h: 0.3, fontSize: 12, bold: true, color: C.textDark });
+      s5.addText(sc.count, { x: cx + 0.3, y: 2.15, w: 3.2, h: 0.5, fontSize: 20, bold: true, color: sc.color });
+      s5.addText(`Нийт дүн: ${sc.amount}`, { x: cx + 0.3, y: 2.7, w: 3.2, h: 0.3, fontSize: 11, color: C.textMuted });
+    });
+
+    // Status Detail Table
+    const stRows: PptxGenJS.TableRow[] = [
+      [
+        { text: 'Төлөв (Статус)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite } },
+        { text: 'Захиалгын тоо', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Мөнгөн дүн (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } }
+      ]
+    ];
+    statusBreakdown.forEach((st, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      stRows.push([
+        { text: st.status, options: { fill: { color: rf }, fontSize: 10, bold: true } },
+        { text: `${st.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(st.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10 } }
+      ]);
+    });
+
+    s5.addTable(stRows, {
+      x: 0.6,
+      y: 3.7,
+      w: 12.13,
+      colW: [5.0, 3.0, 4.13],
+      border: { type: 'solid', color: C.border, pt: 0.5 }
+    });
+
+    // ==========================================
+    // SLIDE 6: FINANCIALS & RECEIVABLES
+    // ==========================================
+    const s6 = pptx.addSlide();
+    s6.background = { color: C.lightBg };
+    addHeader(s6, 'ТӨЛБӨРИЙН ЦУГЛАРАЛТ БА АВЛАГА', 'Нэхэмжилсэн дүн, бодит орлого, үлдэгдэл авлагын хяналт');
+
+    const colRate = summary.totalRevenue > 0 ? (summary.totalPaid / summary.totalRevenue) * 100 : 0;
+    const finCards = [
+      { title: 'Нийт борлуулалт', value: formatMNT(summary.totalRevenue), color: C.primary },
+      { title: 'Төлөгдсөн бодит дүн', value: formatMNT(summary.totalPaid), color: C.success },
+      { title: 'Үлдэгдэл авлага', value: formatMNT(summary.totalReceivables), color: summary.totalReceivables > 0 ? C.danger : C.success },
+      { title: 'Төлбөрийн цугларалт %', value: `${colRate.toFixed(1)}%`, color: colRate >= 80 ? C.success : C.warning }
+    ];
+
+    finCards.forEach((fc, idx) => {
+      const cx = 0.6 + idx * 3.1;
+      s6.addShape(pptx.ShapeType.rect, {
+        x: cx,
+        y: 1.6,
+        w: 2.85,
+        h: 2.0,
+        fill: { color: 'FFFFFF' },
+        line: { color: C.border, width: 1 }
+      });
+      s6.addText(fc.title, { x: cx + 0.2, y: 1.8, w: 2.45, h: 0.3, fontSize: 11, bold: true, color: C.textMuted });
+      s6.addText(fc.value, { x: cx + 0.2, y: 2.2, w: 2.45, h: 0.6, fontSize: 18, bold: true, color: fc.color });
+    });
+
+    // Callout box on Collection
+    s6.addShape(pptx.ShapeType.rect, {
+      x: 0.6,
+      y: 3.9,
+      w: 12.13,
+      h: 2.6,
+      fill: { color: 'FFFFFF' },
+      line: { color: C.border, width: 1 }
+    });
+    s6.addText('САНХҮҮ, АВЛАГЫН ЧИГЛЭЛ БА ЗӨВЛӨМЖ', {
+      x: 0.9,
+      y: 4.15,
+      w: 11.5,
+      h: 0.35,
+      fontSize: 13,
+      bold: true,
+      color: C.primary
+    });
+    const finBullets = [
+      `Тайлант хугацааны нийт борлуулалтаас ${colRate.toFixed(1)}%-ийн төлбөр амжилттай дансанд орсон байна.`,
+      summary.totalReceivables > 0
+        ? `Харилцагчдаас авах үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байгаа тул олгосон болон үйлдвэрлэлд яваа захиалгуудын төлбөрийг шуурхай барагдуулах шаардлагатай.`
+        : `Бүх захиалгын төлбөр бүрэн төлөгдсөн, үлдэгдэл авлагагүй байна.`,
+      `Дараагийн төлөвлөгөөт үед авлагын хэмжээг бууруулж, урьдчилгаа төлбөрийн харьцааг 70%+ түвшинд хадгалахыг зөвлөж байна.`
+    ];
+    s6.addText(finBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
+      x: 0.9,
+      y: 4.6,
+      w: 11.5,
+      h: 1.7
+    });
+
+    // ==========================================
+    // SLIDE 7: TOP 10 CUSTOMERS
+    // ==========================================
+    const s7 = pptx.addSlide();
+    s7.background = { color: C.lightBg };
+    addHeader(s7, 'ШИЛДЭГ ХАРИЛЦАГЧИД (TOP 10)', 'Хамгийн их дүнгээр захиалга өгсөн гол харилцагч, түншүүдийн жагсаалт');
+
+    const custRows: PptxGenJS.TableRow[] = [
+      [
+        { text: '№', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Харилцагчийн нэр', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'left' } },
+        { text: 'Захиалгын тоо', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } },
+        { text: 'Нийт борлуулалт (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } },
+        { text: 'Эзлэх хувь %', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'center' } }
+      ]
+    ];
+
+    topCustomers.forEach((cust, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      const pct = summary.totalRevenue > 0 ? (cust.totalAmount / summary.totalRevenue) * 100 : 0;
+      custRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: cust.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: `${cust.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(cust.totalAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+
+    s7.addTable(custRows, {
+      x: 0.6,
+      y: 1.6,
+      w: 12.13,
+      colW: [0.8, 4.5, 1.8, 3.2, 1.83],
+      border: { type: 'solid', color: C.border, pt: 0.5 }
+    });
+
+    const buffer = await pptx.write({ outputType: 'nodebuffer' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    res.setHeader('Content-Disposition', `attachment; filename="Borluulaltiin_tailan_${encodeURIComponent(targetUser.name)}_${startDateStr}_${endDateStr}.pptx"`);
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('Error generating salesperson report PPTX:', error);
+    res.status(500).json({ error: 'Failed to generate PowerPoint presentation', details: error.message });
   }
 };
 

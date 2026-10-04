@@ -7,14 +7,16 @@ import {
   getCustomerGifts,
   createCustomerGift,
   deleteCustomerGift,
-  getSalespersonReportData
+  getSalespersonReportData,
+  downloadSalespersonReportPptx
 } from '../controllers/reportController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Salesperson Personal Report Data
+// Salesperson Personal Report Data & Meeting Presentation
 router.get('/sales', authMiddleware(['ADMIN', 'FINANCE', 'SALES']), getSalespersonReportData);
+router.get('/sales/pptx', authMiddleware(['ADMIN', 'FINANCE', 'SALES']), downloadSalespersonReportPptx);
 
 // Monthly Report Data & Presentation
 router.get('/monthly', authMiddleware(['ADMIN', 'FINANCE', 'SALES']), getMonthlyReportData);
