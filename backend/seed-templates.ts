@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const standardTemplates = [
   {
     template_name: 'Ном А5 (Зөөлөн хавтас, 160 нүүр, Наалттай)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Наалттай',
     size: 'A5',
     cover_color: '4+0',
@@ -200,7 +200,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Брошур А4 (1 нугалаа, 4 нүүр)',
-    category: 'Брошур',
+    category: 'Танилцуулга',
     binding_type: 'Үдээстэй',
     size: 'A4',
     cover_color: '4+4',
@@ -357,7 +357,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ширээний Календарь А5 (26 нүүр, Спираль, Картон суурьтай)',
-    category: 'Календарь',
+    category: 'Календар',
     binding_type: 'Спираль',
     size: 'A5',
     cover_color: '4+0',
@@ -470,7 +470,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ширээний Календарь B5 (26 нүүр, Спираль, Картон суурьтай)',
-    category: 'Календарь',
+    category: 'Календар',
     binding_type: 'Спираль',
     size: 'B5',
     cover_color: '4+0',
@@ -583,7 +583,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ханын Календарь А2 (7 хуудас / 14 нүүр, Спираль үдээстэй)',
-    category: 'Календарь',
+    category: 'Календар',
     binding_type: 'Спираль',
     size: 'A2',
     cover_color: '4+0',
@@ -653,7 +653,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Флаер А5 (Шохойтой 157гр, 2 тал 4+4)',
-    category: 'Флаер',
+    category: 'Зурагт хуудас',
     binding_type: 'Бусад',
     size: 'A5',
     cover_color: '4+4',
@@ -777,7 +777,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном А5 (Хатуу хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Хатуу хавтастай',
     size: 'A5',
     cover_color: '4+0',
@@ -940,7 +940,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном В5 (Хатуу хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Хатуу хавтастай',
     size: 'B5',
     cover_color: '4+0',
@@ -1102,7 +1102,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном А4 (Хатуу хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Хатуу хавтастай',
     size: 'A4',
     cover_color: '4+0',
@@ -1264,7 +1264,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном А4 (Хөөсөн хатуу хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Хөөсөн хатуу хавтастай',
     size: 'A4',
     cover_color: '4+0',
@@ -1426,7 +1426,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном А5 (Супер хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Супер хавтастай',
     size: 'A5',
     cover_color: '4+0',
@@ -1545,7 +1545,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном В5 (Супер хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Супер хавтастай',
     size: 'B5',
     cover_color: '4+0',
@@ -1664,7 +1664,7 @@ const standardTemplates = [
   },
   {
     template_name: 'Ном А4 (Супер хавтастай, 160 нүүр, 1000ш)',
-    category: 'Ном',
+    category: 'Ном хар',
     binding_type: 'Супер хавтастай',
     size: 'A4',
     cover_color: '4+0',
@@ -1781,6 +1781,1027 @@ const standardTemplates = [
       }
     }
   }
+,
+  {
+  "template_name": "Ном өнгөт А5 (Зөөлөн хавтас, 96 нүүр, 4+4 өнгөт)",
+  "category": "Ном өнгөт",
+  "binding_type": "Наалттай",
+  "size": "A5",
+  "cover_color": "4+0",
+  "inner_color": "4+4",
+  "total_pages": 96,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Бүрэн өнгөт А5 ном (Хавтас 250гр матт бүрэлттэй, Дотор 128гр шохойтой, 4+4 өнгөт)",
+  "order_data": {
+    "sub_size": "148x210mm",
+    "materials": [
+      {
+        "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "B3",
+        "press_sheet": "0.5",
+        "base_qty": 1000,
+        "extra_qty": 100,
+        "total_qty": 600,
+        "divide_by": 5,
+        "sheet_qty": 120,
+        "unit_cost": 1400,
+        "notes": "Хавтас",
+        "is_cover": true
+      },
+      {
+        "material_name": "Шохойтой цаас 128гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "6",
+        "base_qty": 1000,
+        "extra_qty": 200,
+        "total_qty": 6200,
+        "divide_by": 4,
+        "sheet_qty": 1550,
+        "unit_cost": 850,
+        "notes": "Дотор хуудас (96 нүүр, 4+4 өнгөт)",
+        "is_cover": false
+      },
+      {
+        "material_name": "Бүрэлт (Матт)",
+        "size": "",
+        "print_size": "B3",
+        "press_sheet": "",
+        "base_qty": 1000,
+        "extra_qty": 20,
+        "total_qty": 1020,
+        "divide_by": 1,
+        "sheet_qty": 4.08,
+        "unit_cost": 1500,
+        "notes": "Хавтасны матт бүрэлт",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (74.5x60.5)",
+        "size": "74.5x60.5",
+        "print_size": "B3",
+        "press_sheet": "0.5",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "Хавтасны CTP (4+0)",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A2",
+        "press_sheet": "6",
+        "base_qty": 48,
+        "extra_qty": 0,
+        "total_qty": 48,
+        "divide_by": 1,
+        "sheet_qty": 48,
+        "unit_cost": 8800,
+        "notes": "Дотор хуудасны CTP (4+4, 6 х.х, 48 хавтан)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 6500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Өнгөт хэвлэл"
+      },
+      {
+        "operation_name": "Нугалаа",
+        "qty": 6000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Нугалах"
+      },
+      {
+        "operation_name": "Цуглуулга",
+        "qty": 6000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Цуглуулах"
+      },
+      {
+        "operation_name": "Наалт",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Термо наалт"
+      },
+      {
+        "operation_name": "Огтлоо (Гурван талт)",
+        "qty": 2,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "3 тал огтлох"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "inner_color": "4+4",
+      "total_pages": 96
+    }
+  }
+},
+  {
+  "template_name": "Албан бланк А4 (Офсет 80гр, 4+0 өнгөт, 1000ш)",
+  "category": "Бланк",
+  "binding_type": "Бусад",
+  "size": "A4",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Байгууллагын лого бүхий А4 албан бланк",
+  "order_data": {
+    "sub_size": "210x297mm",
+    "materials": [
+      {
+        "material_name": "Офсет цаас 80гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "1",
+        "base_qty": 1000,
+        "extra_qty": 100,
+        "total_qty": 1100,
+        "divide_by": 4,
+        "sheet_qty": 275,
+        "unit_cost": 510,
+        "notes": "Бланкны цаас",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A2",
+        "press_sheet": "1",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Бланк хэвлэх"
+      },
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "А4 зүсэх"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Хортой маягт А5 (2 хувьтай, 100 хуудас, Дугаарлалттай, 500ш)",
+  "category": "Хортой маягт",
+  "binding_type": "Наалттай",
+  "size": "A5",
+  "cover_color": "1+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "2 хувьтай өөрөө хувилагч санхүүгийн маягт (Хар, шар хувь, дараалсан дугаарлалттай)",
+  "order_data": {
+    "sub_size": "148x210mm",
+    "materials": [
+      {
+        "material_name": "Хортой цаас I өнгө 48гр Ao (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "1",
+        "base_qty": 500,
+        "extra_qty": 50,
+        "total_qty": 550,
+        "divide_by": 8,
+        "sheet_qty": 69,
+        "unit_cost": 350,
+        "notes": "Хортой цаас I (Дээд хувь)",
+        "is_cover": false
+      },
+      {
+        "material_name": "Хортой цаас II өнгө/шар 50гр Ao (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "1",
+        "base_qty": 500,
+        "extra_qty": 50,
+        "total_qty": 550,
+        "divide_by": 8,
+        "sheet_qty": 69,
+        "unit_cost": 350,
+        "notes": "Хортой цаас II (Шар хувь)",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (65x55)",
+        "size": "65x55",
+        "print_size": "65*55",
+        "press_sheet": "1",
+        "base_qty": 1,
+        "extra_qty": 0,
+        "total_qty": 1,
+        "divide_by": 1,
+        "sheet_qty": 1,
+        "unit_cost": 6800,
+        "notes": "CTP хавтан (1+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (1 өнгө)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Нууцлал наах",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Дараалсан дугаар тавих"
+      },
+      {
+        "operation_name": "Наалт",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Блок наалт"
+      },
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Огтлох"
+      }
+    ],
+    "specifications": {
+      "cover_color": "1+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Шошго (Шохойтой 300гр, 50х90мм, Бөгжтэй, Матт бүрэлттэй, 1000ш)",
+  "category": "Шошго",
+  "binding_type": "Бусад",
+  "size": "Custom",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Хувцас, барааны шошго (300гр шохойтой, матт бүрэлт, бөгж нүхтэй)",
+  "order_data": {
+    "sub_size": "50x90mm",
+    "materials": [
+      {
+        "material_name": "Шохойтой цаас 300гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 1000,
+        "extra_qty": 100,
+        "total_qty": 1100,
+        "divide_by": 8,
+        "sheet_qty": 138,
+        "unit_cost": 1650,
+        "notes": "Шошгоны цаас",
+        "is_cover": false
+      },
+      {
+        "material_name": "Бүрэлт (Матт)",
+        "size": "",
+        "print_size": "A3",
+        "press_sheet": "",
+        "base_qty": 1000,
+        "extra_qty": 20,
+        "total_qty": 1020,
+        "divide_by": 1,
+        "sheet_qty": 4.08,
+        "unit_cost": 1500,
+        "notes": "Матт бүрэлт",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Бөгж цоологч",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Бөгж цоолох"
+      },
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Зүсэх"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Дэвтэр А5 (48 нүүр, Үдээстэй, Мөрлөсөн, 500ш)",
+  "category": "Дэвтэр",
+  "binding_type": "Үдээстэй",
+  "size": "A5",
+  "cover_color": "4+0",
+  "inner_color": "1+1",
+  "total_pages": 44,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Сургуулийн болон тэмдэглэлийн дэвтэр А5 (Хавтас 4 нүүр + Дотор 44 нүүр мөрлөсөн)",
+  "order_data": {
+    "sub_size": "148x210mm",
+    "materials": [
+      {
+        "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "0.25",
+        "base_qty": 500,
+        "extra_qty": 100,
+        "total_qty": 225,
+        "divide_by": 4,
+        "sheet_qty": 57,
+        "unit_cost": 1400,
+        "notes": "Хавтас",
+        "is_cover": true
+      },
+      {
+        "material_name": "Офсет цаас 80гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "2.75",
+        "base_qty": 500,
+        "extra_qty": 150,
+        "total_qty": 1525,
+        "divide_by": 4,
+        "sheet_qty": 382,
+        "unit_cost": 510,
+        "notes": "Дотор хуудас (Мөрлөсөн)",
+        "is_cover": false
+      },
+      {
+        "material_name": "Бүрэлт (Гялгар)",
+        "size": "",
+        "print_size": "A2",
+        "press_sheet": "",
+        "base_qty": 500,
+        "extra_qty": 20,
+        "total_qty": 520,
+        "divide_by": 1,
+        "sheet_qty": 3.12,
+        "unit_cost": 1500,
+        "notes": "Гялгар бүрэлт",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A2",
+        "press_sheet": "0.25",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "Хавтасны CTP (4+0)",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (65x55)",
+        "size": "65x55",
+        "print_size": "65*55",
+        "press_sheet": "2.75",
+        "base_qty": 6,
+        "extra_qty": 0,
+        "total_qty": 6,
+        "divide_by": 1,
+        "sheet_qty": 6,
+        "unit_cost": 6800,
+        "notes": "Дотор хуудасны CTP (1+1)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 250,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хавтас хэвлэх"
+      },
+      {
+        "operation_name": "Хэвлэх (1 өнгө)",
+        "qty": 1375,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Дотор хэвлэх"
+      },
+      {
+        "operation_name": "Нугалаа",
+        "qty": 1375,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Нугалах"
+      },
+      {
+        "operation_name": "Үдээ (Унаа үдээ)",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Төмөр үдээс"
+      },
+      {
+        "operation_name": "Огтлоо (Гурван талт)",
+        "qty": 2,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Огтлох"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "inner_color": "1+1",
+      "total_pages": 44
+    }
+  }
+},
+  {
+  "template_name": "Хавтас А4 (Халаастай, Шохойтой 300гр, Матт бүрэлттэй, 500ш)",
+  "category": "Хавтас",
+  "binding_type": "Бусад",
+  "size": "A4",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Бичиг баримтын албан хавтас (Нэрийн хуудасны завсартай халаастай, 300гр шохойтой, матт бүрэлттэй)",
+  "order_data": {
+    "sub_size": "220x310mm",
+    "materials": [
+      {
+        "material_name": "Шохойтой цаас 300гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "B2",
+        "press_sheet": "1",
+        "base_qty": 500,
+        "extra_qty": 100,
+        "total_qty": 600,
+        "divide_by": 2,
+        "sheet_qty": 300,
+        "unit_cost": 1650,
+        "notes": "Хавтасны их бие (B2 дэлгээс)",
+        "is_cover": false
+      },
+      {
+        "material_name": "Бүрэлт (Матт)",
+        "size": "",
+        "print_size": "B2",
+        "press_sheet": "",
+        "base_qty": 500,
+        "extra_qty": 20,
+        "total_qty": 520,
+        "divide_by": 1,
+        "sheet_qty": 3.64,
+        "unit_cost": 1500,
+        "notes": "Матт бүрэлт",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (74.5x60.5)",
+        "size": "74.5x60.5",
+        "print_size": "B2",
+        "press_sheet": "1",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Хэв дарах (A2)",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Хэлбэрт огтлох"
+      },
+      {
+        "operation_name": "Гараар хийх ажил",
+        "qty": 500,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Халаас нугалж наах"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Дугтуй DL (Офсет 100гр, 110х220мм, 4+0, 1000ш)",
+  "category": "Дугтуй",
+  "binding_type": "Бусад",
+  "size": "Custom",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Евро стандарт DL дугтуй (110х220мм, өнгөт логотой)",
+  "order_data": {
+    "sub_size": "110x220mm",
+    "materials": [
+      {
+        "material_name": "Офсет цаас 100гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 1000,
+        "extra_qty": 100,
+        "total_qty": 1100,
+        "divide_by": 8,
+        "sheet_qty": 138,
+        "unit_cost": 650,
+        "notes": "Дугтуйн цаас",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Хэв дарах (A3)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Огтлох"
+      },
+      {
+        "operation_name": "Гараар хийх ажил",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Эвхэж наах"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Урилга (Матт 250гр, 1 нугалаа, Алтлаг клише дардастай, 200ш)",
+  "category": "Урилга",
+  "binding_type": "Бусад",
+  "size": "A5",
+  "cover_color": "4+4",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Хүндэтгэлийн урилга (250гр матт цаас, алтлаг фольга клише дардас, 1 нугалаа)",
+  "order_data": {
+    "sub_size": "148x210mm",
+    "materials": [
+      {
+        "material_name": "Мат цаас 250гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 200,
+        "extra_qty": 50,
+        "total_qty": 250,
+        "divide_by": 4,
+        "sheet_qty": 63,
+        "unit_cost": 1400,
+        "notes": "Урилгын цаас",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 8,
+        "extra_qty": 0,
+        "total_qty": 8,
+        "divide_by": 1,
+        "sheet_qty": 8,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+4)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 400,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Клише (Алтлаг)",
+        "qty": 200,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Алтлаг клише дарах"
+      },
+      {
+        "operation_name": "Нугалаа",
+        "qty": 200,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Нугалах"
+      },
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Зүсэх"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+4",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Билет / Тасалбар (Офсет 80гр, Нууцлал дугаарлалттай, 1000ш)",
+  "category": "Билет",
+  "binding_type": "Бусад",
+  "size": "Custom",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Арга хэмжээ, тоглолтын тасалбар билет (Цоолбор таслагчтай, дараалсан дугаарлалттай)",
+  "order_data": {
+    "sub_size": "200x70mm",
+    "materials": [
+      {
+        "material_name": "Офсет цаас 80гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 1000,
+        "extra_qty": 100,
+        "total_qty": 1100,
+        "divide_by": 8,
+        "sheet_qty": 138,
+        "unit_cost": 510,
+        "notes": "Тасалбарын цаас",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 4,
+        "extra_qty": 0,
+        "total_qty": 4,
+        "divide_by": 1,
+        "sheet_qty": 4,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+0)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Нууцлал наах",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Дараалсан дугаар тавих"
+      },
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Зүсэх"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Түргэн хэвлэл Konica А3 (Шохойтой 250гр, 4+0, 100ш)",
+  "category": "Түргэн хэвлэл Konica",
+  "binding_type": "Бусад",
+  "size": "A3",
+  "cover_color": "4+0",
+  "inner_color": "",
+  "total_pages": 1,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (CTP хавтан ашиглахгүй)",
+  "order_data": {
+    "sub_size": "297x420mm",
+    "materials": [
+      {
+        "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A3",
+        "press_sheet": "1",
+        "base_qty": 100,
+        "extra_qty": 0,
+        "total_qty": 100,
+        "divide_by": 8,
+        "sheet_qty": 13,
+        "unit_cost": 1400,
+        "notes": "А3 хэвлэх цаас",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Огтлоо (Жижиг)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Зүсэх"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+0",
+      "total_pages": 1
+    }
+  }
+},
+  {
+  "template_name": "Сонин А3 (8 нүүр, Офсет 70гр, 4+4, 1000ш)",
+  "category": "Сонин",
+  "binding_type": "Бусад",
+  "size": "A3",
+  "cover_color": "4+4",
+  "inner_color": "4+4",
+  "total_pages": 8,
+  "needs_design": false,
+  "design_status": "Эх бэлэн",
+  "design_cost": 0,
+  "notes": "8 нүүртэй өнгөт сонин (А2 хэмжээтэй 2 хуудас дэлгээс, нугалсан)",
+  "order_data": {
+    "sub_size": "297x420mm",
+    "materials": [
+      {
+        "material_name": "Офсет цаас 70гр A0 (889x1194)",
+        "size": "A0",
+        "print_size": "A2",
+        "press_sheet": "2",
+        "base_qty": 1000,
+        "extra_qty": 200,
+        "total_qty": 2200,
+        "divide_by": 2,
+        "sheet_qty": 1100,
+        "unit_cost": 450,
+        "notes": "Сонины цаас (А2 дэлгээс, 2 х.х)",
+        "is_cover": false
+      },
+      {
+        "material_name": "CTP хавтан (76x60.5)",
+        "size": "76x60.5",
+        "print_size": "A2",
+        "press_sheet": "2",
+        "base_qty": 16,
+        "extra_qty": 0,
+        "total_qty": 16,
+        "divide_by": 1,
+        "sheet_qty": 16,
+        "unit_cost": 8800,
+        "notes": "CTP хавтан (4+4, 2 х.х = 16 хавтан)",
+        "is_cover": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_name": "Хэвлэх (4 өнгө)",
+        "qty": 2000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "PRINTING",
+        "is_manual": false,
+        "notes": "Хэвлэх"
+      },
+      {
+        "operation_name": "Нугалаа",
+        "qty": 2000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Нугалах"
+      },
+      {
+        "operation_name": "Цуглуулга",
+        "qty": 1000,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Хавсаргах"
+      },
+      {
+        "operation_name": "Огтлоо (Том)",
+        "qty": 1,
+        "unit_cost": 0,
+        "is_pricing": false,
+        "production_stage": "POST_PRESS",
+        "is_manual": false,
+        "notes": "Огтлох"
+      }
+    ],
+    "specifications": {
+      "cover_color": "4+4",
+      "inner_color": "4+4",
+      "total_pages": 8
+    }
+  }
+}
 ];
 
 export async function seedTemplates() {

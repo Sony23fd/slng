@@ -107,36 +107,351 @@ async function main() {
   }
   console.log('Cover rules seeded successfully!');
 
-  // Product Categories Seeding
+  // Product Categories Seeding (27 Standard Categories)
   const productCategories = [
-    { name: 'Ном', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: true, waste_qty: 100 },
-    { name: 'Сэтгүүл', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
-    { name: 'Брошур', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100 },
-    { name: 'Календарь', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: false, has_pages: true, has_bookmark: false, waste_qty: 50 },
-    { name: 'Тор', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Хайрцаг', calc_mode: 'PACKAGING_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Түргэн хэвлэл', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Флаер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Нэрийн хуудас', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Урилга', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Меню', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 50 },
-    { name: 'Билет', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Албан бланк', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 0 },
-    { name: 'Дугтуй', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 },
-    { name: 'Хавтас', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 50 },
-    { name: 'Стикер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 },
-    { name: 'Дэвтэр', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 50 },
-    { name: 'Сертификат', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 10 },
-    { name: 'Постер', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 10 },
-    { name: 'Шошго', calc_mode: 'STANDARD_MODE', has_cover: false, has_inner: true, has_binding: false, has_pages: false, has_bookmark: false, waste_qty: 20 }
+    { 
+      name: 'Танилцуулга', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 100,
+      default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Шохойтой цаас 157гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+    },
+    { 
+      name: 'Бланк', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Даралт', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 20,
+      default_materials: ['Мат цаас 300гр A0 (889x1194)'],
+      default_operations: ['Клише (Алтлаг)', 'Эмбосс', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Зурагт хуудас', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Шохойтой цаас 157гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Том)']
+    },
+    { 
+      name: 'Календар', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Мат цаас 250гр A0 (889x1194)', 'Картон 2 A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Спираль дарагч', 'Огтлоо (Дунд)']
+    },
+    { 
+      name: 'Ном хар', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: true, 
+      waste_qty: 100,
+      default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)']
+    },
+    { 
+      name: 'Ном өнгөт', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: true, 
+      waste_qty: 100,
+      default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Шохойтой цаас 128гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)']
+    },
+    { 
+      name: 'Сонин', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 100,
+      default_materials: ['Офсет цаас 70гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Огтлоо (Том)']
+    },
+    { 
+      name: 'Сэтгүүл', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 100,
+      default_materials: ['Шохойтой цаас 200гр A0 (889x1194)', 'Шохойтой цаас 105гр A0 (889x1194)', 'Бүрэлт (Гялгар)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+    },
+    { 
+      name: 'Түргэн хэвлэл Konica', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Шохойтой цаас 250гр A0 (889x1194)'],
+      default_operations: ['Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Тор', 
+      calc_mode: 'PACKAGING_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Шохойтой цаас 250гр B1 (787x1092)', 'Бүрэлт (Матт)', 'Оосор (Торны оосор)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A2)', 'Бөгж цоологч', 'Гараар хийх ажил']
+    },
+    { 
+      name: 'Хортой маягт', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 20,
+      default_materials: ['Хортой цаас I өнгө 48гр Ao (889x1194)', 'Хортой цаас II өнгө/шар 50гр Ao (889x1194)'],
+      default_operations: ['Хэвлэх (1 өнгө)', 'Нууцлал наах', 'Наалт', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Шошго', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 20,
+      default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A3)', 'Бөгж цоологч', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Дэвтэр', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)', 'Бүрэлт (Гялгар)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Нугалаа', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+    },
+    { 
+      name: 'EPSON', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Шохойтой цаас 200гр A0 (889x1194)'],
+      default_operations: ['Огтлоо (Том)']
+    },
+    { 
+      name: 'Маягт', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (1 өнгө)', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Хавтас', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A2)', 'Гараар хийх ажил', 'Наалт']
+    },
+    { 
+      name: 'Дугтуй', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 20,
+      default_materials: ['Офсет цаас 100гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A3)', 'Гараар хийх ажил', 'Наалт']
+    },
+    { 
+      name: 'Урилга', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Мат цаас 250гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Клише (Алтлаг)', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Меню', 
+      calc_mode: 'BOOK_MODE', 
+      has_cover: true, 
+      has_inner: true, 
+      has_binding: true, 
+      has_pages: true, 
+      has_bookmark: false, 
+      waste_qty: 50,
+      default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Спираль дарагч', 'Огтлоо (Дунд)']
+    },
+    { 
+      name: 'Нэрийн хуудас', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Дахин хэвлэлт', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Промо', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: [],
+      default_operations: ['Гараар хийх ажил']
+    },
+    { 
+      name: 'Билет', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Нууцлал наах', 'Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Бал', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: [],
+      default_operations: ['Гараар хийх ажил']
+    },
+    { 
+      name: 'Шуурхай принт', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
+      default_operations: ['Огтлоо (Жижиг)']
+    },
+    { 
+      name: 'Бусад', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 0,
+      default_materials: [],
+      default_operations: ['Огтлоо (Жижиг)']
+    }
   ];
 
   for (const c of productCategories) {
     // @ts-ignore
     await prisma.product_category.upsert({
       where: { name: c.name },
-      update: {},
+      update: c,
       create: c,
+    });
+
+    await prisma.constant.upsert({
+      where: { id: -1 }, // fallback dummy
+      create: { type: 'CATEGORY', value: c.name },
+      update: {}
+    }).catch(async () => {
+      const exists = await prisma.constant.findFirst({ where: { type: 'CATEGORY', value: c.name } });
+      if (!exists) {
+        await prisma.constant.create({ data: { type: 'CATEGORY', value: c.name } });
+      }
     });
   }
   console.log('Product categories seeded successfully!');
