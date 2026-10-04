@@ -95,6 +95,7 @@ const operationsData: OpSeedData[] = [
   
   { name: 'Хэвлэх (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 1 өнгө', cost: 10, stage: 'PRINTING', is_pricing: true },
   { name: 'Хэвлэх (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 2 өнгө', cost: 20, stage: 'PRINTING', is_pricing: true },
+  { name: 'Хэвлэх (3 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 3 өнгө', cost: 30, stage: 'PRINTING', is_pricing: true },
   { name: 'Хэвлэх (4 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 4 өнгө', cost: 40, stage: 'PRINTING', is_pricing: true },
   { name: 'Хэвлэх (5 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 5 өнгө', cost: 50, stage: 'PRINTING', is_pricing: true },
 
