@@ -355,7 +355,7 @@ export const downloadMonthlyReportPptx = async (req: Request, res: Response) => 
     const data = await aggregateMonthlyReport(year, month);
 
     const pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_16x9';
+    pptx.layout = 'LAYOUT_WIDE';
     pptx.author = 'Selenge Press LLC';
     pptx.company = 'Сэлэнгэ Пресс ХХК';
     pptx.title = `${year} оны ${month}-р сарын Борлуулалтын тайлан`;
@@ -1546,7 +1546,7 @@ export const downloadSalespersonReportPptx = async (req: Request, res: Response)
     const periodLabel = `${startDateStr} - ${endDateStr}`;
 
     const pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_16x9';
+    pptx.layout = 'LAYOUT_WIDE';
     pptx.author = 'Selenge Press LLC';
     pptx.company = 'Сэлэнгэ Пресс ХХК';
     pptx.title = `Борлуулалтын багийн тайлан танилцуулга (${periodLabel})`;

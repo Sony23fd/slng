@@ -129,7 +129,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
   const periodLabel = `${startDateStr} - ${endDateStr}`;
 
   const pptx = new PptxGenJS();
-  pptx.layout = 'LAYOUT_16x9';
+  pptx.layout = 'LAYOUT_WIDE';
   pptx.author = 'Selenge Press LLC';
   pptx.company = 'Сэлэнгэ Пресс ХХК';
   pptx.title = `Борлуулалтын багийн тайлан танилцуулга (${periodLabel})`;
@@ -156,7 +156,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     slide.addText(title, {
       x: 0.6,
       y: 0.4,
-      w: 9.5,
+      w: 7.8,
       h: 0.5,
       fontSize: 20,
       fontFace: 'Arial',
@@ -166,7 +166,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     slide.addText(subtitle, {
       x: 0.6,
       y: 0.85,
-      w: 9.5,
+      w: 7.8,
       h: 0.35,
       fontSize: 11,
       fontFace: 'Arial',
@@ -175,7 +175,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     slide.addText('СЭЛЭНГЭ ПРЕСС | БОРЛУУЛАЛТЫН АЛБА', {
       x: 8.5,
       y: 0.4,
-      w: 4.2,
+      w: 4.23,
       h: 0.4,
       fontSize: 10,
       fontFace: 'Arial',
