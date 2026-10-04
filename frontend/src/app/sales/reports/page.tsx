@@ -254,46 +254,62 @@ export default function SalesReportPage() {
     document.body.removeChild(link);
   };
 
-  // Download Meeting PPTX Presentation
+  // Download Meeting PPTX Presentation (Client-side instant generation with server fallback)
   const handleDownloadPptx = async () => {
-    if (!token) return;
+    if (!report) {
+      alert('Тайлангийн өгөгдөл ачааллаж дуусаагүй байна.');
+      return;
+    }
     setIsDownloadingPptx(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const params = new URLSearchParams();
-      params.append('period', periodPreset);
-      if (periodPreset === 'custom') {
-        params.append('startDate', startDate);
-        params.append('endDate', endDate);
-      }
-      if (selectedSalesPersonId && selectedSalesPersonId !== 'ALL') {
-        params.append('salesPersonId', selectedSalesPersonId);
-      }
-
-      const res = await fetch(`${apiUrl}/api/reports/sales/pptx?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // 1. Direct client-side generation (Instant, offline-ready, 0ms network latency, never 404s)
+      const { generateSalesReportPptx } = await import('../../../utils/salesReportPptx');
+      await generateSalesReportPptx(report);
+    } catch (clientErr: any) {
+      console.warn('Client PPTX generation failed, falling back to server API:', clientErr);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const params = new URLSearchParams();
+        params.append('period', periodPreset);
+        if (periodPreset === 'custom') {
+          params.append('startDate', startDate);
+          params.append('endDate', endDate);
         }
-      });
+        if (selectedSalesPersonId && selectedSalesPersonId !== 'ALL') {
+          params.append('salesPersonId', selectedSalesPersonId);
+        }
 
-      if (!res.ok) {
-        throw new Error('PPTX тайлан татахад алдаа гарлаа');
+        const res = await fetch(`${apiUrl}/api/reports/sales/pptx?${params.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) {
+          let msg = `Серверээс PPTX татахад алдаа гарлаа (${res.status})`;
+          try {
+            const errJson = await res.json();
+            if (errJson?.error) msg = errJson.error;
+            if (errJson?.details) msg += `: ${errJson.details}`;
+          } catch {}
+          throw new Error(msg);
+        }
+
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        const mgrName = report?.isTeamView ? 'Bagin_tailan' : (report?.targetUser?.name || 'sales');
+        const sDate = report?.period?.startDate ? report.period.startDate.split('T')[0] : 'start';
+        const eDate = report?.period?.endDate ? report.period.endDate.split('T')[0] : 'end';
+        a.download = `Borluulaltiin_${mgrName}_${sDate}_${eDate}.pptx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+      } catch (serverErr: any) {
+        alert(serverErr.message || 'PPTX татахад алдаа гарлаа');
       }
-
-      const blob = await res.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      const mgrName = report?.isTeamView ? 'Bagiin_tailan' : (report?.targetUser?.name || 'sales');
-      const sDate = report?.period?.startDate ? report.period.startDate.split('T')[0] : 'start';
-      const eDate = report?.period?.endDate ? report.period.endDate.split('T')[0] : 'end';
-      a.download = `Borluulaltiin_${mgrName}_${sDate}_${eDate}.pptx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err: any) {
-      alert(err.message || 'PPTX татахад алдаа гарлаа');
     } finally {
       setIsDownloadingPptx(false);
     }
