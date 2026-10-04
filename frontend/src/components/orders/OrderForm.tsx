@@ -1481,7 +1481,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const calcPlates = (colorStr: string, pressSheet: number, divisions: number, isCover: boolean = false) => {
       if (!colorStr || !pressSheet) return 0;
       const match = colorStr.match(/(\d+)\s*\+\s*(\d+)/);
-      if (!match) return 0;
+      if (!match) {
+        const lower = colorStr.toLowerCase().trim();
+        if (['алтлаг', 'бронз', 'мөнгөлөг'].includes(lower)) {
+          const fullSheets = Math.floor(pressSheet);
+          const fraction = pressSheet - fullSheets;
+          const totalSetups = fullSheets + (fraction > 0 ? 1 : 0);
+          return totalSetups * 1;
+        }
+        return 0;
+      }
       const front = parseInt(match[1], 10) || 0;
       const back = parseInt(match[2], 10) || 0;
       const platesPerFull = front + back;
@@ -1590,9 +1599,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         // 1-color (1+1, 1+0) or small format size (65*55, 65x43) -> Ryobi press: 65x55 plate (6,800₮)
         // Multi-color (4+4, 4+0, etc.) on B-size -> Komori B-format: 74.5*60.5 plate (8,800₮)
         // Multi-color on A-size or others -> Komori A-format: 76*60.5 plate (8,800₮)
-        const is1Color = colorToUse === '1+1' || colorToUse === '1+0' || colorToUse === '0+1';
+        const is1Color = colorToUse === '1+1' || colorToUse === '1+0' || colorToUse === '0+1' || ['алтлаг', 'бронз', 'мөнгөлөг'].includes(colorToUse.toLowerCase().trim());
         const isSmallFormatSize = printSize === '65*55' || printSize === '65x55' || printSize === '65x43' || printSize === '65*43';
-        const isSmallPlate = is1Color || (isSmallFormatSize && !colorToUse?.startsWith('4+'));
+        const isSmallPlate = is1Color || (isSmallFormatSize && !colorToUse?.startsWith('4+') && !colorToUse?.startsWith('5+') && !colorToUse?.startsWith('3+'));
 
         const defaultSize: '65x55' | '74.5x60.5' | '76x60.5' = isSmallPlate
           ? '65x55'
@@ -3556,23 +3565,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="">Сонгох...</option>
                 {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
                   groupedConstants['COVER_COLOR'].map((c: any) => (
-                    <option key={c.id} value={c.value}>
-                      {c.value} {c.description ? `(${c.description})` : ''}
+                    <option key={c.id || c.value} value={c.value}>
+                      {c.value}
                     </option>
                   ))
                 ) : (
                   [
-                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
-                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
-                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
-                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
-                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
-                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
-                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
-                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
-                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт)' },
-                  ].map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                    '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
+                    'алтлаг', 'бронз', 'мөнгөлөг'
+                  ].map(v => (
+                    <option key={v} value={v}>{v}</option>
                   ))
                 )}
               </select>
@@ -3583,23 +3586,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="">Сонгох...</option>
                 {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
                   groupedConstants['INNER_COLOR'].map((c: any) => (
-                    <option key={c.id} value={c.value}>
-                      {c.value} {c.description ? `(${c.description})` : ''}
+                    <option key={c.id || c.value} value={c.value}>
+                      {c.value}
                     </option>
                   ))
                 ) : (
                   [
-                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт (Хар цагаан))' },
-                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
-                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
-                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
-                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
-                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
-                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
-                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
-                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
-                  ].map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                    '4+0', '4+1', '4+2', '4+4'
+                  ].map(v => (
+                    <option key={v} value={v}>{v}</option>
                   ))
                 )}
                 <option value="Custom (Тусгай)">Custom (Тусгай)</option>
@@ -3916,9 +3912,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
                                           const curPrintSize = formValues.materials?.[index]?.print_size || 'A2';
                                           const curColor = formValues.inner_color || formValues.cover_color || '4+0';
-                                          const is1Col = curColor === '1+1' || curColor === '1+0' || curColor === '0+1';
+                                          const is1Col = curColor === '1+1' || curColor === '1+0' || curColor === '0+1' || ['алтлаг', 'бронз', 'мөнгөлөг'].includes(curColor.toLowerCase().trim());
                                           const isSmSize = curPrintSize === '65*55' || curPrintSize === '65x55' || curPrintSize === '65x43' || curPrintSize === '65*43';
-                                          const isSm = is1Col || (isSmSize && !curColor?.startsWith('4+'));
+                                          const isSm = is1Col || (isSmSize && !curColor?.startsWith('4+') && !curColor?.startsWith('5+') && !curColor?.startsWith('3+'));
                                           const explicitSize = val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : ''));
                                           const plateFormat = explicitSize || (isSm ? '65x55' : (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5'));
                                           const ctpPrice = plateFormat === '65x55' ? ctpPriceSmall : ctpPriceLarge;

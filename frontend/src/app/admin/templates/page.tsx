@@ -140,23 +140,17 @@ export default function TemplatesPage() {
                 <option value="">Сонгох...</option>
                 {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
                   groupedConstants['COVER_COLOR'].map((c: any) => (
-                    <option key={c.id} value={c.value}>
-                      {c.value} {c.description ? `(${c.description})` : ''}
+                    <option key={c.id || c.value} value={c.value}>
+                      {c.value}
                     </option>
                   ))
                 ) : (
                   [
-                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
-                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
-                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
-                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
-                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
-                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
-                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
-                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
-                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт)' },
-                  ].map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                    '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
+                    'алтлаг', 'бронз', 'мөнгөлөг'
+                  ].map(v => (
+                    <option key={v} value={v}>{v}</option>
                   ))
                 )}
               </select>
@@ -167,23 +161,16 @@ export default function TemplatesPage() {
                 <option value="">Сонгох...</option>
                 {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
                   groupedConstants['INNER_COLOR'].map((c: any) => (
-                    <option key={c.id} value={c.value}>
-                      {c.value} {c.description ? `(${c.description})` : ''}
+                    <option key={c.id || c.value} value={c.value}>
+                      {c.value}
                     </option>
                   ))
                 ) : (
                   [
-                    { value: '1+1', label: '1+1 (Хоёр тал 1 өнгөт (Хар цагаан))' },
-                    { value: '1+0', label: '1+0 (Нэг тал 1 өнгөт)' },
-                    { value: '2+2', label: '2+2 (Хоёр тал 2 өнгөт)' },
-                    { value: '2+1', label: '2+1 (Нэг тал 2 өнгөт + 1 өнгө)' },
-                    { value: '2+0', label: '2+0 (Нэг тал 2 өнгөт (Өнгөтэй өнгөгүй))' },
-                    { value: '4+4', label: '4+4 (Хоёр тал өнгөт)' },
-                    { value: '4+2', label: '4+2 (Нэг тал өнгөт + 2 өнгө)' },
-                    { value: '4+1', label: '4+1 (Нэг тал өнгөт + 1 өнгө)' },
-                    { value: '4+0', label: '4+0 (Нэг тал өнгөт)' },
-                  ].map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                    '4+0', '4+1', '4+2', '4+4'
+                  ].map(v => (
+                    <option key={v} value={v}>{v}</option>
                   ))
                 )}
               </select>
