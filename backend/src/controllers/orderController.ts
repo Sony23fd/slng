@@ -177,9 +177,38 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
+export const formatOrderWithPayment = (order: any) => {
+  if (!order) return order;
+  const finalPrice = Math.round(Number(order.final_price) || 0);
+  let paidAmount = 0;
+  if (Array.isArray(order.payments) && order.payments.length > 0) {
+    paidAmount = Math.round(order.payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0));
+  }
+  const remainingBalance = Math.max(0, finalPrice - paidAmount);
+  let paymentStatus = 'UNPAID';
+  if (paidAmount >= finalPrice && finalPrice > 0) {
+    paymentStatus = 'PAID';
+  } else if (paidAmount > 0) {
+    paymentStatus = 'PARTIAL';
+  } else {
+    paymentStatus = 'UNPAID';
+  }
+  const paidPercent = finalPrice > 0 ? Math.min(100, Math.round((paidAmount / finalPrice) * 100)) : 0;
+
+  return {
+    ...order,
+    total_price: finalPrice, // for backward compatibility
+    final_price: finalPrice,
+    paid_amount: paidAmount,
+    remaining_balance: remainingBalance,
+    payment_status: paymentStatus,
+    paid_percent: paidPercent,
+  };
+};
+
 export const updateOrderStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { new_status, status, changed_by, notes } = req.body;
+  const { new_status, status, changed_by, notes, delivery_notes, force_delivery } = req.body;
 
   try {
     const orderId = parseInt(id as string);
@@ -201,9 +230,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       userId = 1; // Fallback to ID 1
     }
 
-    // Fetch the current order to get the old status
+    // Fetch the current order to get the old status and payments
     const order = await prisma.order.findUnique({
-      where: { id: orderId }
+      where: { id: orderId },
+      include: { payments: true }
     });
 
     if (!order) {
@@ -219,6 +249,25 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     if ((old_status === 'Бэлэн болсон' || old_status === 'Бэлэн') && targetStatus !== 'Хүлээлгэн өгсөн' && targetStatus !== 'Олгосон' && targetStatus !== 'Цуцлагдсан') {
       return res.status(400).json({ error: 'Бэлэн болсон захиалгыг буцааж үйлдвэрлэл рүү шилжүүлэх боломжгүй.' });
+    }
+
+    // Delivery Guard: Check balance when delivering
+    const paidAmount = (order.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const finalPrice = Math.round(Number(order.final_price) || 0);
+    const remainingBalance = Math.max(0, finalPrice - paidAmount);
+
+    if (['Хүлээлгэн өгсөн', 'Олгосон'].includes(targetStatus)) {
+      const finalNote = delivery_notes || notes;
+      if (remainingBalance > 0 && !force_delivery && !finalNote) {
+        return res.status(400).json({
+          error: 'Үлдэгдэл төлбөр дутуу байна',
+          has_remaining_balance: true,
+          remaining_balance: remainingBalance,
+          paid_amount: paidAmount,
+          final_price: finalPrice,
+          message: `Захиалга дээр ${remainingBalance.toLocaleString()} ₮ үлдэгдэл төлбөр байна. Төлбөрийг бүртгэх эсвэл зөвшөөрлийн тайлбартайгаар хүлээлгэн өгнө үү.`
+        });
+      }
     }
 
     let order_number = order.order_number;
@@ -250,6 +299,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       };
     }
 
+    const logNote = (delivery_notes && remainingBalance > 0)
+      ? `Үлдэгдэлтэй хүлээлгэн өгөв: ${delivery_notes}`
+      : (notes || null);
+
     // Use Prisma Transaction
     const result = await prisma.$transaction([
       prisma.order.update({
@@ -262,12 +315,60 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
           changed_by: userId,
           old_status,
           new_status: targetStatus,
-          notes: notes || null
+          notes: logNote
         }
       })
     ]);
 
-    res.status(200).json({ message: 'Order status updated successfully', order: result[0], log: result[1] });
+    // Send notifications if newly ready
+    if (['Бэлэн болсон', 'Бэлэн'].includes(targetStatus) && !['Бэлэн болсон', 'Бэлэн'].includes(old_status)) {
+      if (remainingBalance > 0) {
+        const notifications: any[] = [];
+        if (order.sales_person_id) {
+          notifications.push({
+            user_id: order.sales_person_id,
+            order_id: orderId,
+            title: '🚨 Захиалга бэлэн боллоо (Үлдэгдэлтэй)',
+            message: `Захиалга #${order.order_number || order.id} (${order.product_name}) бэлэн болсон боловч ${remainingBalance.toLocaleString()} ₮ үлдэгдэлтэй байна. Бараа олгохоос өмнө төлбөрийг шалгана уу!`
+          });
+        }
+        const financeAndAdmins = await prisma.user.findMany({
+          where: { role: { in: ['FINANCE', 'ADMIN'] } }
+        });
+        for (const u of financeAndAdmins) {
+          if (u.id !== order.sales_person_id) {
+            notifications.push({
+              user_id: u.id,
+              order_id: orderId,
+              title: '📋 Үлдэгдэл төлбөрийн сануулга',
+              message: `Захиалга #${order.order_number || order.id} бэлэн боллоо. Үлдэгдэл төлбөр: ${remainingBalance.toLocaleString()} ₮ (Борлуулагч: ${order.sales_person_name || 'Борлуулагч'}).`
+            });
+          }
+        }
+        if (notifications.length > 0) {
+          await prisma.notification.createMany({ data: notifications });
+        }
+      } else {
+        const usersToNotify = await prisma.user.findMany({
+          where: { role: { in: ['SALES', 'ADMIN'] } }
+        });
+        const notifications = usersToNotify.map(u => ({
+          user_id: u.id,
+          order_id: orderId,
+          title: 'Захиалга бэлэн боллоо',
+          message: `Захиалга #${order.order_number || order.id} (${order.product_name}) 100% бэлэн боллоо. Төлбөр бүрэн төлөгдсөн.`
+        }));
+        if (notifications.length > 0) {
+          await prisma.notification.createMany({ data: notifications });
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: 'Order status updated successfully',
+      order: formatOrderWithPayment(result[0]),
+      log: result[1]
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to update order status' });
@@ -331,8 +432,10 @@ export const getAllOrders = async (req: Request, res: Response) => {
       materials: true,
       operations: true,
       outsourcedJobs: true,
+      payments: { select: { id: true, amount: true, method: true, date: true, notes: true } }
     } : {
-      user: { select: { id: true, name: true, phone: true } }
+      user: { select: { id: true, name: true, phone: true } },
+      payments: { select: { id: true, amount: true, method: true, date: true, notes: true } }
     };
 
     if (kanbanLimit) {
@@ -352,7 +455,8 @@ export const getAllOrders = async (req: Request, res: Response) => {
         include: orderInclude
       });
       
-      return res.json({ data: orders, meta: { total: orders.length, page: 1, limit: 200, totalPages: 1 } });
+      const formatted = orders.map(formatOrderWithPayment);
+      return res.json({ data: formatted, meta: { total: formatted.length, page: 1, limit: 200, totalPages: 1 } });
     }
 
     // Parallel count and findMany for lightning-fast response
@@ -367,8 +471,18 @@ export const getAllOrders = async (req: Request, res: Response) => {
       })
     ]);
     
+    let formattedOrders = orders.map(formatOrderWithPayment);
+    const paymentFilter = req.query.paymentFilter as string;
+    if (paymentFilter === 'WITH_BALANCE') {
+      formattedOrders = formattedOrders.filter(o => o.remaining_balance > 0);
+    } else if (paymentFilter === 'PAID') {
+      formattedOrders = formattedOrders.filter(o => o.payment_status === 'PAID');
+    } else if (paymentFilter === 'READY_WITH_BALANCE') {
+      formattedOrders = formattedOrders.filter(o => (o.current_status === 'Бэлэн болсон' || o.current_status === 'Бэлэн') && o.remaining_balance > 0);
+    }
+
     res.json({
-      data: orders,
+      data: formattedOrders,
       meta: {
         total,
         page,
@@ -388,7 +502,10 @@ export const updateOrderStages = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id || 1;
   try {
     const orderId = parseInt(id as string);
-    const existingOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    const existingOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payments: true }
+    });
     if (!existingOrder) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -441,34 +558,65 @@ export const updateOrderStages = async (req: Request, res: Response) => {
       ]);
 
       if (autoCompleted) {
-        // Send notification to Sales and Admins only if not already sent
+        const paidAmount = (existingOrder.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const finalPrice = Math.round(Number(existingOrder.final_price) || 0);
+        const remainingBalance = Math.max(0, finalPrice - paidAmount);
+
+        // Send notification to Sales and Admins/Finance only if not already sent
         const existingNotif = await prisma.notification.findFirst({
-          where: { order_id: orderId, title: 'Захиалга бэлэн боллоо' }
+          where: { order_id: orderId, title: { in: ['Захиалга бэлэн боллоо', '🚨 Захиалга бэлэн боллоо (Үлдэгдэлтэй)'] } }
         });
 
         if (!existingNotif) {
-          const usersToNotify = await prisma.user.findMany({
-            where: { role: { in: ['SALES', 'ADMIN'] } }
-          });
-          const notifications = usersToNotify.map(u => ({
-            user_id: u.id,
-            order_id: orderId,
-            title: 'Захиалга бэлэн боллоо',
-            message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) 100% үйлдвэрлэгдэж дууслаа.`,
-          }));
+          const notifications: any[] = [];
+          if (remainingBalance > 0) {
+            if (existingOrder.sales_person_id) {
+              notifications.push({
+                user_id: existingOrder.sales_person_id,
+                order_id: orderId,
+                title: '🚨 Захиалга бэлэн боллоо (Үлдэгдэлтэй)',
+                message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) үйлдвэрлэгдэж дууссан боловч ${remainingBalance.toLocaleString()} ₮ үлдэгдэлтэй байна. Бараа олгохоос өмнө төлбөрийг шалгана уу!`
+              });
+            }
+            const financeAndAdmins = await prisma.user.findMany({
+              where: { role: { in: ['FINANCE', 'ADMIN'] } }
+            });
+            for (const u of financeAndAdmins) {
+              if (u.id !== existingOrder.sales_person_id) {
+                notifications.push({
+                  user_id: u.id,
+                  order_id: orderId,
+                  title: '📋 Үлдэгдэл төлбөрийн сануулга',
+                  message: `Захиалга #${existingOrder.order_number || existingOrder.id} бэлэн боллоо. Үлдэгдэл төлбөр: ${remainingBalance.toLocaleString()} ₮ (Борлуулагч: ${existingOrder.sales_person_name || 'Борлуулагч'}).`
+                });
+              }
+            }
+          } else {
+            const usersToNotify = await prisma.user.findMany({
+              where: { role: { in: ['SALES', 'ADMIN'] } }
+            });
+            for (const u of usersToNotify) {
+              notifications.push({
+                user_id: u.id,
+                order_id: orderId,
+                title: 'Захиалга бэлэн боллоо',
+                message: `Захиалга #${existingOrder.order_number || existingOrder.id} (${existingOrder.product_name}) 100% үйлдвэрлэгдэж дууслаа. Төлбөр бүрэн төлөгдсөн.`
+              });
+            }
+          }
           if (notifications.length > 0) {
             await prisma.notification.createMany({ data: notifications });
           }
         }
       }
 
-      return res.json({ message: 'Production stages updated successfully', order: result[0], autoCompleted });
+      return res.json({ message: 'Production stages updated successfully', order: formatOrderWithPayment(result[0]), autoCompleted });
     } else {
       const updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: updateData
       });
-      return res.json({ message: 'Production stages updated successfully', order: updatedOrder, autoCompleted: false });
+      return res.json({ message: 'Production stages updated successfully', order: formatOrderWithPayment(updatedOrder), autoCompleted: false });
     }
   } catch (error) {
     console.error(error);
@@ -481,9 +629,12 @@ export const getMyOrders = async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
     const orders = await prisma.order.findMany({
       where: { sales_person_id: userId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      include: {
+        payments: { select: { id: true, amount: true, method: true, date: true, notes: true } }
+      }
     });
-    res.json(orders);
+    res.json(orders.map(formatOrderWithPayment));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
@@ -504,7 +655,7 @@ export const getOrderById = async (req: Request, res: Response) => {
       }
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    res.json(order);
+    res.json(formatOrderWithPayment(order));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch order' });
   }

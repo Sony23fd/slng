@@ -82,6 +82,7 @@ interface OrderFormValues {
   payment_method_2: string;
   payment_percent_2: number;
   has_vat: boolean;
+  manual_unit_price?: number | null;
   finance_notes: string;
   status: string;
   next_process: string;
@@ -870,7 +871,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       operations: [],
       outsourced: [],
       profit_margin: 2.3, payment_method_1: '', payment_percent_1: 50, payment_method_2: '', payment_percent_2: 50,
-      has_vat: false, finance_notes: '', status: 'Санхүү хүлээгдэж буй', next_process: ''
+      has_vat: false, manual_unit_price: initialData?.manual_unit_price || null, finance_notes: '', status: 'Санхүү хүлээгдэж буй', next_process: ''
     }
   });
 
@@ -1906,6 +1907,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     has_vat: formValues.has_vat || false,
     print_cost: Number(formValues.print_cost) || 0,
     design_cost: Number(formValues.design_cost) || 0,
+    manual_unit_price: (formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null && formValues.manual_unit_price !== '' as any) 
+      ? Number(formValues.manual_unit_price) 
+      : null,
   };
 
   const prices = usePriceCalculator(pricingParams);
@@ -6094,14 +6098,73 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 </div>
               </div>
 
-              <div className="row-line"><span className="l">Нэгжийн өртөг:</span><span className="v">{prices.unitCost.toLocaleString()} ₮</span></div>
-              <div className="erp-field-inline">
-                <label>Ашиг</label>
-                <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
+              <div className="row-line">
+                <span className="l">Нэгжийн өртөг:</span>
+                <span className="v" style={{ fontWeight: 700 }}>{prices.unitCost.toLocaleString()} ₮</span>
               </div>
               <div className="erp-field-inline">
-                <label>Нэгжийн үнэ (ашигтай)</label>
-                <div className="erp-mini-input"><input type="text" value={`${prices.unitPrice.toLocaleString()} ₮`} readOnly /></div>
+                <label>Ашиг (үржигч)</label>
+                <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
+              </div>
+              <div className="erp-field-inline" style={{ alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Нэгжийн үнэ</span>
+                    {prices.isManualUnitPrice ? (
+                      <span style={{ fontSize: '10px', background: '#fef3c7', color: '#92400e', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                        ✏️ Гараар
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                        ⚡ Автомат
+                      </span>
+                    )}
+                  </label>
+                  {prices.isManualUnitPrice && (
+                    <button
+                      type="button"
+                      onClick={() => setValue("manual_unit_price", null as any)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        color: '#2563eb',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        textDecoration: 'underline'
+                      }}
+                      title="Автомат томьёоны үнэ рүү буцаах"
+                    >
+                      🔄 Автомат руу буцах ({prices.autoUnitPrice.toLocaleString()} ₮)
+                    </button>
+                  )}
+                </div>
+                <div className="erp-mini-input" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    placeholder={String(prices.autoUnitPrice)}
+                    value={formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null ? formValues.manual_unit_price : ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setValue("manual_unit_price", null as any);
+                      } else {
+                        setValue("manual_unit_price", Math.round(Number(val)));
+                      }
+                    }}
+                    style={{
+                      fontWeight: 700,
+                      color: prices.isManualUnitPrice ? '#b45309' : '#0f172a',
+                      background: prices.isManualUnitPrice ? '#fffbeb' : '#ffffff',
+                      borderColor: prices.isManualUnitPrice ? '#f59e0b' : '#cbd5e1'
+                    }}
+                    title={prices.isManualUnitPrice ? "Гараар оруулсан нэгж үнэ" : `Автомат тооцоолсон нэгж үнэ: ${prices.autoUnitPrice} ₮`}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>₮</span>
+                </div>
               </div>
 
               {/* НӨАТ тооцох switch */}
@@ -6127,21 +6190,170 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 </div>
               )}
 
-              <div className="summary-sub">Төлбөрийн хэлбэр & хувь</div>
-              <div className="pay-row">
-                <select {...register("payment_method_1")} style={{flex: 1}}>
-                  <option value="Урьдчилгаа">Урьдчилгаа</option>
-                  <option value="Бэлэн">Бэлэн</option>
-                  <option value="Дансаар">Дансаар</option>
-                </select>
-                <div style={{width:'64px'}}><input type="number" step="any" className="pct erp-mono" {...register("payment_percent_1")} style={{width: '100%', padding: '7px 9px'}} /></div>
+              <div className="summary-sub" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span>💳 Төлбөрийн нөхцөл & Хуваарилалт</span>
+                <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 'normal' }}>
+                  Нийт: <strong style={{ color: 'var(--text-main)' }}>{prices.finalPrice.toLocaleString()} ₮</strong>
+                </span>
               </div>
-              <div className="pay-bar"><div className="a" style={{width: `${formValues.payment_percent_1 || 0}%`}}></div><div className="b" style={{width: `${100 - (formValues.payment_percent_1 || 0)}%`}}></div></div>
-              {formValues.payment_percent_1 > 0 && (
-                <div style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: 600, marginTop: '6px', textAlign: 'right' }}>
-                  Урьдчилгаа дүн: {((prices.finalPrice * (formValues.payment_percent_1 || 0)) / 100).toLocaleString()} ₮
-                </div>
-              )}
+
+              {/* Түргэн сонголтын товчнууд (Presets) */}
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+                {[
+                  { label: '50% (Стандарт)', val: 50 },
+                  { label: '100% (Бүрэн)', val: 100 },
+                  { label: '70%', val: 70 },
+                  { label: '30%', val: 30 },
+                  { label: '0% (Зээл)', val: 0 }
+                ].map(p => {
+                  const isActive = Number(formValues.payment_percent_1) === p.val;
+                  return (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() => {
+                        setValue('payment_percent_1', p.val);
+                        setValue('payment_percent_2', 100 - p.val);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '4px 2px',
+                        fontSize: '10px',
+                        borderRadius: '6px',
+                        border: isActive ? '1px solid #10b981' : '1px solid var(--line)',
+                        background: isActive ? '#ecfdf5' : 'var(--paper)',
+                        color: isActive ? '#065f46' : 'var(--text-main)',
+                        fontWeight: isActive ? 700 : 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Төлбөрийн визуал прогресс бар & 2 Картын задаргаа */}
+              {(() => {
+                const p1 = Math.min(100, Math.max(0, Number(formValues.payment_percent_1 ?? 50)));
+                const p2 = Math.max(0, 100 - p1);
+                const advanceAmt = Math.round((prices.finalPrice * p1) / 100);
+                const remainingAmt = Math.max(0, prices.finalPrice - advanceAmt);
+
+                return (
+                  <div>
+                    <div style={{
+                      display: 'flex',
+                      height: '8px',
+                      borderRadius: '999px',
+                      overflow: 'hidden',
+                      background: '#e2e8f0',
+                      marginBottom: '10px'
+                    }}>
+                      <div style={{
+                        width: `${p1}%`,
+                        background: '#10b981',
+                        transition: 'width 0.25s ease'
+                      }} title={`Урьдчилгаа: ${p1}% (${advanceAmt.toLocaleString()} ₮)`} />
+                      <div style={{
+                        width: `${p2}%`,
+                        background: p2 > 0 ? '#f59e0b' : '#10b981',
+                        transition: 'width 0.25s ease'
+                      }} title={`Үлдэгдэл: ${p2}% (${remainingAmt.toLocaleString()} ₮)`} />
+                    </div>
+
+                    {/* 2 Картын харьцуулалт: Урьдчилгаа ба Үлдэгдэл */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                      {/* Урьдчилгаа картын блок */}
+                      <div style={{
+                        background: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#166534' }}>
+                            🟢 1. Урьдчилгаа
+                          </span>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#166534' }}>
+                            {p1}%
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          <select
+                            {...register("payment_method_1")}
+                            style={{ flex: 1, padding: '4px', fontSize: '11px', borderRadius: '4px', border: '1px solid #86efac', background: '#fff' }}
+                          >
+                            <option value="Дансаар">Дансаар</option>
+                            <option value="Бэлэн">Бэлэн</option>
+                            <option value="QPay">QPay</option>
+                            <option value="Картаар">Картаар</option>
+                            <option value="Гэрээгээр">Гэрээгээр</option>
+                          </select>
+                          <input
+                            type="number"
+                            step="any"
+                            value={formValues.payment_percent_1 ?? 50}
+                            onChange={(e) => {
+                              const val = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                              setValue('payment_percent_1', val);
+                              setValue('payment_percent_2', 100 - val);
+                            }}
+                            style={{ width: '44px', padding: '4px', fontSize: '11px', textAlign: 'center', borderRadius: '4px', border: '1px solid #86efac', background: '#fff', fontWeight: 600 }}
+                            title="Урьдчилгаа хувь (%)"
+                          />
+                          <span style={{ fontSize: '11px', color: '#166534' }}>%</span>
+                        </div>
+                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#15803d', textAlign: 'right', marginTop: '2px' }}>
+                          {advanceAmt.toLocaleString()} ₮
+                        </div>
+                      </div>
+
+                      {/* Үлдэгдэл картын блок */}
+                      <div style={{
+                        background: p2 > 0 ? '#fffbeb' : '#f8fafc',
+                        border: p2 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
+                            {p2 > 0 ? '🟠 2. Үлдэгдэл' : '✓ Бүрэн төлөлт'}
+                          </span>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
+                            {p2}%
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          <select
+                            {...register("payment_method_2")}
+                            style={{ flex: 1, padding: '4px', fontSize: '11px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
+                          >
+                            <option value="Бэлэн болоход">Бэлэн болоход</option>
+                            <option value="Хүлээлгэн өгөхөд">Хүлээлгэн өгөхөд</option>
+                            <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
+                            <option value="Дансаар">Дансаар</option>
+                            <option value="Бэлэн">Бэлэн</option>
+                          </select>
+                          <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, padding: '0 4px' }}>
+                            {p2}%
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '12px', fontWeight: 800, color: p2 > 0 ? '#b45309' : '#475569', textAlign: 'right', marginTop: '2px' }}>
+                          {remainingAmt.toLocaleString()} ₮
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="erp-field" style={{marginBottom:'10px'}}>
                 <label>Санхүүгийн тайлбар, тэмдэглэл</label>

@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../db';
 
 // Add a new payment
 export const addPayment = async (req: Request, res: Response) => {
   try {
     const { order_id } = req.params;
-    const { amount, method, notes } = req.body;
+    const { amount, method, notes, start_production } = req.body;
     const userId = (req as any).user?.id;
 
     if (!userId) {
@@ -29,8 +27,7 @@ export const addPayment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Since types may not have generated properly, use any for the prisma model if needed, but standard TS works.
-    const payment = await (prisma as any).payment.create({
+    const payment = await prisma.payment.create({
       data: {
         order_id: orderId,
         amount: Number(amount),
@@ -45,7 +42,49 @@ export const addPayment = async (req: Request, res: Response) => {
       }
     });
 
-    res.status(201).json({ message: 'Payment recorded successfully', payment });
+    // Compute updated balance
+    const allPayments = await prisma.payment.findMany({ where: { order_id: orderId } });
+    const totalPaid = allPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    const finalPrice = Math.round(Number(order.final_price) || 0);
+    const remainingBalance = Math.max(0, finalPrice - totalPaid);
+
+    // If order was pending finance and user requested start_production (or full/advance paid)
+    if (start_production && (order.current_status === 'Санхүү хүлээгдэж буй' || order.current_status === 'Хүлээгдэж буй')) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { current_status: 'Үйлдвэрлэлд' }
+      });
+      await prisma.orderstatuslog.create({
+        data: {
+          order_id: orderId,
+          changed_by: userId,
+          old_status: order.current_status,
+          new_status: 'Үйлдвэрлэлд',
+          notes: 'Урьдчилгаа төлбөр батлагдаж үйлдвэрлэлд шилжүүлэв'
+        }
+      });
+    }
+
+    // Notify salesperson
+    if (order.sales_person_id) {
+      const balanceText = remainingBalance > 0 ? `Үлдэгдэл: ${remainingBalance.toLocaleString()} ₮` : 'Бүрэн төлөгдсөн (0 ₮)';
+      await prisma.notification.create({
+        data: {
+          user_id: order.sales_person_id,
+          order_id: orderId,
+          title: '💸 Төлбөр бүртгэгдлээ',
+          message: `Захиалга #${order.order_number || order.id} (${order.product_name}) дээр ${Number(amount).toLocaleString()} ₮ төлбөр (${method}) бүртгэгдлээ. ${balanceText}`
+        }
+      });
+    }
+
+    res.status(201).json({
+      message: 'Payment recorded successfully',
+      payment,
+      paid_amount: totalPaid,
+      remaining_balance: remainingBalance,
+      payment_status: remainingBalance <= 0 ? 'PAID' : 'PARTIAL'
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to record payment' });

@@ -36,6 +36,10 @@ export default function InvoicePage() {
   };
 
   const today = new Date().toLocaleDateString('mn-MN');
+  const finalPrice = Math.round(Number(order.final_price ?? order.total_price) || 0);
+  const paidAmount = Math.round(Number(order.paid_amount) || 0);
+  const remaining = Math.max(0, finalPrice - paidAmount);
+  const unitPrice = Math.round(finalPrice / (order.total_qty || 1));
 
   return (
     <div style={{ padding: '1rem', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -108,20 +112,30 @@ export default function InvoicePage() {
               </td>
               <td style={{ padding: '1rem 0.75rem', textAlign: 'center' }}>{order.total_qty}</td>
               <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
-                {((order.total_price || 0) / (order.total_qty || 1)).toLocaleString(undefined, { maximumFractionDigits: 2 })} ₮
+                {unitPrice.toLocaleString()} ₮
               </td>
               <td style={{ padding: '1rem 0.75rem', textAlign: 'right', fontWeight: 600 }}>
-                {(order.total_price || 0).toLocaleString()} ₮
+                {finalPrice.toLocaleString()} ₮
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '3rem' }}>
-          <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', fontWeight: 700, fontSize: '1.25rem', borderTop: '2px solid #cbd5e1' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2.5rem' }}>
+          <div style={{ width: '320px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', fontWeight: 700, fontSize: '1.15rem', borderTop: '2px solid #cbd5e1' }}>
               <span>НИЙТ ДҮН:</span>
-              <span>{(order.total_price || 0).toLocaleString()} ₮</span>
+              <span>{finalPrice.toLocaleString()} ₮</span>
+            </div>
+            {paidAmount > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', fontSize: '0.95rem', color: '#16a34a' }}>
+                <span>Төлөгдсөн:</span>
+                <span>{paidAmount.toLocaleString()} ₮</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', fontWeight: 800, fontSize: '1.15rem', color: remaining > 0 ? '#dc2626' : '#16a34a', borderTop: '1px dashed #cbd5e1', marginTop: '0.25rem' }}>
+              <span>ТӨЛӨХ ҮЛДЭГДЭЛ:</span>
+              <span>{remaining.toLocaleString()} ₮</span>
             </div>
             {order.needs_ebarimt && (
               <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#10b981', marginTop: '0.25rem' }}>
@@ -137,7 +151,7 @@ export default function InvoicePage() {
             <strong>Хүлээн авагч банк:</strong> Хаан Банк<br />
             <strong>Дансны дугаар:</strong> 5000000000<br />
             <strong>Дансны нэр:</strong> Сэлэнгэ Пресс ХХК<br />
-            <strong>Гүйлгээний утга:</strong> {order.order_number} {order.phone}
+            <strong>Гүйлгээний утга:</strong> {order.order_number || `INV-${order.id}`} {order.phone || ''}
           </div>
         </div>
       </div>

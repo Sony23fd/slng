@@ -27,6 +27,7 @@ export interface Order {
   id: number;
   order_number?: string;
   customer_name: string;
+  phone?: string;
   product_name: string;
   total_qty: number;
   is_urgent: boolean;
@@ -39,6 +40,12 @@ export interface Order {
   materials?: any[];
   operations?: any[];
   outsourcedJobs?: any[];
+  final_price?: number;
+  total_price?: number;
+  paid_amount?: number;
+  remaining_balance?: number;
+  payment_status?: string;
+  paid_percent?: number;
 }
 
 const STAGES = [

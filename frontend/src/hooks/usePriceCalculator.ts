@@ -28,6 +28,7 @@ export interface PricingParams {
   has_vat: boolean;
   print_cost?: number;
   design_cost?: number;
+  manual_unit_price?: number | null;
 }
 
 export function usePriceCalculator(params: PricingParams) {
@@ -73,22 +74,31 @@ export function usePriceCalculator(params: PricingParams) {
     // Үйлдвэрийн бодит нийт өртөг:
     const factoryTotalCost = preProfitBaseCost + postProfitTotalCost;
 
-    // 5. Нэгжийн өртөг
+    // 5. Нэгжийн өртөг (Бутархайг арилгаж дээш нь бүхэл төгрөг болгох)
     const qty = params.total_product_qty > 0 ? params.total_product_qty : 1;
-    const unitCost = factoryTotalCost / qty;
+    const rawUnitCost = factoryTotalCost / qty;
+    const unitCost = Math.ceil(rawUnitCost);
 
-    // 6. Цэвэр үнэ (Шинэ томьёо: Үндсэн өртөг * Ашиг + Ашгийн дараах)
+    // 6. Цэвэр үнэ (Томьёо: Үндсэн өртөг * Ашиг + Ашгийн дараах)
     const margin = Number(params.profit_margin);
     const multiplier = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);
-    const netPrice = (preProfitBaseCost * multiplier) + postProfitTotalCost;
+    const rawNetPrice = (preProfitBaseCost * multiplier) + postProfitTotalCost;
 
-    // 7. Эцсийн үнэ (Хэрэв has_vat сонгосон бол 10% НӨАТ нэмэгдэнэ)
-    const finalPrice = params.has_vat ? netPrice * 1.10 : netPrice;
+    // 7. Эцсийн суурь үнэ (НӨАТ тооцох)
+    const rawFinalPrice = params.has_vat ? rawNetPrice * 1.10 : rawNetPrice;
 
-    // 8. Нэгжийн үнэ
-    const unitPrice = finalPrice / qty;
+    // 8. Нэгжийн үнэ (Бүхэл төгрөг болгох ба гараар оруулсан үнийг дэмжих)
+    const autoUnitPrice = Math.ceil(rawFinalPrice / qty);
+    const hasManualPrice = params.manual_unit_price !== undefined && 
+                           params.manual_unit_price !== null && 
+                           Number(params.manual_unit_price) > 0;
+    const unitPrice = hasManualPrice ? Math.round(Number(params.manual_unit_price)) : autoUnitPrice;
 
-    // 9. Үйлдвэрийн цэвэр ашиг
+    // 9. Нийт үнэ (Нэхэмжлэх дээр Тоо ширхэг × Нэгж үнэ = Нийт дүн яв цав бүхэл төгрөгөөр тохирно)
+    const finalPrice = unitPrice * qty;
+    const netPrice = params.has_vat ? Math.round(finalPrice / 1.10) : finalPrice;
+
+    // 10. Үйлдвэрийн цэвэр ашиг
     const netProfit = netPrice - factoryTotalCost;
 
     return {
@@ -101,9 +111,12 @@ export function usePriceCalculator(params: PricingParams) {
       postProfitTotalCost,
       factoryTotalCost,
       unitCost,
+      rawUnitCost,
       netPrice,
       finalPrice,
       unitPrice,
+      autoUnitPrice,
+      isManualUnitPrice: hasManualPrice,
       netProfit
     };
   }, [params]);

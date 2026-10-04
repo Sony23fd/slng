@@ -69,6 +69,56 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
                       👤 {order.customer_name} | {order.total_qty} ш
                     </div>
 
+                    {/* Payment Status & Warning */}
+                    {(() => {
+                      const finalPrice = Math.round(Number(order.final_price ?? order.total_price) || 0);
+                      const paidAmount = Math.round(Number(order.paid_amount) || 0);
+                      const remaining = Math.max(0, finalPrice - paidAmount);
+                      const isReady = order.current_status === 'Бэлэн болсон' || order.current_status === 'Бэлэн';
+
+                      if (finalPrice > 0 && remaining > 0 && isReady) {
+                        return (
+                          <div style={{
+                            background: '#fef2f2',
+                            border: '1.5px solid #ef4444',
+                            borderRadius: '4px',
+                            padding: '4px 6px',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.75rem',
+                            color: '#b91c1c',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            animation: 'pulse-light 2s infinite'
+                          }}>
+                            <span style={{ fontWeight: 800 }}>⚠️ ҮЛДЭГДЭЛ:</span>
+                            <span style={{ fontWeight: 800 }}>{remaining.toLocaleString()} ₮ АВАХ!</span>
+                          </div>
+                        );
+                      }
+
+                      if (finalPrice > 0) {
+                        const isPaid = paidAmount >= finalPrice;
+                        return (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.72rem' }}>
+                            <span style={{ 
+                              padding: '1px 6px', 
+                              borderRadius: '4px', 
+                              fontWeight: 600,
+                              background: isPaid ? '#dcfce7' : paidAmount > 0 ? '#fef3c7' : '#fee2e2',
+                              color: isPaid ? '#15803d' : paidAmount > 0 ? '#b45309' : '#b91c1c'
+                            }}>
+                              {isPaid ? '✓ Төлөгдсөн' : paidAmount > 0 ? `🟡 Урьдчилгаа (${Math.round((paidAmount / finalPrice) * 100)}%)` : '🔴 Төлбөргүй'}
+                            </span>
+                            <span style={{ color: remaining > 0 ? '#dc2626' : '#15803d', fontWeight: 600 }}>
+                              {remaining > 0 ? `Үлд: ${remaining.toLocaleString()} ₮` : `${finalPrice.toLocaleString()} ₮`}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     {/* Notes Warning Block */}
                     {(() => {
                       const hasNotes = Boolean(order.notes) || (order.materials && order.materials.some((m: any) => m.notes)) || (order.operations && order.operations.some((o: any) => o.notes)) || (order.outsourcedJobs && order.outsourcedJobs.some((oj: any) => oj.notes));

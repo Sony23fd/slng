@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import Pagination from '../../../components/Pagination';
 import JobTicketModal from '../../../components/production/JobTicketModal';
 import ProductionInspectorDrawer from '../../../components/production/ProductionInspectorDrawer';
+import DeliveryGuardModal from '../../../components/orders/DeliveryGuardModal';
 
 export default function AllOrdersPage() {
   const { token, user } = useAuthStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
   const [filterTab, setFilterTab] = useState<'ALL' | 'PENDING' | 'IN_PRODUCTION' | 'READY' | 'DELIVERED'>('ALL');
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'WITH_BALANCE' | 'PAID'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [page, setPage] = useState(1);
@@ -20,6 +22,7 @@ export default function AllOrdersPage() {
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [inspectingOrder, setInspectingOrder] = useState<any>(null);
   const [loadingTicketId, setLoadingTicketId] = useState<number | null>(null);
+  const [guardOrder, setGuardOrder] = useState<any>(null);
   const limit = 20;
   
   const router = useRouter();
@@ -86,7 +89,7 @@ export default function AllOrdersPage() {
       .catch(() => {});
   }, [token]);
 
-  useEffect(() => {
+  const fetchOrders = useCallback(() => {
     if (!token) return;
 
     const query = new URLSearchParams({
@@ -94,7 +97,8 @@ export default function AllOrdersPage() {
       limit: limit.toString(),
       search: searchTerm,
       statusType: filterTab,
-      isMine: showOnlyMine.toString()
+      isMine: showOnlyMine.toString(),
+      paymentFilter: paymentFilter !== 'ALL' ? paymentFilter : ''
     });
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders?${query}`, {
@@ -111,11 +115,15 @@ export default function AllOrdersPage() {
         }
       })
       .catch(console.error);
-  }, [token, page, filterTab, showOnlyMine, searchTerm]);
+  }, [token, page, filterTab, showOnlyMine, searchTerm, paymentFilter]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   useEffect(() => {
     setPage(1);
-  }, [filterTab, showOnlyMine, searchTerm]);
+  }, [filterTab, showOnlyMine, searchTerm, paymentFilter]);
 
   // Color functions
   const deliveredStatusNames = orderStatuses.filter(s => s.type === 'DELIVERED').map(s => s.name);
@@ -153,7 +161,7 @@ export default function AllOrdersPage() {
 
       <div className="card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {[
               { key: 'ALL', label: 'Бүгд', color: '#64748b' },
               { key: 'PENDING', label: '⏳ Санхүү', color: '#f59e0b' },
@@ -183,6 +191,34 @@ export default function AllOrdersPage() {
                 {t.label}
               </button>
             ))}
+
+            {/* Төлбөрийн түргэн шүүлтүүр */}
+            <div style={{ display: 'flex', background: '#f1f5f9', padding: '2px', borderRadius: '6px', marginLeft: '6px', border: '1px solid #cbd5e1' }}>
+              {[
+                { key: 'ALL', label: 'Бүх төлбөр' },
+                { key: 'WITH_BALANCE', label: '⚠️ Үлдэгдэлтэй' },
+                { key: 'PAID', label: '✓ Төлөгдсөн' },
+              ].map((p: any) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setPaymentFilter(p.key)}
+                  style={{
+                    padding: '0.25rem 0.6rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    border: 'none',
+                    background: paymentFilter === p.key ? '#ffffff' : 'transparent',
+                    color: paymentFilter === p.key ? (p.key === 'WITH_BALANCE' ? '#dc2626' : '#0f172a') : '#64748b',
+                    fontWeight: paymentFilter === p.key ? 700 : 500,
+                    boxShadow: paymentFilter === p.key ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginRight: '0.5rem' }}>
@@ -213,6 +249,7 @@ export default function AllOrdersPage() {
               <th style={{ padding: '1rem' }}>Бүтээгдэхүүн</th>
               <th style={{ padding: '1rem' }}>Тоо ширхэг</th>
               <th style={{ padding: '1rem' }}>Үйлдвэрлэлийн явц</th>
+              <th style={{ padding: '1rem' }}>Төлбөр</th>
               <th style={{ padding: '1rem' }}>Төлөв</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Үйлдэл</th>
             </tr>
@@ -294,12 +331,65 @@ export default function AllOrdersPage() {
                     </div>
                   </div>
                 </td>
+                <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                  {(() => {
+                    const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
+                    const paidAmount = Math.round(Number(o.paid_amount) || 0);
+                    const remaining = Math.max(0, finalPrice - paidAmount);
+                    const status = o.payment_status || (paidAmount >= finalPrice && finalPrice > 0 ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'UNPAID');
+
+                    if (status === 'PAID') {
+                      return (
+                        <div>
+                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            ✓ Төлөгдсөн
+                          </span>
+                          <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '3px' }}>
+                            {finalPrice.toLocaleString()} ₮
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (status === 'PARTIAL') {
+                      return (
+                        <div>
+                          <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            🟡 Урьдчилгаа {o.paid_percent || Math.round((paidAmount / (finalPrice || 1)) * 100)}%
+                          </span>
+                          <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, marginTop: '3px' }}>
+                            Үлдэгдэл: {remaining.toLocaleString()} ₮
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div>
+                        <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          🔴 Төлбөргүй
+                        </span>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px' }}>
+                          {finalPrice.toLocaleString()} ₮
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </td>
                 <td style={{ padding: '1rem' }}>
                   <select 
                     value={o.current_status} 
                     disabled={!(o.sales_person_id === user?.id || user?.role === 'ADMIN')}
                     onChange={async (e) => {
                       const newStatus = e.target.value;
+                      const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
+                      const paidAmount = Math.round(Number(o.paid_amount) || 0);
+                      const remaining = Math.max(0, finalPrice - paidAmount);
+
+                      // Delivery Guard check: If delivering with remaining balance, show guard modal
+                      if (['Хүлээлгэн өгсөн', 'Олгосон'].includes(newStatus) && remaining > 0) {
+                        setGuardOrder({ ...o, remaining_balance: remaining, paid_amount: paidAmount, final_price: finalPrice });
+                        return;
+                      }
+
                       if (!confirm(`Төлөвийг '${newStatus}' болгож өөрчлөх үү?`)) return;
                       try {
                         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${o.id}/status`, {
@@ -313,7 +403,12 @@ export default function AllOrdersPage() {
                         if (res.ok) {
                           setOrders(orders.map(order => order.id === o.id ? { ...order, current_status: newStatus } : order));
                         } else {
-                          alert('Төлөв өөрчлөхөд алдаа гарлаа.');
+                          const errData = await res.json().catch(() => ({}));
+                          if (errData.has_remaining_balance) {
+                            setGuardOrder({ ...o, remaining_balance: errData.remaining_balance, paid_amount: errData.paid_amount, final_price: errData.final_price });
+                          } else {
+                            alert(`Төлөв өөрчлөхөд алдаа гарлаа: ${errData.error || ''}`);
+                          }
                         }
                       } catch (err) {
                         console.error(err);
@@ -348,7 +443,7 @@ export default function AllOrdersPage() {
             ); })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Захиалга байхгүй байна.
                 </td>
               </tr>
@@ -369,6 +464,17 @@ export default function AllOrdersPage() {
         isOpen={Boolean(inspectingOrder)}
         onClose={() => setInspectingOrder(null)}
       />
+      {guardOrder && (
+        <DeliveryGuardModal
+          order={guardOrder}
+          token={token || ''}
+          onClose={() => setGuardOrder(null)}
+          onSuccess={() => {
+            setGuardOrder(null);
+            fetchOrders();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import Link from 'next/link';
+import DeliveryGuardModal from '../../../../components/orders/DeliveryGuardModal';
 
 export default function OrdersBoardPage() {
   const { token, user } = useAuthStore();
@@ -13,8 +14,9 @@ export default function OrdersBoardPage() {
   const [statuses, setStatuses] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [guardOrder, setGuardOrder] = useState<any>(null);
 
-  useEffect(() => {
+  const fetchBoardData = () => {
     if (!token) return;
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/order-statuses`, {
@@ -43,6 +45,10 @@ export default function OrdersBoardPage() {
         setLoading(false);
       })
       .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchBoardData();
   }, [token]);
 
   const getOrderProgress = (o: any) => {
@@ -60,6 +66,18 @@ export default function OrdersBoardPage() {
 
     const newStatus = destination.droppableId;
     const orderId = Number(draggableId);
+    const targetOrder = orders.find(o => o.id === orderId);
+
+    // Delivery Guard check
+    if (['Хүлээлгэн өгсөн', 'Олгосон'].includes(newStatus) && targetOrder) {
+      const finalPrice = Math.round(Number(targetOrder.final_price ?? targetOrder.total_price) || 0);
+      const paidAmount = Math.round(Number(targetOrder.paid_amount) || 0);
+      const remaining = Math.max(0, finalPrice - paidAmount);
+      if (remaining > 0) {
+        setGuardOrder({ ...targetOrder, remaining_balance: remaining, paid_amount: paidAmount, final_price: finalPrice });
+        return;
+      }
+    }
 
     // Optimistic UI update
     const newOrders = Array.from(orders);
@@ -78,7 +96,7 @@ export default function OrdersBoardPage() {
         body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: 'Самбараас өөрчлөв' })
       }).catch(err => {
         console.error(err);
-        // revert on failure
+        fetchBoardData();
       });
     }
   };
@@ -156,13 +174,63 @@ export default function OrdersBoardPage() {
                                     {order.is_urgent ? 'ЯАРАЛТАЙ' : ''}
                                   </span>
                                 </div>
-                                <div style={{ fontSize: '0.9rem', color: '#334155', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                <div style={{ fontSize: '0.9rem', color: '#334155', marginBottom: '0.4rem', fontWeight: 600 }}>
                                   {order.product_name}
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                                  <span>{order.customer_name}</span>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                                  <span>👤 {order.customer_name}</span>
                                   <span>{order.total_qty} ш</span>
                                 </div>
+
+                                {/* Payment badge on board card */}
+                                {(() => {
+                                  const finalPrice = Math.round(Number(order.final_price ?? order.total_price) || 0);
+                                  const paidAmount = Math.round(Number(order.paid_amount) || 0);
+                                  const remaining = Math.max(0, finalPrice - paidAmount);
+                                  const isReady = order.current_status === 'Бэлэн болсон' || order.current_status === 'Бэлэн';
+
+                                  if (finalPrice > 0 && remaining > 0 && isReady) {
+                                    return (
+                                      <div style={{
+                                        background: '#fef2f2',
+                                        border: '1.5px solid #ef4444',
+                                        borderRadius: '4px',
+                                        padding: '4px 6px',
+                                        marginTop: '4px',
+                                        fontSize: '0.75rem',
+                                        color: '#b91c1c',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        fontWeight: 800
+                                      }}>
+                                        <span>⚠️ ҮЛДЭГДЭЛ:</span>
+                                        <span>{remaining.toLocaleString()} ₮ АВАХ!</span>
+                                      </div>
+                                    );
+                                  }
+
+                                  if (finalPrice > 0) {
+                                    const isPaid = paidAmount >= finalPrice;
+                                    return (
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', fontSize: '0.72rem', borderTop: '1px dashed #e2e8f0', paddingTop: '4px' }}>
+                                        <span style={{ 
+                                          padding: '1px 5px', 
+                                          borderRadius: '4px', 
+                                          fontWeight: 600,
+                                          background: isPaid ? '#dcfce7' : paidAmount > 0 ? '#fef3c7' : '#fee2e2',
+                                          color: isPaid ? '#15803d' : paidAmount > 0 ? '#b45309' : '#b91c1c'
+                                        }}>
+                                          {isPaid ? '✓ Төлөгдсөн' : paidAmount > 0 ? `🟡 Урьдчилгаа` : '🔴 Төлбөргүй'}
+                                        </span>
+                                        <span style={{ color: remaining > 0 ? '#dc2626' : '#15803d', fontWeight: 700 }}>
+                                          {remaining > 0 ? `Үлд: ${remaining.toLocaleString()} ₮` : `${finalPrice.toLocaleString()} ₮`}
+                                        </span>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                               </div>
                             )}
                           </Draggable>
@@ -177,6 +245,18 @@ export default function OrdersBoardPage() {
             </div>
           </DragDropContext>
         </div>
+      )}
+
+      {guardOrder && (
+        <DeliveryGuardModal
+          order={guardOrder}
+          token={token || ''}
+          onClose={() => setGuardOrder(null)}
+          onSuccess={() => {
+            setGuardOrder(null);
+            fetchBoardData();
+          }}
+        />
       )}
     </div>
   );
