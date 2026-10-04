@@ -79,7 +79,6 @@ const prices = [
   { category: 'Материал', item_name: 'Бүрэлт матт Хятад 36 см', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт матт Хятад 44 см', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт матт Хятад 54 см', unit_cost: 1500 },
-  { category: 'Материал', item_name: 'Бүрэлт Илгэн  Со 44', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт Илгэн Со 44 см', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт гялгар/эмбосстой Со 36см', unit_cost: 1500 },
   { category: 'Материал', item_name: 'Бүрэлт матт/эмбосстой Со 36см', unit_cost: 1500 },
