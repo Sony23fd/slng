@@ -51,17 +51,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "0.5",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 5,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B3 0.004)",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -219,17 +219,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Гялгар)",
-          "size": "",
+          "material_name": "Бүрэлт гялгар Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "0.5",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
-          "notes": "Хавтасны гялгар бүрэлт (A2 0.006)",
+          "notes": "Хавтасны гялгар бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -340,17 +340,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
-          "notes": "Матт бүрэлт (A2 0.006)",
+          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -452,17 +452,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 54 см",
+          "size": "54 см",
           "print_size": "B2",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 2,
           "sheet_qty": 3.64,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B2 0.007)",
+          "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
           "is_cover": false
         },
         {
@@ -623,17 +623,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 300,
           "extra_qty": 20,
           "total_qty": 320,
-          "divide_by": 1,
+          "divide_by": 5,
           "sheet_qty": 1.28,
           "unit_cost": 1500,
-          "notes": "Суурийн матт бүрэлт (B3 0.004)",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -777,17 +777,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 300,
           "extra_qty": 20,
           "total_qty": 320,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 1.92,
           "unit_cost": 1500,
-          "notes": "Суурийн матт бүрэлт (A2 0.006)",
+          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -903,17 +903,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "7",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
-          "notes": "Хавтас бүрэлт",
+          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -1094,17 +1094,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "A3",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 100,
           "extra_qty": 20,
           "total_qty": 120,
-          "divide_by": 1,
+          "divide_by": 8,
           "sheet_qty": 0.48,
           "unit_cost": 1500,
-          "notes": "Матт бүрэлт",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -1266,17 +1266,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "0.5",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 6.12,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (A2 0.006)",
+          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -1508,17 +1508,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "1.0",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 5,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B3 0.004)",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -1750,17 +1750,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "1.0",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 5,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B3 0.004)",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -1950,17 +1950,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "1.0",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 6,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B3 0.004)",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -2149,17 +2149,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 54 см",
+          "size": "54 см",
           "print_size": "B2",
-          "press_sheet": "",
+          "press_sheet": "1.0",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 6,
           "sheet_qty": 7.14,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B2 0.007)",
+          "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
           "is_cover": false
         },
         {
@@ -2348,17 +2348,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 54 см",
+          "size": "54 см",
           "print_size": "B2",
-          "press_sheet": "",
+          "press_sheet": "1.0",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 3,
           "sheet_qty": 7.14,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (B2 0.007)",
+          "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
           "is_cover": false
         },
         {
@@ -2533,17 +2533,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "B3",
-          "press_sheet": "",
+          "press_sheet": "0.5",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 5,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -2885,17 +2885,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 36 см",
+          "size": "36 см",
           "print_size": "A3",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 1,
+          "divide_by": 8,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
-          "notes": "Матт бүрэлт",
+          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
           "is_cover": false
         },
         {
@@ -3010,17 +3010,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Гялгар)",
-          "size": "",
+          "material_name": "Бүрэлт гялгар Хятад 44 см",
+          "size": "44 см",
           "print_size": "A2",
-          "press_sheet": "",
+          "press_sheet": "0.25",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 4,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
-          "notes": "Гялгар бүрэлт",
+          "notes": "Хавтасны гялгар бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
@@ -3154,17 +3154,17 @@ const standardTemplates = [
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт (Матт)",
-          "size": "",
+          "material_name": "Бүрэлт матт Хятад 54 см",
+          "size": "54 см",
           "print_size": "B2",
-          "press_sheet": "",
+          "press_sheet": "1",
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 1,
+          "divide_by": 2,
           "sheet_qty": 3.64,
           "unit_cost": 1500,
-          "notes": "Матт бүрэлт",
+          "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
           "is_cover": false
         },
         {
