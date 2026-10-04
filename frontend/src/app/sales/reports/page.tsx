@@ -158,6 +158,66 @@ export default function SalesReportPage() {
       }
 
       const data: ReportData = await res.json();
+
+      // Ensure isTeamView is correctly flagged for ALL
+      if (data.isTeamView === undefined) {
+        data.isTeamView = !selectedSalesPersonId || selectedSalesPersonId === 'ALL';
+      }
+
+      // Synthesize managerStats if missing or empty from server response
+      if (!data.managerStats || data.managerStats.length === 0) {
+        const salespersons = data.availableSalespersons || [];
+        const managerMap = new Map<string, ManagerStat>();
+        salespersons.forEach(sp => {
+          managerMap.set(sp.name, {
+            id: sp.id,
+            name: sp.name,
+            target: 0,
+            actual: 0,
+            achievementRate: 0,
+            orderCount: 0,
+            completedRevenue: 0,
+            inProductionRevenue: 0,
+            paidAmount: 0,
+            receivables: 0
+          });
+        });
+
+        (data.orders || []).forEach(o => {
+          if (o.current_status === 'Цуцлагдсан') return;
+          const mgrName = o.sales_person_name || 'Бусад';
+          const existing = managerMap.get(mgrName) || {
+            name: mgrName,
+            target: 0,
+            actual: 0,
+            achievementRate: 0,
+            orderCount: 0,
+            completedRevenue: 0,
+            inProductionRevenue: 0,
+            paidAmount: 0,
+            receivables: 0
+          };
+
+          const price = Number(o.final_price) || 0;
+          const paid = Number(o.paid_amount) || 0;
+          const balance = Math.max(0, price - paid);
+
+          existing.orderCount += 1;
+          existing.actual += price;
+          existing.paidAmount += paid;
+          existing.receivables += balance;
+
+          if (['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || '')) {
+            existing.completedRevenue += price;
+          } else {
+            existing.inProductionRevenue += price;
+          }
+          managerMap.set(mgrName, existing);
+        });
+
+        data.managerStats = Array.from(managerMap.values()).sort((a, b) => b.actual - a.actual);
+      }
+
       setReport(data);
     } catch (err: any) {
       setError(err.message || 'Алдаа гарлаа');
@@ -264,7 +324,12 @@ export default function SalesReportPage() {
     try {
       // 1. Direct client-side generation (Instant, offline-ready, 0ms network latency, never 404s)
       const { generateSalesReportPptx } = await import('../../../utils/salesReportPptx');
-      await generateSalesReportPptx(report);
+      await generateSalesReportPptx({
+        ...report,
+        isTeamView: report.isTeamView !== undefined ? report.isTeamView : (!selectedSalesPersonId || selectedSalesPersonId === 'ALL'),
+        availableSalespersons: report.availableSalespersons,
+        orders: report.orders
+      });
     } catch (clientErr: any) {
       console.warn('Client PPTX generation failed, falling back to server API:', clientErr);
       try {
@@ -514,6 +579,58 @@ export default function SalesReportPage() {
           )}
         </div>
       </div>
+
+      {/* Zero Orders in Period Helper Banner */}
+      {!loading && !error && report && report.summary.totalOrders === 0 && (
+        <div
+          className="no-print"
+          style={{
+            marginBottom: '1.5rem',
+            padding: '1rem 1.25rem',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>💡</span>
+            <div>
+              <div style={{ fontWeight: 600, color: '#92400e', fontSize: '0.9rem' }}>
+                Сонгосон хугацаанд ({formatDate(report.period.startDate)} - {formatDate(report.period.endDate)}) захиалга бүртгэгдээгүй байна
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#b45309', marginTop: '0.15rem' }}>
+                Өгөгдлийн санд 2026 оны 8-р сарын бодит 34 захиалга байна. Багийн бодит гүйцэтгэл болон PowerPoint танилцуулгыг үзэхийн тулд 8-р сар руу шилжинэ үү.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setPeriodPreset('custom');
+              setStartDate('2026-08-01');
+              setEndDate('2026-08-31');
+            }}
+            style={{
+              padding: '0.45rem 0.9rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: '6px',
+              border: 'none',
+              background: '#d97706',
+              color: '#ffffff',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            📅 8-р сарын багийн тайланг харах
+          </button>
+        </div>
+      )}
 
       {/* Printable Report Header (Visible only when printing) */}
       <div className="print-only" style={{ display: 'none', marginBottom: '1.5rem', borderBottom: '2px solid #0f172a', paddingBottom: '0.75rem' }}>

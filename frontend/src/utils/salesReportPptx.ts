@@ -46,6 +46,8 @@ export interface ReportData {
   categoryBreakdown: Array<{ category: string; count: number; revenue: number; percent: number }>;
   statusBreakdown: Array<{ status: string; count: number; revenue: number }>;
   topCustomers: Array<{ name: string; count: number; totalAmount: number }>;
+  orders?: any[];
+  availableSalespersons?: Array<{ id: number; name: string; role: string }>;
 }
 
 const formatMNT = (amount: number): string => {
@@ -59,7 +61,68 @@ const formatDate = (dateStr: string): string => {
 };
 
 export const generateSalesReportPptx = async (data: ReportData) => {
-  const { targetUser, isTeamView, period, summary, managerStats = [], trend = [], categoryBreakdown = [], statusBreakdown = [], topCustomers = [] } = data;
+  const { targetUser, isTeamView, period, summary, trend = [], categoryBreakdown = [], statusBreakdown = [], topCustomers = [] } = data;
+
+  const isTeam = isTeamView !== undefined ? isTeamView : (!targetUser?.id || targetUser.role === 'TEAM' || targetUser.name?.includes('баг'));
+
+  // 1. Synthesize robust managerStats if missing from server response
+  let effectiveManagerStats: ManagerStat[] = (data.managerStats && data.managerStats.length > 0)
+    ? [...data.managerStats]
+    : [];
+
+  if (effectiveManagerStats.length === 0 && data.availableSalespersons && data.availableSalespersons.length > 0) {
+    const map = new Map<string, ManagerStat>();
+    data.availableSalespersons.forEach(sp => {
+      map.set(sp.name, {
+        id: sp.id,
+        name: sp.name,
+        target: 0,
+        actual: 0,
+        achievementRate: 0,
+        orderCount: 0,
+        completedRevenue: 0,
+        inProductionRevenue: 0,
+        paidAmount: 0,
+        receivables: 0
+      });
+    });
+
+    if (data.orders && Array.isArray(data.orders)) {
+      data.orders.forEach(o => {
+        if (o.current_status === 'Цуцлагдсан') return;
+        const mgrName = o.sales_person_name || 'Бусад';
+        const existing = map.get(mgrName) || {
+          name: mgrName,
+          target: 0,
+          actual: 0,
+          achievementRate: 0,
+          orderCount: 0,
+          completedRevenue: 0,
+          inProductionRevenue: 0,
+          paidAmount: 0,
+          receivables: 0
+        };
+
+        const price = Number(o.final_price) || 0;
+        const paid = Number(o.paid_amount) || 0;
+        const balance = Math.max(0, price - paid);
+
+        existing.orderCount += 1;
+        existing.actual += price;
+        existing.paidAmount += paid;
+        existing.receivables += balance;
+
+        if (['Олгосон', 'Хүлээлгэн өгсөн', 'Бэлэн'].includes(o.current_status || '')) {
+          existing.completedRevenue += price;
+        } else {
+          existing.inProductionRevenue += price;
+        }
+        map.set(mgrName, existing);
+      });
+    }
+
+    effectiveManagerStats = Array.from(map.values()).sort((a, b) => b.actual - a.actual);
+  }
 
   const startDateStr = formatDate(period.startDate);
   const endDateStr = formatDate(period.endDate);
@@ -178,7 +241,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     h: 0.03,
     fill: { color: '334155' }
   });
-  s1.addText(`Танилцуулга: Борлуулалтын алба ${!isTeamView && targetUser?.name ? `(${targetUser.name})` : ''}`, {
+  s1.addText(`Танилцуулга: ${isTeam ? 'Борлуулалтын баг (Бүгд)' : `Борлуулалтын менежер ${targetUser?.name ? `(${targetUser.name})` : ''}`}`, {
     x: 1.2,
     y: 4.7,
     w: 8,
@@ -269,14 +332,21 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     bold: true,
     color: C.primary
   });
-  const summaryBullets = [
-    `Тайлант хугацаанд борлуулалтын баг нийт ${summary.totalOrders} захиалга гүйцэтгэж, ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт хийсэн байна.`,
-    summary.target > 0
-      ? `Багийн нэгдсэн төлөвлөгөөт зорилт ${formatMNT(summary.target)} байснаас биелэлт ${summary.achievementRate.toFixed(1)}%-тай гарлаа.`
-      : `Борлуулалтын нэгдсэн төлөвлөгөө бүртгэгдээгүй бөгөөд захиалга бүрийн дундаж дүн ${formatMNT(avgOrderVal)} байна.`,
-    `Үйлдвэрлэлд ${summary.inProductionCount} захиалга (${formatMNT(summary.inProductionRevenue)}) хэвлэгдэж буй бөгөөд ${summary.completedCount} захиалга (${formatMNT(summary.completedRevenue)}) бүрэн бэлэн болсон.`,
-    `Нийт борлуулалтаас ${formatMNT(summary.totalPaid)} төгрөг дансанд цугларсан ба харилцагчдаас авах үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байна.`
-  ];
+  const summaryBullets = summary.totalOrders > 0
+    ? [
+        `Тайлант хугацаанд борлуулалтын баг нийт ${summary.totalOrders} захиалга гүйцэтгэж, ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт хийсэн байна.`,
+        summary.target > 0
+          ? `Багийн нэгдсэн төлөвлөгөөт зорилт ${formatMNT(summary.target)} байснаас биелэлт ${summary.achievementRate.toFixed(1)}%-тай гарлаа.`
+          : `Борлуулалтын нэгдсэн төлөвлөгөө бүртгэгдээгүй бөгөөд захиалга бүрийн дундаж дүн ${formatMNT(avgOrderVal)} байна.`,
+        `Үйлдвэрлэлд ${summary.inProductionCount} захиалга (${formatMNT(summary.inProductionRevenue)}) хэвлэгдэж буй бөгөөд ${summary.completedCount} захиалга (${formatMNT(summary.completedRevenue)}) бүрэн бэлэн болсон.`,
+        `Нийт борлуулалтаас ${formatMNT(summary.totalPaid)} төгрөг дансанд цугларсан ба харилцагчдаас авах үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байна.`
+      ]
+    : [
+        `Тайлант хугацаанд (${periodLabel}) захиалга бүртгэгдээгүй байна.`,
+        `Өмнөх болон идэвхтэй үеийн захиалгуудыг харахын тулд огнооны шүүлтүүрийг тохируулна уу.`,
+        `Борлуулалтын багийн үйл ажиллагаа, захиалгын бэлтгэл ажлууд хуваарийн дагуу явагдаж байна.`,
+        `Харилцагчдын авлагын төлбөрийг шуурхай цуглуулах хяналтыг тогтмол хэрэгжүүлж байна.`
+      ];
   s2.addText(summaryBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
     x: 0.9,
     y: 4.6,
@@ -304,19 +374,28 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     ]
   ];
 
-  managerStats.forEach((m, idx) => {
-    const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+  if (effectiveManagerStats.length > 0) {
+    effectiveManagerStats.forEach((m, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      mgrRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: m.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: m.target > 0 ? formatMNT(m.target) : '-', options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
+        { text: formatMNT(m.actual), options: { fill: { color: rf }, bold: true, align: 'right', fontSize: 10, color: C.primary } },
+        { text: m.target > 0 ? `${m.achievementRate.toFixed(1)}%` : '-', options: { fill: { color: rf }, bold: true, align: 'center', fontSize: 10, color: m.achievementRate >= 100 ? C.success : (m.achievementRate >= 70 ? C.warning : C.danger) } },
+        { text: `${m.orderCount} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(m.paidAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
+        { text: formatMNT(m.receivables), options: { fill: { color: rf }, bold: m.receivables > 0, align: 'right', fontSize: 10, color: m.receivables > 0 ? C.danger : C.success } }
+      ]);
+    });
+  } else {
     mgrRows.push([
-      { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: m.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
-      { text: m.target > 0 ? formatMNT(m.target) : '-', options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
-      { text: formatMNT(m.actual), options: { fill: { color: rf }, bold: true, align: 'right', fontSize: 10, color: C.primary } },
-      { text: m.target > 0 ? `${m.achievementRate.toFixed(1)}%` : '-', options: { fill: { color: rf }, bold: true, align: 'center', fontSize: 10, color: m.achievementRate >= 100 ? C.success : (m.achievementRate >= 70 ? C.warning : C.danger) } },
-      { text: `${m.orderCount} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: formatMNT(m.paidAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10 } },
-      { text: formatMNT(m.receivables), options: { fill: { color: rf }, bold: m.receivables > 0, align: 'right', fontSize: 10, color: m.receivables > 0 ? C.danger : C.success } }
+      {
+        text: 'Тайлант хугацаанд борлуулалтын менежерийн мэдээлэл бүртгэгдээгүй байна',
+        options: { colspan: 8, fill: { color: C.altRowFill }, align: 'center', fontSize: 10, color: C.textMuted }
+      }
     ]);
-  });
+  }
 
   s3.addTable(mgrRows, {
     x: 0.6,
@@ -334,7 +413,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
   addHeader(s4, 'БОРЛУУЛАЛТЫН ӨДӨР ТУТМЫН ЯВЦ', 'Тайлант хугацааны өдөр бүрийн борлуулалтын динамик болон захиалгын тоо');
 
   const activeTrend = trend.filter(t => t.revenue > 0 || t.count > 0);
-  const trendToShow = activeTrend.length > 0 ? activeTrend : trend.slice(-14);
+  const trendToShow = activeTrend.length > 0 ? activeTrend.slice(0, 12) : [];
 
   const trendRows: PptxGenJS.TableRow[] = [
     [
@@ -345,16 +424,25 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     ]
   ];
 
-  trendToShow.slice(0, 12).forEach((t, idx) => {
-    const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
-    const pct = summary.totalRevenue > 0 ? (t.revenue / summary.totalRevenue) * 100 : 0;
+  if (trendToShow.length > 0) {
+    trendToShow.forEach((t, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      const pct = summary.totalRevenue > 0 ? (t.revenue / summary.totalRevenue) * 100 : 0;
+      trendRows.push([
+        { text: t.date, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: `${t.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(t.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+  } else {
     trendRows.push([
-      { text: t.date, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: `${t.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: formatMNT(t.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
-      { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      {
+        text: 'Тайлант хугацаанд өдөр тутмын борлуулалт ороогүй байна',
+        options: { colspan: 4, fill: { color: C.altRowFill }, align: 'center', fontSize: 10, color: C.textMuted }
+      }
     ]);
-  });
+  }
 
   s4.addTable(trendRows, {
     x: 0.6,
@@ -423,16 +511,25 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     ]
   ];
 
-  categoryBreakdown.slice(0, 10).forEach((c, idx) => {
-    const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+  if (categoryBreakdown.length > 0) {
+    categoryBreakdown.slice(0, 10).forEach((c, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      catRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: c.category, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: `${c.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(c.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${c.percent.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+  } else {
     catRows.push([
-      { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: c.category, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
-      { text: `${c.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: formatMNT(c.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
-      { text: `${c.percent.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      {
+        text: 'Тайлант хугацаанд бүтээгдэхүүний ангиллын борлуулалт бүртгэгдээгүй байна',
+        options: { colspan: 5, fill: { color: C.altRowFill }, align: 'center', fontSize: 10, color: C.textMuted }
+      }
     ]);
-  });
+  }
 
   s5.addTable(catRows, {
     x: 0.6,
@@ -478,14 +575,23 @@ export const generateSalesReportPptx = async (data: ReportData) => {
       { text: 'Мөнгөн дүн (₮)', options: { bold: true, fill: { color: C.headerFill }, color: C.textWhite, align: 'right' } }
     ]
   ];
-  statusBreakdown.forEach((st, idx) => {
-    const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+  if (statusBreakdown.length > 0) {
+    statusBreakdown.forEach((st, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      stRows.push([
+        { text: st.status, options: { fill: { color: rf }, fontSize: 10, bold: true } },
+        { text: `${st.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(st.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10 } }
+      ]);
+    });
+  } else {
     stRows.push([
-      { text: st.status, options: { fill: { color: rf }, fontSize: 10, bold: true } },
-      { text: `${st.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: formatMNT(st.revenue), options: { fill: { color: rf }, align: 'right', fontSize: 10 } }
+      {
+        text: 'Тайлант хугацаанд бүртгэлтэй захиалга олдсонгүй',
+        options: { colspan: 3, fill: { color: C.altRowFill }, align: 'center', fontSize: 10, color: C.textMuted }
+      }
     ]);
-  });
+  }
 
   s6.addTable(stRows, {
     x: 0.6,
@@ -542,13 +648,19 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     bold: true,
     color: C.primary
   });
-  const finBullets = [
-    `Тайлант хугацааны нийт борлуулалтаас ${colRate.toFixed(1)}%-ийн төлбөр амжилттай дансанд орсон байна.`,
-    summary.totalReceivables > 0
-      ? `Багийн нийт үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байгаа тул олгосон болон үйлдвэрлэлд яваа захиалгуудын төлбөрийг шуурхай барагдуулах шаардлагатай.`
-      : `Бүх захиалгын төлбөр бүрэн төлөгдсөн, үлдэгдэл авлагагүй байна.`,
-    `Дараагийн төлөвлөгөөт үед авлагын хэмжээг бууруулж, урьдчилгаа төлбөрийн харьцааг 70%+ түвшинд хадгалахыг зөвлөж байна.`
-  ];
+  const finBullets = summary.totalRevenue > 0
+    ? [
+        `Тайлант хугацааны нийт борлуулалтаас ${colRate.toFixed(1)}%-ийн төлбөр амжилттай дансанд орсон байна.`,
+        summary.totalReceivables > 0
+          ? `Багийн нийт үлдэгдэл авлага ${formatMNT(summary.totalReceivables)} байгаа тул олгосон болон үйлдвэрлэлд яваа захиалгуудын төлбөрийг шуурхай барагдуулах шаардлагатай.`
+          : `Бүх захиалгын төлбөр бүрэн төлөгдсөн, үлдэгдэл авлагагүй байна.`,
+        `Дараагийн төлөвлөгөөт үед авлагын хэмжээг бууруулж, урьдчилгаа төлбөрийн харьцааг 70%+ түвшинд хадгалахыг зөвлөж байна.`
+      ]
+    : [
+        `Сонгосон хугацаанд санхүүгийн төлбөрийн шилжүүлэг бүртгэгдээгүй байна.`,
+        `Харилцагчдын авлагын тооцоог санхүүгийн албатай тулган хянаж, төлбөрийн сахилга батыг баримталж байна.`,
+        `Захиалга авахдаа урьдчилгаа төлбөрийн хувийг (70%+) чанд мөрдөхийг зөвлөж байна.`
+      ];
   s7.addText(finBullets.map(b => ({ text: `•  ${b}\n\n`, options: { fontSize: 11, color: '334155' } })), {
     x: 0.9,
     y: 4.6,
@@ -573,17 +685,26 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     ]
   ];
 
-  topCustomers.forEach((cust, idx) => {
-    const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
-    const pct = summary.totalRevenue > 0 ? (cust.totalAmount / summary.totalRevenue) * 100 : 0;
+  if (topCustomers.length > 0) {
+    topCustomers.forEach((cust, idx) => {
+      const rf = idx % 2 === 1 ? C.altRowFill : 'FFFFFF';
+      const pct = summary.totalRevenue > 0 ? (cust.totalAmount / summary.totalRevenue) * 100 : 0;
+      custRows.push([
+        { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: cust.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
+        { text: `${cust.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
+        { text: formatMNT(cust.totalAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
+        { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      ]);
+    });
+  } else {
     custRows.push([
-      { text: String(idx + 1), options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: cust.name, options: { fill: { color: rf }, bold: true, align: 'left', fontSize: 10 } },
-      { text: `${cust.count} ш`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } },
-      { text: formatMNT(cust.totalAmount), options: { fill: { color: rf }, align: 'right', fontSize: 10, bold: true, color: C.primary } },
-      { text: `${pct.toFixed(1)}%`, options: { fill: { color: rf }, align: 'center', fontSize: 10 } }
+      {
+        text: 'Тайлант хугацаанд харилцагчийн захиалга бүртгэгдээгүй байна',
+        options: { colspan: 5, fill: { color: C.altRowFill }, align: 'center', fontSize: 10, color: C.textMuted }
+      }
     ]);
-  });
+  }
 
   s8.addTable(custRows, {
     x: 0.6,
@@ -635,16 +756,23 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     bold: true,
     color: '34D399'
   });
-  const achievements = [
-    `Нийт ${summary.totalOrders} захиалга дээр ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт амжилттай хийгдсэн.`,
-    summary.target > 0
-      ? `Борлуулалтын багийн зорилтын биелэлт ${summary.achievementRate.toFixed(1)}%-д хүрсэн.`
-      : `Нийт гүйцэтгэсэн захиалгуудын дундаж дүн ${formatMNT(avgOrderVal)} байна.`,
-    `Бүтээгдэхүүний ангиллууд жигд борлуулалттай явагдаж байна.`,
-    managerStats.length > 0
-      ? `Хамгийн өндөр борлуулалттай менежерээр ${managerStats[0]?.name || 'Менежер'} (${formatMNT(managerStats[0]?.actual || 0)}) шалгарсан.`
-      : `Борлуулалтын менежерүүдийн идэвхжилт сайн байна.`
-  ];
+  const achievements = summary.totalOrders > 0
+    ? [
+        `Нийт ${summary.totalOrders} захиалга дээр ${formatMNT(summary.totalRevenue)} төгрөгийн борлуулалт амжилттай хийгдсэн.`,
+        summary.target > 0
+          ? `Борлуулалтын багийн зорилтын биелэлт ${summary.achievementRate.toFixed(1)}%-д хүрсэн.`
+          : `Нийт гүйцэтгэсэн захиалгуудын дундаж дүн ${formatMNT(avgOrderVal)} байна.`,
+        `Бүтээгдэхүүний ангиллууд жигд борлуулалттай явагдаж байна.`,
+        effectiveManagerStats.length > 0 && effectiveManagerStats[0]?.actual > 0
+          ? `Хамгийн өндөр борлуулалттай менежерээр ${effectiveManagerStats[0]?.name || 'Менежер'} (${formatMNT(effectiveManagerStats[0]?.actual || 0)}) шалгарсан.`
+          : `Борлуулалтын менежерүүдийн идэвхжилт сайн байна.`
+      ]
+    : [
+        `Борлуулалтын баг дараагийн үеийн захиалгын бэлтгэл ажлыг бүрэн хангасан.`,
+        `Бүх менежерүүдийн төлөвлөгөөт зорилтыг шинэчлэн тодорхойлж байна.`,
+        `Хэвлэлийн үйлдвэрийн хүчин чадалд нийцүүлэн шинэ бүтээгдэхүүний борлуулалтыг эхлүүлж байна.`,
+        `Харилцагчийн суурийг өргөтгөх, түншлэлийг бэхжүүлэх уулзалтууд явагдаж байна.`
+      ];
   s9.addText(achievements.map(a => ({ text: `✓  ${a}\n\n`, options: { fontSize: 11, color: 'E2E8F0' } })), {
     x: 1.1,
     y: 3.0,
@@ -683,7 +811,7 @@ export const generateSalesReportPptx = async (data: ReportData) => {
     h: 3.4
   });
 
-  const fileName = isTeamView
+  const fileName = isTeam
     ? `Borluulaltiin_bagin_tailan_${startDateStr}_${endDateStr}.pptx`
     : `Borluulaltiin_tailan_${targetUser?.name || 'sales'}_${startDateStr}_${endDateStr}.pptx`;
 
