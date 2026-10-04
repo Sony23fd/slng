@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../../../stores/useAuthStore';
 import {
   ResponsiveContainer,
@@ -115,6 +116,7 @@ const formatMoney = (amount: number) => {
 
 export default function MonthlyReportPage() {
   const { token, user } = useAuthStore();
+  const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState<number>(now.getFullYear());
   const [month, setMonth] = useState<number>(now.getMonth() + 1);
@@ -124,6 +126,12 @@ export default function MonthlyReportPage() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'presentation'>('dashboard');
   const [currentSlide, setCurrentSlide] = useState<number>(1);
+
+  useEffect(() => {
+    if (user && user.role === 'PRODUCTION') {
+      router.push('/admin/production');
+    }
+  }, [user, router]);
 
   // Modal states
   const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);

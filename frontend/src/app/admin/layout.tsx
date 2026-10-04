@@ -63,19 +63,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           
           {/* 1. ХЯНАЛТ & САМБАР */}
           {!collapsed && <div style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.5rem' }}>Хяналт & Самбар</div>}
-          <Link href="/admin" title="Хянах самбар" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>📊</span>
-            {!collapsed && <span>Хянах самбар</span>}
-          </Link>
+          
+          {(user.role === 'ADMIN' || user.role === 'FINANCE') && (
+            <Link href="/admin" title="Хянах самбар" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+              <span style={{ fontSize: '1.1rem' }}>📊</span>
+              {!collapsed && <span>Хянах самбар</span>}
+            </Link>
+          )}
 
           <Link href="/admin/production" title="Үйлдвэрлэл хяналт" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
             <span style={{ fontSize: '1.1rem' }}>🏭</span>
             {!collapsed && <span>Үйлдвэрлэл хяналт</span>}
-          </Link>
-
-          <Link href="/admin/reports/monthly" title="Сарын тайлан (PPTX)" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#eef2ff', fontWeight: 600, textDecoration: 'none', color: '#4338ca', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span style={{ fontSize: '1.1rem' }}>📑</span>
-            {!collapsed && <span>Сарын тайлан (PPTX)</span>}
           </Link>
           
           {/* 2. ЗАХИАЛГА & БҮРТГЭЛ */}
@@ -104,6 +102,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {!collapsed && <span>Хэрэглэгчид</span>}
                 </Link>
               )}
+
+              {/* ТАЙЛАН & ШИНЖИЛГЭЭ */}
+              {!collapsed && <div style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.75rem' }}>Тайлан & Шинжилгээ</div>}
+              
+              <Link href="/admin/reports/monthly" title="Сарын тайлан (PPTX)" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                <span style={{ fontSize: '1.1rem' }}>📑</span>
+                {!collapsed && <span>Сарын тайлан (PPTX)</span>}
+              </Link>
 
               {/* 3. ҮНЭ & ТООЦООЛОЛ */}
               {!collapsed && <div style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.75rem' }}>Үнэ & Тооцоолол</div>}
