@@ -89,9 +89,7 @@ interface OpSeedData {
 const operationsData: OpSeedData[] = [
   { name: 'Нугалаа', expr: 'total_base_sheets', desc: 'Нугалаа', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Шалгах', expr: 'total_base_sheets', desc: 'Шалгах', cost: 10, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Цуглуулга (Холио)', expr: 'total_base_sheets', desc: 'Цуглуулга буюу Холио', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Цуглуулга', expr: 'total_base_sheets', desc: 'Цуглуулга', cost: 10, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Холио', expr: 'total_base_sheets', desc: 'Холио', cost: 10, stage: 'POST_PRESS', is_pricing: true },
   
   { name: 'Хэвлэх (1 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 1 өнгө', cost: 10, stage: 'PRINTING', is_pricing: true },
   { name: 'Хэвлэх (2 өнгө)', expr: 'total_base_sheets', desc: 'Хэвлэх 2 өнгө', cost: 20, stage: 'PRINTING', is_pricing: true },
@@ -125,7 +123,6 @@ const operationsData: OpSeedData[] = [
   { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хөөсөн хатуу хавтас хийх', expr: 'total_qty', desc: 'Хөөсөн хатуу хавтас угсрах', cost: 3500, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Супер хавтас хийх', expr: 'total_qty', desc: 'Супер хавтас нугалах, өмсгөх', cost: 1000, stage: 'POST_PRESS', is_pricing: true },
 
   { name: 'Бөгж цоологч', expr: 'total_qty', desc: 'Бөгж цоологч', cost: 20, stage: 'POST_PRESS', is_pricing: true },
@@ -138,13 +135,8 @@ const operationsData: OpSeedData[] = [
 
   { name: 'Спираль дарагч', expr: 'total_qty', desc: 'Спираль дарагч', cost: 50, stage: 'POST_PRESS', is_pricing: true },
 
-  // Технологийн зааварчилгаа (Үнэгүй - 0₮, цехийн мастер болон гүйцэтгэгчдэд зориулсан)
-  { name: 'Цаас амраах / Хэвэнд бэлтгэх', desc: 'Хэвлэхээс өмнө чийгшил, температурыг тэнцвэржүүлэх', cost: 0, stage: 'PRE_PRESS', is_pricing: false },
-  { name: 'Өнгө тааруулах / Сигнатур тулгах', desc: 'Хэвлэлийн эхний хуудсыг захиалагчийн эхтэй тулгах', cost: 0, stage: 'PRINTING', is_pricing: false },
-  { name: 'Хатаалт хүлээх', desc: 'Бүрэлт болон огтлоонд орохоос өмнө бүрэн хатаах', cost: 0, stage: 'PRINTING', is_pricing: false },
-  { name: 'QR / Баркод уншиж шалгах', desc: 'Хэвлэгдсэн кодуудыг сканнераар уншиж шалгах', cost: 0, stage: 'POST_PRESS', is_pricing: false },
-  { name: 'Тусгай боодол / Хайрцаглах', desc: 'Захиалгын стандартын дагуу тоолж хайрцаглах', cost: 0, stage: 'PACKAGING', is_pricing: false },
-  { name: 'Чанарын эцсийн хяналт', desc: 'Савлахаас өмнөх эцсийн согог шалгалт', cost: 0, stage: 'PACKAGING', is_pricing: false },
+  // Технологийн эцсийн хяналт
+  { name: 'Чанарын эцсийн хяналт', expr: 'total_qty', desc: 'Савлахаас өмнөх эцсийн согог шалгалт', cost: 0, stage: 'PACKAGING', is_pricing: false },
 ];
 
 export async function seedPrices(prisma: PrismaClient) {

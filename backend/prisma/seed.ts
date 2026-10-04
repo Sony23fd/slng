@@ -119,7 +119,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 100,
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Шохойтой цаас 157гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Бланк', 
@@ -131,7 +131,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Даралт', 
@@ -143,7 +143,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 20,
       default_materials: ['Мат цаас 300гр A0 (889x1194)'],
-      default_operations: ['Клише (Алтлаг)', 'Эмбосс', 'Огтлоо (Жижиг)']
+      default_operations: ['Клише (Алтлаг)', 'Эмбосс', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Зурагт хуудас', 
@@ -155,7 +155,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Шохойтой цаас 157гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Том)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Календар', 
@@ -167,7 +167,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Мат цаас 250гр A0 (889x1194)', 'Картон 2 A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Спираль дарагч', 'Огтлоо (Дунд)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Цуглуулга', 'Спираль дарагч', 'Огтлоо (Дунд)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Ном хар', 
@@ -179,7 +179,7 @@ async function main() {
       has_bookmark: true, 
       waste_qty: 100,
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Ном өнгөт', 
@@ -191,7 +191,7 @@ async function main() {
       has_bookmark: true, 
       waste_qty: 100,
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Шохойтой цаас 128гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Сонин', 
@@ -203,7 +203,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 100,
       default_materials: ['Офсет цаас 70гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Огтлоо (Том)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Сэтгүүл', 
@@ -215,7 +215,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 100,
       default_materials: ['Шохойтой цаас 200гр A0 (889x1194)', 'Шохойтой цаас 105гр A0 (889x1194)', 'Бүрэлт (Гялгар)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Түргэн хэвлэл Konica', 
@@ -227,7 +227,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)'],
-      default_operations: ['Огтлоо (Жижиг)']
+      default_operations: ['Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Тор', 
@@ -239,7 +239,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Шохойтой цаас 250гр B1 (787x1092)', 'Бүрэлт (Матт)', 'Оосор (Торны оосор)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A2)', 'Бөгж цоологч', 'Гараар хийх ажил']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Хэв дарах (A2)', 'Бөгж цоологч', 'Гараар хийх ажил', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Хортой маягт', 
@@ -251,7 +251,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 20,
       default_materials: ['Хортой цаас I өнгө 48гр Ao (889x1194)', 'Хортой цаас II өнгө/шар 50гр Ao (889x1194)'],
-      default_operations: ['Хэвлэх (1 өнгө)', 'Нууцлал наах', 'Наалт', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (1 өнгө)', 'Шалгах', 'Цуглуулга', 'Нууцлал наах', 'Наалт', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Шошго', 
@@ -263,7 +263,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 20,
       default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A3)', 'Бөгж цоологч', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Хэв дарах (A3)', 'Бөгж цоологч', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Дэвтэр', 
@@ -275,7 +275,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)', 'Бүрэлт (Гялгар)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Нугалаа', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'EPSON', 
@@ -287,7 +287,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Шохойтой цаас 200гр A0 (889x1194)'],
-      default_operations: ['Огтлоо (Том)']
+      default_operations: ['Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Маягт', 
@@ -299,7 +299,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (1 өнгө)', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (1 өнгө)', 'Шалгах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Хавтас', 
@@ -311,7 +311,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A2)', 'Гараар хийх ажил', 'Наалт']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Хэв дарах (A2)', 'Гараар хийх ажил', 'Наалт', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Дугтуй', 
@@ -323,7 +323,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 20,
       default_materials: ['Офсет цаас 100гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Хэв дарах (A3)', 'Гараар хийх ажил', 'Наалт']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Хэв дарах (A3)', 'Гараар хийх ажил', 'Наалт', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Урилга', 
@@ -335,7 +335,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Мат цаас 250гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нугалаа', 'Клише (Алтлаг)', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нугалаа', 'Клише (Алтлаг)', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Меню', 
@@ -347,7 +347,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 50,
       default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Спираль дарагч', 'Огтлоо (Дунд)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Цуглуулга', 'Спираль дарагч', 'Огтлоо (Дунд)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Нэрийн хуудас', 
@@ -359,7 +359,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Шохойтой цаас 300гр A0 (889x1194)', 'Бүрэлт (Матт)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Дахин хэвлэлт', 
@@ -371,7 +371,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Промо', 
@@ -383,7 +383,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: [],
-      default_operations: ['Гараар хийх ажил']
+      default_operations: ['Гараар хийх ажил', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Билет', 
@@ -395,7 +395,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Хэвлэх (4 өнгө)', 'Нууцлал наах', 'Огтлоо (Жижиг)']
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нууцлал наах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Бал', 
@@ -407,7 +407,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: [],
-      default_operations: ['Гараар хийх ажил']
+      default_operations: ['Гараар хийх ажил', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Шуурхай принт', 
@@ -419,7 +419,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Огтлоо (Жижиг)']
+      default_operations: ['Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
     { 
       name: 'Бусад', 
@@ -431,7 +431,7 @@ async function main() {
       has_bookmark: false, 
       waste_qty: 0,
       default_materials: [],
-      default_operations: ['Огтлоо (Жижиг)']
+      default_operations: ['Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     }
   ];
 
