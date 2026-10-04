@@ -34,11 +34,13 @@ export interface ProductionInspectorDrawerProps {
 export const STAGES_META = [
   { key: 'design', label: 'Эх бэлтгэл / Дизайн', shortLabel: 'Эх бэлтгэл', icon: '🎨', desc: 'Эх файл, макет шалгах, эцсийн баталгаажуулалт' },
   { key: 'raw_material', label: 'Түүхий эд / Цаас', shortLabel: 'Цаас/Материал', icon: '📦', desc: 'Үндсэн ба туслах цаас, картон, материалын зүсэлт' },
-  { key: 'ctp', label: 'CTP Хавтан', shortLabel: 'CTP Хавтан', icon: '💿', desc: 'Хэвлэлийн хөнгөн цагаан хавтан шарах, тодруулах' },
+  { key: 'ctp', label: 'CTP Хавтан', shortLabel: 'CTP', icon: '💿', desc: 'Хэвлэлийн хөнгөн цагаан хавтан шарах, тодруулах' },
   { key: 'print', label: 'Хэвлэх', shortLabel: 'Хэвлэх', icon: '🖨️', desc: 'Офсет / Дижитал машин дээр үндсэн хэвлэлт' },
-  { key: 'inspect', label: 'Шалгаа / Чанар', shortLabel: 'Шалгаа', icon: '🔍', desc: 'Хэвлэмэл хуудасны чанар, будаг шалгах, ялгах' },
-  { key: 'fold', label: 'Нугалаа / Зүсэлт', shortLabel: 'Нугалаа', icon: '📐', desc: 'Хэвлэлийн дараах хуудас нугалах, тэгшлэх' },
-  { key: 'bind', label: 'Үдэх / Наах / Савлах', shortLabel: 'Үдэх/Савлах', icon: '📚', desc: 'Хавтаслах, үдэх, наах, савлаж бэлэн болгох' },
+  { key: 'additional_ops', label: 'Нэмэлт ажиллагаа', shortLabel: 'Нэмэлт ажил', icon: '✨', desc: 'Бүрэлт, лак, клише, эмбосс, хатуу хавтас гэх мэт тусгай ажиллагаанууд' },
+  { key: 'inspect', label: 'Шалгах / Цуглуулга', shortLabel: 'Шалгах/Цуглуулга', icon: '🔍', desc: 'Хэвлэмэл хуудасны чанар, будаг шалгах, сигнатур цуглуулах' },
+  { key: 'bind', label: 'Үдэлт / Наалт', shortLabel: 'Үдэх/Наах', icon: '📚', desc: 'Унаа үдээ, халуун наалт, хатуу хавтас угсрах' },
+  { key: 'cut', label: 'Огтлоо', shortLabel: 'Огтлоо', icon: '✂️', desc: '3 талт огтлоо, том/жижиг хутгаар бэлэн хэмжээгээр огтлох' },
+  { key: 'qc_pack', label: 'Чанарын хяналт & Савлалт', shortLabel: 'Чанар/Савлалт', icon: '📦', desc: 'Чанарын эцсийн хяналт, савлагаа, тоололт, бэлэн болох' },
 ];
 
 export const getStageStatusValue = (stages?: any, key?: string) => {
@@ -48,7 +50,8 @@ export const getStageStatusValue = (stages?: any, key?: string) => {
     design: 'prep',
     raw_material: 'material',
     ctp: 'plate',
-    inspect: 'check'
+    inspect: 'check',
+    cut: 'fold',
   };
   const lk = legacyMap[key];
   if (lk && stages[lk]?.status !== undefined) return Number(stages[lk].status);

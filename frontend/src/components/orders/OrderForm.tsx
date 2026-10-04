@@ -5050,7 +5050,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                                     const base = Number(formValues.materials?.[index]?.base_qty) > 0 
                                       ? Number(formValues.materials?.[index]?.base_qty) 
-                                      : (Number(targetMat?.base_qty) > 0 ? Number(targetMat.base_qty) : (Number(getValues('total_qty')) || 1000));
+                                      : (Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : (Number(getValues('total_qty')) || 1000));
                                     setValue(`materials.${index}.base_qty`, base);
 
                                     const currentOps = getValues('operations') || [];

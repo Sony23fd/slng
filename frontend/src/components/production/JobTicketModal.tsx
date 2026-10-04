@@ -110,6 +110,13 @@ export default function JobTicketModal({ order, onClose }: Props) {
                  {order.is_urgent && <span style={{ color: '#ef4444', marginRight: '0.5rem' }}>🚨 ЯАРАЛТАЙ!</span>}
                </div>
                <div><strong>Эх бэлтгэл:</strong> {order.design_status}</div>
+               <div style={{ marginTop: '0.4rem' }}>
+                 {order.payment_status === 'PAID' || Boolean(order.paid_amount && order.final_price && order.paid_amount >= order.final_price) ? (
+                   <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.9rem' }}>✓ ТӨЛБӨР ТӨЛӨГДСӨН</span>
+                 ) : Boolean(order.remaining_balance && order.remaining_balance > 0) ? (
+                   <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '0.9rem' }}>⚠️ ҮЛДЭГДЭЛ ТӨЛБӨРТЭЙ!</span>
+                 ) : null}
+               </div>
             </div>
           </div>
 

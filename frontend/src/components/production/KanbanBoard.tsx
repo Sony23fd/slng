@@ -87,12 +87,12 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
                             fontSize: '0.75rem',
                             color: '#b91c1c',
                             display: 'flex',
-                            justifyContent: 'space-between',
+                            justifyContent: 'center',
                             alignItems: 'center',
+                            fontWeight: 800,
                             animation: 'pulse-light 2s infinite'
                           }}>
-                            <span style={{ fontWeight: 800 }}>⚠️ ҮЛДЭГДЭЛ:</span>
-                            <span style={{ fontWeight: 800 }}>{remaining.toLocaleString()} ₮ АВАХ!</span>
+                            ⚠️ ҮЛДЭГДЭЛ ТӨЛБӨРТЭЙ!
                           </div>
                         );
                       }
@@ -100,18 +100,15 @@ export default function KanbanBoard({ orders, statuses, onMoveStatus }: Props) {
                       if (finalPrice > 0) {
                         const isPaid = paidAmount >= finalPrice;
                         return (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.72rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.72rem' }}>
                             <span style={{ 
-                              padding: '1px 6px', 
+                              padding: '2px 8px', 
                               borderRadius: '4px', 
-                              fontWeight: 600,
+                              fontWeight: 700,
                               background: isPaid ? '#dcfce7' : paidAmount > 0 ? '#fef3c7' : '#fee2e2',
                               color: isPaid ? '#15803d' : paidAmount > 0 ? '#b45309' : '#b91c1c'
                             }}>
-                              {isPaid ? '✓ Төлөгдсөн' : paidAmount > 0 ? `🟡 Урьдчилгаа (${Math.round((paidAmount / finalPrice) * 100)}%)` : '🔴 Төлбөргүй'}
-                            </span>
-                            <span style={{ color: remaining > 0 ? '#dc2626' : '#15803d', fontWeight: 600 }}>
-                              {remaining > 0 ? `Үлд: ${remaining.toLocaleString()} ₮` : `${finalPrice.toLocaleString()} ₮`}
+                              {isPaid ? '✓ Төлөгдсөн' : paidAmount > 0 ? '🟡 Урьдчилгаатай' : '🔴 Төлбөргүй'}
                             </span>
                           </div>
                         );
