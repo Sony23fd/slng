@@ -84,21 +84,25 @@ export function usePriceCalculator(params: PricingParams) {
     const multiplier = margin > 10 ? ((100 + margin) / 100) : (margin > 0 ? margin : 2.3);
     const rawNetPrice = (preProfitBaseCost * multiplier) + postProfitTotalCost;
 
-    // 7. Эцсийн суурь үнэ (НӨАТ тооцох)
-    const rawFinalPrice = params.has_vat ? rawNetPrice * 1.10 : rawNetPrice;
-
-    // 8. Нэгжийн үнэ (Бүхэл төгрөг болгох ба гараар оруулсан үнийг дэмжих)
-    const autoUnitPrice = Math.ceil(rawFinalPrice / qty);
+    // 7. Суурь нэгж үнэ (НӨАТ-гүй суурь үнэ)
+    const baseAutoUnitPrice = Math.ceil(rawNetPrice / qty);
     const hasManualPrice = params.manual_unit_price !== undefined && 
                            params.manual_unit_price !== null && 
                            Number(params.manual_unit_price) > 0;
-    const unitPrice = hasManualPrice ? Math.round(Number(params.manual_unit_price)) : autoUnitPrice;
+    const baseManualUnitPrice = hasManualPrice ? Math.round(Number(params.manual_unit_price)) : null;
+    const baseUnitPrice = baseManualUnitPrice !== null ? baseManualUnitPrice : baseAutoUnitPrice;
 
-    // 9. Нийт үнэ (Нэхэмжлэх дээр Тоо ширхэг × Нэгж үнэ = Нийт дүн яв цав бүхэл төгрөгөөр тохирно)
+    // 8. Нэхэмжлэхийн нэгж үнэ (НӨАТ тооцох үед суурь үнэн дээр 10% нэмэгдэнэ)
+    // Хэрэв НӨАТ асаалттай бол суурь үнэн дээр 10% нэмэгдэж бүхэл төгрөг болно.
+    const autoUnitPrice = params.has_vat ? Math.ceil(baseAutoUnitPrice * 1.10) : baseAutoUnitPrice;
+    const unitPrice = params.has_vat ? Math.ceil(baseUnitPrice * 1.10) : baseUnitPrice;
+
+    // 9. Нийт үнэ ба Цэвэр дүн (Нэхэмжлэх дээр Тоо ширхэг × Нэгж үнэ = Нийт дүн яв цав бүхэл төгрөгөөр тохирно)
     const finalPrice = unitPrice * qty;
-    const netPrice = params.has_vat ? Math.round(finalPrice / 1.10) : finalPrice;
+    const netPrice = baseUnitPrice * qty;
+    const vatAmount = finalPrice - netPrice;
 
-    // 10. Үйлдвэрийн цэвэр ашиг
+    // 10. Үйлдвэрийн цэвэр ашиг (НӨАТ-гүй цэвэр орлогоос өртгийг хасна)
     const netProfit = netPrice - factoryTotalCost;
 
     return {
@@ -112,10 +116,14 @@ export function usePriceCalculator(params: PricingParams) {
       factoryTotalCost,
       unitCost,
       rawUnitCost,
+      baseUnitPrice,
+      baseAutoUnitPrice,
+      baseManualUnitPrice,
       netPrice,
       finalPrice,
       unitPrice,
       autoUnitPrice,
+      vatAmount,
       isManualUnitPrice: hasManualPrice,
       netProfit
     };

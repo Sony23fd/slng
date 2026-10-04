@@ -6136,34 +6136,41 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       }}
                       title="Автомат томьёоны үнэ рүү буцаах"
                     >
-                      🔄 Автомат руу буцах ({prices.autoUnitPrice.toLocaleString()} ₮)
+                      🔄 Автомат руу буцах ({(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮)
                     </button>
                   )}
                 </div>
-                <div className="erp-mini-input" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    placeholder={String(prices.autoUnitPrice)}
-                    value={formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null ? formValues.manual_unit_price : ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '') {
-                        setValue("manual_unit_price", null as any);
-                      } else {
-                        setValue("manual_unit_price", Math.round(Number(val)));
-                      }
-                    }}
-                    style={{
-                      fontWeight: 700,
-                      color: prices.isManualUnitPrice ? '#b45309' : '#0f172a',
-                      background: prices.isManualUnitPrice ? '#fffbeb' : '#ffffff',
-                      borderColor: prices.isManualUnitPrice ? '#f59e0b' : '#cbd5e1'
-                    }}
-                    title={prices.isManualUnitPrice ? "Гараар оруулсан нэгж үнэ" : `Автомат тооцоолсон нэгж үнэ: ${prices.autoUnitPrice} ₮`}
-                  />
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>₮</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                  <div className="erp-mini-input" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      placeholder={String(prices.baseAutoUnitPrice || prices.autoUnitPrice)}
+                      value={formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null ? formValues.manual_unit_price : ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setValue("manual_unit_price", null as any);
+                        } else {
+                          setValue("manual_unit_price", Math.round(Number(val)));
+                        }
+                      }}
+                      style={{
+                        fontWeight: 700,
+                        color: prices.isManualUnitPrice ? '#b45309' : '#0f172a',
+                        background: prices.isManualUnitPrice ? '#fffbeb' : '#ffffff',
+                        borderColor: prices.isManualUnitPrice ? '#f59e0b' : '#cbd5e1'
+                      }}
+                      title={prices.isManualUnitPrice ? "Гараар оруулсан нэгжийн суурь үнэ (НӨАТ-гүй)" : `Автомат тооцоолсон нэгжийн суурь үнэ: ${(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮`}
+                    />
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>₮</span>
+                  </div>
+                  {formValues.has_vat && (
+                    <div style={{ fontSize: '10.5px', color: '#0284c7', fontWeight: 600 }}>
+                      НӨАТ-тай нэгж: {prices.unitPrice.toLocaleString()} ₮
+                    </div>
+                  )}
                 </div>
               </div>
 
