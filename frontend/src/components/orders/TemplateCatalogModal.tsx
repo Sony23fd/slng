@@ -11,12 +11,13 @@ interface TemplateCatalogModalProps {
 
 const CATEGORY_TABS = [
   { key: 'ALL', label: 'Бүгд' },
-  { key: 'Ном', label: '📚 Зөөлөн ном & Сэтгүүл' },
+  { key: 'Ном', label: '📚 Ном & Сэтгүүл' },
   { key: 'Хатуу хавтас', label: '📖 Хатуу хавтас' },
   { key: 'Тор', label: '🛍️ Цаасан тор' },
-  { key: 'Брошур', label: '📄 Брошур & Танилцуулга' },
-  { key: 'Календарь', label: '🗓️ Календарь' },
-  { key: 'Бусад', label: '🏷️ Нэрийн хуудас & Бусад' }
+  { key: 'Танилцуулга', label: '📄 Танилцуулга & Зурагт хуудас' },
+  { key: 'Календар', label: '🗓️ Календар' },
+  { key: 'Маягт', label: '📑 Бланк & Хортой маягт' },
+  { key: 'Бусад', label: '🏷️ Шошго, Хавтас, Бусад' }
 ];
 
 export default function TemplateCatalogModal({
@@ -59,16 +60,18 @@ export default function TemplateCatalogModal({
           if (!isHard) return false;
         } else if (activeTab === 'Ном') {
           const isHard = binding.includes('хатуу') || name.includes('хатуу') || binding.includes('супер') || name.includes('супер');
-          const isBook = (cat.includes('ном') || cat.includes('сэтгүүл') || name.includes('ном') || name.includes('сэтгүүл')) && !isHard;
+          const isBook = (cat.includes('ном') || cat.includes('сэтгүүл') || name.includes('ном') || name.includes('сэтгүүл') || cat.includes('дэвтэр') || cat.includes('сонин')) && !isHard;
           if (!isBook) return false;
         } else if (activeTab === 'Тор') {
           if (!cat.includes('тор') && !name.includes('тор')) return false;
-        } else if (activeTab === 'Брошур') {
-          if (!cat.includes('брошур') && !name.includes('брошур') && !name.includes('флаер')) return false;
-        } else if (activeTab === 'Календарь') {
-          if (!cat.includes('календарь') && !name.includes('календарь')) return false;
+        } else if (activeTab === 'Танилцуулга') {
+          if (!cat.includes('танилцуулга') && !cat.includes('брошур') && !cat.includes('зурагт') && !name.includes('танилцуулга') && !name.includes('брошур') && !name.includes('флаер')) return false;
+        } else if (activeTab === 'Календар') {
+          if (!cat.includes('календар') && !name.includes('календар')) return false;
+        } else if (activeTab === 'Маягт') {
+          if (!cat.includes('бланк') && !cat.includes('маягт') && !name.includes('бланк') && !name.includes('маягт')) return false;
         } else if (activeTab === 'Бусад') {
-          const isMain = ['ном', 'сэтгүүл', 'тор', 'брошур', 'календарь'].some(k => cat.includes(k) || name.includes(k));
+          const isMain = ['ном', 'сэтгүүл', 'дэвтэр', 'сонин', 'тор', 'танилцуулга', 'брошур', 'зурагт', 'флаер', 'календар', 'бланк', 'маягт'].some(k => cat.includes(k) || name.includes(k));
           if (isMain) return false;
         }
       }

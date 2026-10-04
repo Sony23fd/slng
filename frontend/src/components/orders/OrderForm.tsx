@@ -354,9 +354,11 @@ function isInnerPageMaterial(m: any, category?: string, productCategories: any[]
     }
   }
   const nonPageCategories = [
-    'Брошур', 'Тор', 'Цаасан тор', 'Флаер', 'Нэрийн хуудас',
-    'Урилга', 'Постер', 'Сертификат', 'Хавтас', 'Хайрцаг',
-    'Билет', 'Стикер', 'Шошго', 'Албан бланк', 'Дугтуй', 'Түргэн хэвлэл'
+    'Бланк', 'Даралт', 'Зурагт хуудас', 'Түргэн хэвлэл Konica', 'Тор',
+    'Цаасан тор', 'Хортой маягт', 'Шошго', 'EPSON', 'Маягт',
+    'Хавтас', 'Дугтуй', 'Урилга', 'Нэрийн хуудас', 'Дахин хэвлэлт',
+    'Промо', 'Билет', 'Бал', 'Шуурхай принт', 'Бусад',
+    'Брошур', 'Флаер', 'Постер', 'Сертификат', 'Хайрцаг', 'Стикер', 'Албан бланк', 'Түргэн хэвлэл'
   ];
   if (nonPageCategories.includes(cat)) {
     return false;
@@ -740,28 +742,35 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       });
     }
 
-    // 3. Complete list of all 20 standard printing product categories
+    // 3. Complete list of all 27 standard printing product categories
     const standardCategories = [
-      { value: 'Ном', label: 'Ном (Зөөлөн / Хатуу хавтастай)' },
+      { value: 'Танилцуулга', label: 'Танилцуулга' },
+      { value: 'Бланк', label: 'Бланк' },
+      { value: 'Даралт', label: 'Даралт' },
+      { value: 'Зурагт хуудас', label: 'Зурагт хуудас' },
+      { value: 'Календар', label: 'Календар' },
+      { value: 'Ном хар', label: 'Ном хар' },
+      { value: 'Ном өнгөт', label: 'Ном өнгөт' },
+      { value: 'Сонин', label: 'Сонин' },
       { value: 'Сэтгүүл', label: 'Сэтгүүл' },
-      { value: 'Брошур', label: 'Брошур / Танилцуулга' },
-      { value: 'Календарь', label: 'Календарь (Ширээний / Ханын)' },
-      { value: 'Тор', label: 'Тор (Цаасан тор)' },
-      { value: 'Хайрцаг', label: 'Хайрцаг (Сав баглаа)' },
-      { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл (Quick Print)' },
-      { value: 'Флаер', label: 'Флаер / Лифлет' },
-      { value: 'Нэрийн хуудас', label: 'Нэрийн хуудас' },
-      { value: 'Урилга', label: 'Урилга / Мэндчилгээ' },
-      { value: 'Меню', label: 'Меню (Хоолны цэс)' },
-      { value: 'Билет', label: 'Билет / Тасалбар' },
-      { value: 'Албан бланк', label: 'Албан бланк / Маягт' },
+      { value: 'Түргэн хэвлэл Konica', label: 'Түргэн хэвлэл Konica' },
+      { value: 'Тор', label: 'Тор' },
+      { value: 'Хортой маягт', label: 'Хортой маягт' },
+      { value: 'Шошго', label: 'Шошго' },
+      { value: 'Дэвтэр', label: 'Дэвтэр' },
+      { value: 'EPSON', label: 'EPSON' },
+      { value: 'Маягт', label: 'Маягт' },
+      { value: 'Хавтас', label: 'Хавтас' },
       { value: 'Дугтуй', label: 'Дугтуй' },
-      { value: 'Хавтас', label: 'Хавтас (Folder)' },
-      { value: 'Стикер', label: 'Стикер / Наалт' },
-      { value: 'Дэвтэр', label: 'Дэвтэр / Блокнот' },
-      { value: 'Сертификат', label: 'Сертификат / Батламж' },
-      { value: 'Постер', label: 'Постер / Плакат' },
-      { value: 'Шошго', label: 'Шошго / Бирка' }
+      { value: 'Урилга', label: 'Урилга' },
+      { value: 'Меню', label: 'Меню' },
+      { value: 'Нэрийн хуудас', label: 'Нэрийн хуудас' },
+      { value: 'Дахин хэвлэлт', label: 'Дахин хэвлэлт' },
+      { value: 'Промо', label: 'Промо' },
+      { value: 'Билет', label: 'Билет' },
+      { value: 'Бал', label: 'Бал' },
+      { value: 'Шуурхай принт', label: 'Шуурхай принт' },
+      { value: 'Бусад', label: 'Бусад' }
     ];
 
     standardCategories.forEach(sc => {
@@ -1515,7 +1524,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
 
     const category = formValues.category || '';
-    if (category === 'Түргэн хэвлэл') {
+    const NON_CTP_CATEGORIES = [
+      'Түргэн хэвлэл Konica',
+      'EPSON',
+      'Шуурхай принт',
+      'Бал',
+      'Даралт',
+      'Промо',
+      'Түргэн хэвлэл'
+    ];
+    if (NON_CTP_CATEGORIES.includes(category)) {
       const mats = formValues.materials || [];
       const hasCtp = mats.some(m => {
         const aux = getMaterialType(m.material_name, m.notes);
@@ -2804,17 +2822,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   ⚡ Бэлэн загварын каталог ({templates.length || '16'})
                 </button>
 
-                {/* 2. Top 5 Quick Preset Chips */}
+                {/* 2. Top Quick Preset Chips */}
                 {[
                   {
                     key: 'soft_book',
                     label: '📚 Зөөлөн ном (A5)',
-                    finder: (t: any) => (t.template_name?.includes('Ном А5') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
+                    finder: (t: any) => (t.template_name?.includes('Ном') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
                   },
                   {
                     key: 'hard_book',
                     label: '📖 Хатуу хавтас (A5)',
-                    finder: (t: any) => t.template_name?.includes('Ном А5') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
+                    finder: (t: any) => t.template_name?.includes('Ном') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
                   },
                   {
                     key: 'paper_bag',
@@ -2823,13 +2841,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   },
                   {
                     key: 'brochure',
-                    label: '📄 Брошур (A4)',
-                    finder: (t: any) => t.category === 'Брошур' || t.template_name?.includes('Брошур')
+                    label: '📄 Танилцуулга (A4)',
+                    finder: (t: any) => t.category === 'Танилцуулга' || t.category === 'Брошур' || t.template_name?.includes('Танилцуулга') || t.template_name?.includes('Брошур')
                   },
                   {
                     key: 'calendar',
-                    label: '🗓️ Календарь (A5)',
-                    finder: (t: any) => t.template_name?.includes('Ширээний Календарь А5')
+                    label: '🗓️ Календар (A5)',
+                    finder: (t: any) => t.category === 'Календар' || t.category === 'Календарь' || t.template_name?.includes('Календар')
+                  },
+                  {
+                    key: 'blank',
+                    label: '📑 Албан бланк (A4)',
+                    finder: (t: any) => t.category === 'Бланк' || t.template_name?.includes('бланк')
                   }
                 ].map((item) => (
                   <button
