@@ -523,6 +523,58 @@ const SectionNavRibbon = () => {
   );
 };
 
+interface BagDimensions {
+  height: number;
+  width: number;
+  gusset: number;
+  topFold: number;
+  bottomFold: number;
+}
+
+const DEFAULT_BAG_DIMS: BagDimensions = {
+  height: 32,
+  width: 24,
+  gusset: 8,
+  topFold: 6,
+  bottomFold: 6
+};
+
+const STANDARD_BAG_PRESETS = [
+  { label: '🛍️ А4 Дунд тор (24х32х8 см)', width: 24, height: 32, gusset: 8, topFold: 6, bottomFold: 6, desc: 'Дэлгээс: 64х44 см (B2)' },
+  { label: '🛍️ А3 Том тор (30х40х10 см)', width: 30, height: 40, gusset: 10, topFold: 6, bottomFold: 6, desc: 'Дэлгээс: 80х52 см (B1/B2)' },
+  { label: '🛍️ А5 Жижиг тор (18х25х7 см)', width: 18, height: 25, gusset: 7, topFold: 5, bottomFold: 5, desc: 'Дэлгээс: 50х35 см (A2)' },
+  { label: '🛍️ Хэвтээ тор (32х24х10 см)', width: 32, height: 24, gusset: 10, topFold: 6, bottomFold: 6, desc: 'Дэлгээс: 84х36 см (B1/B2)' },
+  { label: '🍾 Дарсны тор (12х36х10 см)', width: 12, height: 36, gusset: 10, topFold: 6, bottomFold: 6, desc: 'Дэлгээс: 44х48 см (A2)' },
+  { label: '✏️ Тусгай / Гараар оруулах', width: 24, height: 32, gusset: 8, topFold: 6, bottomFold: 6, desc: 'Өөрийн хэмжээг бичих' },
+];
+
+function parseBagDimensions(sizeStr?: string, subSizeStr?: string): BagDimensions {
+  const text = `${sizeStr || ''} ${subSizeStr || ''}`;
+  if (!text.trim()) return { ...DEFAULT_BAG_DIMS };
+
+  const match = text.match(/(?:Тор\s*)?(\d+(?:\.\d+)?)\s*[хxX*]\s*(\d+(?:\.\d+)?)\s*[хxX*]\s*(\d+(?:\.\d+)?)/i);
+  let w = DEFAULT_BAG_DIMS.width;
+  let h = DEFAULT_BAG_DIMS.height;
+  let g = DEFAULT_BAG_DIMS.gusset;
+  let tf = DEFAULT_BAG_DIMS.topFold;
+  let bf = DEFAULT_BAG_DIMS.bottomFold;
+
+  if (match) {
+    w = parseFloat(match[1]) || w;
+    h = parseFloat(match[2]) || h;
+    g = parseFloat(match[3]) || g;
+  }
+
+  const foldMatch = text.match(/амсар[:\s]*(\d+(?:\.\d+)?).*?ёроол[:\s]*(\d+(?:\.\d+)?)/i) || 
+                    text.match(/\+(\d+(?:\.\d+)?)\+(\d+(?:\.\d+)?)/);
+  if (foldMatch) {
+    tf = parseFloat(foldMatch[1]) || tf;
+    bf = parseFloat(foldMatch[2]) || bf;
+  }
+
+  return { width: w, height: h, gusset: g, topFold: tf, bottomFold: bf };
+}
+
 const calculateMakeready = (baseQty: number): number => {
   if (baseQty <= 1000) return 100;
   if (baseQty <= 2000) return 150;
@@ -549,7 +601,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [formulas, setFormulas] = useState<any[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
-  const [bagDims, setBagDims] = useState({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+  const [bagDims, setBagDims] = useState<BagDimensions>(() => {
+    if (initialData) {
+      return parseBagDimensions(initialData.size, initialData.sub_size);
+    }
+    return { ...DEFAULT_BAG_DIMS };
+  });
+  const [selectedBagPreset, setSelectedBagPreset] = useState<string>('');
 
   const OP_CATEGORIES = [
     { name: 'Хэвлэл', keywords: ['хэвлэгч', 'хэвлэл', 'хальс', 'эх бэлтгэл', 'cd'] },
@@ -738,6 +796,107 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const [opModalSearch, setOpModalSearch] = useState<string>('');
   const { fields: outFields, append: appendOut, remove: removeOut } = useFieldArray({ control, name: 'outsourced' });
 
+  const updateBagDimensions = (nextDims: BagDimensions) => {
+    setBagDims(nextDims);
+    const fw = (nextDims.width + nextDims.gusset) * 2;
+    const fh = nextDims.height + nextDims.topFold + nextDims.bottomFold;
+    const sizeStr = `Тор ${nextDims.width}х${nextDims.height}х${nextDims.gusset} (Дэлгээс: ${fw}х${fh}см)`;
+    const subSizeStr = `${nextDims.width}х${nextDims.height}х${nextDims.gusset}см (Амсар: ${nextDims.topFold}см, Ёроол: ${nextDims.bottomFold}см)`;
+    setValue('size', sizeStr);
+    setValue('sub_size', subSizeStr);
+  };
+
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.category === 'Тор' || initialData.category === 'Цаасан тор' || initialData.size?.startsWith('Тор')) {
+        const parsed = parseBagDimensions(initialData.size, initialData.sub_size);
+        setBagDims(parsed);
+      }
+    }
+  }, [initialData]);
+
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
+
+  const allBagPresets = useMemo(() => {
+    const list = [...STANDARD_BAG_PRESETS];
+    if (groupedConstants['BAG_SIZE']) {
+      groupedConstants['BAG_SIZE'].forEach((c: any) => {
+        const parsed = parseBagDimensions(c.value, c.description);
+        const fw = (parsed.width + parsed.gusset) * 2;
+        const fh = parsed.height + parsed.topFold + parsed.bottomFold;
+        const label = `🛍️ ${c.value}`;
+        if (!list.some(p => p.label === label || (p.width === parsed.width && p.height === parsed.height && p.gusset === parsed.gusset))) {
+          list.unshift({
+            label,
+            width: parsed.width,
+            height: parsed.height,
+            gusset: parsed.gusset,
+            topFold: parsed.topFold,
+            bottomFold: parsed.bottomFold,
+            desc: c.description || `Дэлгээс: ${fw}х${fh} см`
+          });
+        }
+      });
+    }
+    return list;
+  }, [groupedConstants]);
+
+  const handleSelectBagPreset = (presetLabel: string) => {
+    setSelectedBagPreset(presetLabel);
+    const found = allBagPresets.find(p => p.label === presetLabel);
+    if (found && presetLabel !== '✏️ Тусгай / Гараар оруулах') {
+      updateBagDimensions({
+        width: found.width,
+        height: found.height,
+        gusset: found.gusset,
+        topFold: found.topFold,
+        bottomFold: found.bottomFold
+      });
+    }
+  };
+
+  const handleSaveBagPreset = async () => {
+    const defaultName = `Тор ${bagDims.width}х${bagDims.height}х${bagDims.gusset}`;
+    const presetName = prompt(
+      'Хадгалах бэлдэцийн нэрийг оруулна уу (Жишээ: Тор 24х32х8 (А4)):',
+      defaultName
+    );
+    if (!presetName || !presetName.trim()) return;
+
+    try {
+      setIsSavingPreset(true);
+      const fw = (bagDims.width + bagDims.gusset) * 2;
+      const fh = bagDims.height + bagDims.topFold + bagDims.bottomFold;
+      const payload = {
+        type: 'BAG_SIZE',
+        value: presetName.trim(),
+        description: `Дэлгээс: ${fw}х${fh}см, Амсар: ${bagDims.topFold}см, Ёроол: ${bagDims.bottomFold}см`
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/constants`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const newConst = await res.json();
+        setConstants(prev => [...prev, newConst]);
+        setSelectedBagPreset(`🛍️ ${newConst.value}`);
+        alert('Торны хэмжээ амжилттай хадгалагдлаа!');
+      } else {
+        alert('Хадгалахад алдаа гарлаа.');
+      }
+    } catch (e) {
+      console.error('Failed to save bag preset', e);
+      alert('Хадгалахад алдаа гарлаа.');
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
 
   const getA7Size = () => {
     const s = getValues('size');
@@ -880,8 +1039,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
 
       // If category or product is Тор (Bag), configure bag dimensions
-      if (t.category === 'Тор' || t.template_name?.includes('Тор')) {
-        setBagDims({ height: 32, width: 24, gusset: 8, topFold: 6, bottomFold: 6 });
+      if (t.category === 'Тор' || t.category === 'Цаасан тор' || t.template_name?.includes('Тор') || t.size?.startsWith('Тор')) {
+        const parsed = parseBagDimensions(t.size, od.sub_size);
+        updateBagDimensions(parsed);
       }
 
       // Materials with live prices from masterPrices and strict offset calculation rules
@@ -1128,6 +1288,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
     if (formValues.category !== prevCategory) {
       setPrevCategory(formValues.category);
+      if (formValues.category === 'Тор' || formValues.category === 'Цаасан тор') {
+        if (!getValues('cover_color')) {
+          setValue('cover_color', '4+0');
+        }
+        updateBagDimensions(bagDims);
+      }
       // Find the category config
       const catConfig = productCategories.find(c => c.name === formValues.category);
       if (catConfig) {
@@ -1348,6 +1514,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       replaceOps(cleanOps);
     }
 
+    const category = formValues.category || '';
+    if (category === 'Түргэн хэвлэл') {
+      const mats = formValues.materials || [];
+      const hasCtp = mats.some(m => {
+        const aux = getMaterialType(m.material_name, m.notes);
+        return aux.type === 'ctp';
+      });
+      if (hasCtp) {
+        const cleanMats = mats.filter(m => {
+          const aux = getMaterialType(m.material_name, m.notes);
+          return aux.type !== 'ctp';
+        });
+        setValue('materials', cleanMats);
+        replaceMaterials(cleanMats);
+      }
+      return;
+    }
+
     const b1 = formValues.cover_color;
     const b2 = formValues.inner_color;
     const mats = formValues.materials || [];
@@ -1356,7 +1540,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const ctpPriceSmallStr = constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800';
     const ctpPriceSmall = Number(ctpPriceSmallStr) || 6800;
     const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
-    const category = formValues.category || '';
 
     // Group required CTP plates by plate size (65x55, 74.5x60.5, 76x60.5)
     interface CtpComp {
@@ -1376,11 +1559,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       const isCover = Boolean(m.is_cover);
       const isInner = !isCover && isInnerPageMaterial(m, category, productCategories);
-      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2));
-      const printSize = m.print_size || (isCover ? 'B3' : 'A2');
+      const isSingleSheet = isCover || !isInner;
+      const isBag = category === 'Тор' || category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
+      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2 || (isBag ? '4+0' : '')));
+      const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : 'A2'));
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
       const mPressSheet = Number(m.press_sheet) || 1;
-      const plates = calcPlates(colorToUse, mPressSheet, divisions, isCover);
+      const plates = calcPlates(colorToUse, mPressSheet, divisions, isSingleSheet);
 
       if (plates > 0) {
         // Plate sizing logic based on printing press standards:
@@ -1397,7 +1582,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         ctpComponents.push({
           role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
-          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : 'Үндсэн'),
+          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : 'Үндсэн')),
           printSize,
           pressSheet: String(m.press_sheet || ''),
           plates,
@@ -2370,15 +2555,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           m5 = Math.ceil(a6 / div);
           if (!m.print_size) setValue(`materials.${index}.print_size`, m3);
         }
-        const m4 = '1';
+        // For bag, preserve user's manual press_sheet if set, otherwise default to '1'
+        const currentPressSheet = Number(m.press_sheet) > 0 ? Number(m.press_sheet) : 1;
+        const m4 = isBag ? String(currentPressSheet) : '1';
 
-        if (String(m.press_sheet) !== m4) setValue(`materials.${index}.press_sheet`, m4);
+        if (String(m.press_sheet || '') !== m4 && !isBag) setValue(`materials.${index}.press_sheet`, m4);
+        else if (isBag && (!m.press_sheet || m.press_sheet === '')) setValue(`materials.${index}.press_sheet`, '1');
+
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
         const extra = calculateMakeready(m5);
-        if (Number(m.extra_qty) !== extra) setValue(`materials.${index}.extra_qty`, extra);
-        const setups = isBag ? 1 : calculateSetups(1, div);
-        const total = (m5 * 1) + (extra * setups);
+        if (Number(m.extra_qty) !== extra && !m.is_manual_extra) setValue(`materials.${index}.extra_qty`, extra);
+        const curExtra = (m.is_manual_extra && Number(m.extra_qty) >= 0) ? Number(m.extra_qty) : extra;
+
+        const pressNum = isBag ? currentPressSheet : 1;
+        const setups = isBag ? calculateSetups(pressNum, div) : calculateSetups(1, div);
+        const total = (m5 * pressNum) + (curExtra * setups);
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
         const divBy = Number(m.divide_by) || (isBag ? 2 : 1);
         if (isBag && Number(m.divide_by) !== divBy) setValue(`materials.${index}.divide_by`, divBy);
@@ -3219,31 +3411,58 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
-                <CalculationHelpBadge
-                  title="Цаасан торны дэлгээс хэмжээ"
-                  formula="Дэлгээс Өргөн = (Өргөн + Хажуу) × 2 | Дэлгээс Өндөр = Өндөр + Амсар (6см) + Ёроол (6см)"
-                  liveCalculation={`Дэлгээс: ${((bagDims.width + bagDims.gusset) * 2)}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см`}
-                  details={[
-                    "3 хэмжээст торыг хэвлэлийн цаасан дээр дэлгэхэд хажуу болон нугалааснууд нэмэгдэн тооцогдоно.",
-                    "Амсар болон Ёроол нугалааг стандартаар тус бүр 6 см гэж авна."
-                  ]}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
+                  <CalculationHelpBadge
+                    title="Цаасан торны дэлгээс хэмжээ"
+                    formula="Дэлгээс Өргөн = (Өргөн + Хажуу) × 2 | Дэлгээс Өндөр = Өндөр + Амсар (6см) + Ёроол (6см)"
+                    liveCalculation={`Дэлгээс: ${((bagDims.width + bagDims.gusset) * 2)}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см`}
+                    details={[
+                      "3 хэмжээст торыг хэвлэлийн цаасан дээр дэлгэхэд хажуу болон нугалааснууд нэмэгдэн тооцогдоно.",
+                      "Амсар болон Ёроол нугалааг стандартаар тус бүр 6 см гэж авна."
+                    ]}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <select
+                    style={{ fontSize: '0.85rem', padding: '0.4rem 0.6rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1e293b', minWidth: '220px' }}
+                    value={selectedBagPreset}
+                    onChange={(e) => handleSelectBagPreset(e.target.value)}
+                  >
+                    <option value="">-- Бэлэн стандарт хэмжээ сонгох --</option>
+                    {allBagPresets.map((p, idx) => (
+                      <option key={idx} value={p.label}>
+                        {p.label} {p.desc ? `(${p.desc})` : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    disabled={isSavingPreset}
+                    onClick={handleSaveBagPreset}
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.825rem', padding: '0.4rem 0.75rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    title="Одоо оруулсан торны хэмжээг системд бэлдэц болгон хадгалах"
+                  >
+                    <span>💾</span>
+                    <span>{isSavingPreset ? 'Хадгалж байна...' : 'Хэмжээ хадгалах'}</span>
+                  </button>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
                 <div className="erp-field">
                   <label>Өндөр (см)</label>
                   <input
                     type="number"
+                    step="any"
                     value={bagDims.height}
                     onChange={(e) => {
                       const h = Number(e.target.value) || 0;
-                      const next = { ...bagDims, height: h };
-                      setBagDims(next);
-                      const fw = (next.width + next.gusset) * 2;
-                      const fh = next.height + next.topFold + next.bottomFold;
-                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                      updateBagDimensions({ ...bagDims, height: h });
                     }}
                   />
                 </div>
@@ -3251,14 +3470,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <label>Өргөн (см)</label>
                   <input
                     type="number"
+                    step="any"
                     value={bagDims.width}
                     onChange={(e) => {
                       const w = Number(e.target.value) || 0;
-                      const next = { ...bagDims, width: w };
-                      setBagDims(next);
-                      const fw = (next.width + next.gusset) * 2;
-                      const fh = next.height + next.topFold + next.bottomFold;
-                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                      updateBagDimensions({ ...bagDims, width: w });
                     }}
                   />
                 </div>
@@ -3266,14 +3482,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <label>Хажуу (см)</label>
                   <input
                     type="number"
+                    step="any"
                     value={bagDims.gusset}
                     onChange={(e) => {
                       const g = Number(e.target.value) || 0;
-                      const next = { ...bagDims, gusset: g };
-                      setBagDims(next);
-                      const fw = (next.width + next.gusset) * 2;
-                      const fh = next.height + next.topFold + next.bottomFold;
-                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                      updateBagDimensions({ ...bagDims, gusset: g });
                     }}
                   />
                 </div>
@@ -3281,14 +3494,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <label>Амсар нугалаа (см)</label>
                   <input
                     type="number"
+                    step="any"
                     value={bagDims.topFold}
                     onChange={(e) => {
                       const tf = Number(e.target.value) || 0;
-                      const next = { ...bagDims, topFold: tf };
-                      setBagDims(next);
-                      const fw = (next.width + next.gusset) * 2;
-                      const fh = next.height + next.topFold + next.bottomFold;
-                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                      updateBagDimensions({ ...bagDims, topFold: tf });
                     }}
                   />
                 </div>
@@ -3296,19 +3506,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <label>Ёроол нугалаа (см)</label>
                   <input
                     type="number"
+                    step="any"
                     value={bagDims.bottomFold}
                     onChange={(e) => {
                       const bf = Number(e.target.value) || 0;
-                      const next = { ...bagDims, bottomFold: bf };
-                      setBagDims(next);
-                      const fw = (next.width + next.gusset) * 2;
-                      const fh = next.height + next.topFold + next.bottomFold;
-                      setValue('size', `Тор ${next.width}х${next.height}х${next.gusset} (Дэлгээс: ${fw}х${fh}см)`);
+                      updateBagDimensions({ ...bagDims, bottomFold: bf });
                     }}
                   />
                 </div>
               </div>
-              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#eff6ff', borderLeft: '4px solid #3b82f6', color: '#1e3a8a', fontWeight: '500' }}>
+
+              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#eff6ff', borderLeft: '4px solid #3b82f6', color: '#1e3a8a', fontWeight: '500', borderRadius: '0.25rem', fontSize: '0.875rem' }}>
                 💡 Автомат бодогдсон Дэлгээс хэмжээ: <strong>Өргөн {((bagDims.width + bagDims.gusset) * 2)} см х Өндөр {(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см</strong> ({((bagDims.width + bagDims.gusset) * 2) * 10}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold) * 10} мм) — B2 эсвэл А2 хэвлэлийн хуудсанд 1 ш багтана.
               </div>
             </div>
@@ -4344,38 +4552,47 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           >
                             {aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '—'}
                           </div>
-                        ) : (
-                          <input 
-                            style={isSpecialMat ? disabledStyle : {...inputStyle, backgroundColor: '#f1f5f9'}} 
-                            readOnly 
-                            title={
-                              isCoverRow 
-                                ? "Хавтасны хэвлэлийн хуудасны норм (Cover Rules Matrix)" 
-                                : isInnerPageMaterial(formValues.materials?.[index], formValues.category)
-                                  ? `Дотор хуудас: Нийт ${formValues.total_pages || 0} нүүр / (${calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', getA7Size())} × 2 нүүр) = ${formValues.materials?.[index]?.press_sheet || 0}`
-                                  : "Хэвлэлийн хуудас"
-                            } 
-                            {...register(`materials.${index}.press_sheet`, {
-                            onChange: (e) => {
-                              if (isSpecialMat) return;
-                              const press = Number(e.target.value) || 1;
-                              const totalQ = Number(getValues('total_qty')) || 0;
-                              const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
-                              if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
-                                setValue(`materials.${index}.base_qty`, base);
+                        ) : (() => {
+                          const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
+                          const isInnerMat = isInnerPageMaterial(formValues.materials?.[index], formValues.category);
+                          const canEditPressSheet = !isSpecialMat && (isBagCategory || (!isCoverRow && !isInnerMat));
+                          return (
+                            <input 
+                              type="number"
+                              step="any"
+                              style={canEditPressSheet ? inputStyle : (isSpecialMat ? disabledStyle : { ...inputStyle, backgroundColor: '#f1f5f9' })} 
+                              readOnly={!canEditPressSheet} 
+                              title={
+                                isCoverRow 
+                                  ? "Хавтасны хэвлэлийн хуудасны норм (Cover Rules Matrix)" 
+                                  : isInnerMat
+                                    ? `Дотор хуудас: Нийт ${formValues.total_pages || 0} нүүр / (${calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', getA7Size())} × 2 нүүр) = ${formValues.materials?.[index]?.press_sheet || 0}`
+                                    : (isBagCategory ? "Торон дээр хэвлэлийн хуудсыг гараар бичиж өөрчлөх боломжтой (1, 2 гэх мэт)" : "Хэвлэлийн хуудас")
+                              } 
+                              {...register(`materials.${index}.press_sheet`, {
+                              onChange: (e) => {
+                                if (isSpecialMat) return;
+                                const press = Number(e.target.value) || 1;
+                                const totalQ = Number(getValues('total_qty')) || 0;
+                                const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
+                                if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                  setValue(`materials.${index}.base_qty`, base);
+                                }
+                                const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base);
+                                setValue(`materials.${index}.extra_qty`, extra);
+                                const a7 = getA7Size();
+                                const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7) || 1;
+                                const setups = calculateSetups(press, divs);
+                                const total = (base * press) + (extra * setups);
+                                setValue(`materials.${index}.total_qty`, total);
+                                const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+                                if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { 
+                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
+                                }
                               }
-                              const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base);
-                              setValue(`materials.${index}.extra_qty`, extra);
-                              const a7 = getA7Size();
-                              const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
-                              const setups = calculateSetups(press, divs);
-                              const total = (base * press) + (extra * setups);
-                              setValue(`materials.${index}.total_qty`, total);
-                              const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                              if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                            }
-                          })} />
-                        )}
+                            })} />
+                          );
+                        })()}
                       </td>
                       )}
                       {isExpandedMaterial && (

@@ -20,6 +20,17 @@ const STANDARD_SIZES: Record<string, { w: number, h: number }> = {
 function parseDimensions(str: string): { w: number, h: number } | null {
   if (!str) return null;
   
+  // Check if string contains Bag Flat sheet (Дэлгээс) in cm or mm, e.g. "Дэлгээс: 64х44см"
+  const delgeesMatch = str.match(/Дэлгээс:\s*(\d+(?:\.\d+)?)\s*(?:x|\*|х)\s*(\d+(?:\.\d+)?)\s*(см|cm|мм|mm)?/i);
+  if (delgeesMatch) {
+    const isCm = !delgeesMatch[3] || delgeesMatch[3].toLowerCase().startsWith('с') || delgeesMatch[3].toLowerCase().startsWith('c');
+    const scale = isCm ? 10 : 1; // Convert cm to mm
+    return {
+      w: parseFloat(delgeesMatch[1]) * scale,
+      h: parseFloat(delgeesMatch[2]) * scale
+    };
+  }
+
   // Try to find explicit WxH e.g. 789x1092 or 789*1092
   const dimMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:x|\*|х)\s*(\d+(?:\.\d+)?)/i);
   if (dimMatch) {
