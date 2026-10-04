@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import {
   ResponsiveContainer,
@@ -79,6 +80,7 @@ const formatDate = (dateStr: string) => {
 
 export default function SalesReportPage() {
   const { token, user } = useAuthStore();
+  const router = useRouter();
 
   const [periodPreset, setPeriodPreset] = useState<'today' | 'this_week' | 'this_month' | 'last_month' | 'custom'>('this_month');
   const [startDate, setStartDate] = useState<string>('');
@@ -88,10 +90,17 @@ export default function SalesReportPage() {
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloadingPptx, setIsDownloadingPptx] = useState<boolean>(false);
 
   // Table filters
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (user && user.role === 'PRODUCTION') {
+      router.push('/admin/production');
+    }
+  }, [user, router]);
 
   // Initialize custom dates with current month
   useEffect(() => {
@@ -225,6 +234,51 @@ export default function SalesReportPage() {
     document.body.removeChild(link);
   };
 
+  // Download Meeting PPTX Presentation
+  const handleDownloadPptx = async () => {
+    if (!token) return;
+    setIsDownloadingPptx(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const params = new URLSearchParams();
+      params.append('period', periodPreset);
+      if (periodPreset === 'custom') {
+        params.append('startDate', startDate);
+        params.append('endDate', endDate);
+      }
+      if (selectedSalesPersonId) {
+        params.append('salesPersonId', selectedSalesPersonId);
+      }
+
+      const res = await fetch(`${apiUrl}/api/reports/sales/pptx?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error('PPTX тайлан татахад алдаа гарлаа');
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      const mgrName = report?.targetUser?.name || 'sales';
+      const sDate = report?.period?.startDate ? report.period.startDate.split('T')[0] : 'start';
+      const eDate = report?.period?.endDate ? report.period.endDate.split('T')[0] : 'end';
+      a.download = `Borluulaltiin_tailan_${mgrName}_${sDate}_${eDate}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      alert(err.message || 'PPTX татахад алдаа гарлаа');
+    } finally {
+      setIsDownloadingPptx(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -247,6 +301,31 @@ export default function SalesReportPage() {
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {/* PowerPoint PPTX Presentation Download Button */}
+            <button
+              onClick={handleDownloadPptx}
+              disabled={isDownloadingPptx}
+              className="btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.45rem 0.9rem',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: isDownloadingPptx ? 'not-allowed' : 'pointer',
+                borderRadius: '6px',
+                border: '1px solid #c7d2fe',
+                background: '#eef2ff',
+                color: '#4338ca',
+                opacity: isDownloadingPptx ? 0.7 : 1
+              }}
+              title="Хурлын танилцуулга PowerPoint (PPTX) татах"
+            >
+              <span>{isDownloadingPptx ? '⏳' : '📑'}</span>
+              <span>{isDownloadingPptx ? 'PPTX бэлтгэж байна...' : 'PowerPoint (PPTX) Татах'}</span>
+            </button>
+
             <button
               onClick={handleExportCSV}
               className="btn btn-outline"
