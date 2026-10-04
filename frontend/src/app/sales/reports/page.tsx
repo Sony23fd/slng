@@ -15,6 +15,21 @@ import {
   Cell
 } from 'recharts';
 
+interface ManagerStat {
+  id?: number;
+  name: string;
+  target: number;
+  actual: number;
+  achievementRate: number;
+  orderCount: number;
+  completedRevenue: number;
+  inProductionRevenue: number;
+  paidAmount: number;
+  receivables: number;
+  barterAmount?: number;
+  donationAmount?: number;
+}
+
 interface OrderItem {
   id: number;
   order_number: string;
@@ -31,6 +46,7 @@ interface OrderItem {
   deadline: string | null;
   is_urgent: boolean;
   order_type: string;
+  sales_person_name?: string;
 }
 
 interface ReportData {
@@ -39,6 +55,7 @@ interface ReportData {
     name: string;
     role: string;
   };
+  isTeamView?: boolean;
   period: {
     type: string;
     startDate: string;
@@ -58,6 +75,7 @@ interface ReportData {
     target: number;
     achievementRate: number;
   };
+  managerStats?: ManagerStat[];
   trend: Array<{ date: string; revenue: number; count: number }>;
   categoryBreakdown: Array<{ category: string; count: number; revenue: number; percent: number }>;
   statusBreakdown: Array<{ status: string; count: number; revenue: number }>;
@@ -85,7 +103,7 @@ export default function SalesReportPage() {
   const [periodPreset, setPeriodPreset] = useState<'today' | 'this_week' | 'this_month' | 'last_month' | 'custom'>('this_month');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [selectedSalesPersonId, setSelectedSalesPersonId] = useState<string>('');
+  const [selectedSalesPersonId, setSelectedSalesPersonId] = useState<string>('ALL');
 
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -193,6 +211,7 @@ export default function SalesReportPage() {
     const headers = [
       'Огноо',
       'Захиалга №',
+      ...(report?.isTeamView ? ['Борлуулагч'] : []),
       'Харилцагч',
       'Байгууллага',
       'Бүтээгдэхүүн',
@@ -209,6 +228,7 @@ export default function SalesReportPage() {
     const rows = filteredOrders.map(o => [
       formatDate(o.createdAt),
       o.order_number || '',
+      ...(report?.isTeamView ? [`"${(o.sales_person_name || '').replace(/"/g, '""')}"`] : []),
       `"${(o.customer_name || '').replace(/"/g, '""')}"`,
       `"${(o.company_name || '').replace(/"/g, '""')}"`,
       `"${(o.product_name || '').replace(/"/g, '""')}"`,
@@ -226,7 +246,7 @@ export default function SalesReportPage() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const fileName = `Borluulaltiin_tailan_${report?.targetUser?.name || 'sales'}_${new Date().toISOString().split('T')[0]}.csv`;
+    const fileName = `Borluulaltiin_${report?.isTeamView ? 'Bagiin' : (report?.targetUser?.name || 'sales')}_tailan_${new Date().toISOString().split('T')[0]}.csv`;
     link.setAttribute('href', url);
     link.setAttribute('download', fileName);
     document.body.appendChild(link);
@@ -246,7 +266,7 @@ export default function SalesReportPage() {
         params.append('startDate', startDate);
         params.append('endDate', endDate);
       }
-      if (selectedSalesPersonId) {
+      if (selectedSalesPersonId && selectedSalesPersonId !== 'ALL') {
         params.append('salesPersonId', selectedSalesPersonId);
       }
 
@@ -264,10 +284,10 @@ export default function SalesReportPage() {
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      const mgrName = report?.targetUser?.name || 'sales';
+      const mgrName = report?.isTeamView ? 'Bagiin_tailan' : (report?.targetUser?.name || 'sales');
       const sDate = report?.period?.startDate ? report.period.startDate.split('T')[0] : 'start';
       const eDate = report?.period?.endDate ? report.period.endDate.split('T')[0] : 'end';
-      a.download = `Borluulaltiin_tailan_${mgrName}_${sDate}_${eDate}.pptx`;
+      a.download = `Borluulaltiin_${mgrName}_${sDate}_${eDate}.pptx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -283,8 +303,6 @@ export default function SalesReportPage() {
     window.print();
   };
 
-  const isManagerOrAdmin = user && ['ADMIN', 'FINANCE', 'MANAGER'].includes(user.role);
-
   return (
     <div className="erp-report-container" style={{ padding: '1.5rem', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Top Header Controls (Hidden during print) */}
@@ -292,10 +310,10 @@ export default function SalesReportPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: 'var(--text-main, #0f172a)' }}>
-              📊 Борлуулалтын тайлан
+              📊 {report?.isTeamView ? 'Борлуулалтын багийн нэгдсэн тайлан' : 'Борлуулалтын тайлан'}
             </h1>
             <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted, #64748b)', fontSize: '0.875rem' }}>
-              Борлуулагч: <b>{report?.targetUser?.name || user?.name}</b> • Хугацаа: {formatDate(report?.period?.startDate || '')} - {formatDate(report?.period?.endDate || '')}
+              Харах хүрээ: <b>{report?.isTeamView ? 'Борлуулалтын баг (Бүгд)' : (report?.targetUser?.name || user?.name)}</b> • Хугацаа: {formatDate(report?.period?.startDate || '')} - {formatDate(report?.period?.endDate || '')}
             </p>
           </div>
 
@@ -320,7 +338,7 @@ export default function SalesReportPage() {
                 color: '#4338ca',
                 opacity: isDownloadingPptx ? 0.7 : 1
               }}
-              title="Хурлын танилцуулга PowerPoint (PPTX) татах"
+              title="Борлуулалтын багийн хурлын танилцуулга PowerPoint (PPTX) татах"
             >
               <span>{isDownloadingPptx ? '⏳' : '📑'}</span>
               <span>{isDownloadingPptx ? 'PPTX бэлтгэж байна...' : 'PowerPoint (PPTX) Татах'}</span>
@@ -452,12 +470,12 @@ export default function SalesReportPage() {
             )}
           </div>
 
-          {/* Salesperson Selector (Only for Admin / Manager) */}
-          {isManagerOrAdmin && report?.availableSalespersons && report.availableSalespersons.length > 0 && (
+          {/* Salesperson Selector (Available for all Sales/Admin users) */}
+          {report?.availableSalespersons && report.availableSalespersons.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Борлуулагч:</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Шүүлт:</span>
               <select
-                value={selectedSalesPersonId || (report?.targetUser?.id ? String(report.targetUser.id) : '')}
+                value={selectedSalesPersonId || 'ALL'}
                 onChange={e => setSelectedSalesPersonId(e.target.value)}
                 style={{
                   padding: '0.35rem 0.75rem',
@@ -466,12 +484,13 @@ export default function SalesReportPage() {
                   border: '1px solid #cbd5e1',
                   background: '#fff',
                   color: '#0f172a',
-                  fontWeight: 500
+                  fontWeight: 600
                 }}
               >
+                <option value="ALL">👥 Борлуулалтын баг (Бүгд)</option>
                 {report.availableSalespersons.map(sp => (
-                  <option key={sp.id} value={sp.id}>
-                    {sp.name} ({sp.role})
+                  <option key={sp.id} value={String(sp.id)}>
+                    👤 {sp.name}
                   </option>
                 ))}
               </select>
@@ -482,9 +501,11 @@ export default function SalesReportPage() {
 
       {/* Printable Report Header (Visible only when printing) */}
       <div className="print-only" style={{ display: 'none', marginBottom: '1.5rem', borderBottom: '2px solid #0f172a', paddingBottom: '0.75rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>БОРЛУУЛАЛТЫН ТАЙЛАН</h1>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
+          {report?.isTeamView ? 'БОРЛУУЛАЛТЫН БАГИЙН НЭГДСЭН ТАЙЛАН' : 'БОРЛУУЛАЛТЫН ТАЙЛАН'}
+        </h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-          <div>Борлуулагч: <b>{report?.targetUser?.name || user?.name}</b></div>
+          <div>Харах хүрээ: <b>{report?.isTeamView ? 'Борлуулалтын баг (Бүгд)' : (report?.targetUser?.name || user?.name)}</b></div>
           <div>Хугацаа: {formatDate(report?.period?.startDate || '')} - {formatDate(report?.period?.endDate || '')}</div>
           <div>Хэвлэсэн: {new Date().toLocaleDateString('mn-MN')}</div>
         </div>
@@ -643,10 +664,255 @@ export default function SalesReportPage() {
                 {report.summary.target > 0 ? `${report.summary.achievementRate.toFixed(1)}%` : 'Тохируулаагүй'}
               </div>
               <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                {report.summary.target > 0 ? `Төлөвлөгөө: ${formatMNT(report.summary.target)}` : 'Сард зорилт тавигдаагүй'}
+                {report.summary.target > 0 ? (report.isTeamView ? `Багийн зорилт: ${formatMNT(report.summary.target)}` : `Төлөвлөгөө: ${formatMNT(report.summary.target)}`) : 'Сард зорилт тавигдаагүй'}
               </div>
             </div>
           </div>
+
+          {/* ALL MANAGERS PERFORMANCE & RANKING TABLE */}
+          {report.managerStats && report.managerStats.length > 0 && (
+            <div
+              className="card"
+              style={{
+                background: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                padding: '1.25rem',
+                marginBottom: '1.5rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }}
+              >
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>👥</span> Борлуулалтын менежерүүдийн гүйцэтгэл ба эрэмбэ
+                  </h3>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                    Борлуулалтын багийн гишүүн тус бүрийн төлөвлөгөө, бодит борлуулалт, биелэлт ба авлагын хяналт
+                  </p>
+                </div>
+                {report.isTeamView ? (
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#2563eb',
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      padding: '0.3rem 0.65rem',
+                      borderRadius: '5px'
+                    }}
+                  >
+                    👥 Нийт багийн дүн харагдаж байна
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setSelectedSalesPersonId('ALL')}
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#2563eb',
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      padding: '0.3rem 0.65rem',
+                      borderRadius: '5px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ↩️ Бүх багийн нэгдсэн тайлан харах
+                  </button>
+                )}
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#475569', textAlign: 'left' }}>
+                      <th style={{ padding: '0.65rem 0.75rem', width: '50px', textAlign: 'center' }}>№</th>
+                      <th style={{ padding: '0.65rem 0.75rem' }}>Менежерийн нэр</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>Төлөвлөгөө</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>Бодит гүйцэтгэл</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'center', width: '150px' }}>Биелэлт %</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }}>Захиалга</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>Төлөгдсөн</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>Үлдэгдэл авлага</th>
+                      <th style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }} className="no-print">
+                        Шүүх
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.managerStats.map((mgr, index) => {
+                      const isSelected =
+                        !report.isTeamView &&
+                        (report.targetUser.name === mgr.name || (mgr.id && report.targetUser.id === mgr.id));
+                      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+                      return (
+                        <tr
+                          key={mgr.name}
+                          style={{
+                            borderBottom: '1px solid #f1f5f9',
+                            background: isSelected ? '#eff6ff' : index % 2 === 1 ? '#fafafa' : '#ffffff',
+                            fontWeight: isSelected ? 600 : 400
+                          }}
+                        >
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', fontWeight: 700, fontSize: '0.9rem' }}>
+                            {medal}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', color: '#0f172a' }}>
+                            <b>{mgr.name}</b>
+                            {isSelected && (
+                              <span
+                                style={{
+                                  marginLeft: '0.4rem',
+                                  fontSize: '0.65rem',
+                                  background: '#2563eb',
+                                  color: '#fff',
+                                  padding: '0.1rem 0.35rem',
+                                  borderRadius: '3px'
+                                }}
+                              >
+                                Сонгогдсон
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right', color: '#64748b' }}>
+                            {mgr.target > 0 ? formatMNT(mgr.target) : '-'}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                            {formatMNT(mgr.actual)}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                              <div
+                                style={{
+                                  flex: 1,
+                                  height: '6px',
+                                  background: '#e2e8f0',
+                                  borderRadius: '3px',
+                                  overflow: 'hidden',
+                                  maxWidth: '60px'
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    height: '100%',
+                                    width: `${Math.min(100, Math.max(0, mgr.achievementRate))}%`,
+                                    background:
+                                      mgr.achievementRate >= 100
+                                        ? '#16a34a'
+                                        : mgr.achievementRate >= 70
+                                        ? '#2563eb'
+                                        : '#f59e0b'
+                                  }}
+                                />
+                              </div>
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  color:
+                                    mgr.achievementRate >= 100
+                                      ? '#16a34a'
+                                      : mgr.achievementRate >= 70
+                                      ? '#2563eb'
+                                      : '#d97706',
+                                  minWidth: '40px',
+                                  textAlign: 'right'
+                                }}
+                              >
+                                {mgr.target > 0 ? `${mgr.achievementRate.toFixed(1)}%` : '-'}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center', color: '#475569' }}>
+                            {mgr.orderCount}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'right', color: '#16a34a', fontWeight: 600 }}>
+                            {formatMNT(mgr.paidAmount)}
+                          </td>
+                          <td
+                            style={{
+                              padding: '0.6rem 0.75rem',
+                              textAlign: 'right',
+                              fontWeight: mgr.receivables > 0 ? 700 : 400,
+                              color: mgr.receivables > 0 ? '#dc2626' : '#64748b'
+                            }}
+                          >
+                            {formatMNT(mgr.receivables)}
+                          </td>
+                          <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }} className="no-print">
+                            <button
+                              onClick={() => {
+                                if (mgr.id) {
+                                  setSelectedSalesPersonId(String(mgr.id));
+                                } else {
+                                  const matched = report.availableSalespersons?.find(u => u.name === mgr.name);
+                                  if (matched) setSelectedSalesPersonId(String(matched.id));
+                                }
+                              }}
+                              style={{
+                                padding: '0.25rem 0.55rem',
+                                fontSize: '0.75rem',
+                                borderRadius: '4px',
+                                border: '1px solid #cbd5e1',
+                                background: isSelected ? '#2563eb' : '#ffffff',
+                                color: isSelected ? '#ffffff' : '#334155',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                              }}
+                              title="Энэ менежерийн тайланг шүүж харах"
+                            >
+                              {isSelected ? 'Сонгогдсон' : 'Шүүх'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1', fontWeight: 700, color: '#0f172a' }}>
+                      <td colSpan={2} style={{ padding: '0.65rem 0.75rem' }}>
+                        БАГИЙН НИЙТ:
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', color: '#64748b' }}>
+                        {formatMNT(report.managerStats.reduce((s, m) => s + m.target, 0))}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>
+                        {formatMNT(report.managerStats.reduce((s, m) => s + m.actual, 0))}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center', color: '#2563eb' }}>
+                        {(() => {
+                          const totalT = report.managerStats.reduce((s, m) => s + m.target, 0);
+                          const totalA = report.managerStats.reduce((s, m) => s + m.actual, 0);
+                          return totalT > 0 ? `${((totalA / totalT) * 100).toFixed(1)}%` : '-';
+                        })()}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }}>
+                        {report.managerStats.reduce((s, m) => s + m.orderCount, 0)}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', color: '#16a34a' }}>
+                        {formatMNT(report.managerStats.reduce((s, m) => s + m.paidAmount, 0))}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right', color: '#dc2626' }}>
+                        {formatMNT(report.managerStats.reduce((s, m) => s + m.receivables, 0))}
+                      </td>
+                      <td className="no-print"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* VISUALS & BREAKDOWNS (TREND & CATEGORIES) */}
           <div
@@ -947,6 +1213,7 @@ export default function SalesReportPage() {
                   >
                     <th style={{ padding: '0.6rem 0.75rem' }}>Огноо</th>
                     <th style={{ padding: '0.6rem 0.75rem' }}>Захиалга №</th>
+                    {report.isTeamView && <th style={{ padding: '0.6rem 0.75rem' }}>Борлуулагч</th>}
                     <th style={{ padding: '0.6rem 0.75rem' }}>Харилцагч</th>
                     <th style={{ padding: '0.6rem 0.75rem' }}>Бүтээгдэхүүн</th>
                     <th style={{ padding: '0.6rem 0.75rem' }}>Ангилал</th>
@@ -990,6 +1257,11 @@ export default function SalesReportPage() {
                               </span>
                             )}
                           </td>
+                          {report.isTeamView && (
+                            <td style={{ padding: '0.55rem 0.75rem', color: '#334155', fontWeight: 600 }}>
+                              {order.sales_person_name || '-'}
+                            </td>
+                          )}
                           <td style={{ padding: '0.55rem 0.75rem', color: '#0f172a' }}>
                             <b>{order.customer_name}</b>
                             {order.company_name && (
@@ -1055,7 +1327,7 @@ export default function SalesReportPage() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan={report.isTeamView ? 11 : 10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                         Шүүлтүүрт тохирох захиалга олдсонгүй
                       </td>
                     </tr>
@@ -1072,7 +1344,7 @@ export default function SalesReportPage() {
                         color: '#0f172a'
                       }}
                     >
-                      <td colSpan={5} style={{ padding: '0.65rem 0.75rem' }}>
+                      <td colSpan={report.isTeamView ? 6 : 5} style={{ padding: '0.65rem 0.75rem' }}>
                         НИЙТ ДҮН:
                       </td>
                       <td style={{ padding: '0.65rem 0.75rem', textAlign: 'right' }}>
