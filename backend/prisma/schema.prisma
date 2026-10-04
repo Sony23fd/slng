@@ -37,6 +37,7 @@ model masterprice {
   unit_cost        Float
   formula_id       Int?
   is_pricing       Boolean              @default(true)
+  is_post_profit   Boolean              @default(false)
   production_stage String?              @default("POST_PRESS")
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -138,6 +139,7 @@ model orderoperation {
   notes            String?
   is_manual        Boolean @default(false)
   is_pricing       Boolean @default(true)
+  is_post_profit   Boolean @default(false)
   production_stage String? @default("POST_PRESS")
   order            order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
 

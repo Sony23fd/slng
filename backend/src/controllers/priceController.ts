@@ -15,6 +15,9 @@ export const getPrices = async (req: Request, res: Response) => {
     if (req.query.is_pricing !== undefined) {
       where.is_pricing = req.query.is_pricing === 'true';
     }
+    if (req.query.is_post_profit !== undefined && req.query.is_post_profit !== 'All') {
+      where.is_post_profit = req.query.is_post_profit === 'true';
+    }
     if (req.query.production_stage && req.query.production_stage !== 'All') {
       where.production_stage = req.query.production_stage as string;
     }
@@ -67,7 +70,7 @@ export const getPrices = async (req: Request, res: Response) => {
 
 export const updatePrice = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { unit_cost, formula_id, is_pricing, production_stage } = req.body;
+  const { unit_cost, formula_id, is_pricing, is_post_profit, production_stage } = req.body;
   const userId = (req as any).user?.id; // from auth middleware
 
   try {
@@ -87,6 +90,9 @@ export const updatePrice = async (req: Request, res: Response) => {
     }
     if (is_pricing !== undefined) {
       dataToUpdate.is_pricing = Boolean(is_pricing);
+    }
+    if (is_post_profit !== undefined) {
+      dataToUpdate.is_post_profit = Boolean(is_post_profit);
     }
     if (production_stage !== undefined) {
       dataToUpdate.production_stage = production_stage;
@@ -142,6 +148,24 @@ export const togglePricePricing = async (req: Request, res: Response) => {
   }
 };
 
+export const togglePriceProfitPhase = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const priceId = parseInt(id as string);
+    const price = await prisma.masterprice.findUnique({ where: { id: priceId } });
+    if (!price) {
+      return res.status(404).json({ error: 'Price not found' });
+    }
+    const updated = await prisma.masterprice.update({
+      where: { id: priceId },
+      data: { is_post_profit: !price.is_post_profit }
+    });
+    res.json({ message: 'Price profit phase toggled', price: updated });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle price profit phase' });
+  }
+};
+
 export const bulkUpdatePrices = async (req: Request, res: Response) => {
   const { items } = req.body;
   const userId = (req as any).user?.id;
@@ -170,6 +194,9 @@ export const bulkUpdatePrices = async (req: Request, res: Response) => {
       }
       if (item.is_pricing !== undefined) {
         dataToUpdate.is_pricing = Boolean(item.is_pricing);
+      }
+      if (item.is_post_profit !== undefined) {
+        dataToUpdate.is_post_profit = Boolean(item.is_post_profit);
       }
       if (item.production_stage !== undefined) {
         dataToUpdate.production_stage = item.production_stage;
@@ -302,7 +329,7 @@ export const getPriceLogs = async (req: Request, res: Response) => {
 };
 
 export const createPrice = async (req: Request, res: Response) => {
-  const { category, item_name, unit_cost, formula_id, is_pricing, production_stage } = req.body;
+  const { category, item_name, unit_cost, formula_id, is_pricing, is_post_profit, production_stage } = req.body;
   const userId = (req as any).user?.id;
 
   try {
@@ -311,6 +338,7 @@ export const createPrice = async (req: Request, res: Response) => {
       item_name,
       unit_cost: Number(unit_cost || 0),
       is_pricing: is_pricing !== undefined ? Boolean(is_pricing) : true,
+      is_post_profit: is_post_profit !== undefined ? Boolean(is_post_profit) : false,
       production_stage: production_stage || 'POST_PRESS'
     };
     if (formula_id) {

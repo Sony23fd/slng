@@ -153,6 +153,7 @@ export const createOrder = async (req: Request, res: Response) => {
               notes: o.notes || null,
               is_manual: Boolean(o.is_manual),
               is_pricing: isPricing,
+              is_post_profit: Boolean(o.is_post_profit),
               production_stage: o.production_stage || 'POST_PRESS'
             };
           })
@@ -615,6 +616,7 @@ export const updateOrder = async (req: Request, res: Response) => {
                 notes: o.notes || null,
                 is_manual: Boolean(o.is_manual),
                 is_pricing: isPricing,
+                is_post_profit: Boolean(o.is_post_profit),
                 production_stage: o.production_stage || 'POST_PRESS'
               };
             })

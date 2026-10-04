@@ -112,16 +112,16 @@ const operationsData: OpSeedData[] = [
   { name: 'Үдээ (Унаа үдээ)', expr: 'total_qty', desc: 'Унаа үдээ', cost: 50, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Үдээ (Шугамын үдээ)', expr: 'total_qty', desc: 'Шугамын үдээ', cost: 50, stage: 'POST_PRESS', is_pricing: true },
 
-  { name: 'Лак (Хэсэгчилсэн)', expr: 'total_qty', desc: 'Хэсэгчилсэн лак', cost: 150, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Лак (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн лак', cost: 200, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Лак (Барзгар)', expr: 'total_qty', desc: 'Барзгар лак', cost: 250, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Лак (Хэсэгчилсэн)', expr: 'total_qty', desc: 'Хэсэгчилсэн лак', cost: 150, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Лак (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн лак', cost: 200, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Лак (Барзгар)', expr: 'total_qty', desc: 'Барзгар лак', cost: 250, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
 
-  { name: 'Эмбосс', expr: 'total_qty', desc: 'Эмбосс товгор даралт', cost: 150, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Клише (Алтлаг)', expr: 'total_qty', desc: 'Алтлаг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Клише (Мөнгөлөг)', expr: 'total_qty', desc: 'Мөнгөлөг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Клише (Зэс)', expr: 'total_qty', desc: 'Зэс фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Клише (Монет)', expr: 'total_qty', desc: 'Монет / Rose Gold фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Клише (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн талбайн фольга клише даралт', cost: 250, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Эмбосс', expr: 'total_qty', desc: 'Эмбосс товгор даралт', cost: 150, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Клише (Алтлаг)', expr: 'total_qty', desc: 'Алтлаг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Клише (Мөнгөлөг)', expr: 'total_qty', desc: 'Мөнгөлөг фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Клише (Зэс)', expr: 'total_qty', desc: 'Зэс фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Клише (Монет)', expr: 'total_qty', desc: 'Монет / Rose Gold фольга клише даралт', cost: 200, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Клише (Бүтэн)', expr: 'total_qty', desc: 'Бүтэн талбайн фольга клише даралт', cost: 250, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
 
   { name: 'Блокон оёо', expr: 'ceil(total_pages / 16) * total_qty', desc: 'Блокон оёо', cost: 100, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Наалт', expr: 'total_qty', desc: 'Наалт', cost: 150, stage: 'POST_PRESS', is_pricing: true },
@@ -131,19 +131,19 @@ const operationsData: OpSeedData[] = [
   { name: 'Огтлоо (Том)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Том', cost: 2000, stage: 'POST_PRESS', is_pricing: true },
   { name: 'Огтлоо (Гурван талт)', expr: 'ceil(total_qty / 500)', desc: 'Огтлоо Гурван талт', cost: 2500, stage: 'POST_PRESS', is_pricing: true },
 
-  { name: 'Хатуу хавтас (A5)', expr: 'total_qty', desc: 'Хатуу хавтас A5', cost: 2000, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Супер хавтас хийх', expr: 'total_qty', desc: 'Супер хавтас нугалах, өмсгөх', cost: 1000, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Хатуу хавтас (A5)', expr: 'total_qty', desc: 'Хатуу хавтас A5', cost: 2000, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Хатуу хавтас (A4)', expr: 'total_qty', desc: 'Хатуу хавтас A4', cost: 3000, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Хатуу хавтас (B5)', expr: 'total_qty', desc: 'Хатуу хавтас B5', cost: 2500, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Хатуу хавтас (B4)', expr: 'total_qty', desc: 'Хатуу хавтас B4', cost: 3500, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Супер хавтас хийх', expr: 'total_qty', desc: 'Супер хавтас нугалах, өмсгөх', cost: 1000, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
 
   { name: 'Бөгж цоологч', expr: 'total_qty', desc: 'Бөгж цоологч', cost: 20, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Гараар хийх ажил', expr: 'total_qty', desc: 'Гараар хийх ажил', cost: 100, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Нууцлал наах', expr: 'total_qty', desc: 'Нууцлал наах', cost: 50, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Гараар хийх ажил', expr: 'total_qty', desc: 'Гараар хийх ажил', cost: 100, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Нууцлал наах', expr: 'total_qty', desc: 'Нууцлал наах', cost: 50, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
 
-  { name: 'Хэв дарах (A5)', expr: 'total_qty', desc: 'Хэв дарах A5', cost: 150, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хэв дарах (A4)', expr: 'total_qty', desc: 'Хэв дарах A4', cost: 250, stage: 'POST_PRESS', is_pricing: true },
-  { name: 'Хэв дарах (A3)', expr: 'total_qty', desc: 'Хэв дарах A3', cost: 350, stage: 'POST_PRESS', is_pricing: true },
+  { name: 'Хэв дарах (A5)', expr: 'total_qty', desc: 'Хэв дарах A5', cost: 150, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Хэв дарах (A4)', expr: 'total_qty', desc: 'Хэв дарах A4', cost: 250, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
+  { name: 'Хэв дарах (A3)', expr: 'total_qty', desc: 'Хэв дарах A3', cost: 350, stage: 'POST_PRESS', is_pricing: true, is_post_profit: true },
 
   { name: 'Спираль дарагч', expr: 'total_qty', desc: 'Спираль дарагч', cost: 50, stage: 'POST_PRESS', is_pricing: true },
 
@@ -231,6 +231,7 @@ export async function seedPrices(prisma: PrismaClient) {
           unit_cost: op.cost,
           formula_id: formulaId,
           is_pricing: op.is_pricing !== false,
+          is_post_profit: Boolean((op as any).is_post_profit),
           production_stage: op.stage || 'POST_PRESS'
         }
       });
@@ -242,6 +243,7 @@ export async function seedPrices(prisma: PrismaClient) {
           unit_cost: op.cost,
           formula_id: formulaId,
           is_pricing: op.is_pricing !== false,
+          is_post_profit: Boolean((op as any).is_post_profit),
           production_stage: op.stage || 'POST_PRESS'
         }
       });

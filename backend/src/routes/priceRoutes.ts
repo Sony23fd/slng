@@ -7,7 +7,8 @@ import {
   importPrices, 
   getPriceLogs, 
   deletePrice,
-  togglePricePricing
+  togglePricePricing,
+  togglePriceProfitPhase
 } from '../controllers/priceController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
@@ -26,6 +27,7 @@ router.post('/import', authMiddleware(['ADMIN', 'FINANCE']), importPrices);
 // Only ADMIN and FINANCE can create, update, or delete prices
 router.post('/', authMiddleware(['ADMIN', 'FINANCE']), createPrice);
 router.patch('/:id/toggle-pricing', authMiddleware(['ADMIN', 'FINANCE']), togglePricePricing);
+router.patch('/:id/toggle-profit-phase', authMiddleware(['ADMIN', 'FINANCE']), togglePriceProfitPhase);
 router.put('/:id', authMiddleware(['ADMIN', 'FINANCE']), updatePrice);
 router.delete('/:id', authMiddleware(['ADMIN', 'FINANCE']), deletePrice);
 
