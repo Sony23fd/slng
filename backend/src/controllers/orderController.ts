@@ -524,13 +524,22 @@ export const updateOrderStages = async (req: Request, res: Response) => {
     }
 
     if (production_stages !== undefined) {
-      const standardKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'fold', 'bind'];
+      const standardKeys = ['design', 'raw_material', 'ctp', 'print', 'inspect', 'bind', 'cut', 'qc_pack'];
       let stagesToCheck = production_stages;
       if (typeof stagesToCheck === 'string') {
         try { stagesToCheck = JSON.parse(stagesToCheck); } catch (e) {}
       }
       if (stagesToCheck && typeof stagesToCheck === 'object') {
-        const allCompleted = standardKeys.every(k => Number(stagesToCheck[k]?.status) === 100);
+        const allCompleted = standardKeys.every(k => {
+          const val = stagesToCheck[k]?.status;
+          if (val === undefined) {
+            if (k === 'cut' && stagesToCheck['fold']?.status !== undefined) {
+              return Number(stagesToCheck['fold'].status) === 100;
+            }
+            return false;
+          }
+          return Number(val) === 100;
+        }) && (stagesToCheck['additional_ops']?.status === undefined || Number(stagesToCheck['additional_ops']?.status) === 100);
         if (allCompleted && targetStatus !== 'Бэлэн болсон' && targetStatus !== 'Бэлэн' && targetStatus !== 'Хүлээлгэн өгсөн' && targetStatus !== 'Олгосон') {
           targetStatus = 'Бэлэн болсон';
           updateData.current_status = 'Бэлэн болсон';
