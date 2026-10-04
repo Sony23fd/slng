@@ -73,9 +73,11 @@ export const createOrder = async (req: Request, res: Response) => {
       raw_material: { status: 0 },
       ctp: { status: 0 },
       print: { status: 0 },
+      additional_ops: { status: 0 },
       inspect: { status: 0 },
-      fold: { status: 0 },
-      bind: { status: 0 }
+      bind: { status: 0 },
+      cut: { status: 0 },
+      qc_pack: { status: 0 }
     };
 
     const order = await prisma.order.create({
