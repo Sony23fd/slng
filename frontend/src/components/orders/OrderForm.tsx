@@ -670,7 +670,7 @@ const calculateMakeready = (baseQty: number): number => {
 export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isQuoteMode?: boolean }) {
   const { token, user } = useAuthStore();
   const router = useRouter();
-  const [isExpandedMaterial, setIsExpandedMaterial] = useState(user?.role === 'PRODUCTION' || user?.role === 'ADMIN');
+  const [isExpandedMaterial, setIsExpandedMaterial] = useState(true);
   const [constants, setConstants] = useState<any[]>([]);
   const [coverRules, setCoverRules] = useState<any[]>([]);
   const [productCategories, setProductCategories] = useState<any[]>([]);
