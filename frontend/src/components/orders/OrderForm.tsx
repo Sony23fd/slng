@@ -308,7 +308,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
   const s = (size || 'A5').toUpperCase();
   if (s === 'B5') {
     return {
-      cardboardDiv: 9,
+      cardboardDiv: 18,
       endpaperDiv: 5,
       endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 16,
@@ -317,7 +317,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
     };
   } else if (s === 'A4') {
     return {
-      cardboardDiv: 7,
+      cardboardDiv: 14,
       endpaperDiv: 4,
       endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 4, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 14,
@@ -326,7 +326,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
     };
   } else if (s === 'B4') {
     return {
-      cardboardDiv: 4.5,
+      cardboardDiv: 9,
       endpaperDiv: 2.5,
       endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
       headbandDiv: 12,
@@ -335,7 +335,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
     };
   } else {
     return {
-      cardboardDiv: 14,
+      cardboardDiv: 28,
       endpaperDiv: 8,
       endpaperPrinted: { printSize: 'A2', pressSheet: '0.5', divBy: 4, extra: 100, baseMultiplier: 0.5 },
       headbandDiv: 25,
@@ -1435,10 +1435,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               const specs = getHardcoverAuxiliarySpecs(a7);
               rowDivideBy = specs.cardboardDiv;
               rowPressSheet = '1';
-              baseQty = tQty;
+              const cardboardPieces = tQty * 2;
+              baseQty = cardboardPieces;
               extraQty = 0;
-              totalQty = tQty;
-              sheetQty = Math.ceil(tQty / specs.cardboardDiv);
+              totalQty = cardboardPieces;
+              sheetQty = Math.ceil(cardboardPieces / specs.cardboardDiv);
             } else if (aux.type === 'endpaper_super') {
               const superSpecs = getSuperCoverSpecs(a7);
               rowDivideBy = superSpecs.endpaperDiv;
@@ -2253,13 +2254,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (aux.isAux) {
         const specs = getHardcoverAuxiliarySpecs(a7);
         if (aux.type === 'cardboard') {
+          const cardboardPieces = a6 * 2;
           setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
           setValue(`materials.${index}.press_sheet`, '1');
           setValue(`materials.${index}.print_size`, '');
           setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
-          const sheets = Math.ceil(a6 / specs.cardboardDiv);
+          const sheets = Math.ceil(cardboardPieces / specs.cardboardDiv);
+          setValue(`materials.${index}.base_qty`, cardboardPieces);
+          setValue(`materials.${index}.total_qty`, cardboardPieces);
           setValue(`materials.${index}.sheet_qty`, sheets);
-          setValue(`materials.${index}.total_qty`, a6);
           setValue(`materials.${index}.extra_qty`, 0);
           return;
         }
@@ -2459,15 +2462,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const capitalPrice = masterPrices.find(p => p.item_name.includes('капитал'))?.unit_cost || 0;
     const ribbonPrice = masterPrices.find(p => p.item_name.includes('Хавчуурга тууз'))?.unit_cost || 0;
 
-    const cardboardSheets = Math.ceil(totalQty / cardboardDiv);
+    const cardboardPieces = totalQty * 2;
+    const cardboardSheets = Math.ceil(cardboardPieces / cardboardDiv);
     const cardboardRow = {
       material_name: 'Картон 2 A0 (889x1194)',
       size: 'A0',
       print_size: '',
       press_sheet: '1',
-      base_qty: totalQty,
+      base_qty: cardboardPieces,
       extra_qty: 0,
-      total_qty: totalQty,
+      total_qty: cardboardPieces,
       divide_by: cardboardDiv,
       sheet_qty: cardboardSheets,
       unit_cost: cardboardPrice,
@@ -3524,9 +3528,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       const a7 = getA7Size();
                       const specs = getHardcoverAuxiliarySpecs(a7);
                       if (aux.type === 'cardboard') {
+                        const cardboardPieces = newBase * 2;
+                        setValue(`materials.${index}.base_qty`, cardboardPieces);
                         setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.cardboardDiv));
+                        setValue(`materials.${index}.total_qty`, cardboardPieces);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / specs.cardboardDiv));
                         return;
                       }
                       if (aux.type === 'endpaper_super') {
@@ -4600,14 +4606,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           return;
                                         }
                                         if (selectedAux.type === 'cardboard') {
+                                          const cardboardPieces = totalQty * 2;
                                           setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
                                           setValue(`materials.${index}.press_sheet`, '1');
                                           setValue(`materials.${index}.print_size`, '');
                                           setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.base_qty`, cardboardPieces);
                                           setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.cardboardDiv));
+                                          setValue(`materials.${index}.total_qty`, cardboardPieces);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / specs.cardboardDiv));
                                           return;
                                         }
                                         if (selectedAux.type === 'endpaper_super') {

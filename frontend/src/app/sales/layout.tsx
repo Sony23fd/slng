@@ -51,7 +51,7 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
         <div className="erp-top-left">
           <Link href="/sales" className="erp-top-brand" title="Mini-ERP">
             <span className="mark">⚡</span>
-            <span>Mini-ERP</span>
+            <span>SP-ERP</span>
           </Link>
 
           <nav className="erp-top-nav">
