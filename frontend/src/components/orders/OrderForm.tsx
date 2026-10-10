@@ -3427,7 +3427,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             {/* 2. Захиалгын мэдээлэл */}
             <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл" theme="purple" icon="📋">
           
-          <div className="erp-grid erp-grid-3">
+          <div className="erp-grid erp-grid-5">
             <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
             <div className="erp-field">
               <label>Бүтээгдэхүүний ангилал</label>
@@ -3807,7 +3807,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <option value="Блокон оёо">Блокон оёо</option>
               </select>
             </div>
-            <div className="erp-field">
+          </div>
+
+          {/* 2-р эгнээ: Эх бэлтгэл ба Нэмэлт сонголтууд цэгцтэй нэг эгнээнд */}
+          <div className="erp-sec2-row2">
+            <div className="erp-field" style={{ width: '180px', flexShrink: 0 }}>
               <label>Эх бэлтгэлийн төлөв</label>
               <select {...register("design_status", {
                 onChange: (e) => {
@@ -3828,232 +3832,240 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </select>
             </div>
             {formValues.design_status !== 'Эх бэлэн' && (
-              <div className="erp-field">
+              <div className="erp-field" style={{ width: '130px', flexShrink: 0 }}>
                 <label>Эх бэлтгэлийн үнэ (₮)</label>
                 <input type="number" {...register("design_cost", { valueAsNumber: true })} />
               </div>
             )}
-          </div>
 
-          {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
-          {(() => {
-            const hasSpotUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Хэсэгчилсэн)'));
-            const hasRoughUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Барзгар)'));
-            const hasEmboss = Boolean(formValues.operations?.some(o => o.operation_name === 'Эмбосс'));
-            const activeClicheTypes = CLICHE_TYPES.filter(type =>
-              formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
-            );
-            const hasCliche = activeClicheTypes.length > 0;
-            const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
-            const isMattCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('матт'));
-            const isGlossCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('гялгар'));
-            const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
+            {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
+            {(() => {
+              const hasSpotUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Хэсэгчилсэн)'));
+              const hasRoughUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Барзгар)'));
+              const hasEmboss = Boolean(formValues.operations?.some(o => o.operation_name === 'Эмбосс'));
+              const activeClicheTypes = CLICHE_TYPES.filter(type =>
+                formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
+              );
+              const hasCliche = activeClicheTypes.length > 0;
+              const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
+              const isMattCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('матт'));
+              const isGlossCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('гялгар'));
+              const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
 
-            return (
-              <div className="erp-addon-bar">
-                <span className="erp-addon-title">
-                  <span>✨</span>
-                  <span>Нэмэлт сонголтууд:</span>
-                </span>
-                
-                {isHardcoverType && (
-                  <>
-                    <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
-                      <input 
-                        type="checkbox" 
-                        {...register("has_super_cover", {
-                          onChange: (e) => {
-                            if (e.target.checked) {
-                              handleAddSuperCoverAuxiliary();
-                            } else {
-                              const existingMats = getValues('materials') || [];
-                              const cleanMats = existingMats.filter(m => {
-                                const n = (m.material_name || '').toLowerCase();
-                                const notes = (m.notes || '').toLowerCase();
-                                return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
-                              });
-                              setValue('materials', cleanMats);
-                              replaceMaterials(cleanMats);
-                              const existingOps = getValues('operations') || [];
-                              const nextOps = existingOps.filter(o => !o.operation_name?.includes('Супер хавтас'));
-                              setValue('operations', nextOps);
-                              replaceOps(nextOps);
-                            }
-                          }
-                        })} 
-                      />
-                      <span>🧥 Супер хавтастай</span>
-                    </label>
-
-                    {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
+              return (
+                <div className="erp-field" style={{ flex: 1, minWidth: '320px' }}>
+                  <label>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: '#d97706' }}>✨</span>
+                      <span>Нэмэлт сонголтууд & өнгөлгөө</span>
+                    </span>
+                    <span className="tag" style={{ fontSize: '9.5px', background: '#fef3c7', color: '#92400e' }}>Шуурхай</span>
+                  </label>
+                  <div className="erp-addon-bar">
+                    {isHardcoverType && (
                       <>
-                        <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
+                        <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
                           <input 
                             type="checkbox" 
-                            {...register("has_printed_endpaper", {
+                            {...register("has_super_cover", {
                               onChange: (e) => {
-                                if (isHardcoverCalculated) {
-                                  handleAddHardcoverAuxiliary({ isPrintedEndpaper: e.target.checked });
+                                if (e.target.checked) {
+                                  handleAddSuperCoverAuxiliary();
+                                } else {
+                                  const existingMats = getValues('materials') || [];
+                                  const cleanMats = existingMats.filter(m => {
+                                    const n = (m.material_name || '').toLowerCase();
+                                    const notes = (m.notes || '').toLowerCase();
+                                    return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
+                                  });
+                                  setValue('materials', cleanMats);
+                                  replaceMaterials(cleanMats);
+                                  const existingOps = getValues('operations') || [];
+                                  const nextOps = existingOps.filter(o => !o.operation_name?.includes('Супер хавтас'));
+                                  setValue('operations', nextOps);
+                                  replaceOps(nextOps);
                                 }
                               }
                             })} 
                           />
-                          <span>📄 Хэвлэлтэй форзац</span>
+                          <span>🧥 Супер</span>
                         </label>
 
-                        <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
-                          <input 
-                            type="checkbox" 
-                            {...register("has_bookmark", {
-                              onChange: (e) => {
-                                if (isHardcoverCalculated) {
-                                  handleAddHardcoverAuxiliary({ hasRibbon: e.target.checked });
-                                }
-                              }
-                            })} 
-                          />
-                          <span>🔖 Хавчуурга туузтай</span>
-                        </label>
+                        {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
+                          <>
+                            <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
+                              <input 
+                                type="checkbox" 
+                                {...register("has_printed_endpaper", {
+                                  onChange: (e) => {
+                                    if (isHardcoverCalculated) {
+                                      handleAddHardcoverAuxiliary({ isPrintedEndpaper: e.target.checked });
+                                    }
+                                  }
+                                })} 
+                              />
+                              <span>📄 Форзац</span>
+                            </label>
+
+                            <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
+                              <input 
+                                type="checkbox" 
+                                {...register("has_bookmark", {
+                                  onChange: (e) => {
+                                    if (isHardcoverCalculated) {
+                                      handleAddHardcoverAuxiliary({ hasRibbon: e.target.checked });
+                                    }
+                                  }
+                                })} 
+                              />
+                              <span>🔖 Тууз</span>
+                            </label>
+                          </>
+                        )}
+                        <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
                       </>
                     )}
-                    <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
-                  </>
-                )}
 
-                {/* Бүрэлтийн сонголтууд (Матт, Гялгар, болон 10 төрлийн бүрэлтийн сонголт) */}
-                <label 
-                  className={`erp-toggle-chip ${isMattCoating ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleCoating('Матт'); }}
-                  title="Матт бүрэлт нэмэх / хасах"
-                >
-                  <input type="checkbox" checked={isMattCoating} readOnly />
-                  <span>✨ Матт бүрэлт</span>
-                </label>
+                    {/* Бүрэлтийн сонголтууд (Матт, Гялгар, болон 10 төрлийн бүрэлтийн сонголт) */}
+                    <label 
+                      className={`erp-toggle-chip ${isMattCoating ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleCoating('Матт'); }}
+                      title="Матт бүрэлт нэмэх / хасах"
+                    >
+                      <input type="checkbox" checked={isMattCoating} readOnly />
+                      <span>✨ Матт бүрэлт</span>
+                    </label>
 
-                <label 
-                  className={`erp-toggle-chip ${isGlossCoating ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleCoating('Гялгар'); }}
-                  title="Гялгар бүрэлт нэмэх / хасах"
-                >
-                  <input type="checkbox" checked={isGlossCoating} readOnly />
-                  <span>✨ Гялгар бүрэлт</span>
-                </label>
+                    <label 
+                      className={`erp-toggle-chip ${isGlossCoating ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleCoating('Гялгар'); }}
+                      title="Гялгар бүрэлт нэмэх / хасах"
+                    >
+                      <input type="checkbox" checked={isGlossCoating} readOnly />
+                      <span>✨ Гялгар бүрэлт</span>
+                    </label>
 
-                <select
-                  value={coatingMat?.material_name || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (!val) {
-                      if (coatingMat) toggleCoating(coatingMat.material_name);
-                    } else {
-                      toggleCoating(val);
-                    }
-                  }}
-                  style={{
-                    height: '28px',
-                    fontSize: '12px',
-                    borderRadius: '4px',
-                    border: coatingMat ? '1px solid #10b981' : '1px solid #cbd5e1',
-                    backgroundColor: coatingMat ? '#f0fdf4' : 'white',
-                    color: coatingMat ? '#065f46' : '#334155',
-                    fontWeight: coatingMat ? 600 : 400,
-                    padding: '0 8px',
-                    cursor: 'pointer',
-                    outline: 'none'
-                  }}
-                  title="Бүрэлтийн материал ба хэмжээг шууд сонгох (10 төрөл)"
-                >
-                  <option value="">-- Бүрэлт сонгох (10 төрөл) --</option>
-                  <optgroup label="✨ Хятад гялгар">
-                    <option value="Бүрэлт гялгар Хятад 36 см">Бүрэлт гялгар Хятад 36 см (36см / B3/A3)</option>
-                    <option value="Бүрэлт гялгар Хятад 44 см">Бүрэлт гялгар Хятад 44 см (44см / A2)</option>
-                    <option value="Бүрэлт гялгар Хятад 54 см">Бүрэлт гялгар Хятад 54 см (54см / B2)</option>
-                  </optgroup>
-                  <optgroup label="✨ Хятад матт">
-                    <option value="Бүрэлт матт Хятад 36 см">Бүрэлт матт Хятад 36 см (36см / B3/A3)</option>
-                    <option value="Бүрэлт матт Хятад 44 см">Бүрэлт матт Хятад 44 см (44см / A2)</option>
-                    <option value="Бүрэлт матт Хятад 54 см">Бүрэлт матт Хятад 54 см (54см / B2)</option>
-                  </optgroup>
-                  <optgroup label="✨ Солонгос / Тусгай">
-                    <option value="Бүрэлт Илгэн Со 44 см">Бүрэлт Илгэн Со 44 см (44см / A2)</option>
-                    <option value="Бүрэлт гялгар/эмбосстой Со 36см">Бүрэлт гялгар/эмбосстой Со 36см (36см / B3/A3)</option>
-                    <option value="Бүрэлт матт/эмбосстой Со 36см">Бүрэлт матт/эмбосстой Со 36см (36см / B3/A3)</option>
-                    <option value="Бүрэлт матт/эмбосстой Со 44см">Бүрэлт матт/эмбосстой Со 44см (44см / A2)</option>
-                  </optgroup>
-                </select>
+                    <select
+                      value={coatingMat?.material_name || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          if (coatingMat) toggleCoating(coatingMat.material_name);
+                        } else {
+                          toggleCoating(val);
+                        }
+                      }}
+                      style={{
+                        height: '26px',
+                        fontSize: '11.5px',
+                        borderRadius: '4px',
+                        border: coatingMat ? '1px solid #10b981' : '1px solid #cbd5e1',
+                        backgroundColor: coatingMat ? '#f0fdf4' : 'white',
+                        color: coatingMat ? '#065f46' : '#334155',
+                        fontWeight: coatingMat ? 600 : 400,
+                        padding: '0 6px',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        width: 'auto',
+                        minWidth: '175px',
+                        maxWidth: '230px',
+                        flexShrink: 0
+                      }}
+                      title="Бүрэлтийн материал ба хэмжээг шууд сонгох (10 төрөл)"
+                    >
+                      <option value="">-- Бүрэлт сонгох (10 төрөл) --</option>
+                      <optgroup label="✨ Хятад гялгар">
+                        <option value="Бүрэлт гялгар Хятад 36 см">Бүрэлт гялгар Хятад 36 см (36см / B3/A3)</option>
+                        <option value="Бүрэлт гялгар Хятад 44 см">Бүрэлт гялгар Хятад 44 см (44см / A2)</option>
+                        <option value="Бүрэлт гялгар Хятад 54 см">Бүрэлт гялгар Хятад 54 см (54см / B2)</option>
+                      </optgroup>
+                      <optgroup label="✨ Хятад матт">
+                        <option value="Бүрэлт матт Хятад 36 см">Бүрэлт матт Хятад 36 см (36см / B3/A3)</option>
+                        <option value="Бүрэлт матт Хятад 44 см">Бүрэлт матт Хятад 44 см (44см / A2)</option>
+                        <option value="Бүрэлт матт Хятад 54 см">Бүрэлт матт Хятад 54 см (54см / B2)</option>
+                      </optgroup>
+                      <optgroup label="✨ Солонгос / Тусгай">
+                        <option value="Бүрэлт Илгэн Со 44 см">Бүрэлт Илгэн Со 44 см (44см / A2)</option>
+                        <option value="Бүрэлт гялгар/эмбосстой Со 36см">Бүрэлт гялгар/эмбосстой Со 36см (36см / B3/A3)</option>
+                        <option value="Бүрэлт матт/эмбосстой Со 36см">Бүрэлт матт/эмбосстой Со 36см (36см / B3/A3)</option>
+                        <option value="Бүрэлт матт/эмбосстой Со 44см">Бүрэлт матт/эмбосстой Со 44см (44см / A2)</option>
+                      </optgroup>
+                    </select>
 
-                <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
+                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
 
-                {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
-                <label 
-                  className={`erp-toggle-chip ${hasSpotUV ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Хэсэгчилсэн)', 150); }}
-                >
-                  <input type="checkbox" checked={hasSpotUV} readOnly />
-                  <span>✨ Хэсэгчилсэн лак</span>
-                </label>
+                    {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
+                    <label 
+                      className={`erp-toggle-chip ${hasSpotUV ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Хэсэгчилсэн)', 150); }}
+                    >
+                      <input type="checkbox" checked={hasSpotUV} readOnly />
+                      <span>✨ Хэсэгчилсэн лак</span>
+                    </label>
 
-                <label 
-                  className={`erp-toggle-chip ${hasRoughUV ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Барзгар)', 250); }}
-                >
-                  <input type="checkbox" checked={hasRoughUV} readOnly />
-                  <span>✨ Барзгар лак</span>
-                </label>
+                    <label 
+                      className={`erp-toggle-chip ${hasRoughUV ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Барзгар)', 250); }}
+                    >
+                      <input type="checkbox" checked={hasRoughUV} readOnly />
+                      <span>✨ Барзгар лак</span>
+                    </label>
 
-                <label 
-                  className={`erp-toggle-chip ${hasEmboss ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleFinishingOp('Эмбосс', 150); }}
-                >
-                  <input type="checkbox" checked={hasEmboss} readOnly />
-                  <span>✨ Эмбосс</span>
-                </label>
+                    <label 
+                      className={`erp-toggle-chip ${hasEmboss ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Эмбосс', 150); }}
+                    >
+                      <input type="checkbox" checked={hasEmboss} readOnly />
+                      <span>✨ Эмбосс</span>
+                    </label>
 
-                <label 
-                  className={`erp-toggle-chip ${hasCliche ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleAllCliche(); }}
-                >
-                  <input type="checkbox" checked={hasCliche} readOnly />
-                  <span>✨ Клише {hasCliche ? '▾' : ''}</span>
-                </label>
+                    <label 
+                      className={`erp-toggle-chip ${hasCliche ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); toggleAllCliche(); }}
+                    >
+                      <input type="checkbox" checked={hasCliche} readOnly />
+                      <span>✨ Клише {hasCliche ? '▾' : ''}</span>
+                    </label>
 
-                {/* Клише задрах 5 дэд сонголтууд */}
-                {hasCliche && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f8fafc', padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569', marginRight: '2px' }}>Фольга:</span>
-                    {CLICHE_TYPES.map(type => {
-                      const opName = `Клише (${type})`;
-                      const isChecked = formValues.operations?.some(o => o.operation_name === opName);
-                      const cost = type === 'Бүтэн' ? 250 : 200;
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => toggleFinishingOp(opName, cost)}
-                          style={{
-                            padding: '2px 7px',
-                            fontSize: '11px',
-                            fontWeight: isChecked ? 700 : 500,
-                            borderRadius: '4px',
-                            border: isChecked ? '1px solid #d97706' : '1px solid #cbd5e1',
-                            background: isChecked ? '#fef3c7' : '#ffffff',
-                            color: isChecked ? '#92400e' : '#475569',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px'
-                          }}
-                        >
-                          {isChecked && <span style={{ color: '#d97706', fontWeight: 'bold' }}>✓</span>}
-                          <span>{type}</span>
-                        </button>
-                      );
-                    })}
+                    {/* Клише задрах 5 дэд сонголтууд */}
+                    {hasCliche && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fff', padding: '1px 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569', marginRight: '2px' }}>Фольга:</span>
+                        {CLICHE_TYPES.map(type => {
+                          const opName = `Клише (${type})`;
+                          const isChecked = formValues.operations?.some(o => o.operation_name === opName);
+                          const cost = type === 'Бүтэн' ? 250 : 200;
+                          return (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => toggleFinishingOp(opName, cost)}
+                              style={{
+                                padding: '1px 6px',
+                                fontSize: '11px',
+                                fontWeight: isChecked ? 700 : 500,
+                                borderRadius: '3px',
+                                border: isChecked ? '1px solid #d97706' : '1px solid #cbd5e1',
+                                background: isChecked ? '#fef3c7' : '#ffffff',
+                                color: isChecked ? '#92400e' : '#475569',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '2px'
+                              }}
+                            >
+                              {isChecked && <span style={{ color: '#d97706', fontWeight: 'bold' }}>✓</span>}
+                              <span>{type}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })()}
+                </div>
+              );
+            })()}
+          </div>
 
           {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
