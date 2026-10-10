@@ -2028,8 +2028,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const isInner = !isCover && isInnerPageMaterial(m, category, productCategories);
       const isSingleSheet = isCover || !isInner;
       const isBag = category === 'Тор' || category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
-      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2 || (isBag ? '4+0' : '')));
-      const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : 'A2'));
+      const isBrochure = category === 'Брошур' || category?.includes('Брошур') || (formValues.product_name && formValues.product_name.includes('Брошур'));
+      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : ''))));
+      const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : (isBrochure ? 'A2' : 'A2')));
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
       const mPressSheet = Number(m.press_sheet) || 1;
       const plates = calcPlates(colorToUse, mPressSheet, divisions, isSingleSheet);
@@ -2049,7 +2050,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         ctpComponents.push({
           role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
-          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : 'Үндсэн')),
+          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : (isBrochure ? 'Брошур' : 'Үндсэн'))),
           printSize,
           pressSheet: String(m.press_sheet || ''),
           plates,
@@ -3030,7 +3031,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (aux.isAux || aux.isNonPrinted) return;
 
       const isCover = isCoverMaterial(m);
-      if (isCover) {
+      if (isCover && !isBrochure) {
         const bt = formValues.binding_type || 'Наалттай';
         const coverLogic = getCoverLogic(a7, bt, coverRules);
         if (coverLogic) {
@@ -3092,9 +3093,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const setups = isBag ? calculateSetups(pressNum, div) : calculateSetups(1, div);
         const total = (m5 * pressNum) + (curExtra * setups);
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
-        const divBy = Number(m.divide_by) || (isBag ? 2 : 1);
-        if (isBag && Number(m.divide_by) !== divBy) setValue(`materials.${index}.divide_by`, divBy);
-        const sQty = Math.ceil(total / divBy);
+
+        const rawDiv = isBag 
+          ? (Number(m.divide_by) || 2) 
+          : (calculatePaperDivision(m.size || 'A0', m3) || 4);
+        if (Number(m.divide_by) !== rawDiv) setValue(`materials.${index}.divide_by`, rawDiv);
+        const sQty = Math.ceil(total / rawDiv);
         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
       }
     });
@@ -3434,7 +3438,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         setValue('category', val);
                         const selectedCatConfig = productCategories.find(c => c.name === val);
                         const curBt = getValues('binding_type');
-                        if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Дэвтэр') {
+                        if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Дэвтэр' || val === 'Брошур') {
                           setValue('binding_type', 'Үдээстэй');
                         } else if (val === 'Календар') {
                           setValue('binding_type', 'Спираль');
@@ -3449,22 +3453,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           if (val === 'Сэтгүүл') setValue('total_pages', 28);
                           else if (val === 'Дэвтэр') setValue('total_pages', 44);
                           else if (val === 'Сонин') setValue('total_pages', 8);
-                          else if (val === 'Танилцуулга') setValue('total_pages', 4);
+                          else if (val === 'Танилцуулга' || val === 'Брошур') setValue('total_pages', 4);
                           else if (val === 'Календар') setValue('total_pages', 26);
                           else if (val === 'Ном өнгөт') setValue('total_pages', 96);
                           else if (val === 'Ном хар') setValue('total_pages', 160);
                         }
 
                         if (!getValues('cover_color')) {
-                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга') setValue('cover_color', '4+4');
+                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга' || val === 'Брошур') setValue('cover_color', '4+4');
                           else if (val === 'Ном хар' || val === 'Дэвтэр') setValue('cover_color', '4+0');
                         }
                         if (!getValues('inner_color')) {
-                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга' || val === 'Сонин') setValue('inner_color', '4+4');
+                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга' || val === 'Сонин' || val === 'Брошур') setValue('inner_color', '4+4');
                           else if (val === 'Ном хар' || val === 'Дэвтэр') setValue('inner_color', '1+1');
                         }
                         if (!getValues('size')) {
-                          if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Бланк' || val === 'Хавтас') setValue('size', 'A4');
+                          if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Бланк' || val === 'Хавтас' || val === 'Брошур') setValue('size', 'A4');
                           else if (val === 'Ном хар' || val === 'Ном өнгөт' || val === 'Дэвтэр' || val === 'Календар') setValue('size', 'A5');
                           else if (val === 'Сонин') setValue('size', 'A3');
                         }
