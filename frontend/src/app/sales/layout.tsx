@@ -49,9 +49,9 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
       {/* Top Header Navbar */}
       <header className="erp-top-header">
         <div className="erp-top-left">
-          <Link href="/sales" className="erp-top-brand" title="Mini-ERP">
+          <Link href="/sales" className="erp-top-brand" title="Selenge-ERP">
             <span className="mark">⚡</span>
-            <span>SP-ERP</span>
+            <span>SelengePress-ERP</span>
           </Link>
 
           <nav className="erp-top-nav">

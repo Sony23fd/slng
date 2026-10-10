@@ -2593,7 +2593,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const superSpecs = getSuperCoverSpecs(size);
     const coverDiv = superSpecs.coverDiv;
     const coverPrintSize = superSpecs.coverPrintSize;
-    const endpaperDiv = superSpecs.endpaperDiv;
 
     const existingMaterials = getValues('materials') || [];
     const cleanMaterials = existingMaterials.filter(m => {
@@ -2603,7 +2602,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     });
 
     const cover250Price = masterPrices.find(p => p.item_name.includes('250гр'))?.unit_cost || 1150;
-    const endpaper157Price = masterPrices.find(p => p.item_name.includes('157гр'))?.unit_cost || 890;
 
     const coverTotal = totalQty + 100;
     const coverSheets = Math.ceil(coverTotal / coverDiv);
@@ -2622,23 +2620,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       is_cover: false
     };
 
-    const endpaperSheets = Math.ceil(totalQty / endpaperDiv);
-    const endpaperRow = {
-      material_name: 'Мат цаас 157гр A0 (889x1194)',
-      size: 'A0',
-      print_size: '',
-      press_sheet: '1',
-      base_qty: totalQty,
-      extra_qty: 0,
-      total_qty: totalQty,
-      divide_by: endpaperDiv,
-      sheet_qty: endpaperSheets,
-      unit_cost: endpaper157Price,
-      notes: `Супер хавтасны форзац 157гр (${endpaperDiv} хуваалт)`,
-      is_cover: false
-    };
-
-    const newMaterials = [...cleanMaterials, superCoverRow, endpaperRow];
+    const newMaterials = [...cleanMaterials, superCoverRow];
     setValue('materials', newMaterials);
     replaceMaterials(newMaterials);
 
@@ -3754,7 +3736,56 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   if (bt.includes('хатуу')) {
                     handleAddHardcoverAuxiliary();
                   } else if (bt === 'Супер хавтастай') {
-                    handleAddSuperCoverAuxiliary();
+                    // Changing to 'Супер хавтастай': The main cover row (is_cover: true) is the super cover!
+                    // Do NOT add auxiliary superCoverRow or endpaper (no duplicate papers).
+                    const currentMats = getValues('materials') || [];
+                    const cleanMats = currentMats.filter((m: any) => {
+                      const aux = getMaterialType(m.material_name, m.notes);
+                      if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
+                        return false;
+                      }
+                      return true;
+                    });
+                    if (cleanMats.length !== currentMats.length) {
+                      setValue('materials', cleanMats);
+                      replaceMaterials(cleanMats);
+                    }
+
+                    // Ensure cover is Matte 250gr
+                    cleanMats.forEach((m: any, idx: number) => {
+                      if (m.is_cover) {
+                        if (!m.material_name || !m.material_name.includes('250гр')) {
+                          setValue(`materials.${idx}.material_name`, 'Мат цаас 250гр B1 (787x1092)');
+                          setValue(`materials.${idx}.size`, 'B1');
+                          setValue(`materials.${idx}.unit_cost`, 1150);
+                          setValue(`materials.${idx}.notes`, 'Үндсэн хавтасны цаас');
+                        }
+                      }
+                    });
+
+                    // Super cover is 1-sided printing: default cover_color to '4+0'
+                    if (!getValues('cover_color') || getValues('cover_color') === '4+4') {
+                      setValue('cover_color', '4+0');
+                    }
+
+                    // Add operation 'Супер хавтас хийх'
+                    const currentOps = getValues('operations') || [];
+                    const hasSuperOp = currentOps.some((o: any) => o.operation_name?.includes('Супер хавтас'));
+                    if (!hasSuperOp) {
+                      const nextOps = [
+                        ...currentOps,
+                        {
+                          operation_name: 'Супер хавтас хийх',
+                          qty: totalQ,
+                          unit_cost: 0,
+                          notes: `${a7} супер хавтас нугалах, өмсгөх`,
+                          is_pricing: false,
+                          production_stage: 'POST_PRESS'
+                        }
+                      ];
+                      setValue('operations', nextOps);
+                      replaceOps(nextOps);
+                    }
                   } else {
                     // Changing to softcover: clean up leftover hardcover / supercover auxiliaries
                     const currentMats = getValues('materials') || [];
@@ -4567,7 +4598,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
 
                                       const matchingPrices = parsedMasterPrices.filter(p => p.baseName === val || p.item_name === val);
-                                      const firstMatched = matchingPrices.length === 1 ? matchingPrices[0] : (matchingPrices.find(p => p.sizeName) || matchingPrices[0]);
+                                      let firstMatched = matchingPrices[0];
+                                      if (val.toLowerCase().includes('мат цаас') && !val.includes('гр')) {
+                                        // If user selected generic "Мат цаас", default directly to 250gr as requested
+                                        const matched250 = matchingPrices.find(p => (p.sizeName || '').includes('250гр') || (p.item_name || '').includes('250гр'));
+                                        if (matched250) {
+                                          firstMatched = matched250;
+                                        }
+                                      } else if (matchingPrices.length > 1) {
+                                        firstMatched = matchingPrices.find(p => p.sizeName) || matchingPrices[0];
+                                      }
 
                                       if (firstMatched) {
                                         setValue(`materials.${index}.size`, firstMatched.sizeName);
