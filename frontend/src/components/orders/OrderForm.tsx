@@ -58,6 +58,8 @@ interface OrderFormValues {
     sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
     is_manual_size?: boolean;
     is_manual_extra?: boolean;
+    is_manual_plates?: boolean;
+    is_standalone_ctp?: boolean;
   }[];
   
   // 6. Ажиллагаа
@@ -1425,10 +1427,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             rowPrintSize = m.print_size || 'A2';
             rowPressSheet = String(m.press_sheet || '');
             rowDivideBy = 1;
-            baseQty = Number(m.sheet_qty || m.base_qty) || 0;
+            let plateCount = Number(m.sheet_qty || m.base_qty) || 0;
+            if (plateCount >= 100 && plateCount === tQty) {
+              plateCount = 4;
+            }
+            baseQty = plateCount;
             extraQty = 0;
-            totalQty = baseQty;
-            sheetQty = baseQty;
+            totalQty = plateCount;
+            sheetQty = plateCount;
           } else if (aux.isNonPrinted) {
             rowPrintSize = '';
             if (aux.type === 'cardboard') {

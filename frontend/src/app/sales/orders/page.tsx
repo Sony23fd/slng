@@ -24,7 +24,7 @@ export default function AllOrdersPage() {
   const [loadingTicketId, setLoadingTicketId] = useState<number | null>(null);
   const [guardOrder, setGuardOrder] = useState<any>(null);
   const limit = 20;
-  
+
   const router = useRouter();
 
   const STAGE_KEYS = [
@@ -86,7 +86,7 @@ export default function AllOrdersPage() {
       .then(data => {
         if (Array.isArray(data)) setOrderStatuses(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [token]);
 
   const fetchOrders = useCallback(() => {
@@ -107,7 +107,7 @@ export default function AllOrdersPage() {
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
-          setOrders(data.data.filter((o:any) => o.current_status !== 'Үнийн санал')); 
+          setOrders(data.data.filter((o: any) => o.current_status !== 'Үнийн санал'));
           setTotalPages(data.meta?.totalPages || 1);
           setTotalCount(data.meta?.total || 0);
         } else if (Array.isArray(data)) {
@@ -222,13 +222,13 @@ export default function AllOrdersPage() {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginRight: '0.5rem' }}>
-              <input 
-                type="checkbox" 
-                checked={showOnlyMine} 
-                onChange={e => setShowOnlyMine(e.target.checked)} 
+              <input
+                type="checkbox"
+                checked={showOnlyMine}
+                onChange={e => setShowOnlyMine(e.target.checked)}
                 style={{ cursor: 'pointer', accentColor: 'var(--primary-color)' }}
               />
-              Зөвхөн минийхийг харах
+              Зөвхөн өөрийн үүсгэсэнг харах
             </label>
             <input
               type="text"
@@ -261,11 +261,11 @@ export default function AllOrdersPage() {
               const isCancelled = o.current_status === 'Цуцлагдсан';
               const isPending = o.current_status === 'Санхүү хүлээгдэж буй' || o.current_status === 'Хүлээгдэж буй';
               const inProduction = o.current_status === 'Үйлдвэрлэлд';
-              
+
               let activeStageLabel = 'Бэлэн';
               if (!isFinished && !isCancelled) {
-                const activeItem = STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 50) 
-                  || STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 0) 
+                const activeItem = STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 50)
+                  || STAGE_KEYS.find(sk => getStageVal(o.production_stages, sk, o.current_status) === 0)
                   || STAGE_KEYS[0];
                 activeStageLabel = activeItem.label;
               }
@@ -273,174 +273,175 @@ export default function AllOrdersPage() {
               const statusObj = orderStatuses.find(s => s.name === o.current_status);
               const statusColor = statusObj?.color || (isFinished ? '#10b981' : isCancelled ? '#ef4444' : inProduction ? '#3b82f6' : '#f59e0b');
               const barColor = isFinished ? '#10b981' : isCancelled ? '#ef4444' : inProduction ? '#3b82f6' : '#f59e0b';
-              
+
               return (
-              <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
-                <td style={{ padding: '1rem' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
-                <td style={{ padding: '1rem' }}>{o.customer_name}</td>
-                <td style={{ padding: '1rem' }}>
-                  <span style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.8rem', color: '#475569' }}>
-                    {o.user?.name || o.sales_person_name || '-'}
-                  </span>
-                </td>
-                <td style={{ padding: '1rem' }}>{o.product_name}</td>
-                <td style={{ padding: '1rem' }}>{o.total_qty}</td>
-                <td style={{ padding: '0.85rem 1rem', minWidth: '175px' }}>
-                  <div 
-                    onClick={() => setInspectingOrder(o)}
-                    style={{ cursor: 'pointer', padding: '0.25rem 0.4rem', borderRadius: '0.375rem', transition: 'background 0.15s' }}
-                    title="Үйлдвэрлэлийн явцыг нарийвчлан харах (7 шатлал, машин, гүйцэтгэгч)"
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', marginBottom: '0.35rem', fontWeight: 600 }}>
-                      <span style={{ 
-                        color: isFinished ? '#15803d' : isCancelled ? '#b91c1c' : inProduction ? '#1d4ed8' : '#b45309',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem'
-                      }}>
-                        {isFinished ? '✓ Бэлэн (100%)' : isCancelled ? '✕ Цуцлагдсан' : isPending && progress === 0 ? '⏳ Эхлээгүй' : `⚙️ ${activeStageLabel}`}
-                      </span>
-                      <span style={{ color: barColor, fontSize: '0.8rem', fontWeight: 700 }}>
-                        {progress}% 🔍
-                      </span>
-                    </div>
+                <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>{o.order_number || `ID: ${o.id}`}</td>
+                  <td style={{ padding: '1rem' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: '1rem' }}>{o.customer_name}</td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.8rem', color: '#475569' }}>
+                      {o.user?.name || o.sales_person_name || '-'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>{o.product_name}</td>
+                  <td style={{ padding: '1rem' }}>{o.total_qty}</td>
+                  <td style={{ padding: '0.85rem 1rem', minWidth: '175px' }}>
+                    <div
+                      onClick={() => setInspectingOrder(o)}
+                      style={{ cursor: 'pointer', padding: '0.25rem 0.4rem', borderRadius: '0.375rem', transition: 'background 0.15s' }}
+                      title="Үйлдвэрлэлийн явцыг нарийвчлан харах (7 шатлал, машин, гүйцэтгэгч)"
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', marginBottom: '0.35rem', fontWeight: 600 }}>
+                        <span style={{
+                          color: isFinished ? '#15803d' : isCancelled ? '#b91c1c' : inProduction ? '#1d4ed8' : '#b45309',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}>
+                          {isFinished ? '✓ Бэлэн (100%)' : isCancelled ? '✕ Цуцлагдсан' : isPending && progress === 0 ? '⏳ Эхлээгүй' : `⚙️ ${activeStageLabel}`}
+                        </span>
+                        <span style={{ color: barColor, fontSize: '0.8rem', fontWeight: 700 }}>
+                          {progress}% 🔍
+                        </span>
+                      </div>
 
-                    <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', overflow: 'hidden', marginBottom: '5px' }}>
-                      <div style={{ 
-                        background: barColor, 
-                        width: `${progress}%`, 
-                        height: '100%', 
-                        transition: 'width 0.3s ease',
-                        borderRadius: '999px' 
-                      }} />
-                    </div>
+                      <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', overflow: 'hidden', marginBottom: '5px' }}>
+                        <div style={{
+                          background: barColor,
+                          width: `${progress}%`,
+                          height: '100%',
+                          transition: 'width 0.3s ease',
+                          borderRadius: '999px'
+                        }} />
+                      </div>
 
-                    <div style={{ display: 'flex', gap: '3px' }}>
-                      {STAGE_KEYS.map((item, idx) => {
-                        const val = getStageVal(o.production_stages, item, o.current_status);
-                        const c = val === 100 ? '#10b981' : val === 50 ? '#3b82f6' : '#cbd5e1';
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {STAGE_KEYS.map((item, idx) => {
+                          const val = getStageVal(o.production_stages, item, o.current_status);
+                          const c = val === 100 ? '#10b981' : val === 50 ? '#3b82f6' : '#cbd5e1';
+                          return (
+                            <div
+                              key={item.key}
+                              title={`${idx + 1}. ${item.label}: ${val}%`}
+                              style={{ flex: 1, height: '4px', borderRadius: '2px', background: c, transition: 'background 0.2s' }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
+                    {(() => {
+                      const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
+                      const paidAmount = Math.round(Number(o.paid_amount) || 0);
+                      const remaining = Math.max(0, finalPrice - paidAmount);
+                      const status = o.payment_status || (paidAmount >= finalPrice && finalPrice > 0 ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'UNPAID');
+
+                      if (status === 'PAID') {
                         return (
-                          <div 
-                            key={item.key} 
-                            title={`${idx + 1}. ${item.label}: ${val}%`}
-                            style={{ flex: 1, height: '4px', borderRadius: '2px', background: c, transition: 'background 0.2s' }} 
-                          />
+                          <div>
+                            <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              ✓ Төлөгдсөн
+                            </span>
+                            <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '3px' }}>
+                              {finalPrice.toLocaleString()} ₮
+                            </div>
+                          </div>
                         );
-                      })}
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
-                  {(() => {
-                    const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
-                    const paidAmount = Math.round(Number(o.paid_amount) || 0);
-                    const remaining = Math.max(0, finalPrice - paidAmount);
-                    const status = o.payment_status || (paidAmount >= finalPrice && finalPrice > 0 ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'UNPAID');
-
-                    if (status === 'PAID') {
+                      }
+                      if (status === 'PARTIAL') {
+                        return (
+                          <div>
+                            <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              🟡 Урьдчилгаа {o.paid_percent || Math.round((paidAmount / (finalPrice || 1)) * 100)}%
+                            </span>
+                            <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, marginTop: '3px' }}>
+                              Үлдэгдэл: {remaining.toLocaleString()} ₮
+                            </div>
+                          </div>
+                        );
+                      }
                       return (
                         <div>
-                          <span style={{ background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            ✓ Төлөгдсөн
+                          <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            🔴 Төлбөргүй
                           </span>
-                          <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '3px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px' }}>
                             {finalPrice.toLocaleString()} ₮
                           </div>
                         </div>
                       );
-                    }
-                    if (status === 'PARTIAL') {
-                      return (
-                        <div>
-                          <span style={{ background: '#fef3c7', color: '#b45309', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            🟡 Урьдчилгаа {o.paid_percent || Math.round((paidAmount / (finalPrice || 1)) * 100)}%
-                          </span>
-                          <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, marginTop: '3px' }}>
-                            Үлдэгдэл: {remaining.toLocaleString()} ₮
-                          </div>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div>
-                        <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.2rem 0.55rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          🔴 Төлбөргүй
-                        </span>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '3px' }}>
-                          {finalPrice.toLocaleString()} ₮
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </td>
-                <td style={{ padding: '1rem' }}>
-                  <select 
-                    value={o.current_status} 
-                    disabled={!(o.sales_person_id === user?.id || user?.role === 'ADMIN')}
-                    onChange={async (e) => {
-                      const newStatus = e.target.value;
-                      const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
-                      const paidAmount = Math.round(Number(o.paid_amount) || 0);
-                      const remaining = Math.max(0, finalPrice - paidAmount);
+                    })()}
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <select
+                      value={o.current_status}
+                      disabled={!(o.sales_person_id === user?.id || user?.role === 'ADMIN')}
+                      onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        const finalPrice = Math.round(Number(o.final_price ?? o.total_price) || 0);
+                        const paidAmount = Math.round(Number(o.paid_amount) || 0);
+                        const remaining = Math.max(0, finalPrice - paidAmount);
 
-                      // Delivery Guard check: If delivering with remaining balance, show guard modal
-                      if (['Хүлээлгэн өгсөн', 'Олгосон'].includes(newStatus) && remaining > 0) {
-                        setGuardOrder({ ...o, remaining_balance: remaining, paid_amount: paidAmount, final_price: finalPrice });
-                        return;
-                      }
-
-                      if (!confirm(`Төлөвийг '${newStatus}' болгож өөрчлөх үү?`)) return;
-                      try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${o.id}/status`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                          },
-                          body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: 'Жагсаалтаас өөрчлөв' })
-                        });
-                        if (res.ok) {
-                          setOrders(orders.map(order => order.id === o.id ? { ...order, current_status: newStatus } : order));
-                        } else {
-                          const errData = await res.json().catch(() => ({}));
-                          if (errData.has_remaining_balance) {
-                            setGuardOrder({ ...o, remaining_balance: errData.remaining_balance, paid_amount: errData.paid_amount, final_price: errData.final_price });
-                          } else {
-                            alert(`Төлөв өөрчлөхөд алдаа гарлаа: ${errData.error || ''}`);
-                          }
+                        // Delivery Guard check: If delivering with remaining balance, show guard modal
+                        if (['Хүлээлгэн өгсөн', 'Олгосон'].includes(newStatus) && remaining > 0) {
+                          setGuardOrder({ ...o, remaining_balance: remaining, paid_amount: paidAmount, final_price: finalPrice });
+                          return;
                         }
-                      } catch (err) {
-                        console.error(err);
-                        alert('Алдаа гарлаа.');
-                      }
-                    }}
-                    style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
-                  >
-                    {Array.from(new Set([...orderStatuses.map(s => s.name), o.current_status])).map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </td>
-                <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  {(o.sales_person_id === user?.id || user?.role === 'ADMIN') ? (
-                    <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                      Засах
+
+                        if (!confirm(`Төлөвийг '${newStatus}' болгож өөрчлөх үү?`)) return;
+                        try {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${o.id}/status`, {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ new_status: newStatus, changed_by: user?.id || 1, notes: 'Жагсаалтаас өөрчлөв' })
+                          });
+                          if (res.ok) {
+                            setOrders(orders.map(order => order.id === o.id ? { ...order, current_status: newStatus } : order));
+                          } else {
+                            const errData = await res.json().catch(() => ({}));
+                            if (errData.has_remaining_balance) {
+                              setGuardOrder({ ...o, remaining_balance: errData.remaining_balance, paid_amount: errData.paid_amount, final_price: errData.final_price });
+                            } else {
+                              alert(`Төлөв өөрчлөхөд алдаа гарлаа: ${errData.error || ''}`);
+                            }
+                          }
+                        } catch (err) {
+                          console.error(err);
+                          alert('Алдаа гарлаа.');
+                        }
+                      }}
+                      style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '1rem', fontSize: '0.85rem', border: '1px solid #cbd5e1', outline: 'none', cursor: 'pointer' }}
+                    >
+                      {Array.from(new Set([...orderStatuses.map(s => s.name), o.current_status])).map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'right', gap: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    {(o.sales_person_id === user?.id || user?.role === 'ADMIN') ? (
+                      <button onClick={() => router.push(`/sales/orders/${o.id}`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                        Засах
+                      </button>
+                    ) : (
+                      <button onClick={() => handleOpenTicket(o)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={loadingTicketId === o.id}>
+                        {loadingTicketId === o.id ? '...' : 'Харах'}
+                      </button>
+                    )}
+                    <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                      Хуулах
                     </button>
-                  ) : (
-                    <button onClick={() => handleOpenTicket(o)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} disabled={loadingTicketId === o.id}>
-                      {loadingTicketId === o.id ? '...' : 'Харах'}
+                    <button onClick={() => router.push(`/sales/orders/${o.id}/quote`)} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
+                      Үнийн санал
                     </button>
-                  )}
-                  <button onClick={() => router.push(`/sales/orders/${o.id}?duplicate=true`)} className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                    Хуулах
-                  </button>
-                  <button onClick={() => router.push(`/sales/orders/${o.id}/quote`)} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>
-                    Үнийн санал
-                  </button>
-                </td>
-              </tr>
-            ); })}
+                  </td>
+                </tr>
+              );
+            })}
             {orders.length === 0 && (
               <tr>
                 <td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
@@ -450,12 +451,12 @@ export default function AllOrdersPage() {
             )}
           </tbody>
         </table>
-        
-        <Pagination 
-          currentPage={page} 
-          totalPages={totalPages} 
-          totalCount={totalCount} 
-          onPageChange={(p) => setPage(p)} 
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={(p) => setPage(p)}
         />
       </div>
       {viewingOrder && <JobTicketModal order={viewingOrder} onClose={() => setViewingOrder(null)} />}
