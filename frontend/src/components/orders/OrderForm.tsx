@@ -493,10 +493,10 @@ const compactSelectStyles = {
     ...base,
     margin: 0,
     padding: 0,
-    border: 'none !important',
-    background: 'transparent !important',
-    boxShadow: 'none !important',
-    outline: 'none !important'
+    border: 0,
+    background: 'transparent',
+    boxShadow: 'none',
+    outline: 0
   }),
   indicatorsContainer: (base: any) => ({ ...base, height: '34px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '4px 6px' }),
@@ -520,7 +520,7 @@ const tableSelectStyles = {
     '&:hover': { borderColor: '#94a3b8' }
   }),
   valueContainer: (base: any) => ({ ...base, height: '28px', padding: '0 5px', display: 'flex', alignItems: 'center' }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important', outline: 'none !important' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
   clearIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
@@ -575,7 +575,7 @@ const printSizeSelectStyles = {
     textAlign: 'center',
     fontSize: '11.5px'
   }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important', outline: 'none !important' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 2px', width: '14px', color: '#64748b' }),
@@ -3412,6 +3412,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         isClearable
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         menuPosition="fixed"
+                        classNamePrefix="react-select"
                         styles={{
                           control: (base) => ({
                             ...base,
@@ -3427,10 +3428,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             ...base,
                             margin: 0,
                             padding: 0,
-                            border: 'none !important',
-                            background: 'transparent !important',
-                            boxShadow: 'none !important',
-                            outline: 'none !important'
+                            border: 0,
+                            background: 'transparent',
+                            boxShadow: 'none',
+                            outline: 0
                           }),
                           indicatorsContainer: (base) => ({ ...base, height: '34px' }),
                           menu: (base) => ({ ...base, zIndex: 99999 }),
@@ -3592,6 +3593,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       isClearable
                       menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                       menuPosition="fixed"
+                      classNamePrefix="react-select"
                       styles={compactSelectStyles}
                     />
                   );
@@ -3727,6 +3729,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       isClearable
                       menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                       menuPosition="fixed"
+                      classNamePrefix="react-select"
                       styles={compactSelectStyles}
                     />
                   );
@@ -3956,6 +3959,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       isClearable
                       menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                       menuPosition="fixed"
+                      classNamePrefix="react-select"
                       styles={compactSelectStyles}
                     />
                   );
@@ -5184,6 +5188,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                   isClearable
                                   menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                   menuPosition="fixed"
+                                  classNamePrefix="react-select"
                                   styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 99999 }) }}
                                 />
                               );
@@ -5480,6 +5485,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     placeholder="Формат"
                                     menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                     menuPosition="fixed"
+                                    classNamePrefix="react-select"
                                     styles={printSizeSelectStyles}
                                   />
                                 </div>
@@ -6212,6 +6218,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         isClearable
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         menuPosition="fixed"
+                        classNamePrefix="react-select"
                         styles={compactSelectStyles}
                       />
                     );
@@ -6235,6 +6242,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         isClearable
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         menuPosition="fixed"
+                        classNamePrefix="react-select"
                         styles={compactSelectStyles}
                       />
                     );

@@ -352,8 +352,8 @@ select:focus {
 }
 
 /* Compact, clean inputs inside smart-table that never overflow borders */
-.smart-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
-.smart-table select {
+.smart-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([role="combobox"]):not([aria-autocomplete="list"]):not([id*="react-select"]):not([class*="react-select"]),
+.smart-table select:not([class*="react-select"]) {
   min-height: 28px !important;
   height: 28px !important;
   max-height: 28px !important;
@@ -370,8 +370,8 @@ select:focus {
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-.smart-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
-.smart-table select:focus {
+.smart-table input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([role="combobox"]):not([aria-autocomplete="list"]):not([id*="react-select"]):not([class*="react-select"]):focus,
+.smart-table select:not([class*="react-select"]):focus {
   outline: none !important;
   border-color: #2563eb !important;
   box-shadow: inset 0 0 0 1px #2563eb !important;
@@ -379,53 +379,68 @@ select:focus {
 }
 
 /* Strictly neutralize ALL react-select internal search/cursor inputs globally so they never get borders, boxes or backgrounds */
+input[id*="react-select"],
+input[role="combobox"],
+input[aria-autocomplete="list"],
+.smart-table input[id*="react-select"],
+.smart-table input[role="combobox"],
+.smart-table input[aria-autocomplete="list"],
+.react-select__input input,
+.smart-table .react-select__input input,
 [class*="-control"] input,
 [class*="react-select"] input,
 [class*="-Input"] input,
 [class*="__input"] input,
-.react-select__input input,
 div[class*="-input-container"] input,
 div[class*="__input-container"] input,
-input[aria-autocomplete="list"],
-input[role="combobox"],
 .smart-table [class*="-control"] input,
 .smart-table [class*="react-select"] input,
 .smart-table [class*="-Input"] input,
-.smart-table .react-select__input input,
-.smart-table input[aria-autocomplete="list"],
-.smart-table input[role="combobox"] {
-  border: none !important;
+.smart-table .react-select__input input {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
-  outline: none !important;
+  outline: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
   line-height: inherit !important;
+  width: auto !important;
 }
 
+input[id*="react-select"]:focus,
+input[role="combobox"]:focus,
+input[aria-autocomplete="list"]:focus,
+.smart-table input[id*="react-select"]:focus,
+.smart-table input[role="combobox"]:focus,
+.smart-table input[aria-autocomplete="list"]:focus,
+.react-select__input input:focus,
+.smart-table .react-select__input input:focus,
 [class*="-control"] input:focus,
 [class*="react-select"] input:focus,
 [class*="-Input"] input:focus,
 [class*="__input"] input:focus,
-.react-select__input input:focus,
 div[class*="-input-container"] input:focus,
 div[class*="__input-container"] input:focus,
-input[aria-autocomplete="list"]:focus,
-input[role="combobox"]:focus,
 .smart-table [class*="-control"] input:focus,
 .smart-table [class*="react-select"] input:focus,
 .smart-table [class*="-Input"] input:focus,
-.smart-table .react-select__input input:focus,
-.smart-table input[aria-autocomplete="list"]:focus,
-.smart-table input[role="combobox"]:focus {
-  border: none !important;
+.smart-table .react-select__input input:focus {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
-  outline: none !important;
+  outline: 0 !important;
 }
 
 .smart-table input[type="number"]::-webkit-inner-spin-button,

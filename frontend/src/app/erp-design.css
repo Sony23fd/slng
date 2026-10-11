@@ -433,13 +433,19 @@
     font-size:9.5px;font-weight:700;color:var(--teal-dark);background:var(--teal-tint);
     padding:1px 5px;border-radius:4px;letter-spacing:.2px;
   }
-  input[type=text],input[type=number],input[type=tel],input[type=date],select{
+  input[type=text]:not([role="combobox"]):not([aria-autocomplete="list"]):not([id*="react-select"]),
+  input[type=number],
+  input[type=tel],
+  input[type=date],
+  select:not([class*="react-select"]) {
     width:100%;border:1px solid var(--line);border-radius:6px;padding:0 10px;
     font-family:inherit;font-size:12.8px;color:var(--text);background:#fff;
     height:34px;line-height:34px;box-sizing:border-box;
     transition:border-color .15s, box-shadow .15s;
   }
-  input:focus,select:focus,textarea:focus{
+  input:not([role="combobox"]):not([aria-autocomplete="list"]):not([id*="react-select"]):focus,
+  select:not([class*="react-select"]):focus,
+  textarea:focus {
     outline:none;border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-tint);
   }
   input::placeholder,textarea::placeholder{color:var(--muted-2);}
@@ -1268,4 +1274,50 @@
     background: #f1f5f9;
     color: #1e293b;
   }
+
+  /* Universal React-Select Input Reset - Eliminates any border, background, shadow or box */
+  input[id*="react-select"],
+  input[role="combobox"],
+  input[aria-autocomplete="list"],
+  .react-select__input input,
+  [class*="-control"] input,
+  [class*="react-select"] input,
+  div[class*="Input"] input,
+  div[class*="input-container"] input {
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    line-height: inherit !important;
+    width: auto !important;
+  }
+
+  input[id*="react-select"]:focus,
+  input[role="combobox"]:focus,
+  input[aria-autocomplete="list"]:focus,
+  .react-select__input input:focus,
+  [class*="-control"] input:focus,
+  [class*="react-select"] input:focus,
+  div[class*="Input"] input:focus,
+  div[class*="input-container"] input:focus {
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+
 
