@@ -486,9 +486,48 @@ const compactSelectStyles = {
     boxSizing: 'border-box',
     fontSize: '12.8px',
     boxShadow: 'none',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     '&:hover': { borderColor: '#94a3b8' }
   }),
-  valueContainer: (base: any) => ({ ...base, height: '34px', padding: '0 8px', display: 'flex', alignItems: 'center' }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: '100%',
+    padding: '0 8px',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+    overflow: 'hidden',
+    boxSizing: 'border-box'
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: '12.8px',
+    lineHeight: '32px',
+    color: '#94a3b8',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'flex',
+    alignItems: 'center'
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: '12.8px',
+    lineHeight: '32px',
+    color: '#0f172a',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'flex',
+    alignItems: 'center'
+  }),
   input: (base: any) => ({
     ...base,
     margin: 0,
@@ -498,9 +537,10 @@ const compactSelectStyles = {
     boxShadow: 'none',
     outline: 0
   }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '34px' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '4px 6px' }),
-  clearIndicator: (base: any) => ({ ...base, padding: '4px 4px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', flexShrink: 0 }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '0 6px', color: '#64748b', display: 'flex', alignItems: 'center' }),
+  clearIndicator: (base: any) => ({ ...base, padding: '0 4px', display: 'flex', alignItems: 'center' }),
   menu: (base: any) => ({ ...base, zIndex: 99999 }),
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
@@ -517,13 +557,53 @@ const tableSelectStyles = {
     boxSizing: 'border-box',
     fontSize: '11.5px',
     boxShadow: 'none',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     '&:hover': { borderColor: '#94a3b8' }
   }),
-  valueContainer: (base: any) => ({ ...base, height: '28px', padding: '0 5px', display: 'flex', alignItems: 'center' }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: '100%',
+    padding: '0 5px',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+    overflow: 'hidden',
+    boxSizing: 'border-box'
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: '11.5px',
+    lineHeight: '26px',
+    color: '#94a3b8',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'flex',
+    alignItems: 'center'
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: '11.5px',
+    lineHeight: '26px',
+    color: '#0f172a',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'flex',
+    alignItems: 'center'
+  }),
   input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '28px' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
-  clearIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', flexShrink: 0 }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '0 3px', color: '#64748b', display: 'flex', alignItems: 'center' }),
+  clearIndicator: (base: any) => ({ ...base, padding: '0 3px', display: 'flex', alignItems: 'center' }),
   groupHeading: (base: any) => ({
     ...base,
     fontSize: '10.5px',
@@ -555,30 +635,50 @@ const printSizeSelectStyles = {
     boxShadow: 'none',
     display: 'flex',
     flexWrap: 'nowrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     '&:hover': { borderColor: '#94a3b8' }
   }),
   valueContainer: (base: any) => ({
     ...base,
-    height: '28px',
+    height: '100%',
     padding: '0 2px',
     display: 'flex',
+    flexWrap: 'nowrap',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     whiteSpace: 'nowrap'
   }),
+  placeholder: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: '11.5px',
+    lineHeight: '26px',
+    textAlign: 'center',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }),
   singleValue: (base: any) => ({
     ...base,
     margin: 0,
+    padding: 0,
     fontWeight: 600,
     color: '#0f172a',
     textAlign: 'center',
-    fontSize: '11.5px'
+    fontSize: '11.5px',
+    lineHeight: '26px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   }),
   input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '28px', paddingRight: '1px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '1px 2px', width: '14px', color: '#64748b' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '0 2px', width: '14px', color: '#64748b', display: 'flex', alignItems: 'center' }),
   clearIndicator: () => ({ display: 'none' }),
   menu: (base: any) => ({ ...base, zIndex: 99999, minWidth: '85px' }),
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
@@ -3413,30 +3513,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         menuPosition="fixed"
                         classNamePrefix="react-select"
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            background: 'white',
-                            borderRadius: '6px',
-                            borderColor: '#cbd5e1',
-                            minHeight: '34px',
-                            height: '34px',
-                            fontSize: '12.5px'
-                          }),
-                          valueContainer: (base) => ({ ...base, padding: '0 6px' }),
-                          input: (base) => ({
-                            ...base,
-                            margin: 0,
-                            padding: 0,
-                            border: 0,
-                            background: 'transparent',
-                            boxShadow: 'none',
-                            outline: 0
-                          }),
-                          indicatorsContainer: (base) => ({ ...base, height: '34px' }),
-                          menu: (base) => ({ ...base, zIndex: 99999 }),
-                          menuPortal: (base) => ({ ...base, zIndex: 99999 })
-                        }}
+                        styles={compactSelectStyles}
                       />
                     )}
                   />

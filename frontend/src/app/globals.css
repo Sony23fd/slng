@@ -443,6 +443,47 @@ div[class*="__input-container"] input:focus,
   outline: 0 !important;
 }
 
+/* React-Select controls must NEVER wrap to multiple rows and must center vertically */
+.react-select__control,
+[class*="-control"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.react-select__value-container,
+[class*="-ValueContainer"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.react-select__placeholder,
+.react-select__single-value {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.react-select__indicators,
+[class*="-IndicatorsContainer"] {
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.react-select__indicator-separator,
+.smart-table .react-select__indicator-separator {
+  display: none !important;
+}
+
 .smart-table input[type="number"]::-webkit-inner-spin-button,
 .smart-table input[type="number"]::-webkit-outer-spin-button {
   height: 20px;
