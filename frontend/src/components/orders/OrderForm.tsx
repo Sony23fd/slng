@@ -512,7 +512,7 @@ const tableSelectStyles = {
     '&:hover': { borderColor: '#94a3b8' }
   }),
   valueContainer: (base: any) => ({ ...base, height: '28px', padding: '0 5px', display: 'flex', alignItems: 'center' }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important' }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
   clearIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
@@ -567,7 +567,7 @@ const printSizeSelectStyles = {
     textAlign: 'center',
     fontSize: '11.5px'
   }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important' }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 2px', width: '14px', color: '#64748b' }),
@@ -4727,8 +4727,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.3rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', minWidth: '190px' }}>Материал</th>
-                      <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.3rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '80px', minWidth: '80px' }}>Хэмжээ</th>
+                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', minWidth: '260px' }}>Материал (Нэр, хэмжээ)</th>
                       <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', minWidth: '68px', lineHeight: 1.15 }}>
                         <div>Хэв.</div>
                         <div>хэмжээ</div>
@@ -4771,7 +4770,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               <tbody>
                 {materialFields.length === 0 && (
                   <tr>
-                    <td colSpan={isExpandedMaterial ? 12 : 5} style={{ textAlign: 'center', padding: '1.2rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    <td colSpan={isExpandedMaterial ? 11 : 5} style={{ textAlign: 'center', padding: '1.2rem', color: '#94a3b8', fontSize: '0.85rem' }}>
                       Материал оруулаагүй байна. Доорх "+ Материал нэмэх" товчийг дарж материал нэмнэ үү.
                     </td>
                   </tr>
@@ -4790,58 +4789,89 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     .map(p => ({ ...p, ...parseMaterial(p.item_name) }));
                     
                   const isPaperItem = (p: any) => {
+                    const name = (p.item_name || '').toLowerCase();
                     const cat = (p.category || '').toLowerCase();
-                    const name = (p.baseName || p.item_name || '').toLowerCase();
-                    if (name.includes('лидерин') || name.includes('бүрэлт') || name.includes('оосор') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || (name.includes('цавуу') && !name.includes('pvc'))) {
+                    if (name.includes('ctp') || name.includes('стр') || name.includes('хавтан') || name.includes('бүрэлт') || name.includes('оосор') || name.includes('лидерин') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || (name.includes('цавуу') && !name.includes('pvc'))) {
                       return false;
                     }
                     if (name.includes('pvc') || name.includes('тусгай')) return true;
                     if (cat.includes('цаас') || cat.includes('paper')) return true;
                     if (name.includes('цаас') || name.includes('paper')) return true;
-                    if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт')) return true;
+                    if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт') || name.includes('кай')) return true;
                     return false;
                   };
 
+                  const isCtpItem = (p: any) => {
+                    const name = (p.item_name || '').toLowerCase();
+                    return name.includes('ctp') || name.includes('стр') || name.includes('хавтан');
+                  };
+
+                  const isCoatingItem = (p: any) => {
+                    const name = (p.item_name || '').toLowerCase();
+                    return name.includes('бүрэлт');
+                  };
+
                   const seenPaper = new Set<string>();
-                  const rawPaperNames: string[] = [];
+                  const paperItems: string[] = [];
                   parsedMasterPrices.filter(isPaperItem).forEach(p => {
                     const fullItem = (p.item_name || '').trim();
                     if (fullItem && !seenPaper.has(fullItem)) {
                       seenPaper.add(fullItem);
-                      rawPaperNames.push(fullItem);
+                      paperItems.push(fullItem);
+                    }
+                  });
+
+                  const seenCtp = new Set<string>();
+                  const ctpItems: string[] = [];
+                  parsedMasterPrices.filter(isCtpItem).forEach(p => {
+                    const fullItem = (p.item_name || '').trim();
+                    if (fullItem && !seenCtp.has(fullItem)) {
+                      seenCtp.add(fullItem);
+                      ctpItems.push(fullItem);
+                    }
+                  });
+
+                  const seenCoating = new Set<string>();
+                  const coatingItems: string[] = [];
+                  parsedMasterPrices.filter(isCoatingItem).forEach(p => {
+                    const fullItem = (p.item_name || '').trim();
+                    if (fullItem && !seenCoating.has(fullItem)) {
+                      seenCoating.add(fullItem);
+                      coatingItems.push(fullItem);
                     }
                   });
 
                   const seenOther = new Set<string>();
-                  const rawOtherNames: string[] = [];
-                  parsedMasterPrices.filter(p => !isPaperItem(p)).forEach(p => {
+                  const otherItems: string[] = [];
+                  parsedMasterPrices.filter(p => !isPaperItem(p) && !isCtpItem(p) && !isCoatingItem(p)).forEach(p => {
                     const fullItem = (p.item_name || '').trim();
                     if (fullItem && !seenOther.has(fullItem)) {
                       seenOther.add(fullItem);
-                      rawOtherNames.push(fullItem);
+                      otherItems.push(fullItem);
                     }
                   });
 
-                  const uniqueBaseNames = [...rawPaperNames, ...rawOtherNames];
+                  const allMaterialNames = [...paperItems, ...ctpItems, ...coatingItems, ...otherItems];
                   const materialOptions = [
-                    ...(rawPaperNames.length > 0 ? [{
+                    ...(paperItems.length > 0 ? [{
                       label: '📄 Цаас (Нэр ба хэмжээ)',
-                      options: rawPaperNames.map(name => ({ value: name, label: name }))
+                      options: paperItems.map(name => ({ value: name, label: name }))
                     }] : []),
-                    ...(rawOtherNames.length > 0 ? [{
+                    ...(ctpItems.length > 0 ? [{
+                      label: '💿 CTP хавтан',
+                      options: ctpItems.map(name => ({ value: name, label: name }))
+                    }] : []),
+                    ...(coatingItems.length > 0 ? [{
+                      label: '✨ Бүрэлт',
+                      options: coatingItems.map(name => ({ value: name, label: name }))
+                    }] : []),
+                    ...(otherItems.length > 0 ? [{
                       label: '📦 Бусад / Туслах материал',
-                      options: rawOtherNames.map(name => ({ value: name, label: name }))
+                      options: otherItems.map(name => ({ value: name, label: name }))
                     }] : [])
                   ];
 
-                  const currentParsed = parseMaterial(currentMaterialName);
-                  const availableSizes = parsedMasterPrices.filter(p => 
-                    p.baseName === currentMaterialName || 
-                    p.item_name === currentMaterialName ||
-                    (Boolean(currentParsed.baseName) && p.baseName === currentParsed.baseName)
-                  );
                   const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
-
                   const inputStyle = tableInputStyle;
 
                   const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
@@ -4860,7 +4890,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : undefined, minWidth: isExpandedMaterial ? '260px' : undefined }}>
+                        <input type="hidden" {...register(`materials.${index}.size`)} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <Controller
@@ -4870,10 +4901,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 const curVal = field.value || '';
                                 let selectedMaterialOpt = null;
                                 if (curVal) {
-                                  if (uniqueBaseNames.includes(curVal)) {
+                                  if (allMaterialNames.includes(curVal)) {
                                     selectedMaterialOpt = { value: curVal, label: curVal };
                                   } else {
-                                    const matched = uniqueBaseNames.find(n => n === curVal || n.startsWith(curVal));
+                                    const matched = allMaterialNames.find(n => n === curVal || n.startsWith(curVal) || curVal.startsWith(n) || n.toLowerCase().includes(curVal.toLowerCase()));
                                     selectedMaterialOpt = matched ? { value: matched, label: matched } : { value: curVal, label: curVal };
                                   }
                                 }
@@ -4923,17 +4954,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
                                           const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
                                           const curPrintSize = formValues.materials?.[index]?.print_size || 'A2';
-                                          const curColor = formValues.inner_color || formValues.cover_color || '4+0';
-                                          const is1Col = curColor === '1+1' || curColor === '1+0' || curColor === '0+1' || ['алтлаг', 'бронз', 'мөнгөлөг'].includes(curColor.toLowerCase().trim());
-                                          const isSmSize = curPrintSize === '65*55' || curPrintSize === '65x55' || curPrintSize === '65x43' || curPrintSize === '65*43';
-                                          const isSm = is1Col || (isSmSize && !curColor?.startsWith('4+') && !curColor?.startsWith('5+') && !curColor?.startsWith('3+'));
-                                          const explicitSize = val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : ''));
-                                          const plateFormat = explicitSize || (isSm ? '65x55' : (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5'));
+                                          const explicitSize = extractSheetSize(val) || (val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : '76x60.5')));
+                                          const plateFormat = explicitSize || (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5');
                                           const ctpPrice = plateFormat === '65x55' ? ctpPriceSmall : ctpPriceLarge;
 
-                                          setValue(`materials.${index}.material_name`, `CTP хавтан (${plateFormat})`);
+                                          setValue(`materials.${index}.material_name`, val);
                                           setValue(`materials.${index}.size`, plateFormat);
-                                          setValue(`materials.${index}.unit_cost`, ctpPrice);
+                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || ctpPrice);
                                           setValue(`materials.${index}.is_manual_size`, true as any);
                                           setValue(`materials.${index}.divide_by`, 1);
                                           setValue(`materials.${index}.press_sheet`, '1');
@@ -5037,13 +5064,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
                                           const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
                                           const parsed = parseMaterial(val);
-                                          const chosenWidth = parsed.sizeName || getCoatingWidthFromPrintSize(coatingPrintSize);
-                                          const matchingFullItem = parsedMasterPrices.find(p => 
-                                            (p.baseName === parsed.baseName || p.baseName === val) && p.sizeName === chosenWidth
-                                          );
-                                          const fullMatName = matchingFullItem?.item_name || (parsed.sizeName ? val : `${val} ${chosenWidth}`);
+                                          const chosenWidth = extractSheetSize(val) || parsed.sizeName || getCoatingWidthFromPrintSize(coatingPrintSize);
 
-                                          setValue(`materials.${index}.material_name`, fullMatName);
+                                          setValue(`materials.${index}.material_name`, val);
                                           setValue(`materials.${index}.size`, chosenWidth);
                                           setValue(`materials.${index}.print_size`, coatingPrintSize);
                                           setValue(`materials.${index}.divide_by`, 1);
@@ -5052,15 +5075,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const base = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
                                           setValue(`materials.${index}.base_qty`, base);
                                           const currentOps = getValues('operations') || [];
-                                          const extra = calculateCoatingMakeready(base, currentOps, `${fullMatName} ${formValues.materials?.[index]?.notes || ''}`);
+                                          const extra = calculateCoatingMakeready(base, currentOps, `${val} ${formValues.materials?.[index]?.notes || ''}`);
                                           setValue(`materials.${index}.extra_qty`, extra);
                                           setValue(`materials.${index}.is_manual_extra`, false as any);
                                           const tQty = base + extra;
                                           setValue(`materials.${index}.total_qty`, tQty);
                                           const coef = getCoatingCoefficient(chosenWidth || coatingPrintSize);
                                           setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                                          setValue(`materials.${index}.unit_cost`, 1500);
-                                          const isGloss = fullMatName.includes('гялгар') || fullMatName.includes('Гялгар');
+                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 1500);
+                                          const isGloss = val.includes('гялгар') || val.includes('Гялгар');
                                           const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
                                           setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet})`);
                                           return;
@@ -5226,8 +5249,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     if (base > 0 && Number(getValues(`materials.${index}.base_qty`)) !== base) {
                                       setValue(`materials.${index}.base_qty`, base);
                                     }
-                                    const currentMaterialName = getValues(`materials.${index}.material_name`) || '';
-                                    const extra = currentMaterialName.includes('Бүрэлт') || currentMaterialName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
+                                    const curMatName = getValues(`materials.${index}.material_name`) || '';
+                                    const extra = curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
                                     setValue(`materials.${index}.extra_qty`, extra);
                                     const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
                                     const divs = calculatePaperDivision(currentPrintSize, a7);
@@ -5245,274 +5268,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               <span>{isCoverRow ? '📘 Хавтас' : 'Хавтас'}</span>
                             </label>
                           )}
-                          {aux.type === 'ctp' && !isExpandedMaterial && (
-                            <div style={{ width: '130px', flexShrink: 0 }}>
-                              <Controller
-                                name={`materials.${index}.size`}
-                                control={control}
-                                render={({ field }) => {
-                                  const curNorm = normalizeCtpSize(field.value);
-                                  const selectedOpt = CTP_PLATE_SIZE_OPTIONS.find(o => o.value === curNorm) || { value: curNorm, label: curNorm };
-                                  return (
-                                    <Select
-                                      value={selectedOpt}
-                                      options={CTP_PLATE_SIZE_OPTIONS}
-                                      onChange={(opt: any) => {
-                                        const val = opt ? normalizeCtpSize(opt.value) : '76x60.5';
-                                        field.onChange(val);
-                                        const newPrice = val === '65x55' ? ctpPriceSmall : ctpPrice;
-                                        setValue(`materials.${index}.size`, val);
-                                        setValue(`materials.${index}.material_name`, `CTP хавтан (${val})`);
-                                        setValue(`materials.${index}.unit_cost`, newPrice);
-                                        setValue(`materials.${index}.is_manual_size`, true as any);
-                                      }}
-                                      styles={{
-                                        ...tableSelectStyles,
-                                        control: (base: any, state: any) => ({
-                                          ...base,
-                                          minHeight: '28px',
-                                          height: '28px',
-                                          fontSize: '11px',
-                                          borderRadius: '4px',
-                                          borderColor: state.isFocused ? '#2563eb' : '#cbd5e1'
-                                        }),
-                                        valueContainer: (base: any) => ({ ...base, padding: '0 4px', height: '28px' }),
-                                        indicatorsContainer: (base: any) => ({ ...base, height: '28px' })
-                                      }}
-                                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                      menuPosition="fixed"
-                                      isSearchable={false}
-                                      placeholder="Хэмжээ..."
-                                    />
-                                  );
-                                }}
-                              />
-                            </div>
-                          )}
                         </div>
                       </td>
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '80px' }}>
-                        {aux.type === 'ctp' ? (
-                          <Controller
-                            name={`materials.${index}.size`}
-                            control={control}
-                            render={({ field }) => {
-                              const curNorm = normalizeCtpSize(field.value);
-                              const selectedOpt = CTP_PLATE_SIZE_OPTIONS.find(o => o.value === curNorm) || { value: curNorm, label: curNorm };
-                              return (
-                                <Select
-                                  value={selectedOpt}
-                                  options={CTP_PLATE_SIZE_OPTIONS}
-                                  onChange={(opt: any) => {
-                                    const val = opt ? normalizeCtpSize(opt.value) : '76x60.5';
-                                    field.onChange(val);
-                                    const newPrice = val === '65x55' ? ctpPriceSmall : ctpPrice;
-                                    setValue(`materials.${index}.size`, val);
-                                    setValue(`materials.${index}.material_name`, `CTP хавтан (${val})`);
-                                    setValue(`materials.${index}.unit_cost`, newPrice);
-                                    setValue(`materials.${index}.is_manual_size`, true as any);
-                                  }}
-                                  styles={tableSelectStyles}
-                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                  menuPosition="fixed"
-                                  isSearchable={false}
-                                  placeholder="Хавтан сонгох..."
-                                />
-                              );
-                            }}
-                          />
-                        ) : (
-                        <Controller
-                          name={`materials.${index}.size`}
-                          control={control}
-                          render={({ field }) => {
-                            const isCoatingRow = currentMaterialName.includes('Бүрэлт') || aux.type === 'coating';
-                            let sizeOptions: { value: string; label: string; unit_cost?: number }[] = [];
-                            
-                            if (isCoatingRow) {
-                              const curParsed = parseMaterial(currentMaterialName);
-                              let coatingItems = parsedMasterPrices.filter(p => 
-                                p.baseName === curParsed.baseName || p.baseName === currentMaterialName
-                              );
-                              if (coatingItems.length === 0 || !coatingItems.some(i => i.sizeName)) {
-                                const isGloss = currentMaterialName.includes('гялгар') || currentMaterialName.includes('Гялгар');
-                                const targetFamily = isGloss ? 'Бүрэлт гялгар Хятад' : 'Бүрэлт матт Хятад';
-                                coatingItems = parsedMasterPrices.filter(p => p.baseName === targetFamily);
-                              }
-                              
-                              const seenSizes = new Set<string>();
-                              sizeOptions = coatingItems
-                                .filter(p => p.sizeName && !seenSizes.has(p.sizeName))
-                                .map(p => {
-                                  seenSizes.add(p.sizeName);
-                                  return {
-                                    value: p.sizeName,
-                                    label: `${p.sizeName} (${p.sizeName.includes('54') ? 'B2' : (p.sizeName.includes('44') ? 'A2' : 'B3/A3')})`,
-                                    unit_cost: p.unit_cost || 1500
-                                  };
-                                });
-                                
-                              if (sizeOptions.length === 0) {
-                                sizeOptions = [
-                                  { value: '36 см', label: '36 см (B3/A3)', unit_cost: 1500 },
-                                  { value: '44 см', label: '44 см (A2)', unit_cost: 1500 },
-                                  { value: '54 см', label: '54 см (B2)', unit_cost: 1500 },
-                                ];
-                              }
-                            } else {
-                              sizeOptions = availableSizes.map(p => ({
-                                value: p.sizeName,
-                                label: p.sizeName || 'Үндсэн (Хэмжээгүй)',
-                                unit_cost: p.unit_cost
-                              }));
-                            }
-
-                            const curVal = field.value || '';
-                            const selectedSizeOpt = sizeOptions.find(o => o.value === curVal) || (curVal ? { value: curVal, label: curVal } : null);
-
-                            return (
-                            <Select
-                              {...field}
-                              options={sizeOptions}
-                              onChange={(selectedOption: any) => {
-                                const val = selectedOption ? selectedOption.value : '';
-                                field.onChange(val);
-                                if (selectedOption) {
-                                  setValue(`materials.${index}.unit_cost`, selectedOption.unit_cost);
-                                  if (isCoatingRow) {
-                                    const curParsed = parseMaterial(currentMaterialName);
-                                    const matchingItem = parsedMasterPrices.find(p => 
-                                      (p.baseName === curParsed.baseName || p.baseName === currentMaterialName) && 
-                                      p.sizeName === val
-                                    ) || parsedMasterPrices.find(p => p.sizeName === val && p.item_name.includes('Бүрэлт'));
-                                    
-                                    const newMatName = matchingItem?.item_name || (curParsed.baseName ? `${curParsed.baseName} ${val}` : `Бүрэлт матт Хятад ${val}`);
-                                    setValue(`materials.${index}.material_name`, newMatName);
-                                    setValue(`materials.${index}.unit_cost`, matchingItem?.unit_cost || 1500);
-
-                                    // Sync with Cover row (press_sheet & divide_by)
-                                    const coverMat = (getValues('materials') || []).find((m: any, i: number) => i !== index && m.is_cover);
-                                    const mainMat = (getValues('materials') || []).find((m: any, i: number) => {
-                                      const a = getMaterialType(m.material_name, m.notes);
-                                      return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
-                                    });
-                                    const targetMat = coverMat || mainMat;
-                                    const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
-                                    const formCat = getValues('category') || formValues.category;
-                                    const isBagCategory = formCat === 'Тор' || formCat === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
-                                    if (targetMat) {
-                                      if (targetMat.press_sheet !== undefined && targetMat.press_sheet !== '') {
-                                        setValue(`materials.${index}.press_sheet`, String(targetMat.press_sheet));
-                                      }
-                                      setValue(`materials.${index}.divide_by`, 1);
-                                      if (targetMat.print_size) {
-                                        setValue(`materials.${index}.print_size`, targetMat.print_size);
-                                      }
-                                    }
-
-                                    const rawBase = Number(formValues.materials?.[index]?.base_qty) > 0 
-                                      ? Number(formValues.materials?.[index]?.base_qty) 
-                                      : (Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : (Number(getValues('total_qty')) || 1000));
-                                    const base = isBagCategory ? Math.round((Number(targetMat?.base_qty) || Number(getValues('total_qty')) || 1000) * targetPressNum) : rawBase;
-                                    setValue(`materials.${index}.base_qty`, base);
-
-                                    const currentOps = getValues('operations') || [];
-                                    const extra = calculateCoatingMakeready(base, currentOps, `${newMatName} ${formValues.materials?.[index]?.notes || ''}`);
-                                    setValue(`materials.${index}.extra_qty`, extra);
-                                    setValue(`materials.${index}.is_manual_extra`, false as any);
-
-                                    const tQty = base + extra;
-                                    setValue(`materials.${index}.total_qty`, tQty);
-
-                                    const coef = getCoatingCoefficient(val);
-                                    const sQty = Number((tQty * coef).toFixed(2));
-                                    setValue(`materials.${index}.sheet_qty`, sQty);
-
-                                    const pSheet = getValues(`materials.${index}.press_sheet`) || targetMat?.press_sheet || '1';
-                                    const isGloss = newMatName.includes('гялгар') || newMatName.includes('Гялгар');
-                                    const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
-                                    setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${val} хуулга, коэф: ${coef}, Х.хуудас: ${pSheet})`);
-
-                                    // Sync coating in operations
-                                    const opTypeName = newMatName.includes('Илгэн')
-                                      ? 'Бүрэлт (Илгэн)'
-                                      : newMatName.includes('эмбосс')
-                                        ? (newMatName.includes('гялгар') ? 'Бүрэлт (Гялгар эмбосс)' : 'Бүрэлт (Матт эмбосс)')
-                                        : (isGloss ? 'Бүрэлт (Гялгар)' : 'Бүрэлт (Матт)');
-
-                                    const hasCoatingOp = currentOps.some((o: any) => (o.operation_name || '').includes('Бүрэлт'));
-                                    if (hasCoatingOp) {
-                                      const nextOps = currentOps.map((o: any) => {
-                                        if ((o.operation_name || '').includes('Бүрэлт')) {
-                                          return { ...o, operation_name: opTypeName, qty: tQty };
-                                        }
-                                        return o;
-                                      });
-                                      setValue('operations', nextOps);
-                                    }
-                                    return;
-                                  }
-                                  const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
-                                  let finalDivBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                                  const a7 = getA7Size();
-                                  if (aux.isNonPrinted) {
-                                    const specs = getHardcoverAuxiliarySpecs(a7);
-                                    if (aux.type === 'cardboard') finalDivBy = specs.cardboardDiv;
-                                    else if (aux.type === 'endpaper_super') finalDivBy = getSuperCoverSpecs(a7).endpaperDiv;
-                                    else if (aux.type === 'endpaper_plain') finalDivBy = specs.endpaperDiv;
-                                    else if (aux.type === 'capital') finalDivBy = specs.headbandDiv;
-                                    setValue(`materials.${index}.divide_by`, finalDivBy);
-                                  } else if (aux.type === 'super_cover') {
-                                    const superSpecs = getSuperCoverSpecs(a7);
-                                    finalDivBy = superSpecs.coverDiv;
-                                    setValue(`materials.${index}.divide_by`, finalDivBy);
-                                    setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
-                                  } else {
-                                    let printSize = formValues.materials?.[index]?.print_size;
-                                    if (!printSize) {
-                                      printSize = getDefaultPrintSize(formValues.category, a7, isCoverRow, formValues.binding_type, coverRules);
-                                      setValue(`materials.${index}.print_size`, printSize);
-                                    }
-                                    const effectiveBt = formValues.binding_type || (isCoverRow ? 'Наалттай' : '');
-                                    const coverLogic = isCoverRow ? getCoverLogic(a7, effectiveBt, coverRules) : null;
-                                    if (coverLogic) {
-                                      finalDivBy = coverLogic.divideBy;
-                                      setValue(`materials.${index}.divide_by`, finalDivBy);
-                                      if (coverLogic.printSize) {
-                                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                                      }
-                                      if (coverLogic.pressSheet) {
-                                        setValue(`materials.${index}.press_sheet`, String(coverLogic.pressSheet));
-                                      }
-                                    } else {
-                                      const ratio = calculatePaperDivision(val, printSize);
-                                      if (ratio > 0) {
-                                        setValue(`materials.${index}.divide_by`, ratio);
-                                        finalDivBy = ratio;
-                                      }
-                                    }
-                                  }
-                                  const totalQty = Number(formValues.materials?.[index]?.total_qty) || 0;
-                                  if (!evaluateDynamicFormula(index, { divide_by: finalDivBy })) {
-                                    setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / finalDivBy));
-                                  }
-                                }
-                              }}
-                              value={selectedSizeOpt}
-                              placeholder={isCoatingRow ? "Өргөн сонгох..." : "Жин, Формат..."}
-                              isClearable
-                              isDisabled={!currentMaterialName || isSpecialStrap}
-                              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                              menuPosition="fixed"
-                              styles={{ ...tableSelectStyles, control: base => ({ ...tableSelectStyles.control(base), background: isSpecialStrap ? '#f1f5f9' : 'white' }), menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                            />
-                          );
-                        }}
-                      />
-                      )}
-                      </td>
-                      )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
                         {aux.type === 'ctp' ? (
