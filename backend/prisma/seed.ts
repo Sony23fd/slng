@@ -242,6 +242,18 @@ async function main() {
       default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Хэв дарах (A2)', 'Бөгж цоологч', 'Гараар хийх ажил', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
     },
     { 
+      name: 'Постер', 
+      calc_mode: 'STANDARD_MODE', 
+      has_cover: false, 
+      has_inner: true, 
+      has_binding: false, 
+      has_pages: false, 
+      has_bookmark: false, 
+      waste_qty: 10,
+      default_materials: ['Шохойтой цаас 200гр A0 (889x1194)', 'Бүрэлт гялгар Хятад 44 см'],
+      default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Бүрэлт (Гялгар)', 'Огтлоо (Том)', 'Чанарын эцсийн хяналт']
+    },
+    { 
       name: 'Хортой маягт', 
       calc_mode: 'STANDARD_MODE', 
       has_cover: false, 
@@ -277,18 +289,7 @@ async function main() {
       default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)', 'Бүрэлт (Гялгар)'],
       default_operations: ['Хэвлэх (4 өнгө)', 'Хэвлэх (1 өнгө)', 'Шалгах', 'Нугалаа', 'Цуглуулга', 'Үдээ (Унаа үдээ)', 'Огтлоо (Гурван талт)', 'Чанарын эцсийн хяналт']
     },
-    { 
-      name: 'EPSON', 
-      calc_mode: 'STANDARD_MODE', 
-      has_cover: false, 
-      has_inner: true, 
-      has_binding: false, 
-      has_pages: false, 
-      has_bookmark: false, 
-      waste_qty: 0,
-      default_materials: ['Шохойтой цаас 200гр A0 (889x1194)'],
-      default_operations: ['Огтлоо (Том)', 'Чанарын эцсийн хяналт']
-    },
+
     { 
       name: 'Маягт', 
       calc_mode: 'STANDARD_MODE', 
@@ -397,30 +398,7 @@ async function main() {
       default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
       default_operations: ['Хэвлэх (4 өнгө)', 'Шалгах', 'Нууцлал наах', 'Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
     },
-    { 
-      name: 'Бал', 
-      calc_mode: 'STANDARD_MODE', 
-      has_cover: false, 
-      has_inner: true, 
-      has_binding: false, 
-      has_pages: false, 
-      has_bookmark: false, 
-      waste_qty: 0,
-      default_materials: [],
-      default_operations: ['Гараар хийх ажил', 'Чанарын эцсийн хяналт']
-    },
-    { 
-      name: 'Шуурхай принт', 
-      calc_mode: 'STANDARD_MODE', 
-      has_cover: false, 
-      has_inner: true, 
-      has_binding: false, 
-      has_pages: false, 
-      has_bookmark: false, 
-      waste_qty: 0,
-      default_materials: ['Офсет цаас 80гр A0 (889x1194)'],
-      default_operations: ['Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт']
-    },
+
     { 
       name: 'Бусад', 
       calc_mode: 'STANDARD_MODE', 

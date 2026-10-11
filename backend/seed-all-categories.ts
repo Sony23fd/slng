@@ -3,18 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const ALL_PRODUCT_CATEGORIES = [
-  {
-    name: 'Ном',
-    calc_mode: 'BOOK_MODE',
-    has_cover: true,
-    has_inner: true,
-    has_binding: true,
-    has_pages: true,
-    has_bookmark: true,
-    waste_qty: 100,
-    default_operations: ['Нугалаа', 'Цуглуулга', 'Наалт', 'Огтлоо (Гурван талт)'],
-    default_materials: ['Шохойтой цаас 250гр A0 (889x1194)', 'Офсет цаас 80гр A0 (889x1194)']
-  },
+
   {
     name: 'Сэтгүүл',
     calc_mode: 'BOOK_MODE',
@@ -87,18 +76,7 @@ const ALL_PRODUCT_CATEGORIES = [
     default_operations: ['Огтлоо (Жижиг)'],
     default_materials: ['Шохойтой цаас 250гр A3 (297x420)']
   },
-  {
-    name: 'Флаер',
-    calc_mode: 'STANDARD_MODE',
-    has_cover: false,
-    has_inner: true,
-    has_binding: false,
-    has_pages: false,
-    has_bookmark: false,
-    waste_qty: 0,
-    default_operations: ['Огтлоо (Жижиг)'],
-    default_materials: ['Шохойтой цаас 157гр A0 (889x1194)']
-  },
+
   {
     name: 'Нэрийн хуудас',
     calc_mode: 'STANDARD_MODE',

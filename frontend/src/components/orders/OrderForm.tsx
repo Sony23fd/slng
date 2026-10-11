@@ -9,7 +9,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import { parseMaterial } from '../../utils/parseMaterial';
+import { parseMaterial, extractSheetSize } from '../../utils/parseMaterial';
 import { calculatePaperDivision, compareProductSizes } from '../../utils/paperSizes';
 import CalculationHelpBadge from '../common/CalculationHelpBadge';
 import TemplateCatalogModal from './TemplateCatalogModal';
@@ -57,6 +57,7 @@ interface OrderFormValues {
     base_qty: number; extra_qty: number; total_qty: number; divide_by: number; 
     sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
     is_manual_size?: boolean;
+    is_manual_base?: boolean;
     is_manual_extra?: boolean;
     is_manual_plates?: boolean;
     is_standalone_ctp?: boolean;
@@ -175,7 +176,7 @@ function calculateSetups(pressSheet: number, divisions: number) {
 
 function getMaterialType(matName?: string, notes?: string): {
   isAux: boolean;
-  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'endpaper_super' | 'super_cover' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'none';
+  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'endpaper_super' | 'super_cover' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'liderin' | 'none';
   isNonPrinted: boolean;
 } {
   const n = (matName || '').toLowerCase();
@@ -184,7 +185,19 @@ function getMaterialType(matName?: string, notes?: string): {
   if (n.includes('хавтан') || n.includes('ctp') || note.includes('хавтан') || note.includes('ctp')) {
     return { isAux: true, type: 'ctp', isNonPrinted: true };
   }
-  if (n.includes('картон') || note.includes('картон')) {
+  if (n.includes('лидерин') || note.includes('лидерин')) {
+    return { isAux: true, type: 'liderin', isNonPrinted: true };
+  }
+  const isHardcoverCardboard = 
+    note.includes('хатуу хавтас') || 
+    note.includes('хатуу картон') || 
+    n.includes('хатуу хавтасны картон') || 
+    n.includes('хатуу картон') || 
+    n.includes('саарал картон') || 
+    n.includes('суурь картон') || 
+    (n.includes('картон 2') && !n.includes('250гр') && !n.includes('200гр') && !n.includes('350гр') && !n.includes('хайрцаг'));
+
+  if (isHardcoverCardboard) {
     return { isAux: true, type: 'cardboard', isNonPrinted: true };
   }
   if (note.includes('супер хавтас') || n.includes('супер хавтас')) {
@@ -353,8 +366,15 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
   const s = (productSize || 'A5').trim().toUpperCase();
   const bt = (bindingType || '').trim();
 
-  if (cat === 'Түргэн хэвлэл') return 'A3';
+  if (cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica') {
+    const sLower = (productSize || '').toLowerCase();
+    if (sLower.includes('6')) return 'А3 (6 гарах)';
+    if (sLower.includes('480') || sLower.includes('320') || sLower.includes('5')) return '480х320 (А0-оос 5 гарна)';
+    if (sLower.includes('a4') || sLower.includes('а4')) return 'А4';
+    return 'А3 (8 гарах)';
+  }
   if (cat === 'Тор' || cat === 'Цаасан тор') return 'B2';
+  if (cat === 'Нэрийн хуудас') return 'A2';
 
   if (isCover) {
     const coverLogic = getCoverLogic(s, bt, coverRules);
@@ -370,7 +390,7 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
 function getDefaultColorsForCategory(category?: string): { coverColor: string; innerColor: string } {
   const cat = (category || '').trim();
   // Digital / non-offset categories
-  if (['Түргэн хэвлэл Konica', 'EPSON', 'Шуурхай принт', 'Бал', 'Даралт', 'Промо', 'Түргэн хэвлэл'].includes(cat)) {
+  if (['Түргэн хэвлэл Konica', 'Даралт', 'Промо', 'Түргэн хэвлэл'].includes(cat)) {
     return { coverColor: '', innerColor: '' };
   }
   // 4+4 / 4+4 multi-page & 2-sided books
@@ -390,7 +410,7 @@ function getDefaultColorsForCategory(category?: string): { coverColor: string; i
     return { coverColor: '4+0', innerColor: '4+4' };
   }
   // 2-sided single sheet / fold products
-  if (['Флаер', 'Зурагт хуудас', 'Урилга', 'Нэрийн хуудас', 'Меню'].includes(cat)) {
+  if (['Зурагт хуудас', 'Урилга', 'Нэрийн хуудас', 'Меню'].includes(cat)) {
     return { coverColor: '4+4', innerColor: '4+4' };
   }
   // Carbonless form
@@ -403,6 +423,7 @@ function getDefaultColorsForCategory(category?: string): { coverColor: string; i
 
 function getDefaultSizeForCategory(category?: string): string {
   const cat = (category || '').trim();
+  if (cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica') return 'А3 (8 гарах)';
   if (cat === 'Постер') return 'A2';
   if (['Сэтгүүл', 'Танилцуулга', 'Брошур', 'Бланк', 'Албан бланк', 'Хавтас', 'Сертификат'].includes(cat)) return 'A4';
   if (cat === 'Сонин') return 'A3';
@@ -434,10 +455,10 @@ function isInnerPageMaterial(m: any, category?: string, productCategories: any[]
   }
   const nonPageCategories = [
     'Бланк', 'Даралт', 'Зурагт хуудас', 'Түргэн хэвлэл Konica', 'Тор',
-    'Цаасан тор', 'Хортой маягт', 'Шошго', 'EPSON', 'Маягт',
+    'Цаасан тор', 'Хортой маягт', 'Шошго', 'Маягт',
     'Хавтас', 'Дугтуй', 'Урилга', 'Нэрийн хуудас', 'Дахин хэвлэлт',
-    'Промо', 'Билет', 'Бал', 'Шуурхай принт', 'Бусад',
-    'Брошур', 'Флаер', 'Постер', 'Сертификат', 'Хайрцаг', 'Стикер', 'Албан бланк', 'Түргэн хэвлэл'
+    'Промо', 'Билет', 'Бусад',
+    'Брошур', 'Постер', 'Сертификат', 'Хайрцаг', 'Стикер', 'Албан бланк', 'Түргэн хэвлэл'
   ];
   if (nonPageCategories.includes(cat)) {
     return false;
@@ -482,26 +503,26 @@ const tableSelectStyles = {
     background: 'white',
     borderRadius: '4px',
     borderColor: '#cbd5e1',
-    minHeight: '32px',
-    height: '32px',
-    maxHeight: '32px',
+    minHeight: '28px',
+    height: '28px',
+    maxHeight: '28px',
     boxSizing: 'border-box',
-    fontSize: '12.2px',
+    fontSize: '11.5px',
     boxShadow: 'none',
     '&:hover': { borderColor: '#94a3b8' }
   }),
-  valueContainer: (base: any) => ({ ...base, height: '32px', padding: '0 6px', display: 'flex', alignItems: 'center' }),
+  valueContainer: (base: any) => ({ ...base, height: '28px', padding: '0 5px', display: 'flex', alignItems: 'center' }),
   input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '32px' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
-  clearIndicator: (base: any) => ({ ...base, padding: '2px 4px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '28px' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
+  clearIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
   groupHeading: (base: any) => ({
     ...base,
-    fontSize: '11px',
+    fontSize: '10.5px',
     fontWeight: 700,
     color: '#475569',
     backgroundColor: '#f8fafc',
-    padding: '4px 8px',
+    padding: '3px 6px',
     margin: 0,
     borderBottom: '1px solid #e2e8f0',
     textTransform: 'none'
@@ -516,11 +537,11 @@ const printSizeSelectStyles = {
     background: state?.isDisabled ? '#f1f5f9' : 'white',
     borderRadius: '4px',
     borderColor: '#cbd5e1',
-    minHeight: '32px',
-    height: '32px',
-    maxHeight: '32px',
+    minHeight: '28px',
+    height: '28px',
+    maxHeight: '28px',
     boxSizing: 'border-box',
-    fontSize: '12px',
+    fontSize: '11.5px',
     fontWeight: 600,
     color: '#1e293b',
     boxShadow: 'none',
@@ -530,8 +551,8 @@ const printSizeSelectStyles = {
   }),
   valueContainer: (base: any) => ({
     ...base,
-    height: '32px',
-    padding: '0 4px',
+    height: '28px',
+    padding: '0 2px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -544,12 +565,12 @@ const printSizeSelectStyles = {
     fontWeight: 600,
     color: '#0f172a',
     textAlign: 'center',
-    fontSize: '12px'
+    fontSize: '11.5px'
   }),
   input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
-  indicatorsContainer: (base: any) => ({ ...base, height: '32px', paddingRight: '2px' }),
+  indicatorsContainer: (base: any) => ({ ...base, height: '28px', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '2px 2px', width: '16px', color: '#64748b' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '1px 2px', width: '14px', color: '#64748b' }),
   clearIndicator: () => ({ display: 'none' }),
   menu: (base: any) => ({ ...base, zIndex: 99999, minWidth: '85px' }),
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
@@ -557,13 +578,15 @@ const printSizeSelectStyles = {
 
 const tableInputStyle: React.CSSProperties = {
   width: '100%',
-  minWidth: '40px',
-  height: '32px',
-  lineHeight: '32px',
-  padding: '0 6px',
+  minWidth: '35px',
+  height: '28px',
+  minHeight: '28px',
+  maxHeight: '28px',
+  lineHeight: '26px',
+  padding: '0 5px',
   border: '1px solid #cbd5e1',
   borderRadius: '4px',
-  fontSize: '12.2px',
+  fontSize: '11.5px',
   boxSizing: 'border-box'
 };
 
@@ -882,7 +905,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       { value: 'Хортой маягт', label: 'Хортой маягт' },
       { value: 'Шошго', label: 'Шошго' },
       { value: 'Дэвтэр', label: 'Дэвтэр' },
-      { value: 'EPSON', label: 'EPSON' },
       { value: 'Маягт', label: 'Маягт' },
       { value: 'Хавтас', label: 'Хавтас' },
       { value: 'Дугтуй', label: 'Дугтуй' },
@@ -892,8 +914,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       { value: 'Дахин хэвлэлт', label: 'Дахин хэвлэлт' },
       { value: 'Промо', label: 'Промо' },
       { value: 'Билет', label: 'Билет' },
-      { value: 'Бал', label: 'Бал' },
-      { value: 'Шуурхай принт', label: 'Шуурхай принт' },
       { value: 'Бусад', label: 'Бусад' }
     ];
 
@@ -1175,7 +1195,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       return !obsoleteList.includes(name);
     });
 
-    const isNonOffset = ['Түргэн хэвлэл Konica', 'EPSON', 'Шуурхай принт', 'Бал', 'Даралт', 'Промо'].includes(cat);
+    const isNonOffset = ['Түргэн хэвлэл', 'Түргэн хэвлэл Konica', 'Даралт', 'Промо'].includes(cat);
     const catConfig = productCategories.find(c => c.name === cat);
     const isBookMode = catConfig?.calc_mode === 'BOOK_MODE' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Сэтгүүл' || cat === 'Танилцуулга' || cat === 'Дэвтэр' || cat === 'Сонин' || cat === 'Календар';
 
@@ -1359,7 +1379,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     if (isBookMode || cat === 'Сэтгүүл' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Дэвтэр' || cat === 'Танилцуулга') {
       defaultCuttingName = 'Огтлоо (Гурван талт)';
       defaultCuttingQty = 2;
-    } else if (cat === 'Зурагт хуудас' || cat === 'Сонин' || cat === 'Тор' || cat === 'Хавтас' || cat === 'EPSON') {
+    } else if (cat === 'Зурагт хуудас' || cat === 'Сонин' || cat === 'Тор' || cat === 'Хавтас') {
       defaultCuttingName = 'Огтлоо (Том)';
       defaultCuttingQty = 1;
     }
@@ -1422,7 +1442,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (od.sub_size) setValue('sub_size', od.sub_size);
 
       // Total qty
-      const tQty = t.total_qty || (od.materials && od.materials[0]?.base_qty) || 1000;
+      const nameQtyMatch = (t.template_name || '').match(/(\d+)\s*ш/i);
+      const parsedNameQty = nameQtyMatch ? Number(nameQtyMatch[1]) : 0;
+      const tQty = t.total_qty || od.total_qty || (parsedNameQty > 0 ? parsedNameQty : (od.materials && od.materials[0]?.base_qty)) || 1000;
       setValue('total_qty', tQty);
 
       // Specifications
@@ -1608,7 +1630,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               const matDivs = calculatePaperDivision(rowSize, rowPrintSize);
               if (matDivs > 0) rowDivideBy = matDivs;
               rowPressSheet = '1';
-              if (category === 'Брошур' || category === 'Флаер') {
+              if (category === 'Брошур' || category === 'Флаер' || category === 'Хортой маягт') {
                 const pDiv = calculatePaperDivision(rowPrintSize, a7) || 1;
                 baseQty = Math.ceil(tQty / pDiv);
               } else {
@@ -1872,7 +1894,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               } else if (!hasCover && !catConfig.has_pages) {
                 rowPress = '1';
                 rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
-                rowTotal = rowBase + rowExtra;
+                if (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт' || formValues.category === 'Нэрийн хуудас') {
+                  const pDiv = calculatePaperDivision(rowPrintSize, a7) || 1;
+                  rowBase = Math.ceil(curQty / pDiv);
+                  rowExtra = calculateMakeready(rowBase);
+                  const pSetups = calculateSetups(1, pDiv);
+                  rowTotal = (rowBase * 1) + (rowExtra * pSetups);
+                } else {
+                  rowTotal = rowBase + rowExtra;
+                }
                 rowSheets = Math.ceil(rowTotal / rowDivideBy);
               } else {
                 rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
@@ -2022,9 +2052,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const category = formValues.category || '';
     const NON_CTP_CATEGORIES = [
       'Түргэн хэвлэл Konica',
-      'EPSON',
-      'Шуурхай принт',
-      'Бал',
       'Даралт',
       'Промо',
       'Түргэн хэвлэл'
@@ -2089,7 +2116,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : (isBrochure ? 'A2' : 'A2')));
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
-      const mPressSheet = Number(m.press_sheet) || 1;
+      const mPressSheet = (Number(m.press_sheet) > 0 && !isNaN(Number(m.press_sheet))) ? Number(m.press_sheet) : 1;
       const plates = calcPlates(colorToUse, mPressSheet, divisions, isSingleSheet);
 
       if (plates > 0) {
@@ -2109,7 +2136,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
           roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : (isBrochure ? 'Брошур' : (category || 'Үндсэн')))),
           printSize,
-          pressSheet: String(m.press_sheet || ''),
+          pressSheet: String(m.press_sheet || '1'),
           plates,
           defaultSize
         });
@@ -2305,8 +2332,43 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const b4 = Number(getValues('total_pages')) || 0;
     const a6 = Number(getValues('total_qty')) || 0;
     const bt = getValues('binding_type') || '';
+    const cat = getValues('category');
     const materials = getValues('materials') || [];
-    
+    const isQuickPrint = cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica';
+
+    if (isQuickPrint) {
+      materials.forEach((m, index) => {
+        const aux = getMaterialType(m.material_name, m.notes);
+        if (aux.type === 'ctp') return;
+
+        let qPrintSize = 'А3 (8 гарах)';
+        let qDivBy = 8;
+        if (newSize.includes('6 гарах') || newSize.includes('(6')) {
+          qPrintSize = 'А3 (6 гарах)';
+          qDivBy = 6;
+        } else if (newSize.includes('480') || newSize.includes('320') || newSize.includes('5 гарна') || newSize.includes('5 гарах') || newSize.includes('(5')) {
+          qPrintSize = '480х320 (А0-оос 5 гарна)';
+          qDivBy = 5;
+        } else if (newSize === 'A4' || newSize.startsWith('A4') || newSize === 'А4' || newSize.startsWith('А4')) {
+          qPrintSize = 'А4';
+          const src = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+          qDivBy = (src.includes('A4') || src.includes('А4')) ? 1 : 16;
+        } else {
+          qPrintSize = 'А3 (8 гарах)';
+          qDivBy = 8;
+        }
+
+        setValue(`materials.${index}.print_size`, qPrintSize);
+        setValue(`materials.${index}.divide_by`, qDivBy);
+        setValue(`materials.${index}.press_sheet`, '1');
+        setValue(`materials.${index}.base_qty`, a6);
+        setValue(`materials.${index}.extra_qty`, 0);
+        setValue(`materials.${index}.total_qty`, a6);
+        setValue(`materials.${index}.sheet_qty`, Math.ceil(a6 / qDivBy));
+      });
+      return;
+    }
+
     materials.forEach((m, index) => {
       const aux = getMaterialType(m.material_name, m.notes);
       if (aux.isAux) {
@@ -2455,14 +2517,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
 
       if (m4 > 0) {
-        const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
+        const isDividedCat = cat === 'Брошур' || cat === 'Флаер' || cat === 'Хортой маягт' || cat === 'Нэрийн хуудас';
+        const printSizeForDivs = coverLogic?.printSize || m.print_size || getDefaultPrintSize(cat, a7, isCover, bt, coverRules);
+        const divs = calculatePaperDivision(printSizeForDivs, a7) || 1;
+        const base = isDividedCat ? Math.ceil(a6 / divs) : (Number(m.base_qty) > 0 ? Number(m.base_qty) : a6);
         if (base > 0 && Number(m.base_qty) !== base) {
           setValue(`materials.${index}.base_qty`, base);
         }
-        const extra = calculateMakeready(base);
-        setValue(`materials.${index}.extra_qty`, extra);
-        const printSizeForDivs = coverLogic?.printSize || m.print_size || getDefaultPrintSize(cat, a7, isCover, bt, coverRules);
-        const divs = calculatePaperDivision(printSizeForDivs, a7) || 1;
+        const isManualExtra = Boolean(m.is_manual_extra);
+        const extra = (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0) 
+          ? Number(m.extra_qty) 
+          : calculateMakeready(base);
+        if (!isManualExtra) {
+          setValue(`materials.${index}.extra_qty`, extra);
+        }
         const setups = calculateSetups(m4, divs);
         const total = (base * m4) + (extra * setups);
         setValue(`materials.${index}.total_qty`, total);
@@ -2513,6 +2581,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const isCapital = name.includes('капитал') || notes.includes('капитал');
       const isRibbon = name.includes('хавчуурга') || notes.includes('хавчуурга');
       return !isCardboard && !isHardcoverEndpaper && !isCapital && !isRibbon;
+    });
+
+    const isBFormat = size.startsWith('B') || size.startsWith('В');
+    const targetCoverName = isBFormat 
+      ? 'Мат цаас 157гр B1 (889x1194)' 
+      : 'Мат цаас 157гр A0 (889x1194)';
+    const targetSize = isBFormat ? 'B1' : 'A0';
+    const targetPrice = isBFormat ? 710 : 940;
+    cleanMaterials.forEach((m: any, idx: number) => {
+      if (m.is_cover || idx === 0) {
+        setValue(`materials.${idx}.material_name`, targetCoverName);
+        setValue(`materials.${idx}.size`, targetSize);
+        setValue(`materials.${idx}.unit_cost`, targetPrice);
+        setValue(`materials.${idx}.notes`, 'Хавтасны цаас (Матт 157гр)');
+      }
     });
 
     const cardboardPrice = masterPrices.find(p => p.item_name.includes('Картон 2'))?.unit_cost || 6300;
@@ -2770,8 +2853,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const targetMat = coverMat || mainMat;
     const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
-    const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat.press_sheet) : '1';
-    const targetDivideBy = targetMat?.divide_by ? Number(targetMat.divide_by) : 1;
+    const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
+    const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+    const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
 
     let width = getCoatingWidthFromPrintSize(coatingPrintSize);
     let fullMatName = '';
@@ -2788,8 +2872,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
 
     const coef = getCoatingCoefficient(chosenWidth || coatingPrintSize);
-    const base = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
-    const extra = calculateCoatingMakeready(base, currentOps, `${fullMatName} Хавтасны бүрэлт (${coatingPrintSize})`);
+    const rawBase = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
+    const base = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
+    const extra = calculateCoatingMakeready(base, currentOps, `${fullMatName} ${isBagCategory ? 'Торны' : 'Хавтасны'} бүрэлт (${coatingPrintSize})`);
     const tQty = base + extra;
     const sQty = Number((tQty * coef).toFixed(2));
 
@@ -2801,10 +2886,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       base_qty: base,
       extra_qty: extra,
       total_qty: tQty,
-      divide_by: targetDivideBy,
+      divide_by: 1,
       sheet_qty: sQty,
       unit_cost: 1500,
-      notes: `Хавтасны бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet}, Хуваалт: ${targetDivideBy})`,
+      notes: `${isBagCategory ? 'Торны' : 'Хавтасны'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet})`,
       is_cover: false,
       is_manual_size: true as any
     };
@@ -3011,9 +3096,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const cat = formValues.category;
     const isBag = cat === 'Тор' || cat === 'Цаасан тор';
     const isBrochure = cat === 'Брошур';
+    const isCarbonless = cat === 'Хортой маягт';
 
     const a6 = Number(formValues.total_qty) || 0;
-    const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A4');
+    const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || (isCarbonless ? 'A5' : (cat === 'Брошур' ? 'A4' : 'A5')));
     const a7 = currentA7Size;
     const mats = getValues('materials') || [];
 
@@ -3043,13 +3129,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
            setValue(`materials.${index}.print_size`, targetPrintSize);
          }
 
-         const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat.press_sheet) : '1';
-         const targetDivideBy = targetMat?.divide_by ? Number(targetMat.divide_by) : 1;
+         const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
+         const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+         const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
          if (String(m.press_sheet || '') !== targetPressSheet) {
            setValue(`materials.${index}.press_sheet`, targetPressSheet);
          }
-         if (Number(m.divide_by) !== targetDivideBy) {
-           setValue(`materials.${index}.divide_by`, targetDivideBy);
+         if (Number(m.divide_by) !== 1) {
+           setValue(`materials.${index}.divide_by`, 1);
          }
 
          const curWidth = m.size || getCoatingWidthFromPrintSize(targetPrintSize);
@@ -3058,8 +3145,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
          }
          const coef = getCoatingCoefficient(curWidth || targetPrintSize);
 
-         const expectedBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : a6;
-         const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : (expectedBase > 0 ? expectedBase : a6);
+         const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : a6;
+         const expectedBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
+         const base = m.is_manual_base && Number(m.base_qty) > 0 ? Number(m.base_qty) : (expectedBase > 0 ? expectedBase : a6);
          const currentOps = formValues.operations || [];
          let extra = Number(m.extra_qty);
          if (isNaN(extra) || extra < 0 || !m.is_manual_extra) {
@@ -3088,7 +3176,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (aux.isAux || aux.isNonPrinted) return;
 
       const isCover = isCoverMaterial(m);
-      if (isCover && !isBrochure) {
+      if (isCover && !isBrochure && !isCarbonless) {
         const bt = formValues.binding_type || 'Наалттай';
         const coverLogic = getCoverLogic(a7, bt, coverRules);
         if (coverLogic) {
@@ -3119,7 +3207,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       }
 
-      if (isBag || isBrochure) {
+      if (isBag || isBrochure || isCarbonless) {
         const defPs = isBag ? 'B2' : (a7.startsWith('B') ? 'B2' : 'A2');
         const m3 = m.print_size || defPs;
         let div = 1;
@@ -3157,9 +3245,40 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (Number(m.divide_by) !== rawDiv) setValue(`materials.${index}.divide_by`, rawDiv);
         const sQty = Math.ceil(total / rawDiv);
         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+        return;
+      }
+
+      // Single-sheet products (Постер, Бланк, Флаер, Стикер, Шошго, Урилга, Билет, etc.)
+      const catConfig = productCategories.find((c: any) => c.name === cat);
+      const isSingleSheetProduct = !isCover && (!catConfig || (!catConfig.has_cover && !catConfig.has_pages));
+      if (isSingleSheetProduct) {
+        const m3 = m.print_size || getDefaultPrintSize(cat, a7, false, formValues.binding_type, coverRules) || 'A2';
+        if (!m.print_size) setValue(`materials.${index}.print_size`, m3);
+
+        const currentPressSheet = (Number(m.press_sheet) > 0 && !isNaN(Number(m.press_sheet))) ? Number(m.press_sheet) : 1;
+        if (String(m.press_sheet || '') !== String(currentPressSheet)) {
+          setValue(`materials.${index}.press_sheet`, String(currentPressSheet));
+        }
+
+        const div = calculatePaperDivision(m3, a7) || 1;
+        const m5 = (cat === 'Флаер') ? Math.ceil(a6 / div) : a6;
+        if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
+
+        const extra = calculateMakeready(m5);
+        if (Number(m.extra_qty) !== extra && !m.is_manual_extra) setValue(`materials.${index}.extra_qty`, extra);
+        const curExtra = (m.is_manual_extra && Number(m.extra_qty) >= 0) ? Number(m.extra_qty) : extra;
+
+        const setups = calculateSetups(currentPressSheet, div);
+        const total = (m5 * currentPressSheet) + (curExtra * setups);
+        if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
+
+        const rawDiv = calculatePaperDivision(m.size || 'A0', m3) || 4;
+        if (Number(m.divide_by) !== rawDiv) setValue(`materials.${index}.divide_by`, rawDiv);
+        const sQty = Math.ceil(total / rawDiv);
+        if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
       }
     });
-  }, [formValues.category, formValues.total_qty, formValues.size, formValues.binding_type, formValues.materials, formValues.operations, coverRules, bagDims, setValue, getValues]);
+  }, [formValues.category, formValues.total_qty, formValues.size, formValues.binding_type, formValues.materials, formValues.operations, coverRules, bagDims, productCategories, setValue, getValues]);
 
   const [submitType, setSubmitType] = useState<string>('');
   const [showOperationsModal, setShowOperationsModal] = useState(false);
@@ -3527,12 +3646,62 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           setValue('size', getDefaultSizeForCategory(val));
                         }
 
-                        if (val === 'Түргэн хэвлэл') {
-                          // Force all existing materials to A3
+                        if (val === 'Түргэн хэвлэл' || val === 'Түргэн хэвлэл Konica') {
+                          const currentSize = getValues('size') || 'А3 (8 гарах)';
+                          let qPrintSize = 'А3 (8 гарах)';
+                          let qDivBy = 8;
+                          const sLower = currentSize.toLowerCase();
+                          if (sLower.includes('6')) {
+                            qPrintSize = 'А3 (6 гарах)';
+                            qDivBy = 6;
+                          } else if (sLower.includes('480') || sLower.includes('320') || sLower.includes('5')) {
+                            qPrintSize = '480х320 (А0-оос 5 гарна)';
+                            qDivBy = 5;
+                          } else if (sLower.includes('a4') || sLower.includes('а4')) {
+                            qPrintSize = 'А4';
+                            qDivBy = 16;
+                          }
+                          setValue('size', qPrintSize);
+                          const totalQ = Number(getValues('total_qty')) || 0;
                           const materials = getValues('materials') || [];
                           materials.forEach((m: any, index: number) => {
-                            setValue(`materials.${index}.print_size`, 'A3');
+                            setValue(`materials.${index}.print_size`, qPrintSize);
+                            setValue(`materials.${index}.divide_by`, qDivBy);
+                            setValue(`materials.${index}.press_sheet`, '1');
+                            setValue(`materials.${index}.base_qty`, totalQ);
                             setValue(`materials.${index}.extra_qty`, 0);
+                            setValue(`materials.${index}.total_qty`, totalQ);
+                            setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
+                          });
+                        }
+
+                        if (val === 'Нэрийн хуудас') {
+                          setValue('size', '90x50');
+                          const totalQ = Number(getValues('total_qty')) || 0;
+                          const pDiv = 40;
+                          const base = Math.ceil(totalQ / pDiv);
+                          const extra = calculateMakeready(base);
+                          const materials = getValues('materials') || [];
+                          materials.forEach((m: any, index: number) => {
+                            const aux = getMaterialType(m.material_name, m.notes);
+                            if (aux.type === 'ctp') return;
+                            if (aux.type === 'coating') {
+                              setValue(`materials.${index}.print_size`, 'A2');
+                              setValue(`materials.${index}.divide_by`, 4);
+                              setValue(`materials.${index}.press_sheet`, '1');
+                              setValue(`materials.${index}.base_qty`, base);
+                              setValue(`materials.${index}.extra_qty`, 20);
+                              setValue(`materials.${index}.total_qty`, base + 20);
+                              setValue(`materials.${index}.sheet_qty`, Number(((base + 20) * 0.006).toFixed(2)));
+                              return;
+                            }
+                            setValue(`materials.${index}.print_size`, 'A2');
+                            setValue(`materials.${index}.divide_by`, 4);
+                            setValue(`materials.${index}.press_sheet`, '1');
+                            setValue(`materials.${index}.base_qty`, base);
+                            setValue(`materials.${index}.extra_qty`, extra);
+                            setValue(`materials.${index}.total_qty`, base + extra);
+                            setValue(`materials.${index}.sheet_qty`, Math.ceil((base + extra) / 4));
                           });
                         }
                       }}
@@ -3560,8 +3729,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     if (aux.type === 'ctp') return;
 
                     const currentBase = Number(m.base_qty) || 0;
-                    const isManualBase = currentBase > 0 && currentBase !== oldA6;
-                    const newBase = isManualBase ? currentBase : a6;
+                    const cat = getValues('category');
+                    const isQuickPrint = cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica';
+                    if (isQuickPrint) {
+                      setValue(`materials.${index}.base_qty`, a6);
+                      setValue(`materials.${index}.extra_qty`, 0);
+                      setValue(`materials.${index}.total_qty`, a6);
+                      const divBy = Number(m.divide_by) || 8;
+                      setValue(`materials.${index}.sheet_qty`, Math.ceil(a6 / divBy));
+                      return;
+                    }
+
+                    const isDividedCat = cat === 'Брошур' || cat === 'Флаер' || cat === 'Хортой маягт' || cat === 'Нэрийн хуудас';
+                    const a7 = getA7Size();
+                    const pDiv = isDividedCat ? (calculatePaperDivision(m.print_size || 'A2', a7) || 1) : 1;
+                    const isManualBase = Boolean(m.is_manual_base);
+                    const newBase = isManualBase ? currentBase : (isDividedCat ? Math.ceil(a6 / pDiv) : a6);
                     setValue(`materials.${index}.base_qty`, newBase);
 
                     if (aux.isAux) {
@@ -3628,7 +3811,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
                         });
                         const targetMat = coverMat || mainMat;
-                        const targetBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : newBase;
+                        const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+                        const formCat = getValues('category');
+                        const isBagCategory = formCat === 'Тор' || formCat === 'Цаасан тор' || (getValues('size') && String(getValues('size')).startsWith('Тор'));
+                        const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : newBase;
+                        const targetBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
                         const ops = getValues('operations') || [];
                         const coatExtra = calculateCoatingMakeready(targetBase, ops, m.notes);
                         setValue(`materials.${index}.base_qty`, targetBase);
@@ -3636,10 +3823,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         setValue(`materials.${index}.is_manual_extra`, false as any);
                         const tQty = targetBase + coatExtra;
                         setValue(`materials.${index}.total_qty`, tQty);
+                        setValue(`materials.${index}.divide_by`, 1);
                         const m3 = m.print_size || targetMat?.print_size || 'A3';
-                        let coef = 0.004;
-                        if (m3 === 'A2') coef = 0.006;
-                        else if (m3 === 'B2') coef = 0.007;
+                        const curWidth = m.size || getCoatingWidthFromPrintSize(m3);
+                        const coef = getCoatingCoefficient(curWidth || m3);
                         setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
                         return;
                       }
@@ -3664,14 +3851,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     if (press === 0) press = 1;
 
                     const isAuxiliaryNoMakeready = aux.isAux;
-                    const extra = isAuxiliaryNoMakeready ? (Number(m.extra_qty) || 0) : calculateMakeready(newBase);
-                    setValue(`materials.${index}.extra_qty`, extra);
-                    const a7 = getA7Size();
+                    const isManualExtra = Boolean(m.is_manual_extra);
+                    const extra = isAuxiliaryNoMakeready 
+                      ? (Number(m.extra_qty) || 0) 
+                      : (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0 
+                          ? Number(m.extra_qty) 
+                          : calculateMakeready(newBase));
+                    if (!isManualExtra) {
+                      setValue(`materials.${index}.extra_qty`, extra);
+                    }
                     const divs = calculatePaperDivision(m.print_size || 'A2', a7);
                     const setups = isAuxiliaryNoMakeready ? 0 : calculateSetups(press, divs);
                     const total = (newBase * press) + (extra * setups);
                     setValue(`materials.${index}.total_qty`, total);
-                    const divBy = Number(m.divide_by) || 1;
+                    let divBy = Number(m.divide_by) || 1;
+                    if (isDividedCat) {
+                      const calculatedDiv = calculatePaperDivision(m.size || 'Ao', m.print_size || 'A2') || 4;
+                      if (divBy !== calculatedDiv) {
+                        divBy = calculatedDiv;
+                        setValue(`materials.${index}.divide_by`, divBy);
+                      }
+                    }
                     if (!evaluateDynamicFormula(index, { base_qty: newBase })) {
                       setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
                     }
@@ -3701,12 +3901,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 name="size"
                 control={control}
                 render={({ field }) => {
-                  const rawSizes: string[] = (groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0)
-                    ? groupedConstants['SIZE'].map((c: any) => c.value)
-                    : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
-                  const sizeOptions = [...rawSizes]
-                    .sort(compareProductSizes)
-                    .map(val => ({ value: val, label: val }));
+                  const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
+                  const isBusinessCard = formValues.category === 'Нэрийн хуудас';
+                  let sizeOptions;
+                  if (isQuickPrint) {
+                    sizeOptions = [
+                      { value: 'А3 (8 гарах)', label: '⚡ А3 (8 гарах)' },
+                      { value: 'А3 (6 гарах)', label: '⚡ А3 (6 гарах)' },
+                      { value: '480х320 (А0-оос 5 гарна)', label: '⚡ 480х320 (А0-оос 5 гарна)' },
+                      { value: 'А4', label: '⚡ А4' }
+                    ];
+                  } else if (isBusinessCard) {
+                    sizeOptions = [
+                      { value: '90x50', label: '90x50 мм (А2-т 40 гарна)' },
+                      { value: '90x55', label: '90x55 мм (А2-т 40 гарна)' },
+                      { value: 'Custom', label: 'Custom' }
+                    ];
+                  } else {
+                    const rawSizes: string[] = (groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0)
+                      ? groupedConstants['SIZE'].map((c: any) => c.value)
+                      : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
+                    sizeOptions = [...rawSizes]
+                      .sort(compareProductSizes)
+                      .map(val => ({ value: val, label: val }));
+                  }
                   return (
                     <CreatableSelect
                       {...field}
@@ -3792,6 +4010,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   });
 
                   if (bt.includes('хатуу')) {
+                    const isBFormat = a7.startsWith('B') || a7.startsWith('В');
+                    const targetCoverName = isBFormat 
+                      ? 'Мат цаас 157гр B1 (889x1194)' 
+                      : 'Мат цаас 157гр A0 (889x1194)';
+                    const targetSize = isBFormat ? 'B1' : 'A0';
+                    const targetPrice = isBFormat ? 710 : 940;
+
+                    const curMats = getValues('materials') || [];
+                    curMats.forEach((m: any, idx: number) => {
+                      if (m.is_cover || idx === 0) {
+                        setValue(`materials.${idx}.material_name`, targetCoverName);
+                        setValue(`materials.${idx}.size`, targetSize);
+                        setValue(`materials.${idx}.unit_cost`, targetPrice);
+                        setValue(`materials.${idx}.notes`, 'Хавтасны цаас (Матт 157гр)');
+                      }
+                    });
+
                     handleAddHardcoverAuxiliary();
                   } else if (bt === 'Супер хавтастай') {
                     // Changing to 'Супер хавтастай': The main cover row (is_cover: true) is the super cover!
@@ -3945,7 +4180,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
               const isMattCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('матт'));
               const isGlossCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('гялгар'));
-              const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном';
+              const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном хар' || formValues.category === 'Ном өнгөт';
 
               return (
                 <div className="erp-field" style={{ flex: 1, minWidth: '320px' }}>
@@ -4487,49 +4722,49 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         >
           
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
-            <table className="smart-table" style={{ minWidth: isExpandedMaterial ? '950px' : '500px' }}>
+            <table className="smart-table" style={{ minWidth: isExpandedMaterial ? '960px' : '500px', width: '100%' }}>
               <thead>
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '220px' }}>Материал</th>
-                      <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '95px' }}>Хэмжээ</th>
-                      <th rowSpan={2} title="[M3] Хэв. хэмжээ" style={{ padding: '0.4rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '78px', minWidth: '78px' }}>Хэв. хэмжээ</th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '85px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span title="[M4] Хэв. хуудас">Хэв. хуудас</span>
-                        </div>
+                      <th rowSpan={2} title="[M1] Материалын нэр" style={{ padding: '0.3rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', minWidth: '190px' }}>Материал</th>
+                      <th rowSpan={2} title="[M2] Хэмжээ" style={{ padding: '0.3rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '80px', minWidth: '80px' }}>Хэмжээ</th>
+                      <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', minWidth: '68px', lineHeight: 1.15 }}>
+                        <div>Хэв.</div>
+                        <div>хэмжээ</div>
                       </th>
-                      <th colSpan={3} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Хэвлэгдэх тоо</th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span title="[M8] Хуваалт">Хуваалт</span>
-                        </div>
+                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '54px', minWidth: '54px', lineHeight: 1.15 }}>
+                        <div>Хэвл.</div>
+                        <div>хуудас</div>
                       </th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '75px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span title="[M9] Тоо">Нийт (ш)</span>
-                        </div>
+                      <th colSpan={3} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.74rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Хэвлэгдэх тоо</th>
+                      <th rowSpan={2} title="[M8] Цаас хуваалт" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '62px', minWidth: '62px', lineHeight: 1.15 }}>
+                        <div>Цаас</div>
+                        <div>хуваалт</div>
                       </th>
-                      <th colSpan={2} style={{ padding: '0.3rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'center', fontSize: '0.8rem', color: '#334155', fontWeight: '600' }}>Өртөг</th>
-                      <th rowSpan={2} title="[MC] Тэмдэглэл" style={{ padding: '0.4rem 0.3rem', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', minWidth: '100px' }}>Тэмдэглэл</th>
-                      <th rowSpan={2} style={{ padding: '0.4rem 0.3rem', width: '38px' }}></th>
+                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', minWidth: '68px', lineHeight: 1.15 }}>
+                        <div>Том цаас</div>
+                        <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
+                      </th>
+                      <th colSpan={2} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.74rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Өртөг (₮)</th>
+                      <th rowSpan={2} title="[MC] Тэмдэглэл / Заавар" style={{ padding: '0.3rem 0.25rem', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', minWidth: '85px' }}>Тэмдэглэл</th>
+                      <th rowSpan={2} style={{ padding: '0.2rem', width: '28px', minWidth: '28px', textAlign: 'center' }}></th>
                     </tr>
                     <tr>
-                      <th style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '90px', background: '#f8fafc' }}>Үндсэн</th>
-                      <th title="[M6] Хадаас" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Хадаас</th>
-                      <th title="[M7] Нийт" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '85px', background: '#f8fafc' }}>Бүгд</th>
-                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Нэгж</th>
-                      <th title="[MB] Нийт өртөг" style={{ padding: '0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.7rem', color: '#64748b', fontWeight: 'normal', textAlign: 'center', width: '80px', background: '#f8fafc' }}>Нийт</th>
+                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Үндсэн</th>
+                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '58px', background: '#f8fafc' }}>Хадаас</th>
+                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Бүгд</th>
+                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '65px', background: '#f8fafc' }}>Нэгж</th>
+                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '75px', background: '#f8fafc' }}>Нийт</th>
                     </tr>
                   </>
                 ) : (
                   <tr>
-                    <th style={{ padding: '0.5rem 0.6rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '48%' }}>Материал</th>
-                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'center', width: '13%' }}>Нэгж өртөг</th>
-                    <th style={{ padding: '0.5rem 0.5rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'right', width: '17%' }}>Нийт өртөг</th>
-                    <th style={{ padding: '0.5rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.8rem', color: '#334155', fontWeight: '600', textAlign: 'left', width: '18%' }}>Тэмдэглэл</th>
-                    <th style={{ padding: '0.5rem 0.2rem', width: '38px', textAlign: 'center' }}></th>
+                    <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '48%' }}>Материал</th>
+                    <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '13%' }}>Нэгж өртөг</th>
+                    <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'right', width: '17%' }}>Нийт өртөг</th>
+                    <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '18%' }}>Тэмдэглэл</th>
+                    <th style={{ padding: '0.2rem', width: '28px', textAlign: 'center' }}></th>
                   </tr>
                 )}
               </thead>
@@ -4557,9 +4792,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const isPaperItem = (p: any) => {
                     const cat = (p.category || '').toLowerCase();
                     const name = (p.baseName || p.item_name || '').toLowerCase();
-                    if (name.includes('бүрэлт') || name.includes('оосор') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || name.includes('цавуу')) {
+                    if (name.includes('лидерин') || name.includes('бүрэлт') || name.includes('оосор') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || (name.includes('цавуу') && !name.includes('pvc'))) {
                       return false;
                     }
+                    if (name.includes('pvc') || name.includes('тусгай')) return true;
                     if (cat.includes('цаас') || cat.includes('paper')) return true;
                     if (name.includes('цаас') || name.includes('paper')) return true;
                     if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт')) return true;
@@ -4569,26 +4805,27 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const seenPaper = new Set<string>();
                   const rawPaperNames: string[] = [];
                   parsedMasterPrices.filter(isPaperItem).forEach(p => {
-                    if (p.baseName && !seenPaper.has(p.baseName)) {
-                      seenPaper.add(p.baseName);
-                      rawPaperNames.push(p.baseName);
+                    const fullItem = (p.item_name || '').trim();
+                    if (fullItem && !seenPaper.has(fullItem)) {
+                      seenPaper.add(fullItem);
+                      rawPaperNames.push(fullItem);
                     }
                   });
 
                   const seenOther = new Set<string>();
                   const rawOtherNames: string[] = [];
                   parsedMasterPrices.filter(p => !isPaperItem(p)).forEach(p => {
-                    const cleanBase = (p.baseName || p.item_name || '').trim().replace(/\s+/g, ' ');
-                    if (cleanBase && !seenOther.has(cleanBase)) {
-                      seenOther.add(cleanBase);
-                      rawOtherNames.push(cleanBase);
+                    const fullItem = (p.item_name || '').trim();
+                    if (fullItem && !seenOther.has(fullItem)) {
+                      seenOther.add(fullItem);
+                      rawOtherNames.push(fullItem);
                     }
                   });
 
                   const uniqueBaseNames = [...rawPaperNames, ...rawOtherNames];
                   const materialOptions = [
                     ...(rawPaperNames.length > 0 ? [{
-                      label: '📄 Цаас',
+                      label: '📄 Цаас (Нэр ба хэмжээ)',
                       options: rawPaperNames.map(name => ({ value: name, label: name }))
                     }] : []),
                     ...(rawOtherNames.length > 0 ? [{
@@ -4623,7 +4860,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '48%' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : undefined }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <Controller
@@ -4631,15 +4868,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               control={control}
                               render={({ field }) => {
                                 const curVal = field.value || '';
-                                const curParsedVal = parseMaterial(curVal);
                                 let selectedMaterialOpt = null;
                                 if (curVal) {
                                   if (uniqueBaseNames.includes(curVal)) {
                                     selectedMaterialOpt = { value: curVal, label: curVal };
-                                  } else if (curParsedVal.baseName && uniqueBaseNames.includes(curParsedVal.baseName)) {
-                                    selectedMaterialOpt = { value: curParsedVal.baseName, label: curParsedVal.baseName };
                                   } else {
-                                    selectedMaterialOpt = { value: curVal, label: curVal };
+                                    const matched = uniqueBaseNames.find(n => n === curVal || n.startsWith(curVal));
+                                    selectedMaterialOpt = matched ? { value: matched, label: matched } : { value: curVal, label: curVal };
                                   }
                                 }
                                 return (
@@ -4659,27 +4894,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
                                       const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
 
-                                      const matchingPrices = parsedMasterPrices.filter(p => p.baseName === val || p.item_name === val);
-                                      let firstMatched = matchingPrices[0];
-                                      if (val.toLowerCase().includes('мат цаас') && !val.includes('гр')) {
-                                        // If user selected generic "Мат цаас", default directly to 250gr as requested
-                                        const matched250 = matchingPrices.find(p => (p.sizeName || '').includes('250гр') || (p.item_name || '').includes('250гр'));
-                                        if (matched250) {
-                                          firstMatched = matched250;
-                                        }
-                                      } else if (matchingPrices.length > 1) {
-                                        firstMatched = matchingPrices.find(p => p.sizeName) || matchingPrices[0];
-                                      }
+                                      const matchingPrice = parsedMasterPrices.find(p => p.item_name === val) || parsedMasterPrices.find(p => p.baseName === val);
+                                      const sheetSize = extractSheetSize(val) || matchingPrice?.sizeName || 'A0';
 
-                                      if (firstMatched) {
-                                        setValue(`materials.${index}.size`, firstMatched.sizeName);
-                                        setValue(`materials.${index}.unit_cost`, firstMatched.unit_cost);
+                                      if (matchingPrice) {
+                                        setValue(`materials.${index}.size`, sheetSize);
+                                        setValue(`materials.${index}.unit_cost`, matchingPrice.unit_cost);
                                       } else {
-                                        setValue(`materials.${index}.size`, '');
+                                        setValue(`materials.${index}.size`, sheetSize || '');
                                         setValue(`materials.${index}.unit_cost`, 0);
                                       }
 
                                       if (selectedAux.isAux) {
+                                        if (selectedAux.type === 'liderin') {
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, 'Лидерин хавтасны бүрээс');
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, totalQty);
+                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 0);
+                                          return;
+                                        }
                                         const specs = getHardcoverAuxiliarySpecs(a7);
                                         if (selectedAux.type === 'ctp') {
                                           const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
@@ -4795,8 +5033,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           });
                                           const targetMat = coverMat || mainMat;
                                           const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
-                                          const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat.press_sheet) : '1';
-                                          const targetDivideBy = targetMat?.divide_by ? Number(targetMat.divide_by) : 1;
+                                          const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
+                                          const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+                                          const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
                                           const parsed = parseMaterial(val);
                                           const chosenWidth = parsed.sizeName || getCoatingWidthFromPrintSize(coatingPrintSize);
                                           const matchingFullItem = parsedMasterPrices.find(p => 
@@ -4807,9 +5046,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.material_name`, fullMatName);
                                           setValue(`materials.${index}.size`, chosenWidth);
                                           setValue(`materials.${index}.print_size`, coatingPrintSize);
-                                          setValue(`materials.${index}.divide_by`, targetDivideBy);
+                                          setValue(`materials.${index}.divide_by`, 1);
                                           setValue(`materials.${index}.press_sheet`, targetPressSheet);
-                                          const base = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
+                                          const rawBase = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
+                                          const base = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
                                           setValue(`materials.${index}.base_qty`, base);
                                           const currentOps = getValues('operations') || [];
                                           const extra = calculateCoatingMakeready(base, currentOps, `${fullMatName} ${formValues.materials?.[index]?.notes || ''}`);
@@ -4821,7 +5061,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
                                           setValue(`materials.${index}.unit_cost`, 1500);
                                           const isGloss = fullMatName.includes('гялгар') || fullMatName.includes('Гялгар');
-                                          setValue(`materials.${index}.notes`, `Хавтасны ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet}, Хуваалт: ${targetDivideBy})`);
+                                          const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
+                                          setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet})`);
                                           return;
                                         }
                                       }
@@ -4834,7 +5075,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       }
 
                                       let divBy = 1;
-                                      const sourceSize = firstMatched?.sizeName || 'A0';
+                                      const sourceSize = sheetSize || 'A0';
                                       const ratio = calculatePaperDivision(sourceSize, printSize);
                                       if (ratio > 0) {
                                         setValue(`materials.${index}.divide_by`, ratio);
@@ -4878,14 +5119,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         }
                                       } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
                                         setValue(`materials.${index}.press_sheet`, '1');
-                                        const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер') 
+                                        const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') 
                                           ? (calculatePaperDivision(printSize, a7) || 1) 
                                           : 1;
                                         const base = Math.ceil(totalQty / pDiv);
                                         setValue(`materials.${index}.base_qty`, base);
                                         const extra = calculateMakeready(base);
                                         setValue(`materials.${index}.extra_qty`, extra);
-                                        const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер') ? calculateSetups(1, pDiv) : 1;
+                                        const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') ? calculateSetups(1, pDiv) : 1;
                                         const total = (base * 1) + (extra * setups);
                                         setValue(`materials.${index}.total_qty`, total);
                                         setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
@@ -4914,10 +5155,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '4px',
-                                height: '32px',
-                                padding: '0 7px',
-                                borderRadius: '5px',
+                                gap: '3px',
+                                height: '28px',
+                                padding: '0 6px',
+                                borderRadius: '4px',
                                 fontSize: '11px',
                                 fontWeight: isCoverRow ? 700 : 500,
                                 cursor: 'pointer',
@@ -5051,7 +5292,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         </div>
                       </td>
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '80px' }}>
                         {aux.type === 'ctp' ? (
                           <Controller
                             name={`materials.${index}.size`}
@@ -5157,21 +5398,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
                                     });
                                     const targetMat = coverMat || mainMat;
+                                    const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+                                    const formCat = getValues('category') || formValues.category;
+                                    const isBagCategory = formCat === 'Тор' || formCat === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
                                     if (targetMat) {
                                       if (targetMat.press_sheet !== undefined && targetMat.press_sheet !== '') {
                                         setValue(`materials.${index}.press_sheet`, String(targetMat.press_sheet));
                                       }
-                                      if (targetMat.divide_by) {
-                                        setValue(`materials.${index}.divide_by`, Number(targetMat.divide_by));
-                                      }
+                                      setValue(`materials.${index}.divide_by`, 1);
                                       if (targetMat.print_size) {
                                         setValue(`materials.${index}.print_size`, targetMat.print_size);
                                       }
                                     }
 
-                                    const base = Number(formValues.materials?.[index]?.base_qty) > 0 
+                                    const rawBase = Number(formValues.materials?.[index]?.base_qty) > 0 
                                       ? Number(formValues.materials?.[index]?.base_qty) 
                                       : (Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : (Number(getValues('total_qty')) || 1000));
+                                    const base = isBagCategory ? Math.round((Number(targetMat?.base_qty) || Number(getValues('total_qty')) || 1000) * targetPressNum) : rawBase;
                                     setValue(`materials.${index}.base_qty`, base);
 
                                     const currentOps = getValues('operations') || [];
@@ -5187,9 +5430,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     setValue(`materials.${index}.sheet_qty`, sQty);
 
                                     const pSheet = getValues(`materials.${index}.press_sheet`) || targetMat?.press_sheet || '1';
-                                    const dBy = getValues(`materials.${index}.divide_by`) || targetMat?.divide_by || 1;
                                     const isGloss = newMatName.includes('гялгар') || newMatName.includes('Гялгар');
-                                    setValue(`materials.${index}.notes`, `Хавтасны ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${val} хуулга, коэф: ${coef}, Х.хуудас: ${pSheet}, Хуваалт: ${dBy})`);
+                                    const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
+                                    setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${val} хуулга, коэф: ${coef}, Х.хуудас: ${pSheet})`);
 
                                     // Sync coating in operations
                                     const opTypeName = newMatName.includes('Илгэн')
@@ -5271,54 +5514,54 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: '78px' }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#eff6ff', 
                               border: '1px solid #bfdbfe', 
                               borderRadius: '4px', 
-                              fontSize: '11.5px', 
+                              fontSize: '11px', 
                               color: '#1d4ed8', 
                               fontWeight: 600 
                             }}
                             title="CTP хавтангийн формат"
                           >
-                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'} хэвлэл
+                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'}
                           </div>
                         ) : isSpecialCoating ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#f0fdf4', 
                               border: '1px solid #bbf7d0', 
                               borderRadius: '4px', 
-                              fontSize: '11.5px', 
+                              fontSize: '11px', 
                               color: '#15803d', 
                               fontWeight: 600 
                             }}
                             title={`Хавтасны хэвлэх форматтай синхрон: ${formValues.materials?.[index]?.print_size || 'B3'}`}
                           >
-                            🏷️ {formValues.materials?.[index]?.print_size || 'B3'} хэвлэл
+                            🏷️ {formValues.materials?.[index]?.print_size || 'B3'}
                           </div>
                         ) : aux.isNonPrinted ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#f8fafc', 
                               border: '1px dashed #cbd5e1', 
                               borderRadius: '4px', 
-                              fontSize: '11px', 
+                              fontSize: '10.5px', 
                               color: '#94a3b8', 
                               fontWeight: 500 
                             }}
@@ -5330,11 +5573,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           <Controller
                             name={`materials.${index}.print_size`}
                             control={control}
-                            render={({ field }) => (
-                              <div title={formValues.category === 'Түргэн хэвлэл' ? 'Түргэн хэвлэл үед үргэлж A3 байна' : ''}>
-                                <CreatableSelect
-                                  {...field}
-                                  options={[
+                            render={({ field }) => {
+                              const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
+                              const printSizeOptions = isQuickPrint
+                                ? [
+                                    { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' },
+                                    { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' },
+                                    { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' },
+                                    { value: 'А4', label: 'А4' }
+                                  ]
+                                : [
                                     { value: 'A1', label: 'A1' },
                                     { value: 'A2', label: 'A2' },
                                     { value: 'A3', label: 'A3' },
@@ -5343,87 +5591,143 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     { value: 'B2', label: 'B2' },
                                     { value: 'B3', label: 'B3' },
                                     { value: 'B4', label: 'B4' }
-                                  ]}
-                                  value={field.value ? { value: field.value, label: field.value } : null}
-                                  onChange={(selected: any) => {
-                                    if (isSpecialStrap) return;
-                                    const val = selected ? selected.value : '';
-                                    field.onChange(val);
+                                  ];
 
-                                    const sourceSize = formValues.materials?.[index]?.size || '';
-                                    const ratio = calculatePaperDivision(sourceSize, val);
-                                    const a7Raw = formValues.size || '';
-                                    const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
-                                    const isCover = formValues.materials?.[index]?.is_cover || false;
-                                    const bt = formValues.binding_type || '';
-                                    const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
-                                    let m4 = 0;
-                                    let divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-
-                                    if (coverLogic) {
-                                      m4 = coverLogic.pressSheet;
-                                      divBy = coverLogic.divideBy;
-                                      setValue(`materials.${index}.press_sheet`, String(m4));
-                                      setValue(`materials.${index}.divide_by`, divBy);
+                              let selectedVal = null;
+                              if (field.value) {
+                                if (isQuickPrint) {
+                                  const fv = field.value.toLowerCase();
+                                  if (fv.includes('6')) {
+                                    selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
+                                  } else if (fv.includes('480') || fv.includes('320') || fv.includes('5')) {
+                                    selectedVal = { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' };
+                                  } else if (fv.includes('a4') || fv.includes('а4')) {
+                                    selectedVal = { value: 'А4', label: 'А4' };
+                                  } else {
+                                    const div = Number(formValues.materials?.[index]?.divide_by) || 8;
+                                    if (div === 6) {
+                                      selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
                                     } else {
-                                      if (ratio > 0) {
-                                        setValue(`materials.${index}.divide_by`, ratio);
-                                        divBy = ratio;
-                                      }
-                                      if (isCover) {
-                                        m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                                      } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
-                                        const b4 = Number(formValues.total_pages) || 0;
-                                        if (val && a7 && b4 > 0) {
-                                          m4 = calculateInnerPressSheet(b4, val, a7);
-                                          setValue(`materials.${index}.press_sheet`, String(m4));
-                                        }
-                                      } else {
-                                        m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                                      }
+                                      selectedVal = { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' };
                                     }
+                                  }
+                                } else {
+                                  selectedVal = { value: field.value, label: field.value };
+                                }
+                              }
 
-                                    if (m4 > 0) {
-                                      const totalQ = Number(getValues('total_qty')) || 0;
-                                      const base = Number(formValues.materials?.[index]?.base_qty) || totalQ;
-                                      const extra = calculateMakeready(base);
-                                      setValue(`materials.${index}.extra_qty`, extra);
-                                      const divs = calculatePaperDivision(val || 'A2', a7);
-                                      const setups = calculateSetups(m4, divs);
-                                      const total = (base * m4) + (extra * setups);
-                                      setValue(`materials.${index}.total_qty`, total);
-                                      if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                                    } else if (ratio > 0) {
-                                      const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
-                                    }
-                                  }}
-                                  isClearable={false}
-                                  isDisabled={isSpecialStrap || formValues.category === 'Түргэн хэвлэл'}
-                                  placeholder="Формат"
-                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                  menuPosition="fixed"
-                                  styles={printSizeSelectStyles}
-                                />
-                              </div>
-                            )}
+                              return (
+                                <div title={isQuickPrint ? 'Түргэн хэвлэлийн формат сонгох' : ''}>
+                                  <CreatableSelect
+                                    {...field}
+                                    options={printSizeOptions}
+                                    value={selectedVal}
+                                    onChange={(selected: any) => {
+                                      if (isSpecialStrap) return;
+                                      const val = selected ? selected.value : '';
+                                      field.onChange(val);
+
+                                      if (isQuickPrint) {
+                                        let qDivBy = 8;
+                                        if (val.includes('6')) {
+                                          qDivBy = 6;
+                                        } else if (val.includes('480') || val.includes('320') || val.includes('5')) {
+                                          qDivBy = 5;
+                                        } else if (val.toLowerCase().includes('a4') || val.toLowerCase().includes('а4')) {
+                                          qDivBy = 16;
+                                        } else {
+                                          qDivBy = 8;
+                                        }
+                                        setValue(`materials.${index}.divide_by`, qDivBy);
+                                        setValue(`materials.${index}.press_sheet`, '1');
+                                        setValue(`materials.${index}.extra_qty`, 0);
+                                        const totalQ = Number(getValues('total_qty')) || 0;
+                                        setValue(`materials.${index}.base_qty`, totalQ);
+                                        setValue(`materials.${index}.total_qty`, totalQ);
+                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
+                                        setValue('size', val);
+                                        return;
+                                      }
+
+                                      const sourceSize = formValues.materials?.[index]?.size || '';
+                                      const ratio = calculatePaperDivision(sourceSize, val);
+                                      const a7Raw = formValues.size || '';
+                                      const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
+                                      const isCover = formValues.materials?.[index]?.is_cover || false;
+                                      const bt = formValues.binding_type || '';
+                                      const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+                                      let m4 = 0;
+                                      let divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+
+                                      if (coverLogic) {
+                                        m4 = coverLogic.pressSheet;
+                                        divBy = coverLogic.divideBy;
+                                        setValue(`materials.${index}.press_sheet`, String(m4));
+                                        setValue(`materials.${index}.divide_by`, divBy);
+                                      } else {
+                                        if (ratio > 0) {
+                                          setValue(`materials.${index}.divide_by`, ratio);
+                                          divBy = ratio;
+                                        }
+                                        if (isCover) {
+                                          m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                        } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
+                                          const b4 = Number(formValues.total_pages) || 0;
+                                          if (val && a7 && b4 > 0) {
+                                            m4 = calculateInnerPressSheet(b4, val, a7);
+                                            setValue(`materials.${index}.press_sheet`, String(m4));
+                                          }
+                                        } else {
+                                          m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                        }
+                                      }
+
+                                      if (m4 > 0) {
+                                        const totalQ = Number(getValues('total_qty')) || 0;
+                                        const isDivided = formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт' || formValues.category === 'Нэрийн хуудас';
+                                        const divs = calculatePaperDivision(val || 'A2', a7) || 1;
+                                        const base = isDivided ? Math.ceil(totalQ / divs) : (Number(formValues.materials?.[index]?.base_qty) || totalQ);
+                                        if (Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                          setValue(`materials.${index}.base_qty`, base);
+                                        }
+                                        const extra = calculateMakeready(base);
+                                        setValue(`materials.${index}.extra_qty`, extra);
+                                        const setups = calculateSetups(m4, divs);
+                                        const total = (base * m4) + (extra * setups);
+                                        setValue(`materials.${index}.total_qty`, total);
+                                        if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                      } else if (ratio > 0) {
+                                        const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
+                                      }
+                                    }}
+                                    isClearable={false}
+                                    isDisabled={isSpecialStrap}
+                                    placeholder="Формат"
+                                    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                    menuPosition="fixed"
+                                    styles={printSizeSelectStyles}
+                                  />
+                                </div>
+                              );
+                            }}
                           />
                         )}
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#eff6ff', 
                               border: '1px solid #bfdbfe', 
                               borderRadius: '4px', 
-                              fontSize: '11.5px', 
+                              fontSize: '11px', 
                               color: '#1d4ed8', 
                               fontWeight: 600 
                             }}
@@ -5434,14 +5738,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         ) : isSpecialCoating ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#f0fdf4', 
                               border: '1px solid #bbf7d0', 
                               borderRadius: '4px', 
-                              fontSize: '11.5px', 
+                              fontSize: '11px', 
                               color: '#166534',
                               fontWeight: 600
                             }}
@@ -5452,14 +5756,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         ) : aux.isNonPrinted ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
                               backgroundColor: '#f1f5f9', 
                               border: '1px solid #e2e8f0', 
                               borderRadius: '4px', 
-                              fontSize: '12px', 
+                              fontSize: '11px', 
                               color: '#94a3b8' 
                             }}
                             title="Хэвлэлийн хуудас тооцохгүй"
@@ -5474,7 +5778,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             <input 
                               type="number"
                               step="any"
-                              style={canEditPressSheet ? inputStyle : (isSpecialMat ? disabledStyle : { ...inputStyle, backgroundColor: '#f1f5f9' })} 
+                              style={canEditPressSheet ? { ...inputStyle, textAlign: 'center' } : (isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, backgroundColor: '#f1f5f9', textAlign: 'center' })} 
                               readOnly={!canEditPressSheet} 
                               title={
                                 isCoverRow 
@@ -5510,10 +5814,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap) return;
+                            setValue(`materials.${index}.is_manual_base`, true as any);
                             if (isSpecialCoating) {
                               const base = Number(e.target.value) || 0;
                               const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
@@ -5542,16 +5847,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         {showFractionalHint && (
                           <div 
                             style={{ 
-                              fontSize: '10px', 
+                              fontSize: '9.5px', 
                               color: '#1d4ed8', 
                               fontWeight: 600, 
-                              marginTop: '2px', 
+                              marginTop: '1px', 
                               textAlign: 'center', 
                               whiteSpace: 'nowrap',
                               backgroundColor: '#eff6ff',
                               border: '1px solid #dbeafe',
                               borderRadius: '3px',
-                              padding: '1px 2px'
+                              padding: '0 2px',
+                              lineHeight: '14px'
                             }}
                             title={`Бүтээгдэхүүний тоо: ${curBase.toLocaleString()} × ${curPress} х.х = ${Math.round(curBase * curPress).toLocaleString()} хэвлэгдэх хуудас`}
                           >
@@ -5561,10 +5867,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
                         <input 
                           type="number" 
-                          style={isSpecialStrap || aux.type === 'ctp' ? disabledStyle : inputStyle} 
+                          style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
                           readOnly={isSpecialStrap || aux.type === 'ctp'} 
                           min={0}
                           max={isSpecialCoating ? 500 : undefined}
@@ -5591,6 +5897,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               return;
                             }
                             const extra = Number(e.target.value) || 0;
+                            setValue(`materials.${index}.is_manual_extra`, true as any);
                             const totalQ = Number(getValues('total_qty')) || 0;
                             const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
                             if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
@@ -5609,21 +5916,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc' }} readOnly {...register(`materials.${index}.total_qty`)} />
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                        <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc', textAlign: 'right' }} readOnly {...register(`materials.${index}.total_qty`)} />
                         {showFractionalHint && (
                           <div 
                             style={{ 
-                              fontSize: '10px', 
+                              fontSize: '9.5px', 
                               color: '#15803d', 
                               fontWeight: 600, 
-                              marginTop: '2px', 
+                              marginTop: '1px', 
                               textAlign: 'center', 
-                              whiteSpace: 'nowrap',
-                              backgroundColor: '#f0fdf4',
-                              border: '1px solid #dcfce7',
-                              borderRadius: '3px',
-                              padding: '1px 2px'
+                              whiteSpace: 'nowrap', 
+                              backgroundColor: '#f0fdf4', 
+                              border: '1px solid #dcfce7', 
+                              borderRadius: '3px', 
+                              padding: '0 2px',
+                              lineHeight: '14px'
                             }}
                             title={`Нийт хэвлэх: ${Math.round(curBase * curPress).toLocaleString()} (Үндсэн хэвлэл) + ${curExtra} (Хадаас) = ${curTotal.toLocaleString()}`}
                           >
@@ -5633,29 +5941,29 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '62px' }}>
                         {aux.type === 'ctp' ? (
-                          <input type="number" style={disabledStyle} readOnly value={1} />
+                          <input type="number" style={{ ...disabledStyle, textAlign: 'center' }} readOnly value={1} />
                         ) : isSpecialCoating ? (
                           <div 
                             style={{ 
-                              height: '32px', 
+                              height: '28px', 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'center', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #bbf7d0', 
+                              backgroundColor: '#f8fafc', 
+                              border: '1px solid #e2e8f0', 
                               borderRadius: '4px', 
-                              fontSize: '11.5px', 
-                              color: '#166534',
-                              fontWeight: 600
+                              fontSize: '11px', 
+                              color: '#94a3b8',
+                              fontWeight: 500
                             }}
-                            title="Хавтасны хуваалттай синхрончлогдсон"
+                            title="Бүрэлтэнд цаасны хуваалт тооцохгүй (Метрээр хэмжигдэнэ)"
                           >
-                            {formValues.materials?.[index]?.divide_by || 1} хуваалт
+                            — (Хуваалтгүй)
                           </div>
                         ) : (
-                          <input type="number" style={isSpecialMat ? disabledStyle : inputStyle} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
+                          <input type="number" style={isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, textAlign: 'center' }} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
                             onChange: (e) => {
                               if (isSpecialMat) return;
                               const divBy = Number(e.target.value) || 1;
@@ -5667,21 +5975,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.sheet_qty`)} />
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                        <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.sheet_qty`)} />
                         {isPrintedPaper && curDiv > 1 && (
                           <div 
                             style={{ 
-                              fontSize: '10px', 
+                              fontSize: '9.5px', 
                               color: '#475569', 
                               fontWeight: 500, 
-                              marginTop: '2px', 
+                              marginTop: '1px', 
                               textAlign: 'center', 
                               whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                               backgroundColor: '#f8fafc',
                               border: '1px solid #e2e8f0',
                               borderRadius: '3px',
-                              padding: '1px 2px'
+                              padding: '0 2px',
+                              lineHeight: '14px'
                             }}
                             title={`Том цаас: ${curTotal.toLocaleString()} / ${curDiv} хуваалт = ${curSheet} ш`}
                           >
@@ -5691,16 +6002,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         {isSpecialCoating && (
                           <div 
                             style={{ 
-                              fontSize: '10px', 
+                              fontSize: '9.5px', 
                               color: '#166534', 
                               fontWeight: 500, 
-                              marginTop: '2px', 
+                              marginTop: '1px', 
                               textAlign: 'center', 
                               whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                               backgroundColor: '#f0fdf4',
                               border: '1px solid #dcfce7',
                               borderRadius: '3px',
-                              padding: '1px 2px'
+                              padding: '0 2px',
+                              lineHeight: '14px'
                             }}
                             title={`Хуулга: ${curTotal} × ${getCoatingCoefficient(formValues.materials?.[index]?.size || formValues.materials?.[index]?.print_size)} коэф = ${curSheet} метр`}
                           >
@@ -5709,23 +6023,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         )}
                       </td>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', width: !isExpandedMaterial ? '13%' : undefined }}>
-                        <input type="number" step="any" style={inputStyle} {...register(`materials.${index}.unit_cost`)} />
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '65px' }}>
+                        <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.unit_cost`)} />
                       </td>
                       {isExpandedMaterial ? (
-                        <td style={{ padding: '0.25rem 0.3rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem' }}>
+                        <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '75px', fontSize: '11.5px' }}>
                           {tCost.toLocaleString()}
                         </td>
                       ) : (
-                        <td style={{ padding: '0.25rem 0.5rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '0.5rem', width: '17%' }}>
+                        <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '17%', fontSize: '11.5px' }}>
                           {tCost.toLocaleString()}
                         </td>
                       )}
-                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', width: !isExpandedMaterial ? '18%' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.25rem', verticalAlign: 'middle', width: !isExpandedMaterial ? '18%' : undefined }}>
                         <input style={inputStyle} {...register(`materials.${index}.notes`)} />
                       </td>
-                      <td style={{ padding: '0.25rem 0.3rem', verticalAlign: 'top', textAlign: 'center', width: !isExpandedMaterial ? '38px' : undefined }}>
-                        <button type="button" onClick={() => removeMaterial(index)} style={{ width: '28px', height: '28px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>X</button>
+                      <td style={{ padding: '0.2rem', verticalAlign: 'middle', textAlign: 'center', width: '28px' }}>
+                        <button type="button" onClick={() => removeMaterial(index)} style={{ width: '22px', height: '22px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', padding: 0 }} title="Устгах">✕</button>
                       </td>
                     </tr>
                   );
@@ -6102,7 +6416,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   name={`outsourced.${index}.job_name`}
                   control={control}
                   render={({ field }) => {
-                    const jobOptions = groupedConstants['OUTSOURCED_JOB']?.map((c: any) => ({ value: c.value, label: c.value })) || [];
+                    const defaultOutsourcedJobs = [
+                      'Клише даралт',
+                      'Клише хэв',
+                      'Эмбосс даралт',
+                      'Эмбосс хэв',
+                      'Тор хийх',
+                      'Хэв хийх',
+                      'Хэв даралт'
+                    ];
+                    const dbJobValues = (groupedConstants['OUTSOURCED_JOB'] || []).map((c: any) => c.value);
+                    const combinedJobs = Array.from(new Set([...defaultOutsourcedJobs, ...dbJobValues]));
+                    const jobOptions = combinedJobs.map((val: string) => ({ value: val, label: val }));
                     return (
                       <CreatableSelect
                         {...field}
@@ -6205,6 +6530,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     {prices.postProfitTotalCost.toLocaleString()} ₮
                   </span>
                 </div>
+                {prices.totalOutsourcedCost > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: '#64748b', paddingLeft: '8px' }}>
+                    <span>🚚 Үүнээс гадуур ажил:</span>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{prices.totalOutsourcedCost.toLocaleString()} ₮</span>
+                  </div>
+                )}
                 <div style={{
                   fontSize: '10px',
                   color: '#64748b',

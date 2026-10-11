@@ -40,8 +40,9 @@ function parseDimensions(str: string): { w: number, h: number } | null {
     };
   }
   
-  // Try to find standard name e.g. A0, B1
-  const nameMatch = str.match(/\b([AB][0-6]o?)\b/i);
+  // Try to find standard name e.g. A0, B1, Ao, Bo
+  const cleanStr = str.replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').replace(/\u043E/g, 'o').replace(/\u041E/g, 'O');
+  const nameMatch = cleanStr.match(/\b([AB][0-6oO])\b/i);
   if (nameMatch) {
     let name = nameMatch[1].toUpperCase();
     if (name === 'AO') name = 'A0'; // Fix common typo "Ao" -> "A0"
@@ -58,11 +59,50 @@ function parseDimensions(str: string): { w: number, h: number } | null {
 
 export function calculatePaperDivision(sourceStr: string, targetStr: string): number {
   if (!sourceStr || !targetStr) return 1;
+
+  // 1. Explicit cut indicator e.g. 'А3 (8 гарах)', 'А3 (6 гарах)', '480х320 (А0-оос 5 гарна)'
+  const explicitCutMatch = targetStr.match(/(\d+)\s*(?:гарах|гарна)/i);
+  if (explicitCutMatch) {
+    const cuts = parseInt(explicitCutMatch[1], 10);
+    if (cuts > 0) return cuts;
+  }
+
+  // 2. Special print production rule: 480x320 cuts 5-up from A0 (889x1194) sheet (3 vertical + 2 horizontal)
+  const isA0Source = /A[0o]/i.test(sourceStr) || /889\s*(?:x|\*|х)\s*1194/i.test(sourceStr);
+  const is480x320Target = /(?:480\s*(?:x|\*|х)\s*320)|(?:320\s*(?:x|\*|х)\s*480)/i.test(targetStr);
+  if (isA0Source && is480x320Target) {
+    return 5;
+  }
+
+  // 3. Special print production rule: Business card (90x50, 90x55, etc.) cuts 40-up on A2 sheet
+  const isBusinessCardTarget = (() => {
+    const s = targetStr.trim().toLowerCase().replace(/\u0445/g, 'x');
+    return (
+      /(?:90\s*[x*]\s*5[0-5])/i.test(s) ||
+      /(?:5[0-5]\s*[x*]\s*90)/i.test(s) ||
+      /(?:9\s*[x*]\s*5\b)/i.test(s) ||
+      s.includes('нэрийн')
+    );
+  })();
+
+  if (isBusinessCardTarget) {
+    const cleanSrc = sourceStr.trim().toUpperCase().replace(/\u0410/g, 'A').replace(/\u041E/g, 'O').replace(/\u043E/g, 'O');
+    if (/A2\b/i.test(cleanSrc) || /(?:420\s*[x*]\s*594)/i.test(cleanSrc) || /(?:440\s*[x*]\s*620)/i.test(cleanSrc)) return 40;
+    if (/A3\b/i.test(cleanSrc) || /(?:297\s*[x*]\s*420)/i.test(cleanSrc)) return 20;
+    if (/A4\b/i.test(cleanSrc) || /(?:210\s*[x*]\s*297)/i.test(cleanSrc)) return 10;
+    if (/A1\b/i.test(cleanSrc) || /(?:594\s*[x*]\s*841)/i.test(cleanSrc)) return 80;
+    if (/A[0O]\b/i.test(cleanSrc) || /(?:889\s*[x*]\s*1194)/i.test(cleanSrc)) return 160;
+    if (/B2\b/i.test(cleanSrc)) return 50;
+    return 40;
+  }
   
   // If the user selects the same size class A->A or B->B, we can use the 2^(diff) rule for perfect exact division
   // because physical cutting sometimes relies on equal halves rather than raw area fit.
-  const sourceNameMatch = sourceStr.match(/\b([AB])([0-6]o?)\b/i);
-  const targetNameMatch = targetStr.match(/\b([AB])([0-6]o?)\b/i);
+  const cleanSource = sourceStr.replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').replace(/\u043E/g, 'o').replace(/\u041E/g, 'O');
+  const cleanTarget = targetStr.replace(/\u0410/g, 'A').replace(/\u0430/g, 'a').replace(/\u0412/g, 'B').replace(/\u0432/g, 'b').replace(/\u043E/g, 'o').replace(/\u041E/g, 'O');
+
+  const sourceNameMatch = cleanSource.match(/\b([AB])([0-6oO])\b/i);
+  const targetNameMatch = cleanTarget.match(/\b([AB])([0-6oO])\b/i);
   
   if (sourceNameMatch && targetNameMatch) {
     let sLetter = sourceNameMatch[1].toUpperCase();

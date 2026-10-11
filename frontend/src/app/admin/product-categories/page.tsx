@@ -159,7 +159,7 @@ export default function ProductCategoriesPage() {
           <form onSubmit={handleAdd} className="form-grid" style={{ marginTop: '1rem' }}>
             <div className="form-group">
               <label className="label">Нэр*</label>
-              <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="Жишээ: Флаер, Календарь..." />
+              <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="Жишээ: Зурагт хуудас, Календарь..." />
             </div>
             <div className="form-group">
               <label className="label">Бодолтын горим (Calc Mode)*</label>

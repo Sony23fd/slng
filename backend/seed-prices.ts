@@ -63,6 +63,22 @@ const prices = [
   // Кай цаас
   { category: 'Цаас', item_name: 'Кай цаас 250 A0 (889x1194)', unit_cost: 1300 },
 
+  // Тусгай цааснууд (Солонгос)
+  { category: 'Цаас', item_name: 'Тусгай цаас 157гр, Солонгос, А0 /900*1200/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 270гр, Солонгос, А0 /900*1200/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 128 гр, Солонгос, А0', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 230гр, Солонгос, А1 /889*635/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 256гр, Солонгос, А1 /889*635/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 179гр, Солонгос, 720*1020', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 128гр, Солонгос, А1 /914*635/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 209гр, Солонгос, А0 /900*1200/', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'Тусгай цаас 256гр, Солонгос, А0 /900*1200/', unit_cost: 0 },
+
+  // PVC 2 талтай цааснууд
+  { category: 'Цаас', item_name: 'PVC 2 тал цавуутай 1.5, Хятад, А3', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'PVC 2 талтай цаас А4', unit_cost: 0 },
+  { category: 'Цаас', item_name: 'PVC 2 талтай цаас', unit_cost: 0 },
+
   // Нэмэлт материалууд
   { category: 'Материал', item_name: 'CTP хавтан', unit_cost: 8800 },
   { category: 'Материал', item_name: 'CTP хавтан (65x55)', unit_cost: 6800 },
@@ -86,6 +102,9 @@ const prices = [
   { category: 'Материал', item_name: 'Оосор (Торны оосор)', unit_cost: 80 },
   { category: 'Материал', item_name: 'Номын капитал (м)', unit_cost: 0 },
   { category: 'Материал', item_name: 'Хавчуурга тууз (м)', unit_cost: 0 },
+  { category: 'Материал', item_name: 'Лидерин (хулдаасан артай)', unit_cost: 0 },
+  { category: 'Материал', item_name: 'Лидерин (цаасан артай)', unit_cost: 0 },
+  { category: 'Материал', item_name: 'Лидерин', unit_cost: 0 },
 ];
 
 interface OpSeedData {

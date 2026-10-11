@@ -93,13 +93,39 @@ export default function JobTicketModal({ order, onClose }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.5rem', fontSize: '0.95rem' }}>
                 <strong>Тоо ширхэг:</strong> <span>{order.total_qty} ш</span>
                 <strong>Хэмжээ:</strong> <span>{order.size} {order.sub_size ? `(${order.sub_size})` : ''}</span>
-                {order.specifications && order.specifications.length > 0 && (
-                  <>
-                    <strong>Хуудасны тоо:</strong> <span>{order.specifications[0].total_pages}</span>
-                    <strong>Гадна өнгө:</strong> <span>{order.specifications[0].cover_color}</span>
-                    <strong>Дотор өнгө:</strong> <span>{order.specifications[0].inner_color}</span>
-                  </>
-                )}
+                {(() => {
+                  const spec = Array.isArray(order.specifications) ? order.specifications[0] : order.specifications;
+                  if (!spec) return null;
+                  return (
+                    <>
+                      {spec.total_pages > 0 && (
+                        <>
+                          <strong>Хуудасны тоо:</strong> <span>{spec.total_pages} нүүр</span>
+                        </>
+                      )}
+                      {spec.cover_color && (
+                        <>
+                          <strong>Гадна өнгө:</strong> <span>{spec.cover_color}</span>
+                        </>
+                      )}
+                      {spec.inner_color && (
+                        <>
+                          <strong>Дотор өнгө:</strong> <span>{spec.inner_color}</span>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
+                {(() => {
+                  const ctpMats = (order.materials || []).filter((m: any) => (m.material_name || '').startsWith('CTP хавтан') || (m.notes || '').includes('CTP'));
+                  const totalPlates = ctpMats.reduce((sum: number, m: any) => sum + (Number(m.sheet_qty || m.total_qty) || 0), 0);
+                  if (totalPlates <= 0) return null;
+                  return (
+                    <>
+                      <strong>CTP Хавтан:</strong> <span style={{ color: '#0369a1', fontWeight: 700 }}>💿 {totalPlates} ширхэг</span>
+                    </>
+                  );
+                })()}
                 <strong>Угсралт:</strong> <span>{order.binding_type || 'Үгүй'}</span>
               </div>
             </div>
@@ -166,14 +192,28 @@ export default function JobTicketModal({ order, onClose }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {order.materials.map((m: any, idx: number) => (
-                    <tr key={idx}>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem' }}>{m.material_name}</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{m.print_size}</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{m.press_sheet} {m.divide_by ? `(1/${m.divide_by})` : ''}</td>
-                      <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{m.total_qty} ш</td>
-                    </tr>
-                  ))}
+                  {order.materials.map((m: any, idx: number) => {
+                    const isCtp = (m.material_name || '').startsWith('CTP хавтан') || (m.material_name || '').includes('хавтан');
+                    const isCoating = (m.material_name || '').includes('Бүрэлт');
+                    const qtyUnit = isCtp ? 'хавтан' : (isCoating ? 'м' : 'ш');
+                    return (
+                      <tr key={idx} style={{ background: isCtp ? '#f0f9ff' : (idx % 2 === 0 ? '#fff' : '#f8fafc') }}>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', fontWeight: isCtp ? 700 : 400, color: isCtp ? '#0369a1' : '#0f172a' }}>
+                          {isCtp ? '💿 ' : ''}{m.material_name}
+                          {m.notes && <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>{m.notes}</div>}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>
+                          {m.print_size || '-'}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>
+                          {isCtp ? '-' : `${m.press_sheet || '-'} ${m.divide_by ? `(1/${m.divide_by})` : ''}`}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', color: isCtp ? '#0369a1' : 'inherit' }}>
+                          {m.sheet_qty || m.total_qty} {qtyUnit}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -265,6 +305,51 @@ export default function JobTicketModal({ order, onClose }: Props) {
               </table>
             </div>
           )}
+
+          {/* 🚚 Гадуур гүйцэтгэх ажлууд (Outsourced Jobs) */}
+          {(() => {
+            const outsourcedList = (order.outsourcedJobs || order.outsourced || []).filter((out: any) => out.job_name && out.job_name.trim() !== '');
+            if (outsourcedList.length === 0) return null;
+            return (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', borderBottom: '1px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>🚚 Гадуур гүйцэтгэх ажлууд ({outsourcedList.length})</span>
+                </h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem', fontSize: '0.88rem' }}>
+                  <thead>
+                    <tr style={{ background: '#fdf2f8' }}>
+                      <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '40px' }}>✓</th>
+                      <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Ажлын нэр</th>
+                      <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left', width: '160px' }}>Гүйцэтгэгч</th>
+                      <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', width: '80px' }}>Тоо ширхэг</th>
+                      <th style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'left' }}>Тэмдэглэл</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {outsourcedList.map((out: any, idx: number) => (
+                      <tr key={`out-${idx}`}>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center' }}>
+                          <div style={{ width: '20px', height: '20px', border: '2px solid #000', borderRadius: '3px', margin: '0 auto' }}></div>
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', fontWeight: 700, color: '#be185d' }}>
+                          {out.job_name}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', color: '#0f172a', fontWeight: 600 }}>
+                          {out.contractor_name || '-'}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', textAlign: 'center', fontWeight: 'bold' }}>
+                          {out.qty ? `${out.qty} ш` : '-'}
+                        </td>
+                        <td style={{ border: '1px solid #cbd5e1', padding: '0.45rem', color: '#334155' }}>
+                          {out.notes || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
           
           <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #000', paddingTop: '1rem' }}>
              <div style={{ textAlign: 'center', width: '200px' }}>

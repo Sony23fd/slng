@@ -58,7 +58,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 5,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -226,7 +226,7 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
           "notes": "Хавтасны гялгар бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -347,7 +347,7 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -459,10 +459,10 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 2,
+          "divide_by": 1,
           "sheet_qty": 3.64,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
+          "notes": "Торны матт бүрэлт (54 см хуулга, коэф: 0.007, Х.хуудас: 1)",
           "is_cover": false
         },
         {
@@ -630,7 +630,7 @@ const standardTemplates = [
           "base_qty": 300,
           "extra_qty": 20,
           "total_qty": 320,
-          "divide_by": 5,
+          "divide_by": 1,
           "sheet_qty": 1.28,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -784,7 +784,7 @@ const standardTemplates = [
           "base_qty": 300,
           "extra_qty": 20,
           "total_qty": 320,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 1.92,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -910,7 +910,7 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -1065,52 +1065,52 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Нэрийн хуудас (Шохойтой 300гр, 90х50мм, 100ш)",
+    "template_name": "Нэрийн хуудас (Шохойтой 300гр, 90х50мм, 2000ш)",
     "category": "Нэрийн хуудас",
     "binding_type": "Бусад",
-    "size": "Custom",
+    "size": "90x50",
     "cover_color": "4+4",
     "inner_color": "",
     "total_pages": 2,
     "needs_design": false,
     "design_status": "Эх бэлэн",
     "design_cost": 0,
-    "notes": "Стандарт нэрийн хуудас 90х50мм, 100ш, 2 тал матт бүрэлттэй",
+    "notes": "Стандарт нэрийн хуудас 90х50мм, 2000ш (А2-т 40 гарна), 2 тал матт бүрэлттэй",
     "order_data": {
       "sub_size": "90x50mm",
       "materials": [
         {
           "material_name": "Шохойтой цаас 300гр A0 (889x1194)",
           "size": "A0",
-          "print_size": "A3",
+          "print_size": "A2",
           "press_sheet": "1",
-          "base_qty": 100,
-          "extra_qty": 50,
+          "base_qty": 50,
+          "extra_qty": 100,
           "total_qty": 150,
-          "divide_by": 8,
-          "sheet_qty": 19,
+          "divide_by": 4,
+          "sheet_qty": 38,
           "unit_cost": 1800,
-          "notes": "Нэрийн хуудасны цаас",
+          "notes": "Нэрийн хуудасны цаас (А2-т 40 гарна)",
           "is_cover": false
         },
         {
-          "material_name": "Бүрэлт матт Хятад 36 см",
-          "size": "36 см",
-          "print_size": "A3",
+          "material_name": "Бүрэлт матт Хятад 44 см",
+          "size": "44 см",
+          "print_size": "A2",
           "press_sheet": "1",
-          "base_qty": 100,
+          "base_qty": 50,
           "extra_qty": 20,
-          "total_qty": 120,
-          "divide_by": 8,
-          "sheet_qty": 0.48,
+          "total_qty": 70,
+          "divide_by": 1,
+          "sheet_qty": 0.42,
           "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
+          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
           "is_cover": false
         },
         {
           "material_name": "CTP хавтан (76x60.5)",
           "size": "76x60.5",
-          "print_size": "A3",
+          "print_size": "A2",
           "press_sheet": "1",
           "base_qty": 4,
           "extra_qty": 0,
@@ -1125,7 +1125,7 @@ const standardTemplates = [
       "operations": [
         {
           "operation_name": "Хэвлэх (4 өнгө)",
-          "qty": 100,
+          "qty": 50,
           "unit_cost": 0,
           "is_pricing": false,
           "production_stage": "PRINTING",
@@ -1134,7 +1134,7 @@ const standardTemplates = [
         },
         {
           "operation_name": "Шалгах",
-          "qty": 100,
+          "qty": 50,
           "unit_cost": 0,
           "is_pricing": false,
           "production_stage": "POST_PRESS",
@@ -1152,7 +1152,7 @@ const standardTemplates = [
         },
         {
           "operation_name": "Чанарын эцсийн хяналт",
-          "qty": 100,
+          "qty": 2000,
           "unit_cost": 0,
           "is_pricing": false,
           "production_stage": "PACKAGING",
@@ -1182,7 +1182,7 @@ const standardTemplates = [
       "sub_size": "148x210mm",
       "materials": [
         {
-          "material_name": "Шохойтой цаас 157гр A0 (889x1194)",
+          "material_name": "Мат цаас 157гр A0 (889x1194)",
           "size": "A0",
           "print_size": "A2",
           "press_sheet": "0.5",
@@ -1191,7 +1191,7 @@ const standardTemplates = [
           "total_qty": 600,
           "divide_by": 4,
           "sheet_qty": 150,
-          "unit_cost": 890,
+          "unit_cost": 940,
           "notes": "Хавтасны цаас",
           "is_cover": true
         },
@@ -1273,7 +1273,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 6.12,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -1424,7 +1424,7 @@ const standardTemplates = [
       "sub_size": "176x250mm",
       "materials": [
         {
-          "material_name": "Шохойтой цаас 157гр A0 (889x1194)",
+          "material_name": "Мат цаас 157гр A0 (889x1194)",
           "size": "A0",
           "print_size": "B3",
           "press_sheet": "1.0",
@@ -1433,7 +1433,7 @@ const standardTemplates = [
           "total_qty": 1100,
           "divide_by": 5,
           "sheet_qty": 220,
-          "unit_cost": 890,
+          "unit_cost": 940,
           "notes": "Хавтасны цаас",
           "is_cover": true
         },
@@ -1515,7 +1515,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 5,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -1666,7 +1666,7 @@ const standardTemplates = [
       "sub_size": "210x297mm",
       "materials": [
         {
-          "material_name": "Шохойтой цаас 157гр A0 (889x1194)",
+          "material_name": "Мат цаас 157гр A0 (889x1194)",
           "size": "A0",
           "print_size": "B3",
           "press_sheet": "1.0",
@@ -1675,7 +1675,7 @@ const standardTemplates = [
           "total_qty": 1100,
           "divide_by": 5,
           "sheet_qty": 220,
-          "unit_cost": 890,
+          "unit_cost": 940,
           "notes": "Хавтасны цаас",
           "is_cover": true
         },
@@ -1757,7 +1757,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 5,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -1957,7 +1957,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 6,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -2156,7 +2156,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 6,
+          "divide_by": 1,
           "sheet_qty": 7.14,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
@@ -2355,7 +2355,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 3,
+          "divide_by": 1,
           "sheet_qty": 7.14,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
@@ -2540,7 +2540,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 5,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -2748,6 +2748,7 @@ const standardTemplates = [
     "design_cost": 0,
     "notes": "2 хувьтай өөрөө хувилагч санхүүгийн маягт (Хар, шар хувь, дараалсан дугаарлалттай)",
     "order_data": {
+      "total_qty": 500,
       "sub_size": "148x210mm",
       "materials": [
         {
@@ -2755,11 +2756,11 @@ const standardTemplates = [
           "size": "A0",
           "print_size": "A2",
           "press_sheet": "1",
-          "base_qty": 500,
-          "extra_qty": 50,
-          "total_qty": 550,
-          "divide_by": 8,
-          "sheet_qty": 69,
+          "base_qty": 63,
+          "extra_qty": 100,
+          "total_qty": 163,
+          "divide_by": 4,
+          "sheet_qty": 41,
           "unit_cost": 350,
           "notes": "Хортой цаас I (Дээд хувь)",
           "is_cover": false
@@ -2769,11 +2770,11 @@ const standardTemplates = [
           "size": "A0",
           "print_size": "A2",
           "press_sheet": "1",
-          "base_qty": 500,
-          "extra_qty": 50,
-          "total_qty": 550,
-          "divide_by": 8,
-          "sheet_qty": 69,
+          "base_qty": 63,
+          "extra_qty": 100,
+          "total_qty": 163,
+          "divide_by": 4,
+          "sheet_qty": 41,
           "unit_cost": 350,
           "notes": "Хортой цаас II (Шар хувь)",
           "is_cover": false
@@ -2796,7 +2797,7 @@ const standardTemplates = [
       "operations": [
         {
           "operation_name": "Хэвлэх (1 өнгө)",
-          "qty": 1000,
+          "qty": 126,
           "unit_cost": 0,
           "is_pricing": false,
           "production_stage": "PRINTING",
@@ -2805,7 +2806,7 @@ const standardTemplates = [
         },
         {
           "operation_name": "Шалгах",
-          "qty": 1000,
+          "qty": 126,
           "unit_cost": 0,
           "is_pricing": false,
           "production_stage": "POST_PRESS",
@@ -2892,7 +2893,7 @@ const standardTemplates = [
           "base_qty": 1000,
           "extra_qty": 20,
           "total_qty": 1020,
-          "divide_by": 8,
+          "divide_by": 1,
           "sheet_qty": 4.08,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
@@ -3017,7 +3018,7 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 4,
+          "divide_by": 1,
           "sheet_qty": 3.12,
           "unit_cost": 1500,
           "notes": "Хавтасны гялгар бүрэлт (44 см хуулга, коэф: 0.006)",
@@ -3161,7 +3162,7 @@ const standardTemplates = [
           "base_qty": 500,
           "extra_qty": 20,
           "total_qty": 520,
-          "divide_by": 2,
+          "divide_by": 1,
           "sheet_qty": 3.64,
           "unit_cost": 1500,
           "notes": "Хавтасны матт бүрэлт (54 см хуулга, коэф: 0.007)",
@@ -3536,24 +3537,24 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica А3 (Шохойтой 250гр, 4+0, 100ш)",
+    "template_name": "Түргэн хэвлэл Konica А3 (8 гарах) (Шохойтой 250гр, 4+0, 100ш)",
     "category": "Түргэн хэвлэл Konica",
     "binding_type": "Бусад",
-    "size": "A3",
+    "size": "А3 (8 гарах)",
     "cover_color": "4+0",
     "inner_color": "",
     "total_pages": 1,
     "needs_design": false,
     "design_status": "Эх бэлэн",
     "design_cost": 0,
-    "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (CTP хавтан ашиглахгүй)",
+    "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (8 гарах, CTP хавтан ашиглахгүй)",
     "order_data": {
       "sub_size": "297x420mm",
       "materials": [
         {
           "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
           "size": "A0",
-          "print_size": "A3",
+          "print_size": "А3 (8 гарах)",
           "press_sheet": "1",
           "base_qty": 100,
           "extra_qty": 0,
@@ -3561,7 +3562,175 @@ const standardTemplates = [
           "divide_by": 8,
           "sheet_qty": 13,
           "unit_cost": 1400,
-          "notes": "А3 хэвлэх цаас",
+          "notes": "А3 хэвлэх цаас (8 гарах)",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica А3 (6 гарах) (Шохойтой 250гр, 4+0, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "А3 (6 гарах)",
+    "cover_color": "4+0",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (6 гарах, CTP хавтан ашиглахгүй)",
+    "order_data": {
+      "sub_size": "297x420mm",
+      "materials": [
+        {
+          "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "А3 (6 гарах)",
+          "press_sheet": "1",
+          "base_qty": 100,
+          "extra_qty": 0,
+          "total_qty": 100,
+          "divide_by": 6,
+          "sheet_qty": 17,
+          "unit_cost": 1400,
+          "notes": "А3 хэвлэх цаас (6 гарах)",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica 480х320 (А0-оос 5 гарна) (Шохойтой 250гр, 4+0, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "480х320 (А0-оос 5 гарна)",
+    "cover_color": "4+0",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр шуурхай хэвлэх 480х320 хуудас (А0-оос 5 гарна, CTP хавтан ашиглахгүй)",
+    "order_data": {
+      "sub_size": "480x320mm",
+      "materials": [
+        {
+          "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "480х320 (А0-оос 5 гарна)",
+          "press_sheet": "1",
+          "base_qty": 100,
+          "extra_qty": 0,
+          "total_qty": 100,
+          "divide_by": 5,
+          "sheet_qty": 20,
+          "unit_cost": 1400,
+          "notes": "480x320 хэвлэх цаас (5 гарна)",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica А4 (Шохойтой 250гр, 4+0, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "А4",
+    "cover_color": "4+0",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А4 хуудас (CTP хавтан ашиглахгүй)",
+    "order_data": {
+      "sub_size": "210x297mm",
+      "materials": [
+        {
+          "material_name": "Шохойтой цаас 250гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "А4",
+          "press_sheet": "1",
+          "base_qty": 100,
+          "extra_qty": 0,
+          "total_qty": 100,
+          "divide_by": 16,
+          "sheet_qty": 7,
+          "unit_cost": 1400,
+          "notes": "А4 хэвлэх цаас",
           "is_cover": false
         }
       ],
@@ -3695,6 +3864,118 @@ const standardTemplates = [
         "cover_color": "4+4",
         "inner_color": "4+4",
         "total_pages": 8
+      }
+    }
+  },
+  {
+    "template_name": "Постер А2 (Шохойтой 200гр, 4+0 өнгөт, Гялгар бүрэлттэй, 1000ш)",
+    "category": "Постер",
+    "binding_type": "",
+    "size": "A2",
+    "cover_color": "4+0",
+    "inner_color": "0+0",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Постер А2 хэмжээтэй (Шохойтой 200гр, 1 тал 4+0 өнгөт, Гялгар бүрэлттэй, 1000ш)",
+    "order_data": {
+      "sub_size": "420x594mm",
+      "materials": [
+        {
+          "material_name": "Шохойтой цаас 200гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "A2",
+          "press_sheet": "1",
+          "base_qty": 1000,
+          "extra_qty": 100,
+          "total_qty": 1100,
+          "divide_by": 4,
+          "sheet_qty": 275,
+          "unit_cost": 1150,
+          "notes": "Постерын үндсэн цаас (А2, 1/4 хуваалт)",
+          "is_cover": false
+        },
+        {
+          "material_name": "Бүрэлт гялгар Хятад 44 см",
+          "size": "44 см",
+          "print_size": "A2",
+          "press_sheet": "1",
+          "base_qty": 1000,
+          "extra_qty": 20,
+          "total_qty": 1020,
+          "divide_by": 1,
+          "sheet_qty": 6.12,
+          "unit_cost": 1500,
+          "notes": "Хавтасны гялгар бүрэлт (44 см хуулга, коэф: 0.006, Х.хуудас: 1, Хуваалт: 1)",
+          "is_cover": false
+        },
+        {
+          "material_name": "CTP хавтан (76x60.5)",
+          "size": "76x60.5",
+          "print_size": "A2",
+          "press_sheet": "1",
+          "base_qty": 4,
+          "extra_qty": 0,
+          "total_qty": 4,
+          "divide_by": 1,
+          "sheet_qty": 4,
+          "unit_cost": 8800,
+          "notes": "Постер (4 ш)",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Хэвлэх (4 өнгө)",
+          "qty": 1000,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PRINTING",
+          "is_manual": false,
+          "notes": "Үндсэн хэвлэлт"
+        },
+        {
+          "operation_name": "Шалгах",
+          "qty": 1000,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Хуудас шалгах"
+        },
+        {
+          "operation_name": "Бүрэлт (Гялгар)",
+          "qty": 1020,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Гялгар бүрэлт"
+        },
+        {
+          "operation_name": "Огтлоо (Том)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Огтлох"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 1000,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "inner_color": "0+0",
+        "total_pages": 1
       }
     }
   }

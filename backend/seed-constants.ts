@@ -15,7 +15,6 @@ const initialConstants = [
   { type: 'CATEGORY', value: 'Хортой маягт' },
   { type: 'CATEGORY', value: 'Шошго' },
   { type: 'CATEGORY', value: 'Дэвтэр' },
-  { type: 'CATEGORY', value: 'EPSON' },
   { type: 'CATEGORY', value: 'Маягт' },
   { type: 'CATEGORY', value: 'Хавтас' },
   { type: 'CATEGORY', value: 'Дугтуй' },
@@ -25,8 +24,6 @@ const initialConstants = [
   { type: 'CATEGORY', value: 'Дахин хэвлэлт' },
   { type: 'CATEGORY', value: 'Промо' },
   { type: 'CATEGORY', value: 'Билет' },
-  { type: 'CATEGORY', value: 'Бал' },
-  { type: 'CATEGORY', value: 'Шуурхай принт' },
   { type: 'CATEGORY', value: 'Бусад' },
   { type: 'SIZE', value: 'A2' },
   { type: 'SIZE', value: 'A3' },
@@ -89,6 +86,13 @@ const initialConstants = [
   { type: 'ORDER_STATUS', value: 'Дардас' },
   { type: 'ORDER_STATUS', value: 'Бэлэн' },
   { type: 'ORDER_STATUS', value: 'Олгосон' },
+  { type: 'OUTSOURCED_JOB', value: 'Клише даралт', description: 'Клише дардас дарах гадуур ажил' },
+  { type: 'OUTSOURCED_JOB', value: 'Клише хэв', description: 'Клише металл хэв хийх гадуур ажил' },
+  { type: 'OUTSOURCED_JOB', value: 'Эмбосс даралт', description: 'Эмбосс товгор даралт хийлгэх' },
+  { type: 'OUTSOURCED_JOB', value: 'Эмбосс хэв', description: 'Эмбосс хэв бэлдүүлэх гадуур ажил' },
+  { type: 'OUTSOURCED_JOB', value: 'Тор хийх', description: 'Цаасан тор угсралт, нугалаа, наалт' },
+  { type: 'OUTSOURCED_JOB', value: 'Хэв хийх', description: 'Модон хутгатай хэлбэрт зүсэлтийн хэв' },
+  { type: 'OUTSOURCED_JOB', value: 'Хэв даралт', description: 'Хэвээр цохиж зүсэх, дарах ажил' },
 ];
 
 export async function seedConstants(prisma: PrismaClient) {

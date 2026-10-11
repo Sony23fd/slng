@@ -56,7 +56,7 @@ export function usePriceCalculator(params: PricingParams) {
 
     const totalOperationCost = preProfitOpsCost + postProfitOpsCost;
 
-    // 3. Гадуур ажлын өртөг (Хэрэглэгчийн тодруулгаар Ашгийн өмнөх суурь өртөгт орно)
+    // 3. Гадуур ажлын өртөг (Гадуур ажлууд бүгд ашгийн дараах шууд өртөг болно)
     const totalOutsourcedCost = (params.outsourced || []).reduce((sum, out) => {
       return sum + ((out.qty || 0) * (out.unit_cost || 0));
     }, 0);
@@ -66,10 +66,10 @@ export function usePriceCalculator(params: PricingParams) {
 
     // 4. Суурь болон Шууд өртгийн задаргаа
     // Ашгийн өмнөх нийт суурь өртөг:
-    const preProfitBaseCost = totalMaterialCost + preProfitOpsCost + totalOutsourcedCost + printCost;
+    const preProfitBaseCost = totalMaterialCost + preProfitOpsCost + printCost;
 
-    // Ашгийн дараах нийт шууд өртөг:
-    const postProfitTotalCost = postProfitOpsCost + designCost;
+    // Ашгийн дараах нийт шууд өртөг (Гадуур ажлууд ашгийн дараа шууд нэмэгдэнэ):
+    const postProfitTotalCost = postProfitOpsCost + totalOutsourcedCost + designCost;
 
     // Үйлдвэрийн бодит нийт өртөг:
     const factoryTotalCost = preProfitBaseCost + postProfitTotalCost;
