@@ -484,10 +484,16 @@ div[class*="__input-container"] input:focus,
   display: none !important;
 }
 
+.smart-table input[type="number"] {
+  padding-left: 3px !important;
+  padding-right: 2px !important;
+}
+
 .smart-table input[type="number"]::-webkit-inner-spin-button,
 .smart-table input[type="number"]::-webkit-outer-spin-button {
-  height: 20px;
-  opacity: 0.4;
+  height: 18px;
+  opacity: 0.45;
+  cursor: pointer;
 }
 
 .smart-table input.num-center {
