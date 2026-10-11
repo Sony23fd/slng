@@ -78,7 +78,8 @@ label {
   margin-bottom: 0.5rem;
 }
 
-input, select {
+input:not([class*="-Input"]):not([aria-autocomplete="list"]):not([role="combobox"]):not([class*="react-select"]):not([class*="__input"]),
+select {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -89,7 +90,8 @@ input, select {
   box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:not([class*="-Input"]):not([aria-autocomplete="list"]):not([role="combobox"]):not([class*="react-select"]):not([class*="__input"]):focus,
+select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
@@ -376,7 +378,16 @@ input:focus, select:focus {
   background: #ffffff !important;
 }
 
-/* Strictly neutralize react-select internal inputs so they never get borders, boxes or backgrounds */
+/* Strictly neutralize ALL react-select internal search/cursor inputs globally so they never get borders, boxes or backgrounds */
+[class*="-control"] input,
+[class*="react-select"] input,
+[class*="-Input"] input,
+[class*="__input"] input,
+.react-select__input input,
+div[class*="-input-container"] input,
+div[class*="__input-container"] input,
+input[aria-autocomplete="list"],
+input[role="combobox"],
 .smart-table [class*="-control"] input,
 .smart-table [class*="react-select"] input,
 .smart-table [class*="-Input"] input,
@@ -396,6 +407,15 @@ input:focus, select:focus {
   line-height: inherit !important;
 }
 
+[class*="-control"] input:focus,
+[class*="react-select"] input:focus,
+[class*="-Input"] input:focus,
+[class*="__input"] input:focus,
+.react-select__input input:focus,
+div[class*="-input-container"] input:focus,
+div[class*="__input-container"] input:focus,
+input[aria-autocomplete="list"]:focus,
+input[role="combobox"]:focus,
 .smart-table [class*="-control"] input:focus,
 .smart-table [class*="react-select"] input:focus,
 .smart-table [class*="-Input"] input:focus,

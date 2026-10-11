@@ -489,7 +489,15 @@ const compactSelectStyles = {
     '&:hover': { borderColor: '#94a3b8' }
   }),
   valueContainer: (base: any) => ({ ...base, height: '34px', padding: '0 8px', display: 'flex', alignItems: 'center' }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+  input: (base: any) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    border: 'none !important',
+    background: 'transparent !important',
+    boxShadow: 'none !important',
+    outline: 'none !important'
+  }),
   indicatorsContainer: (base: any) => ({ ...base, height: '34px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '4px 6px' }),
   clearIndicator: (base: any) => ({ ...base, padding: '4px 4px' }),
@@ -512,7 +520,7 @@ const tableSelectStyles = {
     '&:hover': { borderColor: '#94a3b8' }
   }),
   valueContainer: (base: any) => ({ ...base, height: '28px', padding: '0 5px', display: 'flex', alignItems: 'center' }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important', outline: 'none !important' }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
   clearIndicator: (base: any) => ({ ...base, padding: '1px 3px' }),
@@ -567,7 +575,7 @@ const printSizeSelectStyles = {
     textAlign: 'center',
     fontSize: '11.5px'
   }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important' }),
+  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 'none !important', background: 'transparent !important', boxShadow: 'none !important', outline: 'none !important' }),
   indicatorsContainer: (base: any) => ({ ...base, height: '28px', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '1px 2px', width: '14px', color: '#64748b' }),
@@ -3415,6 +3423,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             fontSize: '12.5px'
                           }),
                           valueContainer: (base) => ({ ...base, padding: '0 6px' }),
+                          input: (base) => ({
+                            ...base,
+                            margin: 0,
+                            padding: 0,
+                            border: 'none !important',
+                            background: 'transparent !important',
+                            boxShadow: 'none !important',
+                            outline: 'none !important'
+                          }),
                           indicatorsContainer: (base) => ({ ...base, height: '34px' }),
                           menu: (base) => ({ ...base, zIndex: 99999 }),
                           menuPortal: (base) => ({ ...base, zIndex: 99999 })
