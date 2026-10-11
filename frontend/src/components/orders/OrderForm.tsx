@@ -367,6 +367,51 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
   return 'A2';
 }
 
+function getDefaultColorsForCategory(category?: string): { coverColor: string; innerColor: string } {
+  const cat = (category || '').trim();
+  // Digital / non-offset categories
+  if (['Түргэн хэвлэл Konica', 'EPSON', 'Шуурхай принт', 'Бал', 'Даралт', 'Промо', 'Түргэн хэвлэл'].includes(cat)) {
+    return { coverColor: '', innerColor: '' };
+  }
+  // 4+4 / 4+4 multi-page & 2-sided books
+  if (['Сэтгүүл', 'Ном өнгөт', 'Танилцуулга', 'Брошур'].includes(cat)) {
+    return { coverColor: '4+4', innerColor: '4+4' };
+  }
+  // 4+0 / 1+1 books & notebooks
+  if (['Ном хар', 'Дэвтэр'].includes(cat)) {
+    return { coverColor: '4+0', innerColor: '1+1' };
+  }
+  // Newspaper
+  if (cat === 'Сонин') {
+    return { coverColor: '4+4', innerColor: '4+4' };
+  }
+  // Calendar
+  if (cat === 'Календар' || cat === 'Календарь') {
+    return { coverColor: '4+0', innerColor: '4+4' };
+  }
+  // 2-sided single sheet / fold products
+  if (['Флаер', 'Зурагт хуудас', 'Урилга', 'Нэрийн хуудас', 'Меню'].includes(cat)) {
+    return { coverColor: '4+4', innerColor: '4+4' };
+  }
+  // Carbonless form
+  if (cat === 'Хортой маягт') {
+    return { coverColor: '1+0', innerColor: '1+0' };
+  }
+  // All other offset categories (Постер, Бланк, Албан бланк, Хавтас, Дугтуй, Тор, Цаасан тор, Шошго, Хайрцаг, Стикер, Сертификат, Билет, Маягт, Дахин хэвлэлт, Бусад, etc.)
+  return { coverColor: '4+0', innerColor: '4+0' };
+}
+
+function getDefaultSizeForCategory(category?: string): string {
+  const cat = (category || '').trim();
+  if (cat === 'Постер') return 'A2';
+  if (['Сэтгүүл', 'Танилцуулга', 'Брошур', 'Бланк', 'Албан бланк', 'Хавтас', 'Сертификат'].includes(cat)) return 'A4';
+  if (cat === 'Сонин') return 'A3';
+  if (cat === 'Дугтуй') return 'DL';
+  if (cat === 'Нэрийн хуудас') return '90x50';
+  if (cat === 'Тор' || cat === 'Цаасан тор') return 'Тор 24х32х8 (Дэлгээс: 64х44см)';
+  return 'A5';
+}
+
 function isCoverMaterial(m: any): boolean {
   if (!m) return false;
   if (m.is_cover) return true;
@@ -1657,19 +1702,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
     if (formValues.category !== prevCategory) {
       setPrevCategory(formValues.category);
+      const catColors = getDefaultColorsForCategory(formValues.category);
+      if (!getValues('cover_color') && catColors.coverColor) {
+        setValue('cover_color', catColors.coverColor);
+      }
+      if (!getValues('inner_color') && catColors.innerColor) {
+        setValue('inner_color', catColors.innerColor);
+      }
       if (formValues.category === 'Тор' || formValues.category === 'Цаасан тор') {
-        if (!getValues('cover_color')) {
-          setValue('cover_color', '4+0');
-        }
         updateBagDimensions(bagDims);
-      } else if (formValues.category === 'Сэтгүүл' || formValues.category === 'Ном өнгөт' || formValues.category === 'Танилцуулга') {
-        if (!getValues('cover_color')) setValue('cover_color', '4+4');
-        if (!getValues('inner_color')) setValue('inner_color', '4+4');
-      } else if (formValues.category === 'Ном хар' || formValues.category === 'Дэвтэр') {
-        if (!getValues('cover_color')) setValue('cover_color', '4+0');
-        if (!getValues('inner_color')) setValue('inner_color', '1+1');
-      } else if (formValues.category === 'Сонин') {
-        if (!getValues('inner_color')) setValue('inner_color', '4+4');
       }
       // Find the category config
       const catConfig = productCategories.find(c => c.name === formValues.category);
@@ -2013,6 +2054,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const ctpPriceSmallStr = constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800';
     const ctpPriceSmall = Number(ctpPriceSmallStr) || 6800;
     const currentA7Size = formValues.size === 'Custom' ? `${formValues.custom_width || 0}x${formValues.custom_height || 0}` : (formValues.size || 'A5');
+    const { coverColor: defCoverColor, innerColor: defInnerColor } = getDefaultColorsForCategory(category);
 
     // Group required CTP plates by plate size (65x55, 74.5x60.5, 76x60.5)
     interface CtpComp {
@@ -2028,14 +2070,23 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     mats.forEach((m, i) => {
       const aux = getMaterialType(m.material_name, m.notes);
-      if (aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') return;
+      if (!m.material_name || !m.material_name.trim() || aux.isNonPrinted || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') return;
 
       const isCover = Boolean(m.is_cover);
       const isInner = !isCover && isInnerPageMaterial(m, category, productCategories);
       const isSingleSheet = isCover || !isInner;
       const isBag = category === 'Тор' || category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
       const isBrochure = category === 'Брошур' || category?.includes('Брошур') || (formValues.product_name && formValues.product_name.includes('Брошур'));
-      const colorToUse = isCover ? b1 : (isInner ? b2 : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : ''))));
+
+      const effectiveCoverColor = b1 || defCoverColor || '4+0';
+      const effectiveInnerColor = b2 || defInnerColor || (category === 'Ном хар' || category === 'Дэвтэр' ? '1+1' : '4+4');
+
+      const colorToUse = isCover 
+        ? effectiveCoverColor 
+        : (isInner 
+            ? effectiveInnerColor 
+            : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : (defCoverColor || '4+0')))));
+
       const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : (isBrochure ? 'A2' : 'A2')));
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
       const mPressSheet = Number(m.press_sheet) || 1;
@@ -2056,7 +2107,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         ctpComponents.push({
           role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
-          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : (isBrochure ? 'Брошур' : 'Үндсэн'))),
+          roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : (isBrochure ? 'Брошур' : (category || 'Үндсэн')))),
           printSize,
           pressSheet: String(m.press_sheet || ''),
           plates,
@@ -3465,18 +3516,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           else if (val === 'Ном хар') setValue('total_pages', 160);
                         }
 
-                        if (!getValues('cover_color')) {
-                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга' || val === 'Брошур') setValue('cover_color', '4+4');
-                          else if (val === 'Ном хар' || val === 'Дэвтэр') setValue('cover_color', '4+0');
+                        const colors = getDefaultColorsForCategory(val);
+                        if (!getValues('cover_color') && colors.coverColor) {
+                          setValue('cover_color', colors.coverColor);
                         }
-                        if (!getValues('inner_color')) {
-                          if (val === 'Сэтгүүл' || val === 'Ном өнгөт' || val === 'Танилцуулга' || val === 'Сонин' || val === 'Брошур') setValue('inner_color', '4+4');
-                          else if (val === 'Ном хар' || val === 'Дэвтэр') setValue('inner_color', '1+1');
+                        if (!getValues('inner_color') && colors.innerColor) {
+                          setValue('inner_color', colors.innerColor);
                         }
                         if (!getValues('size')) {
-                          if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Бланк' || val === 'Хавтас' || val === 'Брошур') setValue('size', 'A4');
-                          else if (val === 'Ном хар' || val === 'Ном өнгөт' || val === 'Дэвтэр' || val === 'Календар') setValue('size', 'A5');
-                          else if (val === 'Сонин') setValue('size', 'A3');
+                          setValue('size', getDefaultSizeForCategory(val));
                         }
 
                         if (val === 'Түргэн хэвлэл') {
@@ -4230,58 +4278,62 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
         <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл" theme="cyan" icon="⚙️">
-          
-          <div className="erp-grid erp-grid-3">
-            <div className="erp-field">
-              <label>[B1] Хавтасны өнгө (Гадна)</label>
-              <select {...register("cover_color")}>
-                <option value="">Сонгох...</option>
-                {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
-                  groupedConstants['COVER_COLOR'].map((c: any) => (
-                    <option key={c.id || c.value} value={c.value}>
-                      {c.value}
-                    </option>
-                  ))
-                ) : (
-                  [
-                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
-                    '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
-                    'алтлаг', 'бронз', 'мөнгөлөг'
-                  ].map(v => (
-                    <option key={v} value={v}>{v}</option>
-                  ))
+          {(() => {
+            const currentCatConfig = productCategories.find((c: any) => c.name === formValues.category);
+            const hasCover = !currentCatConfig || currentCatConfig.has_cover;
+            const hasPages = !currentCatConfig || currentCatConfig.has_pages;
+            return (
+              <div className="erp-grid erp-grid-3">
+                <div className="erp-field">
+                  <label>[B1] {hasCover ? 'Хавтасны өнгө (Гадна)' : 'Хэвлэх өнгө'}</label>
+                  <select {...register("cover_color")}>
+                    <option value="">Сонгох...</option>
+                    {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
+                      groupedConstants['COVER_COLOR'].map((c: any) => (
+                        <option key={c.id || c.value} value={c.value}>
+                          {c.value}
+                        </option>
+                      ))
+                    ) : (
+                      [
+                        '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                        '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
+                        'алтлаг', 'бронз', 'мөнгөлөг'
+                      ].map(v => (
+                        <option key={v} value={v}>{v}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div className="erp-field">
+                  <label>[B2] {hasPages ? 'Хуудасны өнгө' : 'Арын талын өнгө'}</label>
+                  <select {...register("inner_color")}>
+                    <option value="">Сонгох...</option>
+                    {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
+                      groupedConstants['INNER_COLOR'].map((c: any) => (
+                        <option key={c.id || c.value} value={c.value}>
+                          {c.value}
+                        </option>
+                      ))
+                    ) : (
+                      [
+                        '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                        '4+0', '4+1', '4+2', '4+4'
+                      ].map(v => (
+                        <option key={v} value={v}>{v}</option>
+                      ))
+                    )}
+                    <option value="Custom (Тусгай)">Custom (Тусгай)</option>
+                  </select>
+                </div>
+                {formValues.inner_color === 'Custom (Тусгай)' && (
+                  <div className="erp-field">
+                    <label>[B3] Хавчуурга / Тусгай хуудасны тайлбар</label>
+                    <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
+                  </div>
                 )}
-              </select>
-            </div>
-            <div className="erp-field">
-              <label>[B2] Хуудасны өнгө</label>
-              <select {...register("inner_color")}>
-                <option value="">Сонгох...</option>
-                {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
-                  groupedConstants['INNER_COLOR'].map((c: any) => (
-                    <option key={c.id || c.value} value={c.value}>
-                      {c.value}
-                    </option>
-                  ))
-                ) : (
-                  [
-                    '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
-                    '4+0', '4+1', '4+2', '4+4'
-                  ].map(v => (
-                    <option key={v} value={v}>{v}</option>
-                  ))
-                )}
-                <option value="Custom (Тусгай)">Custom (Тусгай)</option>
-              </select>
-            </div>
-            {formValues.inner_color === 'Custom (Тусгай)' && (
-              <div className="erp-field">
-                <label>[B3] Хавчуурга / Тусгай хуудасны тайлбар</label>
-                <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
-              </div>
-            )}
-            <div className="erp-field">
-              <label>[B4] Нийт нүүр (Хавтас орохгүй)</label>
+                <div className="erp-field">
+                  <label>[B4] Нийт нүүр {hasCover ? '(Хавтас орохгүй)' : ''}</label>
               <input type="number" {...register("total_pages", {
                 onChange: (e) => {
                   const b4 = Number(e.target.value) || 0;
@@ -4354,8 +4406,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             </div>
             <input type="hidden" {...register("print_cost")} />
           </div>
-
-
+            );
+          })()}
         </SectionCard>
 
         {/* 6. Шаардлагатай материал */}
