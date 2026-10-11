@@ -95,7 +95,7 @@ export const createOrder = async (req: Request, res: Response) => {
         company_registry: data.company_registry || null,
         company_name: data.company_name || null,
         needs_ebarimt: data.needs_ebarimt === true || data.needs_ebarimt === 'true',
-        order_type: data.order_type || 'STANDARD',
+        order_type: data.order_type || ((data.payment_method_1 === 'Бартер' || data.payment_method_2 === 'Бартер') ? 'BARTER' : (data.payment_method_1 === 'Хандив' || data.payment_method_2 === 'Хандив') ? 'DONATION' : 'STANDARD'),
         lead_source: data.lead_source || null,
         needs_design: Boolean(data.needs_design),
         design_status: data.design_status || 'Эх бэлэн',
@@ -736,6 +736,7 @@ export const updateOrder = async (req: Request, res: Response) => {
           payment_percent_1: data.payment_percent_1 ? Number(data.payment_percent_1) : null,
           payment_method_2: data.payment_method_2 || null,
           payment_percent_2: data.payment_percent_2 ? Number(data.payment_percent_2) : null,
+          order_type: data.order_type || ((data.payment_method_1 === 'Бартер' || data.payment_method_2 === 'Бартер') ? 'BARTER' : (data.payment_method_1 === 'Хандив' || data.payment_method_2 === 'Хандив') ? 'DONATION' : undefined),
           finance_notes: data.finance_notes || null,
           
           specifications: {

@@ -632,7 +632,7 @@ const printSizeSelectStyles = {
     height: '28px',
     maxHeight: '28px',
     boxSizing: 'border-box',
-    fontSize: '11.5px',
+    fontSize: '11px',
     fontWeight: 600,
     color: '#1e293b',
     boxShadow: 'none',
@@ -645,7 +645,7 @@ const printSizeSelectStyles = {
   valueContainer: (base: any) => ({
     ...base,
     height: '100%',
-    padding: '0 2px',
+    padding: '0 1px',
     display: 'flex',
     flexWrap: 'nowrap',
     alignItems: 'center',
@@ -657,7 +657,7 @@ const printSizeSelectStyles = {
     ...base,
     margin: 0,
     padding: 0,
-    fontSize: '11.5px',
+    fontSize: '10.5px',
     lineHeight: '26px',
     textAlign: 'center',
     color: '#94a3b8',
@@ -672,18 +672,21 @@ const printSizeSelectStyles = {
     fontWeight: 600,
     color: '#0f172a',
     textAlign: 'center',
-    fontSize: '11.5px',
+    fontSize: '11px',
     lineHeight: '26px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
   }),
   input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
   indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
-  dropdownIndicator: (base: any) => ({ ...base, padding: '0 2px', width: '14px', color: '#64748b', display: 'flex', alignItems: 'center' }),
+  dropdownIndicator: (base: any) => ({ ...base, padding: '0 1px', width: '12px', color: '#64748b', display: 'flex', alignItems: 'center' }),
   clearIndicator: () => ({ display: 'none' }),
-  menu: (base: any) => ({ ...base, zIndex: 99999, minWidth: '85px' }),
+  menu: (base: any) => ({ ...base, zIndex: 99999, minWidth: '85px', width: 'max-content' }),
   menuPortal: (base: any) => ({ ...base, zIndex: 99999 })
 };
 
@@ -1075,6 +1078,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (initialData.category === 'Тор' || initialData.category === 'Цаасан тор' || initialData.size?.startsWith('Тор')) {
         const parsed = parseBagDimensions(initialData.size, initialData.sub_size);
         setBagDims(parsed);
+      }
+      if (initialData.payment_method_1 === 'Бартер' || initialData.payment_method_2 === 'Бартер') {
+        setValue('order_type', 'BARTER');
+      } else if (initialData.payment_method_1 === 'Хандив' || initialData.payment_method_2 === 'Хандив') {
+        setValue('order_type', 'DONATION');
       }
     }
   }, [initialData]);
@@ -3541,7 +3549,29 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                   <div className="erp-field">
                     <label>Захиалгын төрөл</label>
-                    <select {...register("order_type")} defaultValue="STANDARD">
+                    <select
+                      {...register("order_type")}
+                      value={formValues.order_type || 'STANDARD'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setValue("order_type", val);
+                        if (val === 'BARTER') {
+                          setValue('payment_method_1', 'Бартер');
+                          setValue('payment_percent_1', 100);
+                          setValue('payment_percent_2', 0);
+                        } else if (val === 'DONATION') {
+                          setValue('payment_method_1', 'Хандив');
+                          setValue('payment_percent_1', 100);
+                          setValue('payment_percent_2', 0);
+                        } else if (val === 'STANDARD') {
+                          if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
+                            setValue('payment_method_1', 'Дансаар');
+                            setValue('payment_percent_1', 50);
+                            setValue('payment_percent_2', 50);
+                          }
+                        }
+                      }}
+                    >
                       <option value="STANDARD">Стандарт</option>
                       <option value="BARTER">Бартер</option>
                       <option value="DONATION">Хандив</option>
@@ -4823,57 +4853,57 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         >
           
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
-            <table className="smart-table" style={{ minWidth: isExpandedMaterial ? '1040px' : '500px', width: '100%' }}>
+            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '820px' : '500px' }}>
               <colgroup>
-                <col style={{ width: isExpandedMaterial ? '270px' : '48%' }} />
+                <col style={{ width: isExpandedMaterial ? '250px' : '48%' }} />
                 {isExpandedMaterial && (
                   <>
-                    <col style={{ width: '72px' }} />
                     <col style={{ width: '58px' }} />
-                    <col style={{ width: '68px' }} />
-                    <col style={{ width: '68px' }} />
-                    <col style={{ width: '68px' }} />
-                    <col style={{ width: '62px' }} />
-                    <col style={{ width: '72px' }} />
+                    <col style={{ width: '50px' }} />
+                    <col style={{ width: '54px' }} />
+                    <col style={{ width: '54px' }} />
+                    <col style={{ width: '54px' }} />
+                    <col style={{ width: '50px' }} />
+                    <col style={{ width: '58px' }} />
                   </>
                 )}
-                <col style={{ width: isExpandedMaterial ? '65px' : '13%' }} />
-                <col style={{ width: isExpandedMaterial ? '78px' : '17%' }} />
+                <col style={{ width: isExpandedMaterial ? '56px' : '13%' }} />
+                <col style={{ width: isExpandedMaterial ? '66px' : '17%' }} />
                 <col style={{ width: isExpandedMaterial ? 'auto' : '18%' }} />
-                <col style={{ width: '32px' }} />
+                <col style={{ width: '30px' }} />
               </colgroup>
               <thead>
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '270px', minWidth: '270px' }}>Материал (Нэр, хэмжээ)</th>
-                      <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '72px', minWidth: '72px', lineHeight: 1.15 }}>
+                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '250px' }}>Материал (Нэр, хэмжээ)</th>
+                      <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
                         <div>Хэв.</div>
                         <div>хэмжээ</div>
                       </th>
-                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', minWidth: '58px', lineHeight: 1.15 }}>
+                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '50px', lineHeight: 1.15 }}>
                         <div>Хэвл.</div>
                         <div>хуудас</div>
                       </th>
-                      <th colSpan={3} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.74rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Хэвлэгдэх тоо</th>
-                      <th rowSpan={2} title="[M8] Цаас хуваалт" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '62px', minWidth: '62px', lineHeight: 1.15 }}>
+                      <th colSpan={3} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Хэвлэгдэх тоо</th>
+                      <th rowSpan={2} title="[M8] Цаас хуваалт" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '50px', lineHeight: 1.15 }}>
                         <div>Цаас</div>
                         <div>хуваалт</div>
                       </th>
-                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '72px', minWidth: '72px', lineHeight: 1.15 }}>
+                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
                         <div>Том цаас</div>
-                        <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
+                        <div style={{ fontSize: '0.64rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
                       </th>
-                      <th colSpan={2} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.74rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Өртөг (₮)</th>
-                      <th rowSpan={2} title="[MC] Тэмдэглэл / Заавар" style={{ padding: '0.3rem 0.25rem', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', minWidth: '95px' }}>Тэмдэглэл</th>
-                      <th rowSpan={2} style={{ padding: '0.2rem', width: '32px', minWidth: '32px', textAlign: 'center' }}></th>
+                      <th colSpan={2} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Өртөг (₮)</th>
+                      <th rowSpan={2} title="[MC] Тэмдэглэл / Заавар" style={{ padding: '0.3rem 0.35rem', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left' }}>Тэмдэглэл</th>
+                      <th rowSpan={2} style={{ padding: '0.2rem', width: '30px', textAlign: 'center' }}></th>
                     </tr>
                     <tr>
-                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', minWidth: '68px', background: '#f8fafc' }}>Үндсэн</th>
-                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', minWidth: '68px', background: '#f8fafc' }}>Хадаас</th>
-                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', minWidth: '68px', background: '#f8fafc' }}>Бүгд</th>
-                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '65px', minWidth: '65px', background: '#f8fafc' }}>Нэгж</th>
-                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', fontSize: '0.69rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '78px', minWidth: '78px', background: '#f8fafc' }}>Нийт</th>
+                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Үндсэн</th>
+                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Хадаас</th>
+                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Бүгд</th>
+                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '56px', background: '#f8fafc' }}>Нэгж</th>
+                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '66px', background: '#f8fafc' }}>Нийт</th>
                     </tr>
                   </>
                 ) : (
@@ -5392,7 +5422,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         </div>
                       </td>
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '72px', minWidth: '72px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
@@ -5403,9 +5433,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               backgroundColor: '#eff6ff', 
                               border: '1px solid #bfdbfe', 
                               borderRadius: '4px', 
-                              fontSize: '11px', 
+                              fontSize: '10.5px', 
                               color: '#1d4ed8', 
-                              fontWeight: 600 
+                              fontWeight: 600,
+                              padding: '0 2px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
                             }}
                             title="CTP хавтангийн формат"
                           >
@@ -5421,9 +5455,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               backgroundColor: '#f0fdf4', 
                               border: '1px solid #bbf7d0', 
                               borderRadius: '4px', 
-                              fontSize: '11px', 
+                              fontSize: '10.5px', 
                               color: '#15803d', 
-                              fontWeight: 600 
+                              fontWeight: 600,
+                              padding: '0 2px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
                             }}
                             title={`Хавтасны хэвлэх форматтай синхрон: ${formValues.materials?.[index]?.print_size || 'B3'}`}
                           >
@@ -5439,13 +5477,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               backgroundColor: '#f8fafc', 
                               border: '1px dashed #cbd5e1', 
                               borderRadius: '4px', 
-                              fontSize: '10.5px', 
+                              fontSize: '11px', 
                               color: '#94a3b8', 
                               fontWeight: 500 
                             }}
                             title="Хэвлэх машинд орохгүй, шууд зүсэгдэх туслах материал"
                           >
-                            — (Хэвлэлгүй)
+                            —
                           </div>
                         ) : (
                           <Controller
@@ -5595,7 +5633,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px', minWidth: '58px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '50px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
@@ -5693,7 +5731,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
                         <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap) return;
@@ -5746,7 +5784,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px', minWidth: '68px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
                         <input 
                           type="number" 
                           style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
@@ -5795,7 +5833,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
                         <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc', textAlign: 'right' }} readOnly {...register(`materials.${index}.total_qty`)} />
                         {showFractionalHint && (
                           <div 
@@ -5809,8 +5847,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                               backgroundColor: '#f0fdf4', 
                               border: '1px solid #dcfce7', 
                               borderRadius: '3px', 
-                              padding: '0 2px',
-                              lineHeight: '14px'
+                              padding: '0 2px', 
+                              lineHeight: '14px' 
                             }}
                             title={`Нийт хэвлэх: ${Math.round(curBase * curPress).toLocaleString()} (Үндсэн хэвлэл) + ${curExtra} (Хадаас) = ${curTotal.toLocaleString()}`}
                           >
@@ -5820,7 +5858,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '62px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '50px' }}>
                         {aux.type === 'ctp' ? (
                           <input type="number" style={{ ...disabledStyle, textAlign: 'center' }} readOnly value={1} />
                         ) : isSpecialCoating ? (
@@ -5854,7 +5892,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '72px', minWidth: '72px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
                         <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.sheet_qty`)} />
                         {isPrintedPaper && curDiv > 1 && (
                           <div 
@@ -5902,22 +5940,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         )}
                       </td>
                       )}
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '65px', minWidth: isExpandedMaterial ? '65px' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '56px' }}>
                         <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.unit_cost`)} />
                       </td>
                       {isExpandedMaterial ? (
-                        <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '78px', minWidth: '78px', fontSize: '11.5px' }}>
+                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '66px', fontSize: '11px' }}>
                           {tCost.toLocaleString()}
                         </td>
                       ) : (
-                        <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '17%', fontSize: '11.5px' }}>
+                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '17%', fontSize: '11.5px' }}>
                           {tCost.toLocaleString()}
                         </td>
                       )}
-                      <td style={{ padding: '0.2rem 0.25rem', verticalAlign: 'middle', width: !isExpandedMaterial ? '18%' : undefined, minWidth: isExpandedMaterial ? '95px' : undefined }}>
-                        <input style={inputStyle} {...register(`materials.${index}.notes`)} />
+                      <td style={{ padding: '0.2rem 0.25rem', verticalAlign: 'middle', width: !isExpandedMaterial ? '18%' : undefined }}>
+                        <input style={{ ...inputStyle, width: '100%' }} {...register(`materials.${index}.notes`)} placeholder="Тэмдэглэл..." />
                       </td>
-                      <td style={{ padding: '0.2rem', verticalAlign: 'middle', textAlign: 'center', width: '32px', minWidth: '32px' }}>
+                      <td style={{ padding: '0.2rem', verticalAlign: 'middle', textAlign: 'center', width: '30px' }}>
                         <button type="button" onClick={() => removeMaterial(index)} style={{ width: '22px', height: '22px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', padding: 0 }} title="Устгах">✕</button>
                       </td>
                     </tr>
@@ -6544,16 +6582,31 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   { label: '100% (Бүрэн)', val: 100 },
                   { label: '70%', val: 70 },
                   { label: '30%', val: 30 },
-                  { label: '0% (Зээл)', val: 0 }
-                ].map(p => {
-                  const isActive = Number(formValues.payment_percent_1) === p.val;
+                  { label: '0% (Зээл)', val: 0 },
+                  { label: '🤝 Бартер', val: 100, method: 'Бартер', orderType: 'BARTER' },
+                  { label: '🎁 Хандив', val: 100, method: 'Хандив', orderType: 'DONATION' }
+                ].map((p: any) => {
+                  const isActive = p.orderType
+                    ? (formValues.order_type === p.orderType || formValues.payment_method_1 === p.method)
+                    : (Number(formValues.payment_percent_1) === p.val && formValues.order_type !== 'BARTER' && formValues.order_type !== 'DONATION');
                   return (
                     <button
-                      key={p.val}
+                      key={p.label}
                       type="button"
                       onClick={() => {
                         setValue('payment_percent_1', p.val);
                         setValue('payment_percent_2', 100 - p.val);
+                        if (p.method) {
+                          setValue('payment_method_1', p.method);
+                        }
+                        if (p.orderType) {
+                          setValue('order_type', p.orderType);
+                        } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
+                          setValue('order_type', 'STANDARD');
+                          if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
+                            setValue('payment_method_1', 'Дансаар');
+                          }
+                        }
                       }}
                       style={{
                         flex: 1,
@@ -6565,7 +6618,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         color: isActive ? '#065f46' : 'var(--text-main)',
                         fontWeight: isActive ? 700 : 500,
                         cursor: 'pointer',
-                        transition: 'all 0.15s ease'
+                        transition: 'all 0.15s ease',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       {p.label}
@@ -6626,6 +6680,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                           <select
                             {...register("payment_method_1")}
+                            value={formValues.payment_method_1 || 'Дансаар'}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setValue("payment_method_1", val);
+                              if (val === 'Бартер') {
+                                setValue('order_type', 'BARTER');
+                                setValue('payment_percent_1', 100);
+                                setValue('payment_percent_2', 0);
+                              } else if (val === 'Хандив') {
+                                setValue('order_type', 'DONATION');
+                                setValue('payment_percent_1', 100);
+                                setValue('payment_percent_2', 0);
+                              } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
+                                setValue('order_type', 'STANDARD');
+                              }
+                            }}
                             style={{ flex: 1, padding: '4px', fontSize: '11px', borderRadius: '4px', border: '1px solid #86efac', background: '#fff' }}
                           >
                             <option value="Дансаар">Дансаар</option>
@@ -6633,6 +6703,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             <option value="QPay">QPay</option>
                             <option value="Картаар">Картаар</option>
                             <option value="Гэрээгээр">Гэрээгээр</option>
+                            <option value="Бартер">Бартер</option>
+                            <option value="Хандив">Хандив</option>
                           </select>
                           <input
                             type="number"
@@ -6681,6 +6753,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
                             <option value="Дансаар">Дансаар</option>
                             <option value="Бэлэн">Бэлэн</option>
+                            <option value="Бартер">Бартер</option>
+                            <option value="Хандив">Хандив</option>
                           </select>
                           <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, padding: '0 4px' }}>
                             {p2}%
