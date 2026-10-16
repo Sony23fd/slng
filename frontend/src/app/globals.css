@@ -454,22 +454,37 @@ div[class*="__input-container"] input:focus,
 
 .react-select__value-container,
 [class*="-ValueContainer"] {
-  display: flex !important;
-  flex-wrap: nowrap !important;
+  display: grid !important;
+  grid-template-columns: 0 min-content !important;
   align-items: center !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 
 .react-select__placeholder,
-.react-select__single-value {
+.react-select__single-value,
+[class*="-singleValue"],
+[class*="-placeholder"] {
+  grid-area: 1 / 1 / 2 / 3 !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
+  display: block !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+}
+
+.react-select__input-container,
+div[class*="-Input"],
+div[class*="-input-container"] {
+  grid-area: 1 / 1 / 2 / 3 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
 }
 
 .react-select__indicators,

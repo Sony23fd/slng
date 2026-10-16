@@ -566,15 +566,18 @@ const tableSelectStyles = {
   valueContainer: (base: any) => ({
     ...base,
     height: '100%',
-    padding: '0 5px',
-    display: 'flex',
-    flexWrap: 'nowrap',
+    padding: '0 6px',
+    display: 'grid',
+    gridTemplateColumns: '0 min-content',
     alignItems: 'center',
     overflow: 'hidden',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    minWidth: 0,
+    flex: '1 1 auto'
   }),
   placeholder: (base: any) => ({
     ...base,
+    gridArea: '1 / 1 / 2 / 3',
     margin: 0,
     padding: 0,
     fontSize: '11.5px',
@@ -583,11 +586,13 @@ const tableSelectStyles = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    display: 'flex',
-    alignItems: 'center'
+    display: 'block',
+    minWidth: 0,
+    maxWidth: '100%'
   }),
   singleValue: (base: any) => ({
     ...base,
+    gridArea: '1 / 1 / 2 / 3',
     margin: 0,
     padding: 0,
     fontSize: '11.5px',
@@ -596,10 +601,21 @@ const tableSelectStyles = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    display: 'flex',
-    alignItems: 'center'
+    display: 'block',
+    minWidth: 0,
+    maxWidth: '100%'
   }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
+  input: (base: any) => ({
+    ...base,
+    gridArea: '1 / 1 / 2 / 3',
+    margin: 0,
+    padding: 0,
+    border: 0,
+    background: 'transparent',
+    boxShadow: 'none',
+    outline: 0,
+    minWidth: 0
+  }),
   indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', flexShrink: 0 }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '0 3px', color: '#64748b', display: 'flex', alignItems: 'center' }),
@@ -645,28 +661,35 @@ const printSizeSelectStyles = {
   valueContainer: (base: any) => ({
     ...base,
     height: '100%',
-    padding: '0 1px',
-    display: 'flex',
-    flexWrap: 'nowrap',
+    padding: '0 2px',
+    display: 'grid',
+    gridTemplateColumns: '0 min-content',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    whiteSpace: 'nowrap'
+    boxSizing: 'border-box',
+    minWidth: 0,
+    flex: '1 1 auto'
   }),
   placeholder: (base: any) => ({
     ...base,
+    gridArea: '1 / 1 / 2 / 3',
     margin: 0,
     padding: 0,
     fontSize: '10.5px',
     lineHeight: '26px',
     textAlign: 'center',
     color: '#94a3b8',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    display: 'block',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    minWidth: 0,
+    maxWidth: '100%'
   }),
   singleValue: (base: any) => ({
     ...base,
+    gridArea: '1 / 1 / 2 / 3',
     margin: 0,
     padding: 0,
     fontWeight: 600,
@@ -674,14 +697,24 @@ const printSizeSelectStyles = {
     textAlign: 'center',
     fontSize: '11px',
     lineHeight: '26px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: 'block',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    minWidth: 0,
+    maxWidth: '100%'
   }),
-  input: (base: any) => ({ ...base, margin: 0, padding: 0, border: 0, background: 'transparent', boxShadow: 'none', outline: 0 }),
+  input: (base: any) => ({
+    ...base,
+    gridArea: '1 / 1 / 2 / 3',
+    margin: 0,
+    padding: 0,
+    border: 0,
+    background: 'transparent',
+    boxShadow: 'none',
+    outline: 0,
+    minWidth: 0
+  }),
   indicatorsContainer: (base: any) => ({ ...base, height: '100%', display: 'flex', alignItems: 'center', paddingRight: '1px' }),
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base: any) => ({ ...base, padding: '0 1px', width: '12px', color: '#64748b', display: 'flex', alignItems: 'center' }),
@@ -4930,9 +4963,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         >
           
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
-            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '820px' : '500px' }}>
+            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '855px' : '500px' }}>
               <colgroup>
-                <col style={{ width: isExpandedMaterial ? '250px' : '48%' }} />
+                <col style={{ width: isExpandedMaterial ? '285px' : '48%' }} />
                 {isExpandedMaterial && (
                   <>
                     <col style={{ width: '58px' }} />
@@ -4953,7 +4986,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '250px' }}>Материал (Нэр, хэмжээ)</th>
+                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '285px' }}>Материал (Нэр, хэмжээ)</th>
                       <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
                         <div>Хэв.</div>
                         <div>хэмжээ</div>
@@ -5116,10 +5149,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '270px', minWidth: isExpandedMaterial ? '270px' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '285px', minWidth: isExpandedMaterial ? '285px' : undefined }}>
                         <input type="hidden" {...register(`materials.${index}.size`)} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ flex: 1, minWidth: 0 }} title={formValues.materials?.[index]?.material_name || 'Материал сонгох'}>
                             <Controller
                               name={`materials.${index}.material_name`}
                               control={control}
