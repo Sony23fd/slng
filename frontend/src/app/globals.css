@@ -500,15 +500,33 @@ div[class*="-input-container"] {
 }
 
 .smart-table input[type="number"] {
-  padding-left: 3px !important;
-  padding-right: 2px !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  -moz-appearance: textfield;
 }
 
+/* Hide spinners by default to reclaim 18px and show all 4-6 digits cleanly */
 .smart-table input[type="number"]::-webkit-inner-spin-button,
 .smart-table input[type="number"]::-webkit-outer-spin-button {
-  height: 18px;
-  opacity: 0.45;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Show spinners only on hover/focus for editable fields */
+.smart-table input[type="number"]:not([readonly]):hover::-webkit-inner-spin-button,
+.smart-table input[type="number"]:not([readonly]):focus::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  opacity: 0.65;
   cursor: pointer;
+  height: 18px;
+}
+
+/* Readonly fields must NEVER show spinners */
+.smart-table input[type="number"][readonly]::-webkit-inner-spin-button,
+.smart-table input[type="number"][readonly]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
 }
 
 .smart-table input.num-center {

@@ -4963,22 +4963,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         >
           
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
-            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '855px' : '500px' }}>
+            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '930px' : '500px' }}>
               <colgroup>
-                <col style={{ width: isExpandedMaterial ? '285px' : '48%' }} />
+                <col style={{ width: isExpandedMaterial ? '280px' : '48%' }} />
                 {isExpandedMaterial && (
                   <>
                     <col style={{ width: '58px' }} />
-                    <col style={{ width: '50px' }} />
-                    <col style={{ width: '54px' }} />
-                    <col style={{ width: '54px' }} />
-                    <col style={{ width: '54px' }} />
-                    <col style={{ width: '50px' }} />
+                    <col style={{ width: '48px' }} />
+                    <col style={{ width: '68px' }} />
                     <col style={{ width: '58px' }} />
+                    <col style={{ width: '70px' }} />
+                    <col style={{ width: '50px' }} />
+                    <col style={{ width: '68px' }} />
                   </>
                 )}
-                <col style={{ width: isExpandedMaterial ? '56px' : '13%' }} />
-                <col style={{ width: isExpandedMaterial ? '66px' : '17%' }} />
+                <col style={{ width: isExpandedMaterial ? '68px' : '13%' }} />
+                <col style={{ width: isExpandedMaterial ? '84px' : '17%' }} />
                 <col style={{ width: isExpandedMaterial ? 'auto' : '18%' }} />
                 <col style={{ width: '30px' }} />
               </colgroup>
@@ -4986,12 +4986,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 {isExpandedMaterial ? (
                   <>
                     <tr>
-                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '285px' }}>Материал (Нэр, хэмжээ)</th>
+                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '280px' }}>Материал (Нэр, хэмжээ)</th>
                       <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
                         <div>Хэв.</div>
                         <div>хэмжээ</div>
                       </th>
-                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '50px', lineHeight: 1.15 }}>
+                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '48px', lineHeight: 1.15 }}>
                         <div>Хэвл.</div>
                         <div>хуудас</div>
                       </th>
@@ -5000,7 +5000,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         <div>Цаас</div>
                         <div>хуваалт</div>
                       </th>
-                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
+                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', lineHeight: 1.15 }}>
                         <div>Том цаас</div>
                         <div style={{ fontSize: '0.64rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
                       </th>
@@ -5009,11 +5009,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <th rowSpan={2} style={{ padding: '0.2rem', width: '30px', textAlign: 'center' }}></th>
                     </tr>
                     <tr>
-                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Үндсэн</th>
-                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Хадаас</th>
-                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '54px', background: '#f8fafc' }}>Бүгд</th>
-                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '56px', background: '#f8fafc' }}>Нэгж</th>
-                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '66px', background: '#f8fafc' }}>Нийт</th>
+                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Үндсэн</th>
+                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '58px', background: '#f8fafc' }}>Хадаас</th>
+                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Бүгд</th>
+                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Нэгж</th>
+                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '84px', background: '#f8fafc' }}>Нийт</th>
                     </tr>
                   </>
                 ) : (
@@ -5149,7 +5149,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   return (
                     <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '285px', minWidth: isExpandedMaterial ? '285px' : undefined }}>
+                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '280px', minWidth: isExpandedMaterial ? '280px' : undefined }}>
                         <input type="hidden" {...register(`materials.${index}.size`)} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
                           <div style={{ flex: 1, minWidth: 0 }} title={formValues.materials?.[index]?.material_name || 'Материал сонгох'}>
@@ -5746,7 +5746,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '50px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '48px' }}>
                         {aux.type === 'ctp' ? (
                           <div 
                             style={{ 
@@ -5845,7 +5845,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
                         <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap) return;
@@ -5898,7 +5898,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
                         <input 
                           type="number" 
                           style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
@@ -5959,7 +5959,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '54px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '70px' }}>
                         <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc', textAlign: 'right' }} readOnly {...register(`materials.${index}.total_qty`)} />
                         {showFractionalHint && (
                           <div 
@@ -6018,7 +6018,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       </td>
                       )}
                       {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
                         <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.sheet_qty`)} />
                         {isPrintedPaper && curDiv > 1 && (
                           <div 
@@ -6066,11 +6066,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         )}
                       </td>
                       )}
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '56px' }}>
+                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '68px' }}>
                         <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.unit_cost`)} />
                       </td>
                       {isExpandedMaterial ? (
-                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '66px', fontSize: '11px' }}>
+                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '84px', fontSize: '11px' }}>
                           {tCost.toLocaleString()}
                         </td>
                       ) : (
