@@ -838,17 +838,88 @@ function parseBagDimensions(sizeStr?: string, subSizeStr?: string): BagDimension
   return { width: w, height: h, gusset: g, topFold: tf, bottomFold: bf };
 }
 
-const calculateMakeready = (baseQty: number): number => {
-  if (baseQty <= 1000) return 100;
-  if (baseQty <= 2000) return 150;
-  if (baseQty <= 4000) return 200;
-  if (baseQty <= 5000) return 300;
-  if (baseQty <= 10000) return 400;
-  if (baseQty <= 14999) return 500;
-  if (baseQty <= 20000) return 600;
-  if (baseQty <= 25000) return 800;
-  if (baseQty <= 29999) return 900;
-  return 1000;
+interface MakereadyOptions {
+  category?: string;
+  isCover?: boolean;
+  color?: string;
+  isBlackPrint?: boolean;
+}
+
+const calculateMakeready = (
+  baseQty: number,
+  options?: MakereadyOptions | string | boolean
+): number => {
+  // Determine if it should use Black print (Хар ном / 1-өнгө) table
+  let isBlack = false;
+  if (typeof options === 'boolean') {
+    isBlack = options;
+  } else if (typeof options === 'string') {
+    isBlack = options === 'Ном хар' || options === 'black';
+  } else if (options && typeof options === 'object') {
+    if (options.isBlackPrint !== undefined) {
+      isBlack = options.isBlackPrint;
+    } else if (options.category === 'Ном хар') {
+      // In Ном хар, if it's the cover with 4-color print (e.g. 4+0), it's Color.
+      // If it's inner pages or 1-color cover, it's Black.
+      if (options.isCover) {
+        const col = (options.color || '').trim();
+        isBlack = col === '1+0' || col === '1+1' || col === '0+1';
+      } else {
+        isBlack = true;
+      }
+    } else if (options.category === 'Дэвтэр' && !options.isCover) {
+      // Дэвтэрийн дотор хуудас ихэвчлэн 1+1 мөрлөсөн тул хар хэвлэл
+      isBlack = true;
+    } else if (options.color) {
+      const col = options.color.trim();
+      isBlack = col === '1+1' || col === '1+0' || col === '0+1';
+    }
+  }
+
+  if (isBlack) {
+    if (baseQty <= 1000) return 60;
+    if (baseQty <= 2000) return 100;
+    if (baseQty <= 3000) return 150;
+    if (baseQty <= 4000) return 180;
+    if (baseQty <= 5000) return 200;
+    if (baseQty <= 6000) return 220;
+    if (baseQty <= 7000) return 250;
+    if (baseQty <= 8000) return 280;
+    if (baseQty <= 9000) return 310;
+    if (baseQty <= 10000) return 350;
+    if (baseQty <= 11000) return 380;
+    if (baseQty <= 12000) return 400;
+    if (baseQty <= 13000) return 420;
+    if (baseQty <= 14000) return 450;
+    if (baseQty <= 15000) return 480;
+    if (baseQty <= 18000) return 500;
+    if (baseQty <= 20000) return 520;
+    if (baseQty <= 25000) return 600;
+    if (baseQty <= 30000) return 700;
+    return 800;
+  } else {
+    // Өнгөт ном ба 4 өнгөт хэвлэл
+    if (baseQty <= 1000) return 100;
+    if (baseQty <= 2000) return 150;
+    if (baseQty <= 3000) return 180;
+    if (baseQty <= 4000) return 200;
+    if (baseQty <= 5000) return 230;
+    if (baseQty <= 6000) return 260;
+    if (baseQty <= 7000) return 290;
+    if (baseQty <= 8000) return 320;
+    if (baseQty <= 9000) return 350;
+    if (baseQty <= 10000) return 380;
+    if (baseQty <= 11000) return 410;
+    if (baseQty <= 12000) return 440;
+    if (baseQty <= 13000) return 470;
+    if (baseQty <= 14000) return 500;
+    if (baseQty <= 15000) return 530;
+    if (baseQty <= 18000) return 600;
+    if (baseQty <= 20000) return 680;
+    if (baseQty <= 25000) return 800;
+    if (baseQty <= 30000) return 900;
+    return 1000;
+  }
 };
 
 export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }: { initialData?: any, isEdit?: boolean, orderId?: number, isQuoteMode?: boolean }) {
@@ -1714,7 +1785,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               rowDivideBy = coverLogic.divideBy;
               if (coverLogic.printSize) rowPrintSize = coverLogic.printSize;
               baseQty = tQty;
-              extraQty = calculateMakeready(baseQty);
+              extraQty = calculateMakeready(baseQty, { category, isCover: true, color: t.cover_color || getValues('cover_color') });
               const divs = calculatePaperDivision(rowPrintSize || 'A2', a7) || 1;
               const setups = calculateSetups(Number(rowPressSheet) || 1, divs);
               totalQty = (baseQty * (Number(rowPressSheet) || 1)) + (extraQty * setups);
@@ -1725,7 +1796,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               const matDivs = calculatePaperDivision(rowSize, rowPrintSize);
               if (matDivs > 0) rowDivideBy = matDivs;
               baseQty = tQty;
-              extraQty = calculateMakeready(baseQty);
+              extraQty = calculateMakeready(baseQty, { category, isCover: true, color: t.cover_color || getValues('cover_color') });
               const divs = calculatePaperDivision(rowPrintSize || 'A2', a7) || 1;
               const setups = calculateSetups(Number(rowPressSheet) || 1, divs);
               totalQty = (baseQty * (Number(rowPressSheet) || 1)) + (extraQty * setups);
@@ -1738,7 +1809,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               const m4 = calculateInnerPressSheet(b4, rowPrintSize, a7);
               rowPressSheet = String(m4);
               baseQty = tQty;
-              extraQty = calculateMakeready(baseQty);
+              extraQty = calculateMakeready(baseQty, { category, isCover: false, color: t.inner_color || getValues('inner_color') });
               const divs = calculatePaperDivision(rowPrintSize || 'A2', a7) || 1;
               const setups = calculateSetups(m4, divs);
               totalQty = (baseQty * m4) + (extraQty * setups);
@@ -1755,7 +1826,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               } else {
                 baseQty = tQty;
               }
-              extraQty = calculateMakeready(baseQty);
+              extraQty = calculateMakeready(baseQty, { category, isCover: false, color: t.cover_color || getValues('cover_color') });
               const setups = 1;
               totalQty = (baseQty * 1) + (extraQty * setups);
               sheetQty = Math.ceil(totalQty / rowDivideBy);
@@ -1945,7 +2016,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               let rowDivideBy = 1;
               let isCoverRow = false;
               let rowBase = curQty;
-              let rowExtra = calculateMakeready(rowBase);
+              let rowExtra = calculateMakeready(rowBase, { category: formValues.category });
               let rowPress = '';
               let rowTotal = 0;
               let rowSheets = 0;
@@ -1986,6 +2057,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 }
               } else if (hasCover && idx === 0) {
                 isCoverRow = true;
+                rowExtra = calculateMakeready(rowBase, { category: formValues.category, isCover: true, color: formValues.cover_color });
                 const coverLogic = getCoverLogic(a7, bt, coverRules);
                 if (coverLogic) {
                   rowPress = String(coverLogic.pressSheet);
@@ -2002,6 +2074,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 rowSheets = Math.ceil(rowTotal / rowDivideBy);
               } else if (curPages > 0 && isInner) {
                 rowDivideBy = calculatePaperDivision(matSize, rowPrintSize) || 4;
+                rowExtra = calculateMakeready(rowBase, { category: formValues.category, isCover: false, color: formValues.inner_color });
                 const innerPress = calculateInnerPressSheet(curPages, rowPrintSize, a7);
                 if (innerPress > 0) {
                   rowPress = String(innerPress);
@@ -2016,10 +2089,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 if (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт' || formValues.category === 'Нэрийн хуудас') {
                   const pDiv = calculatePaperDivision(rowPrintSize, a7) || 1;
                   rowBase = Math.ceil(curQty / pDiv);
-                  rowExtra = calculateMakeready(rowBase);
+                  rowExtra = calculateMakeready(rowBase, { category: formValues.category, isCover: false, color: formValues.cover_color });
                   const pSetups = calculateSetups(1, pDiv);
                   rowTotal = (rowBase * 1) + (rowExtra * pSetups);
                 } else {
+                  rowExtra = calculateMakeready(rowBase, { category: formValues.category, isCover: false, color: formValues.cover_color });
                   rowTotal = rowBase + rowExtra;
                 }
                 rowSheets = Math.ceil(rowTotal / rowDivideBy);
@@ -2644,9 +2718,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           setValue(`materials.${index}.base_qty`, base);
         }
         const isManualExtra = Boolean(m.is_manual_extra);
+        const rowColor = isCover ? formValues.cover_color : formValues.inner_color;
         const extra = (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0) 
           ? Number(m.extra_qty) 
-          : calculateMakeready(base);
+          : calculateMakeready(base, { category: cat, isCover, color: rowColor });
         if (!isManualExtra) {
           setValue(`materials.${index}.extra_qty`, extra);
         }
@@ -3310,7 +3385,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : a6;
           if (Number(m.base_qty) !== base) setValue(`materials.${index}.base_qty`, base);
 
-          const extra = calculateMakeready(base);
+          const extra = calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
           if (Number(m.extra_qty) !== extra && !m.is_manual_extra) setValue(`materials.${index}.extra_qty`, extra);
 
           const curExtra = (m.is_manual_extra && Number(m.extra_qty) >= 0) ? Number(m.extra_qty) : extra;
@@ -3349,7 +3424,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
-        const extra = calculateMakeready(m5);
+        const extra = calculateMakeready(m5, { category: formValues.category, isCover: false, color: formValues.cover_color });
         if (Number(m.extra_qty) !== extra && !m.is_manual_extra) setValue(`materials.${index}.extra_qty`, extra);
         const curExtra = (m.is_manual_extra && Number(m.extra_qty) >= 0) ? Number(m.extra_qty) : extra;
 
@@ -3383,7 +3458,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const m5 = (cat === 'Флаер') ? Math.ceil(a6 / div) : a6;
         if (Number(m.base_qty) !== m5) setValue(`materials.${index}.base_qty`, m5);
 
-        const extra = calculateMakeready(m5);
+        const extra = calculateMakeready(m5, { category: cat, isCover: false, color: formValues.cover_color });
         if (Number(m.extra_qty) !== extra && !m.is_manual_extra) setValue(`materials.${index}.extra_qty`, extra);
         const curExtra = (m.is_manual_extra && Number(m.extra_qty) >= 0) ? Number(m.extra_qty) : extra;
 
@@ -3809,7 +3884,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           const totalQ = Number(getValues('total_qty')) || 0;
                           const pDiv = 40;
                           const base = Math.ceil(totalQ / pDiv);
-                          const extra = calculateMakeready(base);
+                          const extra = calculateMakeready(base, { category: val, color: '4+0' });
                           const materials = getValues('materials') || [];
                           materials.forEach((m: any, index: number) => {
                             const aux = getMaterialType(m.material_name, m.notes);
@@ -3982,11 +4057,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                     const isAuxiliaryNoMakeready = aux.isAux;
                     const isManualExtra = Boolean(m.is_manual_extra);
+                    const isCov = isCoverMaterial(m);
+                    const rowColor = isCov ? getValues('cover_color') : getValues('inner_color');
                     const extra = isAuxiliaryNoMakeready 
                       ? (Number(m.extra_qty) || 0) 
                       : (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0 
                           ? Number(m.extra_qty) 
-                          : calculateMakeready(newBase));
+                          : calculateMakeready(newBase, { category: cat, isCover: isCov, color: rowColor }));
                     if (!isManualExtra) {
                       setValue(`materials.${index}.extra_qty`, extra);
                     }
@@ -4130,7 +4207,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       if (base > 0 && Number(m.base_qty) !== base) {
                         setValue(`materials.${index}.base_qty`, base);
                       }
-                      const extra = calculateMakeready(base);
+                      const extra = calculateMakeready(base, { category: getValues('category'), isCover: true, color: getValues('cover_color') });
                       setValue(`materials.${index}.extra_qty`, extra);
                       const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
                       const setups = calculateSetups(m4, divs);
@@ -4736,7 +4813,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       if (base > 0 && Number(m.base_qty) !== base) {
                         setValue(`materials.${index}.base_qty`, base);
                       }
-                      const extra = calculateMakeready(base);
+                      const extra = calculateMakeready(base, { category, isCover: false, color: getValues('inner_color') });
                       setValue(`materials.${index}.extra_qty`, extra);
                       const divs = calculatePaperDivision(effectivePrintSize, a7);
                       const setups = calculateSetups(m4, divs);
@@ -5266,7 +5343,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         }
                                         const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
                                         setValue(`materials.${index}.base_qty`, base);
-                                        const extra = calculateMakeready(base);
+                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
                                         setValue(`materials.${index}.extra_qty`, extra);
                                         const divs = calculatePaperDivision(coverPrintSize, a7);
                                         const setups = calculateSetups(m4, divs);
@@ -5280,7 +5357,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           const m4 = calculateInnerPressSheet(b4, printSize, a7);
                                           setValue(`materials.${index}.press_sheet`, String(m4));
                                           const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
-                                          const extra = calculateMakeready(base);
+                                          const extra = calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.inner_color });
                                           setValue(`materials.${index}.extra_qty`, extra);
                                           const divs = calculatePaperDivision(printSize, a7);
                                           const setups = calculateSetups(m4, divs);
@@ -5296,7 +5373,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           : 1;
                                         const base = Math.ceil(totalQty / pDiv);
                                         setValue(`materials.${index}.base_qty`, base);
-                                        const extra = calculateMakeready(base);
+                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.cover_color });
                                         setValue(`materials.${index}.extra_qty`, extra);
                                         const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') ? calculateSetups(1, pDiv) : 1;
                                         const total = (base * 1) + (extra * setups);
@@ -5401,7 +5478,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                       setValue(`materials.${index}.base_qty`, base);
                                     }
                                     const curMatName = getValues(`materials.${index}.material_name`) || '';
-                                    const extra = curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) : calculateMakeready(base);
+                                    const extra = curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') 
+                                      ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) 
+                                      : calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
                                     setValue(`materials.${index}.extra_qty`, extra);
                                     const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
                                     const divs = calculatePaperDivision(currentPrintSize, a7);
@@ -5606,7 +5685,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         if (Number(formValues.materials?.[index]?.base_qty) !== base) {
                                           setValue(`materials.${index}.base_qty`, base);
                                         }
-                                        const extra = calculateMakeready(base);
+                                        const isCov = isCoverMaterial(formValues.materials?.[index]);
+                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
                                         setValue(`materials.${index}.extra_qty`, extra);
                                         const setups = calculateSetups(m4, divs);
                                         const total = (base * m4) + (extra * setups);
@@ -5713,7 +5793,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
                                   setValue(`materials.${index}.base_qty`, base);
                                 }
-                                const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base);
+                                const isCov = isCoverMaterial(formValues.materials?.[index]);
+                                const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
                                 setValue(`materials.${index}.extra_qty`, extra);
                                 const a7 = getA7Size();
                                 const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7) || 1;
@@ -5791,7 +5872,19 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           readOnly={isSpecialStrap || aux.type === 'ctp'} 
                           min={0}
                           max={isSpecialCoating ? 500 : undefined}
-                          title={isSpecialCoating ? "Бүрэлтийн хадаас (Энгийн: 20/50, Эмбосс: 40/50, Лак: 60)" : "Хадаас"}
+                          title={
+                            isSpecialCoating 
+                              ? "Бүрэлтийн хадаас (Энгийн: 20/50, Эмбосс: 40/50, Лак: 60)" 
+                              : (() => {
+                                  const rowMat = formValues.materials?.[index];
+                                  const isCov = isCoverMaterial(rowMat);
+                                  const col = isCov ? formValues.cover_color : formValues.inner_color;
+                                  const isBlack = formValues.category === 'Ном хар' 
+                                    ? (isCov ? (col === '1+0' || col === '1+1' || col === '0+1') : true) 
+                                    : (col === '1+1' || col === '1+0' || col === '0+1');
+                                  return `Машины хадаас (${isBlack ? 'Хар хэвлэл' : 'Өнгөт хэвлэл'})`;
+                                })()
+                          }
                           {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
                             if (isSpecialStrap || aux.type === 'ctp') return;
