@@ -6783,27 +6783,46 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       }} title={`Үлдэгдэл: ${p2}% (${remainingAmt.toLocaleString()} ₮)`} />
                     </div>
 
-                    {/* 2 Картын харьцуулалт: Урьдчилгаа ба Үлдэгдэл */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-                      {/* Урьдчилгаа картын блок */}
+                    {/* 2 Картын харьцуулалт: Урьдчилгаа ба Үлдэгдэл (Босоо дээр доор) */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {/* 1. Урьдчилгаа картын блок */}
                       <div style={{
                         background: '#f0fdf4',
                         border: '1px solid #bbf7d0',
                         borderRadius: '8px',
-                        padding: '8px',
+                        padding: '8px 10px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '4px'
+                        gap: '6px'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#166534' }}>
-                            🟢 1. Урьдчилгаа
-                          </span>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#166534' }}>
-                            {p1}%
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#166534' }}>
+                              🟢 1. Урьдчилгаа
+                            </span>
+                            <span style={{
+                              fontSize: '10.5px',
+                              fontWeight: 700,
+                              color: '#15803d',
+                              background: '#dcfce7',
+                              border: '1px solid #86efac',
+                              padding: '1px 6px',
+                              borderRadius: '999px'
+                            }}>
+                              {p1}%
+                            </span>
+                          </div>
+                          <div style={{
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            color: '#15803d'
+                          }}>
+                            {advanceAmt.toLocaleString()} ₮
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <select
                             {...register("payment_method_1")}
                             value={formValues.payment_method_1 || 'Дансаар'}
@@ -6822,7 +6841,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 setValue('order_type', 'STANDARD');
                               }
                             }}
-                            style={{ flex: 1, padding: '4px', fontSize: '11px', borderRadius: '4px', border: '1px solid #86efac', background: '#fff' }}
+                            style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #86efac', background: '#fff', color: '#1e293b', fontWeight: 500 }}
                           >
                             <option value="Дансаар">Дансаар</option>
                             <option value="Бэлэн">Бэлэн</option>
@@ -6832,63 +6851,93 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             <option value="Бартер">Бартер</option>
                             <option value="Хандив">Хандив</option>
                           </select>
-                          <input
-                            type="number"
-                            step="any"
-                            value={formValues.payment_percent_1 ?? 50}
-                            onChange={(e) => {
-                              const val = Math.min(100, Math.max(0, Number(e.target.value) || 0));
-                              setValue('payment_percent_1', val);
-                              setValue('payment_percent_2', 100 - val);
-                            }}
-                            style={{ width: '44px', padding: '4px', fontSize: '11px', textAlign: 'center', borderRadius: '4px', border: '1px solid #86efac', background: '#fff', fontWeight: 600 }}
-                            title="Урьдчилгаа хувь (%)"
-                          />
-                          <span style={{ fontSize: '11px', color: '#166534' }}>%</span>
-                        </div>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#15803d', textAlign: 'right', marginTop: '2px' }}>
-                          {advanceAmt.toLocaleString()} ₮
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#fff', border: '1px solid #86efac', borderRadius: '5px', padding: '1px 6px' }}>
+                            <input
+                              type="number"
+                              step="any"
+                              value={formValues.payment_percent_1 ?? 50}
+                              onChange={(e) => {
+                                const val = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                                setValue('payment_percent_1', val);
+                                setValue('payment_percent_2', 100 - val);
+                              }}
+                              style={{ width: '38px', padding: '4px 0', fontSize: '11.5px', textAlign: 'center', border: 'none', background: 'transparent', fontWeight: 700, color: '#166534', outline: 'none' }}
+                              title="Урьдчилгаа хувь (%)"
+                            />
+                            <span style={{ fontSize: '11px', color: '#166534', fontWeight: 600 }}>%</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Үлдэгдэл картын блок */}
+                      {/* 2. Үлдэгдэл картын блок */}
                       <div style={{
                         background: p2 > 0 ? '#fffbeb' : '#f8fafc',
                         border: p2 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
                         borderRadius: '8px',
-                        padding: '8px',
+                        padding: '8px 10px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '4px'
+                        gap: '6px'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
-                            {p2 > 0 ? '🟠 2. Үлдэгдэл' : '✓ Бүрэн төлөлт'}
-                          </span>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
-                            {p2}%
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                          <select
-                            {...register("payment_method_2")}
-                            style={{ flex: 1, padding: '4px', fontSize: '11px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
-                          >
-                            <option value="Бэлэн болоход">Бэлэн болоход</option>
-                            <option value="Хүлээлгэн өгөхөд">Хүлээлгэн өгөхөд</option>
-                            <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
-                            <option value="Дансаар">Дансаар</option>
-                            <option value="Бэлэн">Бэлэн</option>
-                            <option value="Бартер">Бартер</option>
-                            <option value="Хандив">Хандив</option>
-                          </select>
-                          <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, padding: '0 4px' }}>
-                            {p2}%
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
+                              {p2 > 0 ? '🟠 2. Үлдэгдэл' : '✓ Бүрэн төлөлт'}
+                            </span>
+                            <span style={{
+                              fontSize: '10.5px',
+                              fontWeight: 700,
+                              color: p2 > 0 ? '#b45309' : '#475569',
+                              background: p2 > 0 ? '#fef3c7' : '#e2e8f0',
+                              border: p2 > 0 ? '1px solid #fcd34d' : '1px solid #cbd5e1',
+                              padding: '1px 6px',
+                              borderRadius: '999px'
+                            }}>
+                              {p2}%
+                            </span>
+                          </div>
+                          <div style={{
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            color: p2 > 0 ? '#b45309' : '#475569'
+                          }}>
+                            {remainingAmt.toLocaleString()} ₮
                           </div>
                         </div>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: p2 > 0 ? '#b45309' : '#475569', textAlign: 'right', marginTop: '2px' }}>
-                          {remainingAmt.toLocaleString()} ₮
-                        </div>
+
+                        {p2 > 0 ? (
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <select
+                              {...register("payment_method_2")}
+                              style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #fcd34d', background: '#fff', color: '#1e293b', fontWeight: 500 }}
+                            >
+                              <option value="Бэлэн болоход">Бэлэн болоход</option>
+                              <option value="Хүлээлгэн өгөхөд">Хүлээлгэн өгөхөд</option>
+                              <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
+                              <option value="Гэрээгээр 30 хоног">Гэрээгээр 30 хоног</option>
+                              <option value="Дансаар">Дансаар</option>
+                              <option value="Бэлэн">Бэлэн</option>
+                              <option value="Бартер">Бартер</option>
+                              <option value="Хандив">Хандив</option>
+                            </select>
+                            <div style={{
+                              fontSize: '11px',
+                              color: '#92400e',
+                              fontWeight: 600,
+                              padding: '3px 8px',
+                              background: '#fef3c7',
+                              borderRadius: '5px',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              Үлдэгдэл {p2}%
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '2px 0' }}>
+                            ✓ Урьдчилгаагаар 100% бүрэн төлөгдсөн тул үлдэгдэл төлбөр байхгүй.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
