@@ -2709,7 +2709,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             ? effectiveInnerColor 
             : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : (defCoverColor || '4+0')))));
 
-      const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : (isBrochure ? 'A2' : 'A2')));
+      let printSize = m.print_size;
+      if (!printSize) {
+        printSize = isCover 
+          ? getDefaultPrintSize(category, currentA7Size, true, formValues.binding_type, coverRules) 
+          : (isBag ? 'B2' : (isBrochure ? 'A2' : getDefaultPrintSize(category, currentA7Size, false, formValues.binding_type, coverRules)));
+      }
+
+      // Safeguard for multi-page inner sheets: print size must follow product size family!
+      if (isInner) {
+        if (currentA7Size.toUpperCase().startsWith('B') && printSize.toUpperCase().startsWith('A')) {
+          printSize = 'B2';
+        } else if (currentA7Size.toUpperCase().startsWith('A') && printSize.toUpperCase().startsWith('B')) {
+          printSize = 'A2';
+        }
+      }
+
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
       let mPressSheet = (Number(m.press_sheet) > 0 && !isNaN(Number(m.press_sheet))) ? Number(m.press_sheet) : 1;
       if (isInner) {
@@ -2738,7 +2753,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           role: isCover ? 'cover' : (isInner ? 'inner' : 'main'),
           roleLabel: isCover ? 'Хавтас' : (isInner ? 'Дотор' : (isBag ? 'Тор' : (isBrochure ? 'Брошур' : (category || 'Үндсэн')))),
           printSize,
-          pressSheet: String(m.press_sheet || '1'),
+          pressSheet: String(mPressSheet || m.press_sheet || '1'),
           plates,
           defaultSize
         });
@@ -2802,11 +2817,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const targetCtpList = Object.values(groupedByPlateSize).map(g => {
       const platePrice = g.size === '65x55' ? ctpPriceSmall : ctpPrice;
+      const displayPressSheet = g.pressSheets.length === 1 ? g.pressSheets[0] : '1';
       return {
         material_name: `CTP хавтан (${g.size})`,
         size: g.size,
         print_size: g.printSizes.join(', ') || 'A2',
-        press_sheet: g.pressSheets[0] || '1',
+        press_sheet: displayPressSheet,
         base_qty: g.totalPlates,
         extra_qty: 0,
         total_qty: g.totalPlates,
@@ -2829,8 +2845,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           cur.material_name !== tgt.material_name ||
           normalizeCtpSize(cur.size) !== tgt.size ||
           cur.print_size !== tgt.print_size ||
+          cur.press_sheet !== tgt.press_sheet ||
           Number(cur.sheet_qty) !== tgt.sheet_qty ||
+          Number(cur.base_qty) !== tgt.base_qty ||
+          Number(cur.total_qty) !== tgt.total_qty ||
           Number(cur.unit_cost) !== tgt.unit_cost ||
+          cur.notes !== tgt.notes ||
           Number(cur.divide_by) !== 1
         ) {
           hasDiff = true;
@@ -3080,7 +3100,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
       } else if (isCover) {
         m4 = Number(m.press_sheet) || 1;
-        let effectivePrintSize = m.print_size || getDefaultPrintSize(cat, a7, true, bt, coverRules);
+        let effectivePrintSize = getDefaultPrintSize(cat, a7, true, bt, coverRules);
         setValue(`materials.${index}.print_size`, effectivePrintSize);
         const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
         const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
@@ -3089,11 +3109,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           divBy = matDivs;
         }
       } else if (isInnerPageMaterial(m, cat, productCategories)) {
-        let effectivePrintSize = m.print_size;
-        if (!effectivePrintSize) {
-          effectivePrintSize = getDefaultPrintSize(cat, a7, false, bt, coverRules);
-          setValue(`materials.${index}.print_size`, effectivePrintSize);
-        }
+        let effectivePrintSize = getDefaultPrintSize(cat, a7, false, bt, coverRules);
+        setValue(`materials.${index}.print_size`, effectivePrintSize);
         if (effectivePrintSize && a7) {
           const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
           const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
@@ -3108,7 +3125,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       } else {
         m4 = Number(m.press_sheet) || 1;
         setValue(`materials.${index}.press_sheet`, String(m4));
-        let effectivePrintSize = m.print_size || getDefaultPrintSize(cat, a7, false, bt, coverRules);
+        let effectivePrintSize = getDefaultPrintSize(cat, a7, false, bt, coverRules);
         setValue(`materials.${index}.print_size`, effectivePrintSize);
         const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
         const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
@@ -3120,7 +3137,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       if (m4 > 0) {
         const isDividedCat = cat === 'Брошур' || cat === 'Флаер' || cat === 'Хортой маягт' || cat === 'Нэрийн хуудас';
-        const printSizeForDivs = coverLogic?.printSize || m.print_size || getDefaultPrintSize(cat, a7, isCover, bt, coverRules);
+        const printSizeForDivs = coverLogic?.printSize || (isCover ? getDefaultPrintSize(cat, a7, true, bt, coverRules) : getDefaultPrintSize(cat, a7, false, bt, coverRules));
         const divs = calculatePaperDivision(printSizeForDivs, a7) || 1;
         const base = isDividedCat ? Math.ceil(a6 / divs) : (Number(m.base_qty) > 0 ? Number(m.base_qty) : a6);
         if (base > 0 && Number(m.base_qty) !== base) {
@@ -3154,6 +3171,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue(`operations.${opIdx}.is_pricing`, curCost > 0);
       setValue(`operations.${opIdx}.notes`, `${a7} хатуу хавтас угсрах, наах`);
     }
+
+    const updatedMats = getValues('materials') || [];
+    setValue('materials', updatedMats);
+    replaceMaterials(updatedMats);
+
+    const currentOps = getValues('operations') || [];
+    const syncedOps = syncStandardProductionOperations(currentOps, {
+      category: cat,
+      binding_type: bt,
+      total_qty: a6,
+      total_pages: b4,
+      cover_color: getValues('cover_color'),
+      inner_color: getValues('inner_color'),
+      materials: updatedMats,
+      size: a7
+    });
+    setValue('operations', syncedOps);
+    replaceOps(syncedOps);
   };
 
   const handleAddHardcoverAuxiliary = (overrideOptions?: { isPrintedEndpaper?: boolean; hasRibbon?: boolean }) => {
@@ -6519,6 +6554,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         setValue(`materials.${index}.total_qty`, totalQ);
                                         setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
                                         setValue('size', val);
+                                        const updatedMats = getValues('materials') || [];
+                                        setValue('materials', updatedMats);
+                                        replaceMaterials(updatedMats);
                                         return;
                                       }
 
@@ -6574,6 +6612,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         const total = Number(formValues.materials?.[index]?.total_qty) || 0;
                                         setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
                                       }
+
+                                      const updatedMats = getValues('materials') || [];
+                                      setValue('materials', updatedMats);
+                                      replaceMaterials(updatedMats);
                                     }}
                                     isClearable={false}
                                     isDisabled={isSpecialStrap}
@@ -6608,7 +6650,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             }}
                             title="Холбогдох хэвлэлийн хуудас"
                           >
-                            {formValues.materials?.[index]?.press_sheet ? `${formValues.materials?.[index]?.press_sheet} х.х` : '1'}
+                            {formValues.materials?.[index]?.press_sheet && formValues.materials?.[index]?.press_sheet !== '1' ? `${formValues.materials?.[index]?.press_sheet} х.х` : '—'}
                           </div>
                         ) : isSpecialCoating ? (
                           <div 
@@ -6683,6 +6725,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { 
                                   setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
                                 }
+                                const updatedMats = getValues('materials') || [];
+                                setValue('materials', updatedMats);
+                                replaceMaterials(updatedMats);
                               }
                             })} />
                           );
