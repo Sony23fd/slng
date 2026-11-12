@@ -65,7 +65,7 @@ const ALL_PRODUCT_CATEGORIES = [
     default_materials: ['Хайрцагны картон 350гр B1 (787x1092)', 'Бүрэлт (Матт)']
   },
   {
-    name: 'Түргэн хэвлэл',
+    name: 'Түргэн хэвлэл Konica',
     calc_mode: 'STANDARD_MODE',
     has_cover: false,
     has_inner: true,
@@ -73,8 +73,8 @@ const ALL_PRODUCT_CATEGORIES = [
     has_pages: false,
     has_bookmark: false,
     waste_qty: 0,
-    default_operations: ['Огтлоо (Жижиг)'],
-    default_materials: ['Шохойтой цаас 250гр A3 (297x420)']
+    default_operations: ['Огтлоо (Жижиг)', 'Чанарын эцсийн хяналт'],
+    default_materials: ['Шохойтой цаас 250гр A0 (889x1194)']
   },
 
   {

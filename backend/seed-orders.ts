@@ -232,7 +232,7 @@ async function main() {
     // 4. Түргэн хэвлэл
     else if (type === 4) {
       orderData.product_name = "Түргэн хэвлэл";
-      orderData.category = "Түргэн хэвлэл";
+      orderData.category = "Түргэн хэвлэл Konica";
       orderData.size = "A3";
       orderData.is_urgent = true;
       notes = "Түргэн хэвлэл - Үйлчлүүлэгч хүлээж байна!";
