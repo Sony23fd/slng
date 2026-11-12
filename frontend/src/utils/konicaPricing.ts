@@ -1,21 +1,21 @@
 /**
- * SelengePress ERP - Konica Minolta Quick Print (Түргэн хэвлэл) Pricing Tariff
+ * SelengePress ERP - Quick Print (Түргэн хэвлэл) Pricing Tariff
  *
  * Энэхүү тарифын сан нь SelengePress-ийн Konica Minolta дижитал түргэн хэвлэлийн
- * батлагдсан албан ёсны үнийн хүснэгтийн дагуу бодогдоно:
- * 1. Хэвлэлийн үнэ (1-200 ш): A4, A3 (105гр - 300гр, 1 ба 2 тал)
- * 2. Хуудастай хэвлэлийн үнэ (1-100 ш, A4 нэг хуудсаар): 105гр - 300гр, 1 ба 2 тал
+ * батлагдсан албан ёсны үнийн хүснэгтийн ("ТҮРГЭН ХЭВЛЭЛ ҮНИЙН САНАЛ") дагуу бодогдоно:
+ * 1. Хэвлэлийн үнэ (1-200 ш): Өнгөт /A4/, Өнгөт /A3/ (105гр - 300гр, 1 ба 2 тал)
+ * 2. Хуудастай хэвлэлийн үнэ (1-100 ш): Өнгөт /A4/ (105гр - 300гр, 1 ба 2 тал)
  * 3. Албан бланк (100 гр): A5 (330₮), A4 (440₮)
- * 4. Нэрийн хуудас: 300гр матт (330₮/440₮), Арт цаас (550₮/660₮), Лактай (880₮), Булан дугуйлах (+50₮)
- * 5. Хар ном (Номын гөлгөр шар 80гр): A5, A4, A3 (1 тал ба 2 тал)
+ * 4. Нэрийн хуудас: 300 гр матт цаас (330₮/440₮), Арт цаас (550₮/660₮), Лактай (880₮), Булан дугуйлах (+50₮)
+ * 5. Хар ном (Номын гөлгөр шар 80 гр): A5, A4, A3 (1 тал ба 2 тал)
  */
 
 export type KonicaSubtype = 
-  | 'PRINT_SHEET'       // Өнгөт хуудас (A4 / A3)
-  | 'PRINT_MULTI_PAGE'  // Хуудастай товхимол (A4)
-  | 'OFFICIAL_BLANK'    // Албан бланк (A5 / A4)
+  | 'PRINT_SHEET'       // Хэвлэлийн үнэ (1-200 ш)
+  | 'PRINT_MULTI_PAGE'  // Хуудастай хэвлэлийн үнэ (1-100 ш)
+  | 'OFFICIAL_BLANK'    // Албан бланк (100 гр)
   | 'BUSINESS_CARD'     // Нэрийн хуудас
-  | 'BLACK_BOOK';       // Хар ном (Шар цаас 80гр)
+  | 'BLACK_BOOK';       // Хар ном (Номын гөлгөр шар 80 гр)
 
 export interface KonicaTariffQuery {
   subtype: KonicaSubtype;
@@ -158,7 +158,7 @@ export function getKonicaTariff(query: KonicaTariffQuery): KonicaTariffResult {
       unitPrice,
       pricePerSheet: unitPrice,
       sheetCountPerCopy: 1,
-      description: `Konica Албан бланк 100гр (${blankSize}) - ${unitPrice.toLocaleString()} ₮`,
+      description: `Албан бланк (100 гр, ${blankSize}) - ${unitPrice.toLocaleString()} ₮`,
       matchedGrammage: 100,
       matchedSize: blankSize,
       matchedSides: 1
@@ -185,7 +185,7 @@ export function getKonicaTariff(query: KonicaTariffQuery): KonicaTariffResult {
       unitPrice,
       pricePerSheet: unitPrice,
       sheetCountPerCopy: 1,
-      description: `Konica Нэрийн хуудас [${rates.name}, ${sides} тал${cornerDesc}] - ${unitPrice.toLocaleString()} ₮`,
+      description: `Нэрийн хуудас [${rates.name}, ${sides} тал${cornerDesc}] - ${unitPrice.toLocaleString()} ₮`,
       matchedGrammage: 300,
       matchedSize: 'Нэрийн хуудас (90х50)',
       matchedSides: sides
@@ -207,14 +207,14 @@ export function getKonicaTariff(query: KonicaTariffQuery): KonicaTariffResult {
       unitPrice,
       pricePerSheet,
       sheetCountPerCopy: sheetCount,
-      description: `Konica Хар ном (Шар 80гр, ${bookSize}, ${sides} тал, ${sheetCount} хуудас × ${pricePerSheet}₮) - ${unitPrice.toLocaleString()} ₮`,
+      description: `Хар ном [Номын гөлгөр шар 80 гр, ${bookSize}, ${sides} тал, ${sheetCount} хуудас × ${pricePerSheet}₮] - ${unitPrice.toLocaleString()} ₮`,
       matchedGrammage: 80,
       matchedSize: bookSize,
       matchedSides: sides
     };
   }
 
-  // --- Дэд төрөл 4: Хуудастай хэвлэл (1-100 ш, A4 нэг хуудсаар) ---
+  // --- Дэд төрөл 4: Хуудастай хэвлэлийн үнэ (1-100 ш) ---
   if (subtype === 'PRINT_MULTI_PAGE') {
     const available = [105, 128, 157, 200, 250, 300];
     const closestGram = available.reduce((prev, curr) => 
@@ -231,14 +231,14 @@ export function getKonicaTariff(query: KonicaTariffQuery): KonicaTariffResult {
       unitPrice,
       pricePerSheet,
       sheetCountPerCopy: sheetCount,
-      description: `Konica Хуудастай товхимол (A4, ${closestGram}гр, ${sides} тал, ${sheetCount} хуудас × ${pricePerSheet}₮) - ${unitPrice.toLocaleString()} ₮`,
+      description: `Хуудастай хэвлэлийн үнэ /Өнгөт A4/ (${closestGram} гр, ${sides} тал, ${sheetCount} хуудас × ${pricePerSheet}₮) - ${unitPrice.toLocaleString()} ₮`,
       matchedGrammage: closestGram,
       matchedSize: 'A4',
       matchedSides: sides
     };
   }
 
-  // --- Дэд төрөл 5: Өнгөт хуудас (A4 / A3, Хэвлэлийн үнэ 1-200 ш) ---
+  // --- Дэд төрөл 5: Хэвлэлийн үнэ (1-200 ш) ---
   const sheetSize: 'A4' | 'A3' = normSize === 'A3' ? 'A3' : 'A4';
   const sizeMap = KONICA_SHEET_RATES[sheetSize];
   const availableGrams = [105, 128, 157, 200, 250, 300];
@@ -252,7 +252,7 @@ export function getKonicaTariff(query: KonicaTariffQuery): KonicaTariffResult {
     unitPrice,
     pricePerSheet: unitPrice,
     sheetCountPerCopy: 1,
-    description: `Konica Өнгөт ${sheetSize} (${matchedGram}гр, ${sides} тал) - ${unitPrice.toLocaleString()} ₮`,
+    description: `Хэвлэлийн үнэ /Өнгөт ${sheetSize}/ (${matchedGram} гр, ${sides} тал) - ${unitPrice.toLocaleString()} ₮`,
     matchedGrammage: matchedGram,
     matchedSize: sheetSize,
     matchedSides: sides

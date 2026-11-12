@@ -1153,7 +1153,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       { value: 'Ном өнгөт', label: 'Ном өнгөт' },
       { value: 'Сонин', label: 'Сонин' },
       { value: 'Сэтгүүл', label: 'Сэтгүүл' },
-      { value: 'Түргэн хэвлэл Konica', label: 'Түргэн хэвлэл Konica' },
+      { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл' },
       { value: 'Тор', label: 'Тор' },
       { value: 'Хортой маягт', label: 'Хортой маягт' },
       { value: 'Шошго', label: 'Шошго' },
@@ -4783,7 +4783,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <span style={{ fontSize: '18px' }}>⚡</span>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '14px', color: '#0369a1', letterSpacing: '-0.01em' }}>
-                      Konica Minolta Дижитал Түргэн Хэвлэлийн Тариф
+                      ТҮРГЭН ХЭВЛЭЛ ҮНИЙН САНАЛ (KONICA MINOLTA)
                     </div>
                     <div style={{ fontSize: '11px', color: '#0284c7' }}>
                       {activeKonicaTariff?.description || 'Албан ёсны батлагдсан тарифаар нэгж үнэ автоматаар бодогдоно'}
@@ -4845,11 +4845,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {[
-                    { key: 'PRINT_SHEET', label: '📄 Өнгөт хуудас (1-200ш)', hint: 'A4/A3 105-300гр' },
-                    { key: 'PRINT_MULTI_PAGE', label: '📖 Хуудастай товхимол (1-100ш)', hint: 'A4 нэг хуудсаар' },
-                    { key: 'OFFICIAL_BLANK', label: '📝 Албан бланк (100гр)', hint: 'A5 (330₮) / A4 (440₮)' },
-                    { key: 'BUSINESS_CARD', label: '💳 Нэрийн хуудас (Konica)', hint: '300гр / Арт / Лак' },
-                    { key: 'BLACK_BOOK', label: '📚 Хар ном (Шар 80гр)', hint: 'A5/A4/A3 номын шар' }
+                    { key: 'PRINT_SHEET', label: 'Хэвлэлийн үнэ (1-200 ш)', hint: 'Өнгөт /A4/, Өнгөт /A3/' },
+                    { key: 'PRINT_MULTI_PAGE', label: 'Хуудастай хэвлэлийн үнэ (1-100 ш)', hint: 'Өнгөт /A4/' },
+                    { key: 'OFFICIAL_BLANK', label: 'Албан бланк (100 гр)', hint: 'A5 (330₮), A4 (440₮)' },
+                    { key: 'BUSINESS_CARD', label: 'Нэрийн хуудас', hint: '300 гр матт цаас, Арт цаас, Лактай, Булан дугуйлах' },
+                    { key: 'BLACK_BOOK', label: 'Хар ном (Номын гөлгөр шар 80 гр)', hint: 'A5, A4, A3' }
                   ].map(item => {
                     const isActive = konicaSubtype === item.key;
                     return (
@@ -4886,11 +4886,11 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   <>
                     {konicaSubtype === 'PRINT_SHEET' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Формат:</span>
                         {[
-                          { label: 'A4', val: 'А4' },
-                          { label: 'А3 (8 гарах)', val: 'А3 (8 гарах)' },
-                          { label: 'А3 (6 гарах)', val: 'А3 (6 гарах)' },
+                          { label: 'Өнгөт /A4/', val: 'А4' },
+                          { label: 'Өнгөт /A3/ (8 гарах)', val: 'А3 (8 гарах)' },
+                          { label: 'Өнгөт /A3/ (6 гарах)', val: 'А3 (6 гарах)' },
                           { label: '480х320 (5 гарна)', val: '480х320 (А0-оос 5 гарна)' }
                         ].map(s => {
                           const isCur = formValues.size === s.val;
@@ -4918,7 +4918,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас (грамм):</span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Грамм:</span>
                       {[105, 128, 157, 200, 250, 300].map(g => {
                         const curGram = parseGrammage(formValues.materials?.[0]?.material_name, 250);
                         const isCur = curGram === g;
@@ -4947,8 +4947,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
                       {[
-                        { label: '1 тал (4+0)', val: 1 as const },
-                        { label: '2 тал (4+4)', val: 2 as const }
+                        { label: '1 тал', val: 1 as const },
+                        { label: '2 тал', val: 2 as const }
                       ].map(side => {
                         const curSide = parseSidesFromColor(formValues.cover_color);
                         const isCur = curSide === side.val;
@@ -5002,7 +5002,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   </>
                 )}
 
-                {/* 2. Албан бланк сонголтууд */}
+                {/* 2. Албан бланк (100 гр) сонголтууд */}
                 {konicaSubtype === 'OFFICIAL_BLANK' && (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -5034,7 +5034,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       })}
                     </div>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>
-                      Цаас: Офсет 100гр (Батлагдсан тариф)
+                      100 гр
                     </div>
                   </>
                 )}
@@ -5045,7 +5045,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас:</span>
                       {[
-                        { label: '300 гр матт (330/440₮)', val: '300 гр матт цаас' },
+                        { label: '300 гр матт цаас (330/440₮)', val: '300 гр матт цаас' },
                         { label: 'Арт цаас (550/660₮)', val: 'Арт цаас' },
                         { label: 'Лактай (880₮)', val: 'Лактай' }
                       ].map(c => {
@@ -5108,7 +5108,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                         checked={konicaRoundedCorners}
                         onChange={handleToggleRoundedCorners}
                       />
-                      <span>✂️ Булан дугуйлах (+50₮)</span>
+                      <span>Булан дугуйлах (+50₮)</span>
                     </label>
                   </>
                 )}
@@ -5117,7 +5117,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 {konicaSubtype === 'BLACK_BOOK' && (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ [Номын гөлгөр шар 80 гр]:</span>
                       {[
                         { label: 'A5 (150/300₮)', val: 'A5' },
                         { label: 'A4 (200/400₮)', val: 'A4' },
