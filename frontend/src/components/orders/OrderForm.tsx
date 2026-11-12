@@ -13,6 +13,14 @@ import { parseMaterial, extractSheetSize } from '../../utils/parseMaterial';
 import { calculatePaperDivision, compareProductSizes } from '../../utils/paperSizes';
 import CalculationHelpBadge from '../common/CalculationHelpBadge';
 import TemplateCatalogModal from './TemplateCatalogModal';
+import { 
+  getKonicaTariff, 
+  KonicaSubtype, 
+  parseGrammage, 
+  parseSidesFromColor, 
+  normalizeKonicaSize,
+  KonicaTariffResult 
+} from '../../utils/konicaPricing';
 
 interface OrderFormValues {
   // 1. Үндсэн
@@ -363,6 +371,7 @@ function getHardcoverAuxiliarySpecs(size?: string) {
 
 function getDefaultPrintSize(category?: string, productSize?: string, isCover?: boolean, bindingType?: string, coverRules?: any[]): string {
   const cat = (category || '').trim();
+  if (!cat) return '';
   const s = (productSize || 'A5').trim().toUpperCase();
   const bt = (bindingType || '').trim();
 
@@ -389,6 +398,7 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
 
 function getDefaultColorsForCategory(category?: string): { coverColor: string; innerColor: string } {
   const cat = (category || '').trim();
+  if (!cat) return { coverColor: '', innerColor: '' };
   // Digital / non-offset categories
   if (['Түргэн хэвлэл Konica', 'Даралт', 'Промо', 'Түргэн хэвлэл'].includes(cat)) {
     return { coverColor: '', innerColor: '' };
@@ -423,6 +433,7 @@ function getDefaultColorsForCategory(category?: string): { coverColor: string; i
 
 function getDefaultSizeForCategory(category?: string): string {
   const cat = (category || '').trim();
+  if (!cat) return '';
   if (cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica') return 'А3 (8 гарах)';
   if (cat === 'Постер') return 'A2';
   if (['Сэтгүүл', 'Танилцуулга', 'Брошур', 'Бланк', 'Албан бланк', 'Хавтас', 'Сертификат'].includes(cat)) return 'A4';
@@ -435,18 +446,19 @@ function getDefaultSizeForCategory(category?: string): string {
 
 function isCoverMaterial(m: any): boolean {
   if (!m) return false;
-  if (m.is_cover) return true;
-  if (typeof m.notes === 'string' && (m.notes === 'Хавтас' || m.notes.includes('Хавтасны цаас') || m.notes.startsWith('Хавтас'))) return true;
+  if (m.is_cover === true || m.is_cover === 1 || m.is_cover === 'true') return true;
+  if (typeof m.notes === 'string' && (m.notes.toLowerCase().includes('хавтас') || m.notes.startsWith('Хавтас'))) return true;
   return false;
 }
 
 function isInnerPageMaterial(m: any, category?: string, productCategories: any[] = []): boolean {
-  if (!m || isCoverMaterial(m)) return false;
+  if (!m || isCoverMaterial(m) || m.is_cover) return false;
   const aux = getMaterialType(m.material_name, m.notes);
   if (aux.isNonPrinted || aux.isAux || aux.type === 'coating' || aux.type === 'strap' || aux.type === 'ctp') {
     return false;
   }
   const cat = (category || '').trim();
+  if (!cat) return false;
   if (productCategories && productCategories.length > 0) {
     const catConfig = productCategories.find((c: any) => c.name === cat);
     if (catConfig && !catConfig.has_pages) {
@@ -882,6 +894,15 @@ const calculateMakeready = (
   baseQty: number,
   options?: MakereadyOptions | string | boolean
 ): number => {
+  // Дижитал түргэн хэвлэл (Konica) дээр хэвлэлийн хадаас тооцохгүй (AGENTS.md дүрэм А2)
+  if (options && typeof options === 'object') {
+    if (options.category === 'Түргэн хэвлэл' || options.category === 'Түргэн хэвлэл Konica') {
+      return 0;
+    }
+  } else if (typeof options === 'string' && (options === 'Түргэн хэвлэл' || options === 'Түргэн хэвлэл Konica')) {
+    return 0;
+  }
+
   // Determine if it should use Black print (Хар ном / 1-өнгө) table
   let isBlack = false;
   if (typeof options === 'boolean') {
@@ -975,6 +996,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     return { ...DEFAULT_BAG_DIMS };
   });
   const [selectedBagPreset, setSelectedBagPreset] = useState<string>('');
+  const [konicaSubtype, setKonicaSubtype] = useState<KonicaSubtype>(() => {
+    if (initialData) {
+      const pName = (initialData.product_name || '').toLowerCase();
+      const mName = (initialData.materials?.[0]?.material_name || '').toLowerCase();
+      const sName = (initialData.size || '').toLowerCase();
+      if (initialData.category === 'Албан бланк' || pName.includes('бланк')) return 'OFFICIAL_BLANK';
+      if (initialData.category === 'Нэрийн хуудас' || sName.includes('90x50') || pName.includes('нэрийн')) return 'BUSINESS_CARD';
+      if (mName.includes('шар') || pName.includes('хар ном') || mName.includes('номын')) return 'BLACK_BOOK';
+      if ((Number(initialData.total_pages) > 1) || pName.includes('хуудастай') || pName.includes('товхимол')) return 'PRINT_MULTI_PAGE';
+    }
+    return 'PRINT_SHEET';
+  });
+  const [konicaPaperType, setKonicaPaperType] = useState<string>('300 гр матт цаас');
+  const [konicaRoundedCorners, setKonicaRoundedCorners] = useState<boolean>(false);
 
   const OP_CATEGORIES = [
     { name: 'Хэвлэл', keywords: ['хэвлэгч', 'хэвлэл', 'хальс', 'эх бэлтгэл', 'cd'] },
@@ -1659,6 +1694,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     if (t.design_cost !== undefined) setValue('design_cost', t.design_cost);
     if (t.notes) setValue('notes', t.notes);
 
+    if (t.category === 'Түргэн хэвлэл' || t.category === 'Түргэн хэвлэл Konica') {
+      const tName = (t.template_name || '').toLowerCase();
+      if (tName.includes('бланк') || t.category === 'Албан бланк') {
+        setKonicaSubtype('OFFICIAL_BLANK');
+      } else if (tName.includes('нэрийн') || t.size === '90x50') {
+        setKonicaSubtype('BUSINESS_CARD');
+      } else if (tName.includes('хар ном') || tName.includes('шар')) {
+        setKonicaSubtype('BLACK_BOOK');
+      } else if (tName.includes('хуудастай') || (Number(t.total_pages) > 1)) {
+        setKonicaSubtype('PRINT_MULTI_PAGE');
+      } else {
+        setKonicaSubtype('PRINT_SHEET');
+      }
+    }
+
     // 2. Order data specifics
     if (t.order_data) {
       const od = typeof t.order_data === 'string' ? JSON.parse(t.order_data) : t.order_data;
@@ -1935,6 +1985,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         setValue('operations', fullySyncedOps);
         replaceOps(fullySyncedOps);
       }
+      if (od.manual_unit_price !== undefined && od.manual_unit_price !== null) {
+        setValue('manual_unit_price', Number(od.manual_unit_price));
+      }
     }
   };
 
@@ -2202,6 +2255,321 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
   }, [formValues.category, prevCategory, productCategories, masterPrices, getValues, setValue]);
 
+  const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
+
+  const activeKonicaTariff = useMemo<KonicaTariffResult | null>(() => {
+    if (!isQuickPrint) return null;
+    const m0 = formValues.materials?.[0];
+    const matName = m0?.material_name || '';
+    const sides = parseSidesFromColor(formValues.cover_color);
+    const totalPages = Number(formValues.total_pages) || 1;
+    const currentSize = formValues.size || 'А3 (8 гарах)';
+    const grammage = parseGrammage(matName, konicaSubtype === 'OFFICIAL_BLANK' ? 100 : (konicaSubtype === 'BLACK_BOOK' ? 80 : 250));
+
+    return getKonicaTariff({
+      subtype: konicaSubtype,
+      size: currentSize,
+      grammage,
+      sides,
+      totalPages,
+      paperType: konicaPaperType,
+      roundedCorners: konicaRoundedCorners,
+      materialName: matName
+    });
+  }, [
+    isQuickPrint,
+    konicaSubtype,
+    formValues.size,
+    formValues.cover_color,
+    formValues.total_pages,
+    formValues.materials,
+    konicaPaperType,
+    konicaRoundedCorners
+  ]);
+
+  // Total pages dynamic synchronization for multi-page Konica products
+  useEffect(() => {
+    if (!isQuickPrint) return;
+    if (konicaSubtype === 'PRINT_MULTI_PAGE' || konicaSubtype === 'BLACK_BOOK') {
+      const pages = Number(formValues.total_pages) || 1;
+      const tResult = getKonicaTariff({
+        subtype: konicaSubtype,
+        size: formValues.size,
+        sides: parseSidesFromColor(formValues.cover_color),
+        totalPages: pages,
+        materialName: formValues.materials?.[0]?.material_name
+      });
+      if (tResult && tResult.unitPrice > 0) {
+        setValue('manual_unit_price', tResult.unitPrice);
+      }
+    }
+  }, [formValues.total_pages, isQuickPrint, konicaSubtype, formValues.size, formValues.cover_color]);
+
+  const handleSelectKonicaSubtype = (st: KonicaSubtype) => {
+    setKonicaSubtype(st);
+    const totalQ = Number(getValues('total_qty')) || 0;
+    
+    if (st === 'PRINT_SHEET') {
+      setValue('binding_type', 'Бусад');
+      setValue('total_pages', 1);
+      const curSize = getValues('size') || 'А3 (8 гарах)';
+      const norm = normalizeKonicaSize(curSize);
+      const targetSize = norm === 'A4' ? 'А4' : 'А3 (8 гарах)';
+      const divBy = norm === 'A4' ? 16 : 8;
+      setValue('size', targetSize);
+      
+      const curMat = getValues('materials.0.material_name') || '';
+      const curGram = parseGrammage(curMat, 250);
+      const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes(String(curGram)) && p.item_name.includes('Шохойтой') && p.item_name.includes('A0')) || {
+        item_name: `Шохойтой цаас ${curGram}гр A0 (889x1194)`,
+        unit_cost: 1400
+      };
+      setValue('materials.0.material_name', targetPaper.item_name);
+      setValue('materials.0.unit_cost', targetPaper.unit_cost);
+      setValue('materials.0.print_size', targetSize);
+      setValue('materials.0.divide_by', divBy);
+      setValue('materials.0.press_sheet', '1');
+      setValue('materials.0.base_qty', totalQ);
+      setValue('materials.0.extra_qty', 0);
+      setValue('materials.0.total_qty', totalQ);
+      setValue('materials.0.sheet_qty', Math.ceil(totalQ / divBy));
+      
+      const tResult = getKonicaTariff({
+        subtype: 'PRINT_SHEET',
+        size: targetSize,
+        grammage: curGram,
+        sides: parseSidesFromColor(getValues('cover_color')),
+        totalPages: 1
+      });
+      setValue('manual_unit_price', tResult.unitPrice);
+    } else if (st === 'PRINT_MULTI_PAGE') {
+      setValue('binding_type', 'Үдээстэй');
+      setValue('size', 'А4');
+      let pages = Number(getValues('total_pages')) || 0;
+      if (pages <= 1) {
+        pages = 8;
+        setValue('total_pages', 8);
+      }
+      const sides = parseSidesFromColor(getValues('cover_color')) || 2;
+      if (!getValues('cover_color')) setValue('cover_color', '4+4');
+      
+      const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('157гр') && p.item_name.includes('Шохойтой') && p.item_name.includes('A0')) || {
+        item_name: 'Шохойтой цаас 157гр A0 (889x1194)',
+        unit_cost: 890
+      };
+      const sheetsPerCopy = sides === 2 ? Math.ceil(pages / 2) : pages;
+      const totalSheets = totalQ * sheetsPerCopy;
+      setValue('materials.0.material_name', targetPaper.item_name);
+      setValue('materials.0.unit_cost', targetPaper.unit_cost);
+      setValue('materials.0.print_size', 'А4');
+      setValue('materials.0.divide_by', 16);
+      setValue('materials.0.press_sheet', '1');
+      setValue('materials.0.base_qty', totalSheets);
+      setValue('materials.0.extra_qty', 0);
+      setValue('materials.0.total_qty', totalSheets);
+      setValue('materials.0.sheet_qty', Math.ceil(totalSheets / 16));
+      
+      const tResult = getKonicaTariff({
+        subtype: 'PRINT_MULTI_PAGE',
+        size: 'A4',
+        grammage: 157,
+        sides,
+        totalPages: pages
+      });
+      setValue('manual_unit_price', tResult.unitPrice);
+    } else if (st === 'OFFICIAL_BLANK') {
+      setValue('binding_type', 'Бусад');
+      setValue('total_pages', 1);
+      const curSize = getValues('size');
+      const targetSize = (curSize === 'A5' || curSize === 'А5') ? 'A5' : 'A4';
+      setValue('size', targetSize);
+      setValue('cover_color', '4+0');
+      
+      const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('100гр') && p.item_name.includes('Офсет')) || {
+        item_name: 'Офсет цаас 100гр A0 (889x1194)',
+        unit_cost: 675
+      };
+      const divBy = targetSize === 'A5' ? 32 : 16;
+      setValue('materials.0.material_name', targetPaper.item_name);
+      setValue('materials.0.unit_cost', targetPaper.unit_cost);
+      setValue('materials.0.print_size', targetSize);
+      setValue('materials.0.divide_by', divBy);
+      setValue('materials.0.press_sheet', '1');
+      setValue('materials.0.base_qty', totalQ);
+      setValue('materials.0.extra_qty', 0);
+      setValue('materials.0.total_qty', totalQ);
+      setValue('materials.0.sheet_qty', Math.ceil(totalQ / divBy));
+      
+      const tResult = getKonicaTariff({
+        subtype: 'OFFICIAL_BLANK',
+        size: targetSize
+      });
+      setValue('manual_unit_price', tResult.unitPrice);
+    } else if (st === 'BUSINESS_CARD') {
+      setValue('binding_type', 'Бусад');
+      setValue('total_pages', 1);
+      setValue('size', '90x50');
+      if (!getValues('cover_color')) setValue('cover_color', '4+0');
+      
+      const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('300гр') && p.item_name.includes('Мат')) || {
+        item_name: 'Мат цаас 300гр A0 (889x1194)',
+        unit_cost: 1800
+      };
+      setValue('materials.0.material_name', targetPaper.item_name);
+      setValue('materials.0.unit_cost', targetPaper.unit_cost);
+      setValue('materials.0.print_size', 'A2');
+      setValue('materials.0.divide_by', 4);
+      setValue('materials.0.press_sheet', '1');
+      const baseCut = Math.ceil(totalQ / 40);
+      setValue('materials.0.base_qty', baseCut);
+      setValue('materials.0.extra_qty', 0);
+      setValue('materials.0.total_qty', baseCut);
+      setValue('materials.0.sheet_qty', Math.ceil(baseCut / 4));
+      
+      const tResult = getKonicaTariff({
+        subtype: 'BUSINESS_CARD',
+        paperType: konicaPaperType,
+        sides: parseSidesFromColor(getValues('cover_color')),
+        roundedCorners: konicaRoundedCorners
+      });
+      setValue('manual_unit_price', tResult.unitPrice);
+    } else if (st === 'BLACK_BOOK') {
+      setValue('binding_type', 'Үдээстэй');
+      const curSize = getValues('size');
+      const norm = normalizeKonicaSize(curSize);
+      const targetSize = norm === 'A3' ? 'A3' : (norm === 'A5' ? 'A5' : 'A4');
+      setValue('size', targetSize);
+      setValue('cover_color', '1+1');
+      let pages = Number(getValues('total_pages')) || 0;
+      if (pages <= 1) {
+        pages = 20;
+        setValue('total_pages', 20);
+      }
+      
+      const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('шар') && p.item_name.includes('80гр')) || {
+        item_name: 'Номын шар Хөнгөн 80гр A0 (889x1194)',
+        unit_cost: 510
+      };
+      const divBy = targetSize === 'A3' ? 8 : (targetSize === 'A5' ? 32 : 16);
+      const sheetsPerCopy = Math.ceil(pages / 2);
+      const totalSheets = totalQ * sheetsPerCopy;
+      setValue('materials.0.material_name', targetPaper.item_name);
+      setValue('materials.0.unit_cost', targetPaper.unit_cost);
+      setValue('materials.0.print_size', targetSize);
+      setValue('materials.0.divide_by', divBy);
+      setValue('materials.0.press_sheet', '1');
+      setValue('materials.0.base_qty', totalSheets);
+      setValue('materials.0.extra_qty', 0);
+      setValue('materials.0.total_qty', totalSheets);
+      setValue('materials.0.sheet_qty', Math.ceil(totalSheets / divBy));
+      
+      const tResult = getKonicaTariff({
+        subtype: 'BLACK_BOOK',
+        size: targetSize,
+        sides: 2,
+        totalPages: pages
+      });
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
+  const handleSelectKonicaGrammage = (gram: number) => {
+    const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes(String(gram)) && p.item_name.includes('Шохойтой') && p.item_name.includes('A0')) || {
+      item_name: `Шохойтой цаас ${gram}гр A0 (889x1194)`,
+      unit_cost: 1400
+    };
+    setValue('materials.0.material_name', targetPaper.item_name);
+    setValue('materials.0.unit_cost', targetPaper.unit_cost);
+    
+    const tResult = getKonicaTariff({
+      subtype: konicaSubtype,
+      size: getValues('size'),
+      grammage: gram,
+      sides: parseSidesFromColor(getValues('cover_color')),
+      totalPages: Number(getValues('total_pages')) || 1,
+      paperType: konicaPaperType,
+      roundedCorners: konicaRoundedCorners,
+      materialName: targetPaper.item_name
+    });
+    if (tResult) {
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
+  const handleSelectKonicaSides = (sides: 1 | 2) => {
+    const newColor = sides === 2 ? '4+4' : '4+0';
+    setValue('cover_color', newColor);
+    
+    const m0 = getValues('materials.0');
+    const tResult = getKonicaTariff({
+      subtype: konicaSubtype,
+      size: getValues('size'),
+      sides,
+      totalPages: Number(getValues('total_pages')) || 1,
+      paperType: konicaPaperType,
+      roundedCorners: konicaRoundedCorners,
+      materialName: m0?.material_name
+    });
+    if (tResult) {
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
+  const handleSelectKonicaSize = (sz: string) => {
+    setValue('size', sz);
+    let divBy = 8;
+    if (sz.includes('6')) divBy = 6;
+    else if (sz.includes('480') || sz.includes('5')) divBy = 5;
+    else if (sz.includes('A4') || sz.includes('А4')) divBy = 16;
+    else if (sz.includes('A5') || sz.includes('А5')) divBy = 32;
+    
+    setValue('materials.0.print_size', sz);
+    setValue('materials.0.divide_by', divBy);
+    const totalQ = Number(getValues('total_qty')) || 0;
+    setValue('materials.0.sheet_qty', Math.ceil(Number(getValues('materials.0.total_qty') || totalQ) / divBy));
+    
+    const m0 = getValues('materials.0');
+    const tResult = getKonicaTariff({
+      subtype: konicaSubtype,
+      size: sz,
+      sides: parseSidesFromColor(getValues('cover_color')),
+      totalPages: Number(getValues('total_pages')) || 1,
+      paperType: konicaPaperType,
+      roundedCorners: konicaRoundedCorners,
+      materialName: m0?.material_name
+    });
+    if (tResult) {
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
+  const handleSelectCardType = (cardType: string) => {
+    setKonicaPaperType(cardType);
+    const tResult = getKonicaTariff({
+      subtype: 'BUSINESS_CARD',
+      paperType: cardType,
+      sides: parseSidesFromColor(getValues('cover_color')),
+      roundedCorners: konicaRoundedCorners
+    });
+    if (tResult) {
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
+  const handleToggleRoundedCorners = () => {
+    const nextVal = !konicaRoundedCorners;
+    setKonicaRoundedCorners(nextVal);
+    const tResult = getKonicaTariff({
+      subtype: 'BUSINESS_CARD',
+      paperType: konicaPaperType,
+      sides: parseSidesFromColor(getValues('cover_color')),
+      roundedCorners: nextVal
+    });
+    if (tResult) {
+      setValue('manual_unit_price', tResult.unitPrice);
+    }
+  };
+
   const pricingParams = {
     total_product_qty: Number(formValues.total_qty) || 0,
     materials: formValues.materials || [],
@@ -2276,13 +2644,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     }
 
     const category = formValues.category || '';
+    const currentTotalQty = Number(formValues.total_qty) || 0;
     const NON_CTP_CATEGORIES = [
       'Түргэн хэвлэл Konica',
       'Даралт',
       'Промо',
       'Түргэн хэвлэл'
     ];
-    if (NON_CTP_CATEGORIES.includes(category)) {
+    if (NON_CTP_CATEGORIES.includes(category) || currentTotalQty === 0) {
       const mats = formValues.materials || [];
       const hasCtp = mats.some(m => {
         const aux = getMaterialType(m.material_name, m.notes);
@@ -2342,7 +2711,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       const printSize = m.print_size || (isCover ? 'B3' : (isBag ? 'B2' : (isBrochure ? 'A2' : 'A2')));
       const divisions = calculatePaperDivision(printSize, currentA7Size) || 1;
-      const mPressSheet = (Number(m.press_sheet) > 0 && !isNaN(Number(m.press_sheet))) ? Number(m.press_sheet) : 1;
+      let mPressSheet = (Number(m.press_sheet) > 0 && !isNaN(Number(m.press_sheet))) ? Number(m.press_sheet) : 1;
+      if (isInner) {
+        const b4 = Number(formValues.total_pages !== undefined ? formValues.total_pages : getValues('total_pages')) || 0;
+        if (b4 > 0) {
+          const calcPress = calculateInnerPressSheet(b4, printSize, currentA7Size);
+          if (calcPress > 0) mPressSheet = calcPress;
+        }
+      }
       const plates = calcPlates(colorToUse, mPressSheet, divisions, isSingleSheet);
 
       if (plates > 0) {
@@ -2468,7 +2844,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials', nextMats);
       replaceMaterials(nextMats);
     }
-  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.binding_type, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, productCategories, constants, getValues, setValue]);
+  }, [formValues.materials, formValues.cover_color, formValues.inner_color, formValues.binding_type, formValues.size, formValues.custom_width, formValues.custom_height, formValues.category, formValues.total_pages, formValues.total_qty, productCategories, constants, getValues, setValue]);
 
   useEffect(() => {
     const currentRounded = Math.round(prices.unitPrice).toString();
@@ -2782,7 +3158,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   const handleAddHardcoverAuxiliary = (overrideOptions?: { isPrintedEndpaper?: boolean; hasRibbon?: boolean }) => {
     const size = (getValues('size') || 'A5').toUpperCase();
-    const totalQty = Number(getValues('total_qty')) || 1000;
+    const totalQty = Number(getValues('total_qty')) || 0;
     const isPrintedEndpaper = overrideOptions?.isPrintedEndpaper !== undefined 
       ? overrideOptions.isPrintedEndpaper 
       : !!getValues('has_printed_endpaper');
@@ -2957,7 +3333,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     else if (rawSize.includes('B4')) size = 'B4';
     else if (rawSize.includes('A5')) size = 'A5';
 
-    const totalQty = Number(getValues('total_qty')) || 1000;
+    const totalQty = Number(getValues('total_qty')) || 0;
     const superSpecs = getSuperCoverSpecs(size);
     const coverDiv = superSpecs.coverDiv;
     const coverPrintSize = superSpecs.coverPrintSize;
@@ -3070,7 +3446,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
     const a7 = getA7Size();
     const bt = getValues('binding_type') || '';
-    const totalQty = Number(getValues('total_qty')) || 1000;
+    const totalQty = Number(getValues('total_qty')) || 0;
 
     const coverMat = currentMats.find((m: any) => m.is_cover);
     const mainMat = currentMats.find((m: any) => {
@@ -3961,6 +4337,15 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const a6 = Number(e.target.value) || 0;
                   const oldA6 = Number(getValues('total_qty')) || 0;
                   const materials = getValues('materials') || [];
+                  if (a6 === 0) {
+                    materials.forEach((m, index) => {
+                      setValue(`materials.${index}.base_qty`, 0);
+                      setValue(`materials.${index}.extra_qty`, 0);
+                      setValue(`materials.${index}.total_qty`, 0);
+                      setValue(`materials.${index}.sheet_qty`, 0);
+                    });
+                    return;
+                  }
                   materials.forEach((m, index) => {
                     if (!m.material_name || !m.material_name.trim()) return;
                     const aux = getMaterialType(m.material_name, m.notes);
@@ -4117,8 +4502,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     }
                   });
 
-                  // Ажиллагаануудын хэвлэх тоог материалын хамт шууд шинэчлэх
+                  // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
                   const updatedMats = getValues('materials') || [];
+                  setValue('materials', updatedMats);
+                  replaceMaterials(updatedMats);
                   const currentOps = getValues('operations') || [];
                   const syncedOps = syncStandardProductionOperations(currentOps, {
                     category: getValues('category'),
@@ -4379,6 +4766,445 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
               </select>
             </div>
           </div>
+
+          {/* ⚡ Konica Minolta Дижитал Түргэн Хэвлэлийн Тарифт Тооцооны самбар */}
+          {isQuickPrint && (
+            <div style={{
+              margin: '12px 0',
+              padding: '14px 18px',
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              border: '1.5px solid #0284c7',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(2, 132, 199, 0.08)'
+            }}>
+              {/* Дээд хэсэг: Гарчиг ба Идэвхтэй тарифт үнийн карт */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px', borderBottom: '1px solid #bae6fd', paddingBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>⚡</span>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '14px', color: '#0369a1', letterSpacing: '-0.01em' }}>
+                      Konica Minolta Дижитал Түргэн Хэвлэлийн Тариф
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#0284c7' }}>
+                      {activeKonicaTariff?.description || 'Албан ёсны батлагдсан тарифаар нэгж үнэ автоматаар бодогдоно'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{
+                    background: '#ffffff',
+                    border: '1.5px solid #0284c7',
+                    borderRadius: '6px',
+                    padding: '4px 12px',
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '6px'
+                  }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Тарифт нэгж үнэ:</span>
+                    <span style={{ fontSize: '16px', fontWeight: 800, color: '#0369a1' }}>
+                      {activeKonicaTariff ? activeKonicaTariff.unitPrice.toLocaleString() : '—'} ₮
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>/ш</span>
+                  </div>
+
+                  {formValues.manual_unit_price === activeKonicaTariff?.unitPrice ? (
+                    <span style={{ fontSize: '11px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontWeight: 700, border: '1px solid #86efac' }}>
+                      ✅ Үнэ холбогдсон
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeKonicaTariff) {
+                          setValue('manual_unit_price', activeKonicaTariff.unitPrice);
+                        }
+                      }}
+                      style={{
+                        background: '#0284c7',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '5px 10px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                      title="Тарифт үнийг захиалгын нэгж үнэ рүү оноох"
+                    >
+                      🔄 Тарифт үнийг оноох ({activeKonicaTariff?.unitPrice.toLocaleString()} ₮)
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 5 Дэд төрлийн сонголт (Subtype Pills) */}
+              <div style={{ marginBottom: '10px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.03em' }}>
+                  Бүтээгдэхүүний дэд төрөл (Тарифын хүснэгт):
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[
+                    { key: 'PRINT_SHEET', label: '📄 Өнгөт хуудас (1-200ш)', hint: 'A4/A3 105-300гр' },
+                    { key: 'PRINT_MULTI_PAGE', label: '📖 Хуудастай товхимол (1-100ш)', hint: 'A4 нэг хуудсаар' },
+                    { key: 'OFFICIAL_BLANK', label: '📝 Албан бланк (100гр)', hint: 'A5 (330₮) / A4 (440₮)' },
+                    { key: 'BUSINESS_CARD', label: '💳 Нэрийн хуудас (Konica)', hint: '300гр / Арт / Лак' },
+                    { key: 'BLACK_BOOK', label: '📚 Хар ном (Шар 80гр)', hint: 'A5/A4/A3 номын шар' }
+                  ].map(item => {
+                    const isActive = konicaSubtype === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => handleSelectKonicaSubtype(item.key as KonicaSubtype)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: isActive ? 700 : 500,
+                          color: isActive ? '#ffffff' : '#1e293b',
+                          backgroundColor: isActive ? '#0284c7' : '#ffffff',
+                          border: isActive ? '1px solid #0369a1' : '1px solid #cbd5e1',
+                          cursor: 'pointer',
+                          boxShadow: isActive ? '0 1px 3px rgba(2, 132, 199, 0.3)' : 'none',
+                          transition: 'all 0.15s ease'
+                        }}
+                        title={item.hint}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Дэд сонголтуудын эгнээ (Subtype specifics) */}
+              <div style={{ background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '6px', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px' }}>
+                
+                {/* 1. Өнгөт хуудас & Хуудастай товхимол сонголтууд */}
+                {(konicaSubtype === 'PRINT_SHEET' || konicaSubtype === 'PRINT_MULTI_PAGE') && (
+                  <>
+                    {konicaSubtype === 'PRINT_SHEET' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                        {[
+                          { label: 'A4', val: 'А4' },
+                          { label: 'А3 (8 гарах)', val: 'А3 (8 гарах)' },
+                          { label: 'А3 (6 гарах)', val: 'А3 (6 гарах)' },
+                          { label: '480х320 (5 гарна)', val: '480х320 (А0-оос 5 гарна)' }
+                        ].map(s => {
+                          const isCur = formValues.size === s.val;
+                          return (
+                            <button
+                              key={s.val}
+                              type="button"
+                              onClick={() => handleSelectKonicaSize(s.val)}
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: isCur ? 700 : 500,
+                                background: isCur ? '#0284c7' : '#f1f5f9',
+                                color: isCur ? '#ffffff' : '#334155',
+                                border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {s.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас (грамм):</span>
+                      {[105, 128, 157, 200, 250, 300].map(g => {
+                        const curGram = parseGrammage(formValues.materials?.[0]?.material_name, 250);
+                        const isCur = curGram === g;
+                        return (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => handleSelectKonicaGrammage(g)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {g} гр
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                      {[
+                        { label: '1 тал (4+0)', val: 1 as const },
+                        { label: '2 тал (4+4)', val: 2 as const }
+                      ].map(side => {
+                        const curSide = parseSidesFromColor(formValues.cover_color);
+                        const isCur = curSide === side.val;
+                        return (
+                          <button
+                            key={side.val}
+                            type="button"
+                            onClick={() => handleSelectKonicaSides(side.val)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {side.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {konicaSubtype === 'PRINT_MULTI_PAGE' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
+                        {[8, 12, 16, 20, 24, 32, 48].map(p => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                              setValue('total_pages', p);
+                            }}
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              fontSize: '10.5px',
+                              background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
+                              color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
+                              border: '1px solid #cbd5e1',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 2. Албан бланк сонголтууд */}
+                {konicaSubtype === 'OFFICIAL_BLANK' && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                      {[
+                        { label: 'А5 (330 ₮)', val: 'A5' },
+                        { label: 'А4 (440 ₮)', val: 'A4' }
+                      ].map(s => {
+                        const isCur = formValues.size === s.val || (s.val === 'A4' && formValues.size === 'А4');
+                        return (
+                          <button
+                            key={s.val}
+                            type="button"
+                            onClick={() => handleSelectKonicaSize(s.val)}
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              fontSize: '11.5px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                      Цаас: Офсет 100гр (Батлагдсан тариф)
+                    </div>
+                  </>
+                )}
+
+                {/* 3. Нэрийн хуудас сонголтууд */}
+                {konicaSubtype === 'BUSINESS_CARD' && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас:</span>
+                      {[
+                        { label: '300 гр матт (330/440₮)', val: '300 гр матт цаас' },
+                        { label: 'Арт цаас (550/660₮)', val: 'Арт цаас' },
+                        { label: 'Лактай (880₮)', val: 'Лактай' }
+                      ].map(c => {
+                        const isCur = konicaPaperType === c.val;
+                        return (
+                          <button
+                            key={c.val}
+                            type="button"
+                            onClick={() => handleSelectCardType(c.val)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {c.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                      {[
+                        { label: '1 тал', val: 1 as const },
+                        { label: '2 тал', val: 2 as const }
+                      ].map(side => {
+                        const curSide = parseSidesFromColor(formValues.cover_color);
+                        const isCur = curSide === side.val;
+                        return (
+                          <button
+                            key={side.val}
+                            type="button"
+                            onClick={() => handleSelectKonicaSides(side.val)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {side.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#1e293b', background: konicaRoundedCorners ? '#e0f2fe' : '#f8fafc', padding: '3px 8px', borderRadius: '4px', border: konicaRoundedCorners ? '1px solid #0284c7' : '1px solid #cbd5e1' }}>
+                      <input
+                        type="checkbox"
+                        checked={konicaRoundedCorners}
+                        onChange={handleToggleRoundedCorners}
+                      />
+                      <span>✂️ Булан дугуйлах (+50₮)</span>
+                    </label>
+                  </>
+                )}
+
+                {/* 4. Хар ном сонголтууд */}
+                {konicaSubtype === 'BLACK_BOOK' && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                      {[
+                        { label: 'A5 (150/300₮)', val: 'A5' },
+                        { label: 'A4 (200/400₮)', val: 'A4' },
+                        { label: 'A3 (300/600₮)', val: 'A3' }
+                      ].map(s => {
+                        const isCur = formValues.size === s.val;
+                        return (
+                          <button
+                            key={s.val}
+                            type="button"
+                            onClick={() => handleSelectKonicaSize(s.val)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                      {[
+                        { label: '1 тал', val: 1 as const },
+                        { label: '2 тал', val: 2 as const }
+                      ].map(side => {
+                        const curSide = parseSidesFromColor(formValues.cover_color);
+                        const isCur = curSide === side.val;
+                        return (
+                          <button
+                            key={side.val}
+                            type="button"
+                            onClick={() => handleSelectKonicaSides(side.val)}
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? 700 : 500,
+                              background: isCur ? '#0284c7' : '#f1f5f9',
+                              color: isCur ? '#ffffff' : '#334155',
+                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {side.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
+                      {[16, 20, 32, 50, 64, 100, 160].map(p => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setValue('total_pages', p);
+                          }}
+                          style={{
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            fontSize: '10.5px',
+                            background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
+                            color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
+                            border: '1px solid #cbd5e1',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+              </div>
+            </div>
+          )}
 
           {/* 2-р эгнээ: Эх бэлтгэл ба Нэмэлт сонголтууд цэгцтэй нэг эгнээнд */}
           <div className="erp-sec2-row2">
@@ -4842,6 +5668,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                     if (m4 > 0) {
                       const totalQ = Number(getValues('total_qty')) || 0;
+                      if (totalQ === 0) {
+                        setValue(`materials.${index}.base_qty`, 0);
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, 0);
+                        setValue(`materials.${index}.sheet_qty`, 0);
+                        return;
+                      }
                       const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
                       if (base > 0 && Number(m.base_qty) !== base) {
                         setValue(`materials.${index}.base_qty`, base);
@@ -4862,8 +5695,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                     }
                   });
 
-                  // Ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
+                  // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
                   const updatedMats = getValues('materials') || [];
+                  setValue('materials', updatedMats);
+                  replaceMaterials(updatedMats);
                   const currentOps = getValues('operations') || [];
                   const syncedOps = syncStandardProductionOperations(currentOps, {
                     category,
@@ -4962,6 +5797,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           }
         >
           
+          {(!formValues.category || !formValues.total_qty) && (
+            <div style={{ margin: '0 0 0.6rem 0', padding: '0.4rem 0.75rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', fontSize: '0.78rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>💡</span>
+              <span><strong>Санамж:</strong> Цаас болон материалын бодолтыг үнэн зөв ажиллуулахын тулд эхлээд дээрх <strong>Бүтээгдэхүүний ангилал</strong> болон <strong>Хэвлэгдэх тоо нийт</strong>-ийг оруулна уу.</span>
+            </div>
+          )}
           <div className="table-responsive" style={{ marginBottom: '1rem' }}>
             <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '930px' : '500px' }}>
               <colgroup>
@@ -5178,8 +6019,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     if (val) {
                                       const selectedAux = getMaterialType(val);
                                       const a7 = getA7Size();
-                                      const totalQty = Number(getValues('total_qty')) || 1000;
-                                      const isCover = Boolean(formValues.materials?.[index]?.is_cover);
+                                      const tQ = Number(getValues('total_qty'));
+                                      const totalQty = isNaN(tQ) || tQ < 0 ? 0 : tQ;
+                                      const isCover = Boolean(formValues.materials?.[index]?.is_cover || formValues.materials?.[index]?.notes?.includes('Хавтас'));
                                       const bt = formValues.binding_type || '';
                                       const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
                                       const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
@@ -5374,29 +6216,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           setValue(`materials.${index}.print_size`, coverPrintSize);
                                           printSize = coverPrintSize;
                                         }
-                                        const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
+                                        const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
                                         setValue(`materials.${index}.base_qty`, base);
-                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
+                                        const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
                                         setValue(`materials.${index}.extra_qty`, extra);
                                         const divs = calculatePaperDivision(coverPrintSize, a7);
                                         const setups = calculateSetups(m4, divs);
-                                        const total = (base * m4) + (extra * setups);
+                                        const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
                                         setValue(`materials.${index}.total_qty`, total);
-                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                        setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
                                         return;
                                       } else if (!isCover && isInnerPageMaterial({ material_name: val, notes: formValues.materials?.[index]?.notes, is_cover: false }, formValues.category)) {
                                         const b4 = Number(getValues('total_pages')) || 0;
                                         if (b4 > 0 && printSize && a7) {
                                           const m4 = calculateInnerPressSheet(b4, printSize, a7);
                                           setValue(`materials.${index}.press_sheet`, String(m4));
-                                          const base = Number(getValues(`materials.${index}.base_qty`)) || totalQty;
-                                          const extra = calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.inner_color });
+                                          const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
+                                          setValue(`materials.${index}.base_qty`, base);
+                                          const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.inner_color });
                                           setValue(`materials.${index}.extra_qty`, extra);
                                           const divs = calculatePaperDivision(printSize, a7);
                                           const setups = calculateSetups(m4, divs);
-                                          const total = (base * m4) + (extra * setups);
+                                          const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
                                           setValue(`materials.${index}.total_qty`, total);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                          setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
                                           return;
                                         }
                                       } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
@@ -5404,14 +6247,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                         const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') 
                                           ? (calculatePaperDivision(printSize, a7) || 1) 
                                           : 1;
-                                        const base = Math.ceil(totalQty / pDiv);
+                                        const base = totalQty === 0 ? 0 : Math.ceil(totalQty / pDiv);
                                         setValue(`materials.${index}.base_qty`, base);
-                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.cover_color });
+                                        const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.cover_color });
                                         setValue(`materials.${index}.extra_qty`, extra);
                                         const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') ? calculateSetups(1, pDiv) : 1;
-                                        const total = (base * 1) + (extra * setups);
+                                        const total = totalQty === 0 ? 0 : ((base * 1) + (extra * setups));
                                         setValue(`materials.${index}.total_qty`, total);
-                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                        setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
                                         return;
                                       }
 
@@ -5463,6 +6306,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                 {...register(`materials.${index}.is_cover`, {
                                   onChange: (e) => {
                                     const isCov = e.target.checked;
+                                    setValue(`materials.${index}.is_cover`, isCov);
                                     const bt = getValues('binding_type') || (isCov ? 'Наалттай' : '');
                                     const b4 = Number(getValues('total_pages')) || 0;
                                     const a7 = getA7Size();
@@ -5506,24 +6350,25 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                     }
 
                                     const totalQ = Number(getValues('total_qty')) || 0;
-                                    const base = Number(getValues(`materials.${index}.base_qty`)) > 0 ? Number(getValues(`materials.${index}.base_qty`)) : totalQ;
-                                    if (base > 0 && Number(getValues(`materials.${index}.base_qty`)) !== base) {
-                                      setValue(`materials.${index}.base_qty`, base);
-                                    }
+                                    const base = totalQ > 0 ? (Number(getValues(`materials.${index}.base_qty`)) > 0 ? Number(getValues(`materials.${index}.base_qty`)) : totalQ) : 0;
+                                    setValue(`materials.${index}.base_qty`, base);
                                     const curMatName = getValues(`materials.${index}.material_name`) || '';
-                                    const extra = curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') 
+                                    const extra = totalQ === 0 ? 0 : (curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') 
                                       ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) 
-                                      : calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
+                                      : calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color }));
                                     setValue(`materials.${index}.extra_qty`, extra);
                                     const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
                                     const divs = calculatePaperDivision(currentPrintSize, a7);
                                     const setups = calculateSetups(m4, divs);
-                                    const total = (base * m4) + (extra * setups);
+                                    const total = totalQ === 0 ? 0 : ((base * m4) + (extra * setups));
                                     setValue(`materials.${index}.total_qty`, total);
                                     
                                     if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) { 
-                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
+                                      setValue(`materials.${index}.sheet_qty`, totalQ === 0 ? 0 : Math.ceil(total / divBy)); 
                                     }
+                                    const updatedCoverMats = getValues('materials') || [];
+                                    setValue('materials', updatedCoverMats);
+                                    replaceMaterials(updatedCoverMats);
                                   }
                                 })}
                                 style={{ width: '13px', height: '13px', accentColor: '#2563eb', cursor: 'pointer', margin: 0, outline: 'none' }}
@@ -6666,6 +7511,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   {formValues.has_vat && (
                     <div style={{ fontSize: '10.5px', color: '#0284c7', fontWeight: 600 }}>
                       НӨАТ-тай нэгж: {prices.unitPrice.toLocaleString()} ₮
+                    </div>
+                  )}
+                  {isQuickPrint && activeKonicaTariff && (
+                    <div style={{ marginTop: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#0284c7', fontWeight: 600 }}>
+                        ⚡ Тариф: {activeKonicaTariff.unitPrice.toLocaleString()} ₮
+                      </span>
+                      {formValues.manual_unit_price !== activeKonicaTariff.unitPrice && (
+                        <button
+                          type="button"
+                          onClick={() => setValue('manual_unit_price', activeKonicaTariff.unitPrice)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            color: '#0284c7',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          Тарифт буцах
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
