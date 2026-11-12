@@ -566,8 +566,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica Албан бланк А4 (Офсет 100гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Албан бланк А4 (100 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "A4",
     "cover_color": "4+0",
@@ -623,8 +623,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica Албан бланк А5 (Офсет 100гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Албан бланк А5 (100 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "A5",
     "cover_color": "4+0",
@@ -680,8 +680,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica Нэрийн хуудас (Матт 300гр, 4+4, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Нэрийн хуудас (300 гр матт цаас, 2 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "90x50",
     "cover_color": "4+4",
@@ -737,8 +737,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica Хар ном товхимол А5 (Шар 80гр, 1+1, 20 нүүр, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хар ном А5 (Номын гөлгөр шар 80 гр, 2 тал, 20 нүүр)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Үдээстэй",
     "size": "A5",
     "cover_color": "1+1",
@@ -803,8 +803,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica Хуудастай товхимол А4 (Шохойтой 157гр, 4+4, 16 нүүр, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хуудастай хэвлэлийн үнэ А4 (157 гр, 2 тал, 16 нүүр)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Үдээстэй",
     "size": "A4",
     "cover_color": "4+4",
@@ -3840,8 +3840,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica А3 (8 гарах) (Шохойтой 250гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хэвлэлийн үнэ А3 (8 гарах, 250 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "А3 (8 гарах)",
     "cover_color": "4+0",
@@ -3897,8 +3897,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica А3 (6 гарах) (Шохойтой 250гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хэвлэлийн үнэ А3 (6 гарах, 250 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "А3 (6 гарах)",
     "cover_color": "4+0",
@@ -3954,8 +3954,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica 480х320 (А0-оос 5 гарна) (Шохойтой 250гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хэвлэлийн үнэ 480х320 (250 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "480х320 (А0-оос 5 гарна)",
     "cover_color": "4+0",
@@ -4011,8 +4011,8 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Түргэн хэвлэл Konica А4 (Шохойтой 250гр, 4+0, 100ш)",
-    "category": "Түргэн хэвлэл Konica",
+    "template_name": "Түргэн хэвлэл - Хэвлэлийн үнэ А4 (250 гр, 1 тал)",
+    "category": "Түргэн хэвлэл",
     "binding_type": "Бусад",
     "size": "А4",
     "cover_color": "4+0",
