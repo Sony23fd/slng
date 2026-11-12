@@ -566,6 +566,309 @@ const standardTemplates = [
     }
   },
   {
+    "template_name": "Түргэн хэвлэл Konica Албан бланк А4 (Офсет 100гр, 4+0, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "A4",
+    "cover_color": "4+0",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр хэвлэх албан бланк A4 (Тарифт үнэ 440₮)",
+    "order_data": {
+      "manual_unit_price": 440,
+      "sub_size": "210x297mm",
+      "materials": [
+        {
+          "material_name": "Офсет цаас 100гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "А4",
+          "press_sheet": "1",
+          "base_qty": 100,
+          "extra_qty": 0,
+          "total_qty": 100,
+          "divide_by": 16,
+          "sheet_qty": 7,
+          "unit_cost": 675,
+          "notes": "А4 бланк цаас",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica Албан бланк А5 (Офсет 100гр, 4+0, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "A5",
+    "cover_color": "4+0",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр хэвлэх албан бланк A5 (Тарифт үнэ 330₮)",
+    "order_data": {
+      "manual_unit_price": 330,
+      "sub_size": "148x210mm",
+      "materials": [
+        {
+          "material_name": "Офсет цаас 100гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "A5",
+          "press_sheet": "1",
+          "base_qty": 100,
+          "extra_qty": 0,
+          "total_qty": 100,
+          "divide_by": 32,
+          "sheet_qty": 4,
+          "unit_cost": 675,
+          "notes": "А5 бланк цаас",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+0",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica Нэрийн хуудас (Матт 300гр, 4+4, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Бусад",
+    "size": "90x50",
+    "cover_color": "4+4",
+    "inner_color": "",
+    "total_pages": 1,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал лазер принтерээр хэвлэх нэрийн хуудас (300гр матт, 2 тал 440₮)",
+    "order_data": {
+      "manual_unit_price": 440,
+      "sub_size": "90x50mm",
+      "materials": [
+        {
+          "material_name": "Мат цаас 300гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "A2",
+          "press_sheet": "1",
+          "base_qty": 3,
+          "extra_qty": 0,
+          "total_qty": 3,
+          "divide_by": 4,
+          "sheet_qty": 1,
+          "unit_cost": 1800,
+          "notes": "Нэрийн хуудасны цаас (40 гарна)",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+4",
+        "total_pages": 1
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica Хар ном товхимол А5 (Шар 80гр, 1+1, 20 нүүр, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Үдээстэй",
+    "size": "A5",
+    "cover_color": "1+1",
+    "inner_color": "",
+    "total_pages": 20,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал принтерээр хэвлэх хар ном товхимол (10 хуудас × 300₮ = 3,000₮)",
+    "order_data": {
+      "manual_unit_price": 3000,
+      "sub_size": "148x210mm",
+      "materials": [
+        {
+          "material_name": "Номын шар Хөнгөн 80гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "A5",
+          "press_sheet": "1",
+          "base_qty": 1000,
+          "extra_qty": 0,
+          "total_qty": 1000,
+          "divide_by": 32,
+          "sheet_qty": 32,
+          "unit_cost": 510,
+          "notes": "Хар номын шар цаас",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Үдээ (Унаа үдээ)",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Төвийн үдээ"
+        },
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "1+1",
+        "total_pages": 20
+      }
+    }
+  },
+  {
+    "template_name": "Түргэн хэвлэл Konica Хуудастай товхимол А4 (Шохойтой 157гр, 4+4, 16 нүүр, 100ш)",
+    "category": "Түргэн хэвлэл Konica",
+    "binding_type": "Үдээстэй",
+    "size": "A4",
+    "cover_color": "4+4",
+    "inner_color": "",
+    "total_pages": 16,
+    "needs_design": false,
+    "design_status": "Эх бэлэн",
+    "design_cost": 0,
+    "notes": "Дижитал принтерээр хэвлэх хуудастай товхимол (8 хуудас × 630₮ = 5,040₮)",
+    "order_data": {
+      "manual_unit_price": 5040,
+      "sub_size": "210x297mm",
+      "materials": [
+        {
+          "material_name": "Шохойтой цаас 157гр A0 (889x1194)",
+          "size": "A0",
+          "print_size": "А4",
+          "press_sheet": "1",
+          "base_qty": 800,
+          "extra_qty": 0,
+          "total_qty": 800,
+          "divide_by": 16,
+          "sheet_qty": 50,
+          "unit_cost": 890,
+          "notes": "Товхимлын хуудас цаас",
+          "is_cover": false
+        }
+      ],
+      "operations": [
+        {
+          "operation_name": "Үдээ (Унаа үдээ)",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Төвийн үдээ"
+        },
+        {
+          "operation_name": "Огтлоо (Жижиг)",
+          "qty": 1,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "POST_PRESS",
+          "is_manual": false,
+          "notes": "Зүсэх"
+        },
+        {
+          "operation_name": "Чанарын эцсийн хяналт",
+          "qty": 100,
+          "unit_cost": 0,
+          "is_pricing": false,
+          "production_stage": "PACKAGING",
+          "is_manual": false,
+          "notes": "Эцсийн согог шалгалт"
+        }
+      ],
+      "specifications": {
+        "cover_color": "4+4",
+        "total_pages": 16
+      }
+    }
+  },
+  {
     "template_name": "Ширээний Календарь А5 (26 нүүр, Спираль, Картон суурьтай)",
     "category": "Календар",
     "binding_type": "Спираль",
@@ -1525,14 +1828,14 @@ const standardTemplates = [
           "material_name": "CTP хавтан (74.5x60.5)",
           "size": "74.5x60.5",
           "print_size": "B3",
-          "press_sheet": "B3",
-          "base_qty": 1,
+          "press_sheet": "1.0",
+          "base_qty": 4,
           "extra_qty": 0,
-          "total_qty": 1,
+          "total_qty": 4,
           "divide_by": 1,
-          "sheet_qty": 1,
+          "sheet_qty": 4,
           "unit_cost": 8800,
-          "notes": "4",
+          "notes": "Хавтасны CTP хэвлэлийн хавтан (4+0)",
           "is_cover": false
         },
         {
@@ -1767,14 +2070,14 @@ const standardTemplates = [
           "material_name": "CTP хавтан (74.5x60.5)",
           "size": "74.5x60.5",
           "print_size": "B3",
-          "press_sheet": "B3",
-          "base_qty": 1,
+          "press_sheet": "1.0",
+          "base_qty": 4,
           "extra_qty": 0,
-          "total_qty": 1,
+          "total_qty": 4,
           "divide_by": 1,
-          "sheet_qty": 1,
+          "sheet_qty": 4,
           "unit_cost": 8800,
-          "notes": "4",
+          "notes": "Хавтасны CTP хэвлэлийн хавтан (4+0)",
           "is_cover": false
         },
         {
@@ -1967,14 +2270,14 @@ const standardTemplates = [
           "material_name": "CTP хавтан (74.5x60.5)",
           "size": "74.5x60.5",
           "print_size": "B3",
-          "press_sheet": "B3",
-          "base_qty": 1,
+          "press_sheet": "1.0",
+          "base_qty": 4,
           "extra_qty": 0,
-          "total_qty": 1,
+          "total_qty": 4,
           "divide_by": 1,
-          "sheet_qty": 1,
+          "sheet_qty": 4,
           "unit_cost": 8800,
-          "notes": "4",
+          "notes": "Хавтасны CTP хэвлэлийн хавтан (4+0)",
           "is_cover": false
         },
         {
@@ -2166,14 +2469,14 @@ const standardTemplates = [
           "material_name": "CTP хавтан (74.5x60.5)",
           "size": "74.5x60.5",
           "print_size": "594x280",
-          "press_sheet": "594x280",
-          "base_qty": 1,
+          "press_sheet": "1.0",
+          "base_qty": 4,
           "extra_qty": 0,
-          "total_qty": 1,
+          "total_qty": 4,
           "divide_by": 1,
-          "sheet_qty": 1,
+          "sheet_qty": 4,
           "unit_cost": 8800,
-          "notes": "4",
+          "notes": "Хавтасны CTP хэвлэлийн хавтан (4+0)",
           "is_cover": false
         },
         {
@@ -2365,14 +2668,14 @@ const standardTemplates = [
           "material_name": "CTP хавтан (74.5x60.5)",
           "size": "74.5x60.5",
           "print_size": "720x380",
-          "press_sheet": "720x380",
-          "base_qty": 1,
+          "press_sheet": "1.0",
+          "base_qty": 4,
           "extra_qty": 0,
-          "total_qty": 1,
+          "total_qty": 4,
           "divide_by": 1,
-          "sheet_qty": 1,
+          "sheet_qty": 4,
           "unit_cost": 8800,
-          "notes": "4",
+          "notes": "Хавтасны CTP хэвлэлийн хавтан (4+0)",
           "is_cover": false
         },
         {
@@ -3549,6 +3852,7 @@ const standardTemplates = [
     "design_cost": 0,
     "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (8 гарах, CTP хавтан ашиглахгүй)",
     "order_data": {
+      "manual_unit_price": 2350,
       "sub_size": "297x420mm",
       "materials": [
         {
@@ -3605,6 +3909,7 @@ const standardTemplates = [
     "design_cost": 0,
     "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А3 хуудас (6 гарах, CTP хавтан ашиглахгүй)",
     "order_data": {
+      "manual_unit_price": 2350,
       "sub_size": "297x420mm",
       "materials": [
         {
@@ -3661,6 +3966,7 @@ const standardTemplates = [
     "design_cost": 0,
     "notes": "Дижитал лазер принтерээр шуурхай хэвлэх 480х320 хуудас (А0-оос 5 гарна, CTP хавтан ашиглахгүй)",
     "order_data": {
+      "manual_unit_price": 2350,
       "sub_size": "480x320mm",
       "materials": [
         {
@@ -3717,6 +4023,7 @@ const standardTemplates = [
     "design_cost": 0,
     "notes": "Дижитал лазер принтерээр шуурхай хэвлэх А4 хуудас (CTP хавтан ашиглахгүй)",
     "order_data": {
+      "manual_unit_price": 1150,
       "sub_size": "210x297mm",
       "materials": [
         {
