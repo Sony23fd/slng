@@ -869,312 +869,404 @@ const standardTemplates = [
     }
   },
   {
-    "template_name": "Ширээний Календарь А5 (26 нүүр, Спираль, Картон суурьтай)",
-    "category": "Календар",
-    "binding_type": "Спираль",
-    "size": "A5",
-    "cover_color": "4+0",
-    "inner_color": "4+4",
-    "total_pages": 26,
-    "needs_design": false,
-    "design_status": "Эх бэлэн",
-    "design_cost": 0,
-    "notes": "Ширээний хуанли А5 (13 хуудас, 26 нүүр, төмөр спираль үдээс, картон суурь)",
-    "order_data": {
-      "sub_size": "210x148mm",
-      "materials": [
-        {
-          "material_name": "Мат цаас 250гр A0 (889x1194)",
-          "size": "A0",
-          "print_size": "A2",
-          "press_sheet": "1.625",
-          "base_qty": 300,
-          "extra_qty": 150,
-          "total_qty": 637.5,
-          "divide_by": 4,
-          "sheet_qty": 160,
-          "unit_cost": 1400,
-          "notes": "Календарийн хуудас (13 хуудас)",
-          "is_cover": false
-        },
-        {
-          "material_name": "Мат цаас 300гр A0 (889x1194)",
-          "size": "A0",
-          "print_size": "B3",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 100,
-          "total_qty": 400,
-          "divide_by": 5,
-          "sheet_qty": 80,
-          "unit_cost": 1800,
-          "notes": "Суурийн цаас",
-          "is_cover": true
-        },
-        {
-          "material_name": "Картон 2 A0 (889x1194)",
-          "size": "A0",
-          "print_size": "",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 0,
-          "total_qty": 300,
-          "divide_by": 12,
-          "sheet_qty": 25,
-          "unit_cost": 6300,
-          "notes": "Суурийн картон",
-          "is_cover": false
-        },
-        {
-          "material_name": "Бүрэлт матт Хятад 36 см",
-          "size": "36 см",
-          "print_size": "B3",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 20,
-          "total_qty": 320,
-          "divide_by": 1,
-          "sheet_qty": 1.28,
-          "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
-          "is_cover": false
-        },
-        {
-          "material_name": "CTP хавтан (76x60.5)",
-          "size": "76x60.5",
-          "print_size": "A2",
-          "press_sheet": "1.625",
-          "base_qty": 16,
-          "extra_qty": 0,
-          "total_qty": 16,
-          "divide_by": 1,
-          "sheet_qty": 16,
-          "unit_cost": 8800,
-          "notes": "Хуудасны CTP хэвлэлийн хавтан (4+4)",
-          "is_cover": false
-        },
-        {
-          "material_name": "CTP хавтан (74.5x60.5)",
-          "size": "74.5x60.5",
-          "print_size": "B3",
-          "press_sheet": "1",
-          "base_qty": 4,
-          "extra_qty": 0,
-          "total_qty": 4,
-          "divide_by": 1,
-          "sheet_qty": 4,
-          "unit_cost": 8800,
-          "notes": "Суурийн CTP хэвлэлийн хавтан (4+0)",
-          "is_cover": false
-        }
-      ],
-      "operations": [
-        {
-          "operation_name": "Хэвлэх (4 өнгө)",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "PRINTING",
-          "is_manual": false,
-          "notes": "Өнгөт хэвлэлт"
-        },
-        {
-          "operation_name": "Шалгах",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "Хуудас шалгах"
-        },
-        {
-          "operation_name": "Спираль дарагч",
-          "qty": 7200,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "24 нүх спираль"
-        },
-        {
-          "operation_name": "Суурь хийх (А5)",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "Суурь угсрах"
-        },
-        {
-          "operation_name": "Чанарын эцсийн хяналт",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "PACKAGING",
-          "is_manual": false,
-          "notes": "Эцсийн шалгалт"
-        }
-      ],
-      "specifications": {
-        "cover_color": "4+0",
-        "inner_color": "4+4",
-        "total_pages": 26
+      "template_name": "Ширээний Календарь А5 (26 нүүр, Спираль, Картон суурьтай)",
+      "category": "Календар",
+      "binding_type": "Спираль",
+      "size": "A5",
+      "cover_color": "4+0",
+      "inner_color": "4+4",
+      "total_pages": 26,
+      "needs_design": false,
+      "design_status": "Эх бэлэн",
+      "design_cost": 0,
+      "notes": "Ширээний хуанли А5 (13 хуудас, 26 нүүр, төмөр спираль үдээс, картон суурь)",
+      "order_data": {
+          "sub_size": "210x148mm",
+          "materials": [
+              {
+                  "material_name": "Мат цаас 250гр A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "A2",
+                  "press_sheet": "1.625",
+                  "base_qty": 300,
+                  "extra_qty": 150,
+                  "total_qty": 637.5,
+                  "divide_by": 4,
+                  "sheet_qty": 160,
+                  "unit_cost": 1400,
+                  "notes": "Календарийн хуудас (13 хуудас)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Мат цаас 157гр A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "B3",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 100,
+                  "total_qty": 400,
+                  "divide_by": 5,
+                  "sheet_qty": 80,
+                  "unit_cost": 940,
+                  "notes": "Суурийн цаас",
+                  "is_cover": true
+              },
+              {
+                  "material_name": "Мат цаас 200гр A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "",
+                  "press_sheet": "—",
+                  "base_qty": 300,
+                  "extra_qty": 0,
+                  "total_qty": 300,
+                  "divide_by": 12,
+                  "sheet_qty": 25,
+                  "unit_cost": 1150,
+                  "notes": "Суурийн дотор цаас (Под)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Картон 2 A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 0,
+                  "total_qty": 300,
+                  "divide_by": 12,
+                  "sheet_qty": 25,
+                  "unit_cost": 6300,
+                  "notes": "Суурийн картон (12ш гарна)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Бүрэлт матт Хятад 36 см",
+                  "size": "36 см",
+                  "print_size": "B3",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 20,
+                  "total_qty": 320,
+                  "divide_by": 1,
+                  "sheet_qty": 1.28,
+                  "unit_cost": 1500,
+                  "notes": "Хавтасны матт бүрэлт (36 см хуулга, коэф: 0.004)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Нуруу Хятад 5/16",
+                  "size": "5/16",
+                  "print_size": "",
+                  "press_sheet": "—",
+                  "base_qty": 7200,
+                  "extra_qty": 0,
+                  "total_qty": 7200,
+                  "divide_by": 1,
+                  "sheet_qty": 7200,
+                  "unit_cost": 5,
+                  "notes": "Төмөр спираль нуруу (24 нүх)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "CTP хавтан (76x60.5)",
+                  "size": "76x60.5",
+                  "print_size": "A2",
+                  "press_sheet": "1.625",
+                  "base_qty": 16,
+                  "extra_qty": 0,
+                  "total_qty": 16,
+                  "divide_by": 1,
+                  "sheet_qty": 16,
+                  "unit_cost": 8800,
+                  "notes": "Хуудасны CTP хэвлэлийн хавтан (4+4)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "CTP хавтан (74.5x60.5)",
+                  "size": "74.5x60.5",
+                  "print_size": "B3",
+                  "press_sheet": "1",
+                  "base_qty": 4,
+                  "extra_qty": 0,
+                  "total_qty": 4,
+                  "divide_by": 1,
+                  "sheet_qty": 4,
+                  "unit_cost": 8800,
+                  "notes": "Суурийн CTP хэвлэлийн хавтан (4+0)",
+                  "is_cover": false
+              }
+          ],
+          "operations": [
+              {
+                  "operation_name": "Хэвлэх (4 өнгө)",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "PRINTING",
+                  "is_manual": false,
+                  "notes": "Өнгөт хэвлэлт"
+              },
+              {
+                  "operation_name": "Шалгах",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Хуудас шалгах"
+              },
+              {
+                  "operation_name": "Цуглуулга",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Цуглуулга"
+              },
+              {
+                  "operation_name": "Суурь хийх",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Суурь угсрах"
+              },
+              {
+                  "operation_name": "Спираль дарагч",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Спираль дарах"
+              },
+              {
+                  "operation_name": "Огтлоо (Дунд)",
+                  "qty": 1,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Огтлох"
+              },
+              {
+                  "operation_name": "Чанарын эцсийн хяналт",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "PACKAGING",
+                  "is_manual": false,
+                  "notes": "Эцсийн шалгалт"
+              }
+          ],
+          "specifications": {
+              "cover_color": "4+0",
+              "inner_color": "4+4",
+              "total_pages": 26
+          }
       }
-    }
   },
   {
-    "template_name": "Ширээний Календарь B5 (26 нүүр, Спираль, Картон суурьтай)",
-    "category": "Календар",
-    "binding_type": "Спираль",
-    "size": "B5",
-    "cover_color": "4+0",
-    "inner_color": "4+4",
-    "total_pages": 26,
-    "needs_design": false,
-    "design_status": "Эх бэлэн",
-    "design_cost": 0,
-    "notes": "Ширээний хуанли B5 (13 хуудас, 26 нүүр, спираль үдээс, картон суурь)",
-    "order_data": {
-      "sub_size": "250x176mm",
-      "materials": [
-        {
-          "material_name": "Мат цаас 250гр B1 (787x1092)",
-          "size": "B1",
-          "print_size": "B2",
-          "press_sheet": "1.625",
-          "base_qty": 300,
-          "extra_qty": 150,
-          "total_qty": 637.5,
-          "divide_by": 2,
-          "sheet_qty": 319,
-          "unit_cost": 1150,
-          "notes": "Календарийн хуудас (13 хуудас)",
-          "is_cover": false
-        },
-        {
-          "material_name": "Мат цаас 300гр A0 (889x1194)",
-          "size": "A0",
-          "print_size": "A2",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 100,
-          "total_qty": 400,
-          "divide_by": 4,
-          "sheet_qty": 100,
-          "unit_cost": 1800,
-          "notes": "Суурийн цаас",
-          "is_cover": true
-        },
-        {
-          "material_name": "Картон 2 A0 (889x1194)",
-          "size": "A0",
-          "print_size": "",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 0,
-          "total_qty": 300,
-          "divide_by": 8,
-          "sheet_qty": 38,
-          "unit_cost": 6300,
-          "notes": "Суурийн картон",
-          "is_cover": false
-        },
-        {
-          "material_name": "Бүрэлт матт Хятад 44 см",
-          "size": "44 см",
-          "print_size": "A2",
-          "press_sheet": "1",
-          "base_qty": 300,
-          "extra_qty": 20,
-          "total_qty": 320,
-          "divide_by": 1,
-          "sheet_qty": 1.92,
-          "unit_cost": 1500,
-          "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
-          "is_cover": false
-        },
-        {
-          "material_name": "CTP хавтан (74.5x60.5)",
-          "size": "74.5x60.5",
-          "print_size": "B2",
-          "press_sheet": "1.625",
-          "base_qty": 16,
-          "extra_qty": 0,
-          "total_qty": 16,
-          "divide_by": 1,
-          "sheet_qty": 16,
-          "unit_cost": 8800,
-          "notes": "Хуудасны CTP хэвлэлийн хавтан (4+4)",
-          "is_cover": false
-        },
-        {
-          "material_name": "CTP хавтан (76x60.5)",
-          "size": "76x60.5",
-          "print_size": "A2",
-          "press_sheet": "1",
-          "base_qty": 4,
-          "extra_qty": 0,
-          "total_qty": 4,
-          "divide_by": 1,
-          "sheet_qty": 4,
-          "unit_cost": 8800,
-          "notes": "Суурийн CTP хэвлэлийн хавтан (4+0)",
-          "is_cover": false
-        }
-      ],
-      "operations": [
-        {
-          "operation_name": "Хэвлэх (4 өнгө)",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "PRINTING",
-          "is_manual": false,
-          "notes": "Өнгөт хэвлэлт"
-        },
-        {
-          "operation_name": "Шалгах",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "Хуудас шалгах"
-        },
-        {
-          "operation_name": "Спираль дарагч",
-          "qty": 8400,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "28 нүх спираль"
-        },
-        {
-          "operation_name": "Суурь хийх (B5)",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "POST_PRESS",
-          "is_manual": false,
-          "notes": "Суурь угсрах"
-        },
-        {
-          "operation_name": "Чанарын эцсийн хяналт",
-          "qty": 300,
-          "unit_cost": 0,
-          "is_pricing": false,
-          "production_stage": "PACKAGING",
-          "is_manual": false,
-          "notes": "Эцсийн шалгалт"
-        }
-      ],
-      "specifications": {
-        "cover_color": "4+0",
-        "inner_color": "4+4",
-        "total_pages": 26
+      "template_name": "Ширээний Календарь B5 (26 нүүр, Спираль, Картон суурьтай)",
+      "category": "Календар",
+      "binding_type": "Спираль",
+      "size": "B5",
+      "cover_color": "4+0",
+      "inner_color": "4+4",
+      "total_pages": 26,
+      "needs_design": false,
+      "design_status": "Эх бэлэн",
+      "design_cost": 0,
+      "notes": "Ширээний хуанли B5 (13 хуудас, 26 нүүр, спираль үдээс, картон суурь)",
+      "order_data": {
+          "sub_size": "250x176mm",
+          "materials": [
+              {
+                  "material_name": "Мат цаас 250гр B1 (787x1092)",
+                  "size": "B1",
+                  "print_size": "B2",
+                  "press_sheet": "1.625",
+                  "base_qty": 300,
+                  "extra_qty": 150,
+                  "total_qty": 637.5,
+                  "divide_by": 2,
+                  "sheet_qty": 319,
+                  "unit_cost": 1150,
+                  "notes": "Календарийн хуудас (13 хуудас)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Мат цаас 157гр A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "A2",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 100,
+                  "total_qty": 400,
+                  "divide_by": 4,
+                  "sheet_qty": 100,
+                  "unit_cost": 940,
+                  "notes": "Суурийн цаас",
+                  "is_cover": true
+              },
+              {
+                  "material_name": "Мат цаас 200гр A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "",
+                  "press_sheet": "—",
+                  "base_qty": 300,
+                  "extra_qty": 0,
+                  "total_qty": 300,
+                  "divide_by": 7,
+                  "sheet_qty": 43,
+                  "unit_cost": 1150,
+                  "notes": "Суурийн дотор цаас (Под)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Картон 2 A0 (889x1194)",
+                  "size": "A0",
+                  "print_size": "",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 0,
+                  "total_qty": 300,
+                  "divide_by": 8,
+                  "sheet_qty": 38,
+                  "unit_cost": 6300,
+                  "notes": "Суурийн картон (8ш гарна)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Бүрэлт матт Хятад 44 см",
+                  "size": "44 см",
+                  "print_size": "A2",
+                  "press_sheet": "1",
+                  "base_qty": 300,
+                  "extra_qty": 20,
+                  "total_qty": 320,
+                  "divide_by": 1,
+                  "sheet_qty": 1.92,
+                  "unit_cost": 1500,
+                  "notes": "Хавтасны матт бүрэлт (44 см хуулга, коэф: 0.006)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "Нуруу Хятад 5/16",
+                  "size": "5/16",
+                  "print_size": "",
+                  "press_sheet": "—",
+                  "base_qty": 7500,
+                  "extra_qty": 0,
+                  "total_qty": 7500,
+                  "divide_by": 1,
+                  "sheet_qty": 7500,
+                  "unit_cost": 5,
+                  "notes": "Төмөр спираль нуруу (25 нүх)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "CTP хавтан (74.5x60.5)",
+                  "size": "74.5x60.5",
+                  "print_size": "B2",
+                  "press_sheet": "1.625",
+                  "base_qty": 16,
+                  "extra_qty": 0,
+                  "total_qty": 16,
+                  "divide_by": 1,
+                  "sheet_qty": 16,
+                  "unit_cost": 8800,
+                  "notes": "Хуудасны CTP хэвлэлийн хавтан (4+4)",
+                  "is_cover": false
+              },
+              {
+                  "material_name": "CTP хавтан (76x60.5)",
+                  "size": "76x60.5",
+                  "print_size": "A2",
+                  "press_sheet": "1",
+                  "base_qty": 4,
+                  "extra_qty": 0,
+                  "total_qty": 4,
+                  "divide_by": 1,
+                  "sheet_qty": 4,
+                  "unit_cost": 8800,
+                  "notes": "Суурийн CTP хэвлэлийн хавтан (4+0)",
+                  "is_cover": false
+              }
+          ],
+          "operations": [
+              {
+                  "operation_name": "Хэвлэх (4 өнгө)",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "PRINTING",
+                  "is_manual": false,
+                  "notes": "Өнгөт хэвлэлт"
+              },
+              {
+                  "operation_name": "Шалгах",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Хуудас шалгах"
+              },
+              {
+                  "operation_name": "Цуглуулга",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Цуглуулга"
+              },
+              {
+                  "operation_name": "Хатуу хавтас (B5)",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Суурь угсрах"
+              },
+              {
+                  "operation_name": "Спираль дарагч",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Спираль дарах"
+              },
+              {
+                  "operation_name": "Огтлоо (Дунд)",
+                  "qty": 1,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "POST_PRESS",
+                  "is_manual": false,
+                  "notes": "Огтлох"
+              },
+              {
+                  "operation_name": "Чанарын эцсийн хяналт",
+                  "qty": 300,
+                  "unit_cost": 0,
+                  "is_pricing": false,
+                  "production_stage": "PACKAGING",
+                  "is_manual": false,
+                  "notes": "Эцсийн шалгалт"
+              }
+          ],
+          "specifications": {
+              "cover_color": "4+0",
+              "inner_color": "4+4",
+              "total_pages": 26
+          }
       }
-    }
   },
   {
     "template_name": "Ханын Календарь А2 (7 хуудас / 14 нүүр, Спираль үдээстэй)",

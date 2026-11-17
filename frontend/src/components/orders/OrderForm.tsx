@@ -184,7 +184,7 @@ function calculateSetups(pressSheet: number, divisions: number) {
 
 function getMaterialType(matName?: string, notes?: string): {
   isAux: boolean;
-  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'endpaper_super' | 'super_cover' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'liderin' | 'none';
+  type: 'cardboard' | 'endpaper_plain' | 'endpaper_printed' | 'endpaper_super' | 'super_cover' | 'capital' | 'ribbon' | 'strap' | 'coating' | 'ctp' | 'liderin' | 'spiral_wire' | 'stand_lining' | 'none';
   isNonPrinted: boolean;
 } {
   const n = (matName || '').toLowerCase();
@@ -195,6 +195,12 @@ function getMaterialType(matName?: string, notes?: string): {
   }
   if (n.includes('лидерин') || note.includes('лидерин')) {
     return { isAux: true, type: 'liderin', isNonPrinted: true };
+  }
+  if (n.includes('нуруу') || note.includes('нуруу') || n.includes('спираль нуруу') || note.includes('спираль нуруу')) {
+    return { isAux: true, type: 'spiral_wire', isNonPrinted: true };
+  }
+  if (note.includes('под') || note.includes('дотор наалт') || note.includes('суурийн дотор') || n.includes('под')) {
+    return { isAux: true, type: 'stand_lining', isNonPrinted: true };
   }
   const isHardcoverCardboard = 
     note.includes('хатуу хавтас') || 
@@ -237,6 +243,16 @@ function getMaterialType(matName?: string, notes?: string): {
   }
 
   return { isAux: false, type: 'none', isNonPrinted: false };
+}
+
+function getSpiralLoops(size?: string): number {
+  const s = (size || '').toUpperCase().trim();
+  if (s.startsWith('A4')) return 34;
+  if (s.startsWith('B5') || s.includes('240') || s.includes('160')) return 25;
+  if (s.startsWith('A5')) return 24;
+  if (s.startsWith('A3')) return 48;
+  if (s.startsWith('A2')) return 56;
+  return 25;
 }
 
 function normalizeCtpSize(s?: string): '65x55' | '74.5x60.5' | '76x60.5' {
@@ -329,9 +345,11 @@ function getSuperCoverSpecs(size?: string) {
 
 function getHardcoverAuxiliarySpecs(size?: string) {
   const s = (size || 'A5').toUpperCase();
-  if (s === 'B5') {
+  if (s === 'B5' || s.includes('240') || s.includes('160')) {
     return {
       cardboardDiv: 18,
+      standCardboardDiv: 7,
+      standLiningDiv: 7,
       endpaperDiv: 5,
       endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 16,
@@ -341,6 +359,8 @@ function getHardcoverAuxiliarySpecs(size?: string) {
   } else if (s === 'A4') {
     return {
       cardboardDiv: 14,
+      standCardboardDiv: 6,
+      standLiningDiv: 6,
       endpaperDiv: 4,
       endpaperPrinted: { printSize: 'B3', pressSheet: '1.0', divBy: 4, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 14,
@@ -350,6 +370,8 @@ function getHardcoverAuxiliarySpecs(size?: string) {
   } else if (s === 'B4') {
     return {
       cardboardDiv: 9,
+      standCardboardDiv: 4,
+      standLiningDiv: 4,
       endpaperDiv: 2.5,
       endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
       headbandDiv: 12,
@@ -359,6 +381,8 @@ function getHardcoverAuxiliarySpecs(size?: string) {
   } else {
     return {
       cardboardDiv: 28,
+      standCardboardDiv: 12,
+      standLiningDiv: 12,
       endpaperDiv: 8,
       endpaperPrinted: { printSize: 'A2', pressSheet: '0.5', divBy: 4, extra: 100, baseMultiplier: 0.5 },
       headbandDiv: 25,
@@ -1610,15 +1634,18 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       removeOpIfNotManual('Цуглуулга');
     }
 
-    // 5. Binding: Үдээ vs Наалт vs Хатуу хавтас
+    // 5. Binding: Үдээ vs Наалт vs Хатуу хавтас vs Спираль
     if (bt === 'Үдээстэй') {
       removeOpIfNotManual('Наалт');
+      removeOpIfNotManual('Спираль дарагч');
       upsertOp('Үдээ (Унаа үдээ)', totalQty, 'POST_PRESS', 'Төмөр үдээс');
     } else if (bt === 'Наалттай') {
       removeOpIfNotManual('Үдээ');
+      removeOpIfNotManual('Спираль дарагч');
       upsertOp('Наалт', totalQty, 'POST_PRESS', 'Термо цавуун наалт');
     } else if (bt === 'Хатуу хавтастай' || bt === 'Хөндлөн хатуу хавтастай') {
       removeOpIfNotManual('Үдээ');
+      removeOpIfNotManual('Спираль дарагч');
       upsertOp('Наалт', totalQty, 'POST_PRESS', 'Блок наалт');
       const hcOpName = getHardcoverAuxiliarySpecs(size).opName;
       upsertOp(hcOpName, totalQty, 'POST_PRESS', `${size} хатуу хавтас угсрах, наах`);
@@ -1627,14 +1654,26 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     } else if (bt === 'Блокон оёо') {
       const sewingQty = Math.ceil(totalPages / 16) * totalQty;
       upsertOp('Блокон оёо', sewingQty > 0 ? sewingQty : totalQty, 'POST_PRESS', 'Утас блокон оёо');
+    } else if (bt === 'Спираль' || bt === 'Пүрштэй' || cat === 'Календар' || cat === 'Календарь') {
+      removeOpIfNotManual('Үдээ');
+      removeOpIfNotManual('Наалт');
+      upsertOp('Спираль дарагч', totalQty, 'POST_PRESS', 'Төмөр спиралиар үдэх');
+      if (cat === 'Календар' || cat === 'Календарь' || mats.some((m: any) => getMaterialType(m.material_name, m.notes).type === 'cardboard')) {
+        const hcOpName = getHardcoverAuxiliarySpecs(size).opName;
+        upsertOp(hcOpName, totalQty, 'POST_PRESS', `${size} хуанлийн картон суурь угсрах`);
+      }
     }
 
     // 6. Огтлоо (Trimming/Cutting)
+    const isCalendar = cat === 'Календар' || cat === 'Календарь' || bt === 'Спираль' || bt === 'Пүрштэй';
     const hasCutting = ops.some((o: any) => (o.operation_name || '').startsWith('Огтлоо'));
     let defaultCuttingName = 'Огтлоо (Жижиг)';
     let defaultCuttingQty = 1;
 
-    if (isBookMode || cat === 'Сэтгүүл' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Дэвтэр' || cat === 'Танилцуулга') {
+    if (isCalendar) {
+      defaultCuttingName = 'Огтлоо (Дунд)';
+      defaultCuttingQty = 1;
+    } else if (isBookMode || cat === 'Сэтгүүл' || cat === 'Ном хар' || cat === 'Ном өнгөт' || cat === 'Дэвтэр' || cat === 'Танилцуулга') {
       defaultCuttingName = 'Огтлоо (Гурван талт)';
       defaultCuttingQty = 2;
     } else if (cat === 'Зурагт хуудас' || cat === 'Сонин' || cat === 'Тор' || cat === 'Хавтас') {
@@ -1645,7 +1684,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     if (!hasCutting) {
       upsertOp(defaultCuttingName, defaultCuttingQty, 'POST_PRESS', 'Огтлох');
     } else {
-      if (isBookMode) {
+      if (isCalendar) {
+        const cIdx = ops.findIndex((o: any) => (o.operation_name || '').startsWith('Огтлоо'));
+        if (cIdx >= 0 && !ops[cIdx].is_manual && ops[cIdx].operation_name === 'Огтлоо (Гурван талт)') {
+          ops[cIdx].operation_name = 'Огтлоо (Дунд)';
+          ops[cIdx].qty = 1;
+        }
+      } else if (isBookMode) {
         const cIdx = ops.findIndex((o: any) => (o.operation_name || '').startsWith('Огтлоо'));
         if (cIdx >= 0 && !ops[cIdx].is_manual && ops[cIdx].operation_name !== 'Огтлоо (Гурван талт)') {
           ops[cIdx].operation_name = 'Огтлоо (Гурван талт)';
@@ -1754,6 +1799,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           let rowDivideBy = Number(m.divide_by) || 1;
           let rowPressSheet = String(m.press_sheet || '');
           let rowSize = m.size;
+          let rowNotes = m.notes || '';
           let baseQty = Number(m.base_qty) || tQty;
           let extraQty = Number(m.extra_qty) || 0;
           let totalQty = Number(m.total_qty) || baseQty;
@@ -1779,13 +1825,36 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             rowPrintSize = '';
             if (aux.type === 'cardboard') {
               const specs = getHardcoverAuxiliarySpecs(a7);
-              rowDivideBy = specs.cardboardDiv;
+              const isCalendar = category === 'Календар' || category === 'Календарь' || formValues.binding_type === 'Спираль' || t.binding_type === 'Спираль';
+              const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+              rowDivideBy = cDiv;
               rowPressSheet = '1';
-              const cardboardPieces = tQty * 2;
+              const cardboardPieces = isCalendar ? tQty : tQty * 2;
               baseQty = cardboardPieces;
               extraQty = 0;
               totalQty = cardboardPieces;
-              sheetQty = Math.ceil(cardboardPieces / specs.cardboardDiv);
+              sheetQty = Math.ceil(cardboardPieces / cDiv);
+              rowNotes = isCalendar ? `Суурийн картон (${cDiv}ш гарна)` : `Хатуу хавтасны картон (${cDiv}ш гарна)`;
+            } else if (aux.type === 'spiral_wire') {
+              const loops = getSpiralLoops(a7);
+              const totalLoops = tQty * loops;
+              rowDivideBy = 1;
+              rowPressSheet = '—';
+              baseQty = totalLoops;
+              extraQty = 0;
+              totalQty = totalLoops;
+              sheetQty = totalLoops;
+              rowNotes = `Спираль нуруу (${loops} нүх)`;
+            } else if (aux.type === 'stand_lining') {
+              const specs = getHardcoverAuxiliarySpecs(a7);
+              const lDiv = specs.standLiningDiv || 7;
+              rowDivideBy = lDiv;
+              rowPressSheet = '—';
+              baseQty = tQty;
+              extraQty = 0;
+              totalQty = tQty;
+              sheetQty = Math.ceil(tQty / lDiv);
+              rowNotes = `Суурийн дотор цаас (Под)`;
             } else if (aux.type === 'endpaper_super') {
               const superSpecs = getSuperCoverSpecs(a7);
               rowDivideBy = superSpecs.endpaperDiv;
@@ -1927,6 +1996,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             extra_qty: extraQty,
             total_qty: totalQty,
             sheet_qty: sheetQty,
+            notes: rowNotes,
             unit_cost: (mp && mp.unit_cost > 0) ? mp.unit_cost : (Number(m.unit_cost) || (aux.type === 'ctp' ? (normalizeCtpSize(rowSize) === '65x55' ? 6800 : 8800) : 0))
           };
         });
@@ -2123,11 +2193,31 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   const coef = getCoatingCoefficient(chosenWidth);
                   rowSheets = Number((rowTotal * coef).toFixed(2));
                 } else if (aux.type === 'cardboard') {
-                  rowDivideBy = specs.cardboardDiv;
+                  const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || bt === 'Спираль';
+                  rowDivideBy = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+                  rowBase = isCalendar ? curQty : curQty * 2;
                   rowPress = '1';
                   rowTotal = rowBase;
                   rowExtra = 0;
                   rowSheets = Math.ceil(rowTotal / rowDivideBy);
+                } else if (aux.type === 'spiral_wire') {
+                  const loops = getSpiralLoops(a7);
+                  rowBase = curQty * loops;
+                  rowTotal = rowBase;
+                  rowExtra = 0;
+                  rowDivideBy = 1;
+                  rowSheets = rowBase;
+                  rowPress = '—';
+                  rowPrintSize = '';
+                } else if (aux.type === 'stand_lining') {
+                  const lDiv = specs.standLiningDiv || 7;
+                  rowDivideBy = lDiv;
+                  rowBase = curQty;
+                  rowTotal = curQty;
+                  rowExtra = 0;
+                  rowSheets = Math.ceil(curQty / lDiv);
+                  rowPress = '—';
+                  rowPrintSize = '';
                 } else if (aux.type === 'endpaper_plain') {
                   rowDivideBy = specs.endpaperDiv;
                   rowPress = '1';
@@ -2996,15 +3086,42 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       if (aux.isAux) {
         const specs = getHardcoverAuxiliarySpecs(a7);
         if (aux.type === 'cardboard') {
-          const cardboardPieces = a6 * 2;
-          setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
+          const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль' || cat === 'Календар' || cat === 'Календарь' || bt === 'Спираль';
+          const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+          const cardboardPieces = isCalendar ? a6 : a6 * 2;
+          setValue(`materials.${index}.divide_by`, cDiv);
           setValue(`materials.${index}.press_sheet`, '1');
           setValue(`materials.${index}.print_size`, '');
-          setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
-          const sheets = Math.ceil(cardboardPieces / specs.cardboardDiv);
+          setValue(`materials.${index}.notes`, isCalendar ? `Суурийн картон (${cDiv}ш гарна)` : `Хатуу хавтасны картон (${cDiv}ш гарна)`);
+          const sheets = Math.ceil(cardboardPieces / cDiv);
           setValue(`materials.${index}.base_qty`, cardboardPieces);
           setValue(`materials.${index}.total_qty`, cardboardPieces);
           setValue(`materials.${index}.sheet_qty`, sheets);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'spiral_wire') {
+          const loops = getSpiralLoops(a7);
+          const totalLoops = a6 * loops;
+          setValue(`materials.${index}.divide_by`, 1);
+          setValue(`materials.${index}.press_sheet`, '—');
+          setValue(`materials.${index}.print_size`, '');
+          setValue(`materials.${index}.notes`, `Спираль нуруу (${loops} нүх)`);
+          setValue(`materials.${index}.base_qty`, totalLoops);
+          setValue(`materials.${index}.total_qty`, totalLoops);
+          setValue(`materials.${index}.sheet_qty`, totalLoops);
+          setValue(`materials.${index}.extra_qty`, 0);
+          return;
+        }
+        if (aux.type === 'stand_lining') {
+          const lDiv = specs.standLiningDiv || 7;
+          setValue(`materials.${index}.divide_by`, lDiv);
+          setValue(`materials.${index}.press_sheet`, '—');
+          setValue(`materials.${index}.print_size`, '');
+          setValue(`materials.${index}.notes`, `Суурийн дотор цаас (Под)`);
+          setValue(`materials.${index}.base_qty`, a6);
+          setValue(`materials.${index}.total_qty`, a6);
+          setValue(`materials.${index}.sheet_qty`, Math.ceil(a6 / lDiv));
           setValue(`materials.${index}.extra_qty`, 0);
           return;
         }
@@ -3081,7 +3198,6 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
 
       const isCover = isCoverMaterial(m);
-      const cat = getValues('category');
       const effectiveBt = bt || (isCover ? 'Наалттай' : '');
       const coverLogic = isCover ? getCoverLogic(a7, effectiveBt, coverRules) : null;
       if (isCover && !m.is_cover) {
@@ -4409,11 +4525,30 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       const a7 = getA7Size();
                       const specs = getHardcoverAuxiliarySpecs(a7);
                       if (aux.type === 'cardboard') {
-                        const cardboardPieces = newBase * 2;
+                        const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
+                        const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+                        const cardboardPieces = isCalendar ? newBase : newBase * 2;
                         setValue(`materials.${index}.base_qty`, cardboardPieces);
                         setValue(`materials.${index}.extra_qty`, 0);
                         setValue(`materials.${index}.total_qty`, cardboardPieces);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / specs.cardboardDiv));
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
+                        return;
+                      }
+                      if (aux.type === 'spiral_wire') {
+                        const loops = getSpiralLoops(a7);
+                        const totalLoops = newBase * loops;
+                        setValue(`materials.${index}.base_qty`, totalLoops);
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, totalLoops);
+                        setValue(`materials.${index}.sheet_qty`, totalLoops);
+                        return;
+                      }
+                      if (aux.type === 'stand_lining') {
+                        const lDiv = specs.standLiningDiv || 7;
+                        setValue(`materials.${index}.base_qty`, newBase);
+                        setValue(`materials.${index}.extra_qty`, 0);
+                        setValue(`materials.${index}.total_qty`, newBase);
+                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / lDiv));
                         return;
                       }
                       if (aux.type === 'endpaper_super') {
@@ -6011,7 +6146,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
                   const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
                   const isSpecialStrap = currentMaterialName.includes('Оосор');
-                  const isSpecialMat = isSpecialCoating || isSpecialStrap;
+                  const isSpecialWire = aux.type === 'spiral_wire' || currentMaterialName.includes('Нуруу');
+                  const isSpecialMat = isSpecialCoating || isSpecialStrap || isSpecialWire;
                   const isCoverRow = isCoverMaterial(formValues.materials?.[index]);
                   const curPress = Number(formValues.materials?.[index]?.press_sheet) || 0;
                   const curBase = Number(formValues.materials?.[index]?.base_qty) || 0;
@@ -6109,15 +6245,42 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                                           return;
                                         }
                                         if (selectedAux.type === 'cardboard') {
-                                          const cardboardPieces = totalQty * 2;
-                                          setValue(`materials.${index}.divide_by`, specs.cardboardDiv);
+                                          const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
+                                          const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+                                          const cardboardPieces = isCalendar ? totalQty : totalQty * 2;
+                                          setValue(`materials.${index}.divide_by`, cDiv);
                                           setValue(`materials.${index}.press_sheet`, '1');
                                           setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Хатуу хавтасны картон (${specs.cardboardDiv}ш гарна)`);
+                                          setValue(`materials.${index}.notes`, isCalendar ? `Суурийн картон (${cDiv}ш гарна)` : `Хатуу хавтасны картон (${cDiv}ш гарна)`);
                                           setValue(`materials.${index}.base_qty`, cardboardPieces);
                                           setValue(`materials.${index}.extra_qty`, 0);
                                           setValue(`materials.${index}.total_qty`, cardboardPieces);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / specs.cardboardDiv));
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'spiral_wire') {
+                                          const loops = getSpiralLoops(a7);
+                                          const totalLoops = totalQty * loops;
+                                          setValue(`materials.${index}.divide_by`, 1);
+                                          setValue(`materials.${index}.press_sheet`, '—');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Спираль нуруу (${loops} нүх)`);
+                                          setValue(`materials.${index}.base_qty`, totalLoops);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalLoops);
+                                          setValue(`materials.${index}.sheet_qty`, totalLoops);
+                                          return;
+                                        }
+                                        if (selectedAux.type === 'stand_lining') {
+                                          const lDiv = specs.standLiningDiv || 7;
+                                          setValue(`materials.${index}.divide_by`, lDiv);
+                                          setValue(`materials.${index}.press_sheet`, '—');
+                                          setValue(`materials.${index}.print_size`, '');
+                                          setValue(`materials.${index}.notes`, `Суурийн дотор цаас (Под)`);
+                                          setValue(`materials.${index}.base_qty`, totalQty);
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                          setValue(`materials.${index}.total_qty`, totalQty);
+                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / lDiv));
                                           return;
                                         }
                                         if (selectedAux.type === 'endpaper_super') {
@@ -6736,9 +6899,9 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       )}
                       {isExpandedMaterial && (
                       <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
-                        <input type="number" style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
+                        <input type="number" style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
                           onChange: (e) => {
-                            if (isSpecialStrap) return;
+                            if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
                             setValue(`materials.${index}.is_manual_base`, true as any);
                             if (isSpecialCoating) {
                               const base = Number(e.target.value) || 0;
@@ -6791,8 +6954,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
                         <input 
                           type="number" 
-                          style={isSpecialStrap || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
-                          readOnly={isSpecialStrap || aux.type === 'ctp'} 
+                          style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
+                          readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'} 
                           min={0}
                           max={isSpecialCoating ? 500 : undefined}
                           title={
@@ -6810,7 +6973,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           }
                           {...register(`materials.${index}.extra_qty`, {
                           onChange: (e) => {
-                            if (isSpecialStrap || aux.type === 'ctp') return;
+                            if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
                             if (isSpecialCoating) {
                               let extra = Number(e.target.value) || 0;
                               if (extra < 0) {
@@ -6895,6 +7058,24 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                           >
                             — (Хуваалтгүй)
                           </div>
+                        ) : isSpecialWire ? (
+                          <div 
+                            style={{ 
+                              height: '28px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              backgroundColor: '#f8fafc', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '4px', 
+                              fontSize: '11px', 
+                              color: '#94a3b8', 
+                              fontWeight: 500 
+                            }}
+                            title="Спираль нуруунд хуваалт тооцохгүй"
+                          >
+                            —
+                          </div>
                         ) : (
                           <input type="number" style={isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, textAlign: 'center' }} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
                             onChange: (e) => {
@@ -6930,6 +7111,28 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                             title={`Том цаас: ${curTotal.toLocaleString()} / ${curDiv} хуваалт = ${curSheet} ш`}
                           >
                             ↳ {curTotal} / {curDiv}
+                          </div>
+                        )}
+                        {isSpecialWire && (
+                          <div 
+                            style={{ 
+                              fontSize: '9.5px', 
+                              color: '#0369a1', 
+                              fontWeight: 500, 
+                              marginTop: '1px', 
+                              textAlign: 'center', 
+                              whiteSpace: 'nowrap', 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              backgroundColor: '#f0f9ff', 
+                              border: '1px solid #bae6fd', 
+                              borderRadius: '3px', 
+                              padding: '0 2px', 
+                              lineHeight: '14px' 
+                            }}
+                            title={`Спираль нуруу: ${curSheet} loop`}
+                          >
+                            ↳ {getSpiralLoops(getA7Size())} нүхтэй
                           </div>
                         )}
                         {isSpecialCoating && (
