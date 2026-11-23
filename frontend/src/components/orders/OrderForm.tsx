@@ -2339,6 +2339,20 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   rowTotal = rowBase;
                   rowExtra = 0;
                   rowSheets = Math.ceil(rowTotal / rowDivideBy);
+                } else if (aux.type === 'ribbon') {
+                  rowDivideBy = 1;
+                  rowPress = '';
+                  rowBase = curQty;
+                  rowTotal = curQty;
+                  rowExtra = 0;
+                  rowSheets = Math.ceil(curQty * specs.ribbonLength);
+                } else if (aux.type === 'strap') {
+                  rowDivideBy = 1;
+                  rowPress = '';
+                  rowBase = curQty;
+                  rowTotal = curQty * 2;
+                  rowExtra = 0;
+                  rowSheets = curQty * 2;
                 }
               } else if (hasCover && idx === 0) {
                 isCoverRow = true;
@@ -4379,9 +4393,14 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                   {/* 2. Top Quick Preset Chips */}
                   {[
                     {
-                      key: 'soft_book',
-                      label: '📚 Зөөлөн ном (A5)',
-                      finder: (t: any) => (t.template_name?.includes('Ном') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
+                      key: 'color_book_b5',
+                      label: '📖 Ном өнгөт (B5 160н)',
+                      finder: (t: any) => (t.template_name?.includes('өнгөт') && t.size === 'B5') || t.template_name?.includes('Ном өнгөт B5')
+                    },
+                    {
+                      key: 'black_book_b5',
+                      label: '📖 Ном хар (B5 160н)',
+                      finder: (t: any) => t.template_name?.includes('Ном хар B5') || (t.category === 'Ном хар' && t.size === 'B5' && t.binding_type === 'Наалттай')
                     },
                     {
                       key: 'hard_book',
@@ -4389,24 +4408,29 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                       finder: (t: any) => t.template_name?.includes('Ном') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
                     },
                     {
+                      key: 'calendar_desk',
+                      label: '🗓️ Календар (240x160)',
+                      finder: (t: any) => t.template_name?.includes('240х160') || t.template_name?.includes('240x160') || (t.category?.includes('Календар') && t.size?.includes('240'))
+                    },
+                    {
                       key: 'paper_bag',
                       label: '🛍️ Цаасан тор (B2)',
                       finder: (t: any) => t.category === 'Тор' || t.template_name?.includes('Тор')
                     },
                     {
-                      key: 'brochure',
-                      label: '📄 Танилцуулга (A4)',
-                      finder: (t: any) => t.category === 'Танилцуулга' || t.category === 'Брошур' || t.template_name?.includes('Танилцуулга') || t.template_name?.includes('Брошур')
+                      key: 'business_card',
+                      label: '💳 Нэрийн хуудас (2000ш)',
+                      finder: (t: any) => (t.template_name?.includes('Нэрийн хуудас') && !t.template_name?.includes('Түргэн')) || (t.template_name?.includes('2000ш') && t.template_name?.includes('хуудас'))
                     },
                     {
-                      key: 'calendar',
-                      label: '🗓️ Календар (A5)',
-                      finder: (t: any) => t.category === 'Календар' || t.category === 'Календарь' || t.template_name?.includes('Календар')
+                      key: 'carbonless_form',
+                      label: '📑 Хортой маягт (A5)',
+                      finder: (t: any) => t.template_name?.includes('Хортой маягт') || (t.category === 'Маягт' && t.template_name?.includes('Хортой'))
                     },
                     {
-                      key: 'blank',
-                      label: '📑 Албан бланк (A4)',
-                      finder: (t: any) => t.category === 'Бланк' || t.template_name?.includes('бланк')
+                      key: 'konica_quick',
+                      label: '🖨️ Түргэн хэвлэл (Konica)',
+                      finder: (t: any) => t.category === 'Түргэн хэвлэл' || t.category === 'Түргэн хэвлэл Konica' || t.template_name?.startsWith('Түргэн хэвлэл')
                     }
                   ].map((item) => (
                     <button
