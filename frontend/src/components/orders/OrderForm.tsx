@@ -145,7 +145,7 @@ function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = [
   if (s === 'A5' && btLower === 'үдээстэй') return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
   if (s === 'B5' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   if (s === 'B5' && btLower === 'үдээстэй') return { pressSheet: 0.5, divideBy: 5, printSize: 'B3' };
-  if (s === 'B4' && isSoftOrBlock) return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
+  if (s === 'B4' && isSoftOrBlock) return { pressSheet: 0.5, divideBy: 3, printSize: 'B2' };
   if (s === 'B4' && btLower === 'үдээстэй') return { pressSheet: 0.5, divideBy: 2, printSize: 'B2' };
   if (s === 'A6' && isSoftOrBlock) return { pressSheet: 0.25, divideBy: 4, printSize: 'A2' };
   if (s === 'A6' && btLower === 'үдээстэй') return { pressSheet: 0.125, divideBy: 4, printSize: 'A2' };
@@ -154,9 +154,10 @@ function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = [
 
   // Hardcover (Хатуу хавтас) fallbacks
   if (s === 'A5' && btLower === 'хатуу хавтастай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
-  if (s === 'B5' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
+  if (s === 'B5' && btLower === 'хатуу хавтастай') return { pressSheet: 0.5, divideBy: 4, printSize: 'A2' };
   if (s === 'A4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 5, printSize: 'B3' };
-  if (s === 'B4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 4, printSize: 'A2' };
+  if (s === 'B4' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 4, printSize: 'A1' };
+  if (s === 'B6' && btLower === 'хатуу хавтастай') return { pressSheet: 1.0, divideBy: 6, printSize: '440x320' };
 
   // Landscape Hardcover (Хөндлөн хатуу хавтас) fallbacks
   if (s === 'A4' && btLower === 'хөндлөн хатуу хавтастай') return { pressSheet: 1.0, divideBy: 3, printSize: 'B2' };
@@ -372,11 +373,22 @@ function getHardcoverAuxiliarySpecs(size?: string) {
       cardboardDiv: 9,
       standCardboardDiv: 4,
       standLiningDiv: 4,
-      endpaperDiv: 2.5,
-      endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
+      endpaperDiv: 2,
+      endpaperPrinted: { printSize: 'B2', pressSheet: '1.0', divBy: 2, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 12,
       ribbonLength: 0.44,
       opName: 'Хатуу хавтас (B4)'
+    };
+  } else if (s === 'B6') {
+    return {
+      cardboardDiv: 36,
+      standCardboardDiv: 16,
+      standLiningDiv: 16,
+      endpaperDiv: 2,
+      endpaperPrinted: { printSize: 'B2', pressSheet: '0.25', divBy: 2, extra: 100, baseMultiplier: 0.25 },
+      headbandDiv: 28,
+      ribbonLength: 0.22,
+      opName: 'Хатуу хавтас (B6)'
     };
   } else {
     return {
@@ -415,6 +427,10 @@ function getDefaultPrintSize(category?: string, productSize?: string, isCover?: 
   }
 
   if (s.startsWith('B')) {
+    // Хар номны B5, B6 хэмжээ нь Ryobi жижиг офсет машин (B3 хэмжээ)-аар хэвлэгдэнэ
+    if (cat === 'Ном хар' && (s === 'B5' || s === 'B6')) {
+      return 'B3';
+    }
     return 'B2';
   }
   return 'A2';
@@ -955,7 +971,7 @@ const calculateMakeready = (
   }
 
   if (isBlack) {
-    if (baseQty <= 1000) return 60;
+    if (baseQty <= 1000) return 80;
     if (baseQty <= 2000) return 100;
     if (baseQty <= 3000) return 150;
     if (baseQty <= 4000) return 180;

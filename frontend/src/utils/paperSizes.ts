@@ -67,10 +67,11 @@ export function calculatePaperDivision(sourceStr: string, targetStr: string): nu
     if (cuts > 0) return cuts;
   }
 
-  // 2. Special print production rule: 480x320 cuts 5-up from A0 (889x1194) sheet (3 vertical + 2 horizontal)
+  // 2. Special print production rule: 480x320 and B3 (approx 350x500) cut 5-up from A0 (889x1194) sheet (3 vertical + 2 horizontal)
   const isA0Source = /A[0o]/i.test(sourceStr) || /889\s*(?:x|\*|х)\s*1194/i.test(sourceStr);
   const is480x320Target = /(?:480\s*(?:x|\*|х)\s*320)|(?:320\s*(?:x|\*|х)\s*480)/i.test(targetStr);
-  if (isA0Source && is480x320Target) {
+  const isB3Target = /\bB3\b/i.test(targetStr) || /(?:35[0-3]\s*(?:x|\*|х)\s*500)|(?:500\s*(?:x|\*|х)\s*35[0-3])/i.test(targetStr);
+  if (isA0Source && (is480x320Target || isB3Target)) {
     return 5;
   }
 
