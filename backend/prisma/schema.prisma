@@ -242,6 +242,8 @@ model product_category {
   id                 Int     @id @default(autoincrement())
   name               String  @unique
   calc_mode          String
+  sort_order         Int     @default(0)
+  group_name         String?
   has_cover          Boolean @default(true)
   has_inner          Boolean @default(true)
   has_binding        Boolean @default(true)
