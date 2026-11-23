@@ -13,13 +13,13 @@ import { parseMaterial, extractSheetSize } from '../../utils/parseMaterial';
 import { calculatePaperDivision, compareProductSizes } from '../../utils/paperSizes';
 import CalculationHelpBadge from '../common/CalculationHelpBadge';
 import TemplateCatalogModal from './TemplateCatalogModal';
-import { 
-  getKonicaTariff, 
-  KonicaSubtype, 
-  parseGrammage, 
-  parseSidesFromColor, 
+import {
+  getKonicaTariff,
+  KonicaSubtype,
+  parseGrammage,
+  parseSidesFromColor,
   normalizeKonicaSize,
-  KonicaTariffResult 
+  KonicaTariffResult
 } from '../../utils/konicaPricing';
 
 interface OrderFormValues {
@@ -47,22 +47,22 @@ interface OrderFormValues {
   binding_type?: string;
   has_printed_endpaper?: boolean;
   has_super_cover?: boolean;
-  
+
   // 2. Өнгө
   cover_color: string;
   inner_color: string;
-  
+
   // 3. Хавчуурга
   has_bookmark: string;
-  
+
   // 4. Нүүр
   total_pages: number;
   print_cost: number;
-  
+
   // 5. Материал
-  materials: { 
-    material_name: string; size: string; print_size: string; press_sheet: string; 
-    base_qty: number; extra_qty: number; total_qty: number; divide_by: number; 
+  materials: {
+    material_name: string; size: string; print_size: string; press_sheet: string;
+    base_qty: number; extra_qty: number; total_qty: number; divide_by: number;
     sheet_qty: number; unit_cost: number; notes: string; is_cover?: boolean;
     is_manual_size?: boolean;
     is_manual_base?: boolean;
@@ -70,22 +70,22 @@ interface OrderFormValues {
     is_manual_plates?: boolean;
     is_standalone_ctp?: boolean;
   }[];
-  
+
   // 6. Ажиллагаа
-  operations: { 
-    operation_name: string; 
-    qty: number; 
-    unit_cost: number; 
-    notes: string; 
+  operations: {
+    operation_name: string;
+    qty: number;
+    unit_cost: number;
+    notes: string;
     is_manual?: boolean;
     is_pricing?: boolean;
     is_post_profit?: boolean;
     production_stage?: string;
   }[];
-  
+
   // 8. Гадуур ажил
   outsourced: { job_name: string; contractor_name?: string; qty: number; unit_cost: number; notes: string }[];
-  
+
   // 8. Санхүү
   profit_margin: number;
   payment_method_1: string;
@@ -131,8 +131,8 @@ function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = [
   const btLower = normalizedBt.toLowerCase();
 
   if (coverRules && coverRules.length > 0) {
-    const rule = coverRules.find((r: any) => 
-      r.size?.trim().toUpperCase() === s && 
+    const rule = coverRules.find((r: any) =>
+      r.size?.trim().toUpperCase() === s &&
       (normalizeBinding(r.binding).toLowerCase() === btLower || r.binding?.trim().toLowerCase() === btLower)
     );
     if (rule) return { pressSheet: rule.press_sheet, divideBy: rule.divide_by, printSize: rule.print_size };
@@ -169,7 +169,7 @@ function getCoverLogic(size: string, bindingType?: string, coverRules: any[] = [
   if (s === 'B5' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 6, printSize: '594x280' };
   if (s === 'A4' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 3, printSize: '720x380' };
   if (s === 'B4' && btLower === 'супер хавтастай') return { pressSheet: 1.0, divideBy: 2, printSize: 'B2' };
-  
+
   return null;
 }
 
@@ -203,13 +203,13 @@ function getMaterialType(matName?: string, notes?: string): {
   if (note.includes('под') || note.includes('дотор наалт') || note.includes('суурийн дотор') || n.includes('под')) {
     return { isAux: true, type: 'stand_lining', isNonPrinted: true };
   }
-  const isHardcoverCardboard = 
-    note.includes('хатуу хавтас') || 
-    note.includes('хатуу картон') || 
-    n.includes('хатуу хавтасны картон') || 
-    n.includes('хатуу картон') || 
-    n.includes('саарал картон') || 
-    n.includes('суурь картон') || 
+  const isHardcoverCardboard =
+    note.includes('хатуу хавтас') ||
+    note.includes('хатуу картон') ||
+    n.includes('хатуу хавтасны картон') ||
+    n.includes('хатуу картон') ||
+    n.includes('саарал картон') ||
+    n.includes('суурь картон') ||
     (n.includes('картон 2') && !n.includes('250гр') && !n.includes('200гр') && !n.includes('350гр') && !n.includes('хайрцаг'));
 
   if (isHardcoverCardboard) {
@@ -373,6 +373,8 @@ function getHardcoverAuxiliarySpecs(size?: string) {
       cardboardDiv: 9,
       standCardboardDiv: 4,
       standLiningDiv: 4,
+      endpaperDiv: 2.5,
+      endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
       endpaperDiv: 2,
       endpaperPrinted: { printSize: 'B2', pressSheet: '1.0', divBy: 2, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 12,
@@ -805,8 +807,8 @@ const SectionCard = ({ id, step, title, sub, icon, theme, actions, children }: a
             {sub && <div className="sub" style={{ fontSize: '11.5px', color: 'var(--muted-2)', fontWeight: 500, marginTop: '1px' }}>{sub}</div>}
           </div>
         </div>
-        <div 
-          className="erp-card-actions" 
+        <div
+          className="erp-card-actions"
           style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}
           onClick={(e) => {
             e.stopPropagation();
@@ -814,16 +816,16 @@ const SectionCard = ({ id, step, title, sub, icon, theme, actions, children }: a
           }}
         >
           {actions}
-          <div 
+          <div
             onClick={(e) => {
               e.stopPropagation();
               setCollapsed(!collapsed);
-            }} 
+            }}
             style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '2px' }}
             title={collapsed ? 'Дэлгэх' : 'Хураах'}
           >
             <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px', color: 'var(--muted-2)', transition: 'transform .2s' }}>
-              <path d="m6 9 6 6 6-6"/>
+              <path d="m6 9 6 6 6-6" />
             </svg>
           </div>
         </div>
@@ -913,8 +915,8 @@ function parseBagDimensions(sizeStr?: string, subSizeStr?: string): BagDimension
     g = parseFloat(match[3]) || g;
   }
 
-  const foldMatch = text.match(/амсар[:\s]*(\d+(?:\.\d+)?).*?ёроол[:\s]*(\d+(?:\.\d+)?)/i) || 
-                    text.match(/\+(\d+(?:\.\d+)?)\+(\d+(?:\.\d+)?)/);
+  const foldMatch = text.match(/амсар[:\s]*(\d+(?:\.\d+)?).*?ёроол[:\s]*(\d+(?:\.\d+)?)/i) ||
+    text.match(/\+(\d+(?:\.\d+)?)\+(\d+(?:\.\d+)?)/);
   if (foldMatch) {
     tf = parseFloat(foldMatch[1]) || tf;
     bf = parseFloat(foldMatch[2]) || bf;
@@ -971,6 +973,7 @@ const calculateMakeready = (
   }
 
   if (isBlack) {
+    if (baseQty <= 1000) return 60;
     if (baseQty <= 1000) return 80;
     if (baseQty <= 2000) return 100;
     if (baseQty <= 3000) return 150;
@@ -1147,7 +1150,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       .then(d => {
         if (Array.isArray(d)) setOrderStatuses(d);
       })
-      .catch(() => {});
+      .catch(() => { });
 
   }, [token]);
 
@@ -1313,7 +1316,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
   // Format deadline for date input
   const defaultDeadline = initialData?.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '';
-  
+
   const { register, control, watch, handleSubmit, setValue, getValues } = useForm<OrderFormValues>({
     defaultValues: initialData ? { ...initialData, deadline: defaultDeadline } : {
       customer_name: '', phone: '', company_name: '', company_registry: '', order_type: 'STANDARD', lead_source: 'Шууд харилцагч', deadline: '', product_name: '', category: '', total_qty: 0,
@@ -1418,7 +1421,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/constants`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
@@ -1471,7 +1474,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const divBy = Number(m.divide_by) || 1;
       setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
       return true;
-    } catch(e) {
+    } catch (e) {
       console.error("Formula eval error", e);
       return false;
     }
@@ -2129,13 +2132,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
             const stage = o.production_stage || mp?.production_stage || 'POST_PRESS';
             const cost = Number(o.unit_cost) || 0;
             const isPricing = cost > 0;
-            
+
             let calcQty = Number(o.qty) || 0;
             if (mp && mp.formula && mp.formula.expression && !o.is_manual) {
               try {
                 const res = evaluateOperationFormula(mp.formula.expression, smartMaterials, templateScope);
                 if (res > 0) calcQty = res;
-              } catch(err) {
+              } catch (err) {
                 calcQty = Number(o.qty) || 0;
               }
             }
@@ -2192,10 +2195,10 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const catConfig = productCategories.find(c => c.name === formValues.category);
       if (catConfig) {
         try {
-          const defaults = catConfig.default_operations ? (Array.isArray(catConfig.default_operations) 
-            ? catConfig.default_operations 
+          const defaults = catConfig.default_operations ? (Array.isArray(catConfig.default_operations)
+            ? catConfig.default_operations
             : JSON.parse(catConfig.default_operations)) : [];
-          
+
           const currentOps = getValues('operations') || [];
           // Хуучин Үндсэн ажиллагаануудыг устгах (зөвхөн гараар нэмсэн нь үлдэнэ)
           let newOps = currentOps.filter((o: any) => o.notes !== 'Үндсэн ажиллагаа');
@@ -2227,17 +2230,17 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           });
           setValue('operations', syncedOps);
           replaceOps(syncedOps);
-        } catch(e) {
+        } catch (e) {
           console.error("Failed to parse default operations", e);
         }
 
         try {
-          const defMats = catConfig.default_materials ? (Array.isArray(catConfig.default_materials) 
-            ? catConfig.default_materials 
+          const defMats = catConfig.default_materials ? (Array.isArray(catConfig.default_materials)
+            ? catConfig.default_materials
             : JSON.parse(catConfig.default_materials)) : [];
-          
+
           const currentMats = getValues('materials') || [];
-          let newMats = currentMats.filter((m: any) => 
+          let newMats = currentMats.filter((m: any) =>
             m.notes !== 'Үндсэн материал' && m.notes !== 'Хавтас' && m.notes !== 'Дотор хуудас' && m.material_name && m.material_name.trim() !== ''
           );
 
@@ -2398,7 +2401,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
               newMats.push({
                 material_name: matName,
-                is_cover: isCoverRow, 
+                is_cover: isCoverRow,
                 print_size: rowPrintSize,
                 size: finalMatSize,
                 press_sheet: rowPress,
@@ -2446,7 +2449,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
           });
           setValue('operations', freshlySyncedOps);
           replaceOps(freshlySyncedOps);
-        } catch(e) {
+        } catch (e) {
           console.error("Failed to parse default materials", e);
         }
       }
@@ -2506,7 +2509,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const handleSelectKonicaSubtype = (st: KonicaSubtype) => {
     setKonicaSubtype(st);
     const totalQ = Number(getValues('total_qty')) || 0;
-    
+
     if (st === 'PRINT_SHEET') {
       setValue('binding_type', 'Бусад');
       setValue('total_pages', 1);
@@ -2515,7 +2518,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const targetSize = norm === 'A4' ? 'А4' : 'А3 (8 гарах)';
       const divBy = norm === 'A4' ? 16 : 8;
       setValue('size', targetSize);
-      
+
       const curMat = getValues('materials.0.material_name') || '';
       const curGram = parseGrammage(curMat, 250);
       const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes(String(curGram)) && p.item_name.includes('Шохойтой') && p.item_name.includes('A0')) || {
@@ -2531,7 +2534,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials.0.extra_qty', 0);
       setValue('materials.0.total_qty', totalQ);
       setValue('materials.0.sheet_qty', Math.ceil(totalQ / divBy));
-      
+
       const tResult = getKonicaTariff({
         subtype: 'PRINT_SHEET',
         size: targetSize,
@@ -2550,7 +2553,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       }
       const sides = parseSidesFromColor(getValues('cover_color')) || 2;
       if (!getValues('cover_color')) setValue('cover_color', '4+4');
-      
+
       const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('157гр') && p.item_name.includes('Шохойтой') && p.item_name.includes('A0')) || {
         item_name: 'Шохойтой цаас 157гр A0 (889x1194)',
         unit_cost: 890
@@ -2566,7 +2569,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials.0.extra_qty', 0);
       setValue('materials.0.total_qty', totalSheets);
       setValue('materials.0.sheet_qty', Math.ceil(totalSheets / 16));
-      
+
       const tResult = getKonicaTariff({
         subtype: 'PRINT_MULTI_PAGE',
         size: 'A4',
@@ -2582,7 +2585,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const targetSize = (curSize === 'A5' || curSize === 'А5') ? 'A5' : 'A4';
       setValue('size', targetSize);
       setValue('cover_color', '4+0');
-      
+
       const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('100гр') && p.item_name.includes('Офсет')) || {
         item_name: 'Офсет цаас 100гр A0 (889x1194)',
         unit_cost: 675
@@ -2597,7 +2600,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials.0.extra_qty', 0);
       setValue('materials.0.total_qty', totalQ);
       setValue('materials.0.sheet_qty', Math.ceil(totalQ / divBy));
-      
+
       const tResult = getKonicaTariff({
         subtype: 'OFFICIAL_BLANK',
         size: targetSize
@@ -2608,7 +2611,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('total_pages', 1);
       setValue('size', '90x50');
       if (!getValues('cover_color')) setValue('cover_color', '4+0');
-      
+
       const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('300гр') && p.item_name.includes('Мат')) || {
         item_name: 'Мат цаас 300гр A0 (889x1194)',
         unit_cost: 1800
@@ -2623,7 +2626,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials.0.extra_qty', 0);
       setValue('materials.0.total_qty', baseCut);
       setValue('materials.0.sheet_qty', Math.ceil(baseCut / 4));
-      
+
       const tResult = getKonicaTariff({
         subtype: 'BUSINESS_CARD',
         paperType: konicaPaperType,
@@ -2643,7 +2646,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         pages = 20;
         setValue('total_pages', 20);
       }
-      
+
       const targetPaper = masterPrices.find(p => p.category === 'Цаас' && p.item_name.includes('шар') && p.item_name.includes('80гр')) || {
         item_name: 'Номын шар Хөнгөн 80гр A0 (889x1194)',
         unit_cost: 510
@@ -2660,7 +2663,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       setValue('materials.0.extra_qty', 0);
       setValue('materials.0.total_qty', totalSheets);
       setValue('materials.0.sheet_qty', Math.ceil(totalSheets / divBy));
-      
+
       const tResult = getKonicaTariff({
         subtype: 'BLACK_BOOK',
         size: targetSize,
@@ -2678,7 +2681,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     };
     setValue('materials.0.material_name', targetPaper.item_name);
     setValue('materials.0.unit_cost', targetPaper.unit_cost);
-    
+
     const tResult = getKonicaTariff({
       subtype: konicaSubtype,
       size: getValues('size'),
@@ -2697,7 +2700,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const handleSelectKonicaSides = (sides: 1 | 2) => {
     const newColor = sides === 2 ? '4+4' : '4+0';
     setValue('cover_color', newColor);
-    
+
     const m0 = getValues('materials.0');
     const tResult = getKonicaTariff({
       subtype: konicaSubtype,
@@ -2720,12 +2723,12 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     else if (sz.includes('480') || sz.includes('5')) divBy = 5;
     else if (sz.includes('A4') || sz.includes('А4')) divBy = 16;
     else if (sz.includes('A5') || sz.includes('А5')) divBy = 32;
-    
+
     setValue('materials.0.print_size', sz);
     setValue('materials.0.divide_by', divBy);
     const totalQ = Number(getValues('total_qty')) || 0;
     setValue('materials.0.sheet_qty', Math.ceil(Number(getValues('materials.0.total_qty') || totalQ) / divBy));
-    
+
     const m0 = getValues('materials.0');
     const tResult = getKonicaTariff({
       subtype: konicaSubtype,
@@ -2777,8 +2780,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     has_vat: formValues.has_vat || false,
     print_cost: Number(formValues.print_cost) || 0,
     design_cost: Number(formValues.design_cost) || 0,
-    manual_unit_price: (formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null && formValues.manual_unit_price !== '' as any) 
-      ? Number(formValues.manual_unit_price) 
+    manual_unit_price: (formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null && formValues.manual_unit_price !== '' as any)
+      ? Number(formValues.manual_unit_price)
       : null,
   };
 
@@ -2824,7 +2827,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const fractionLeaves = Math.round(fraction * divisions);
         fractionalSetups = popcount(fractionLeaves);
       }
-      
+
       // Дотор хуудасны бутархай хуудас нь зөвхөн урд ар өнгө ижил (1+1, 4+4) үед л
       // татаж хөмрөх (work-and-turn) боломжтой (front хавтан).
       // Харин 4+1, 4+2, 2+1 гэх мэт урд ар өнгө зөрүүтэй үед татаж хөмрөх боломжгүй тул
@@ -2901,16 +2904,16 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
       const effectiveCoverColor = b1 || defCoverColor || '4+0';
       const effectiveInnerColor = b2 || defInnerColor || (category === 'Ном хар' || category === 'Дэвтэр' ? '1+1' : '4+4');
 
-      const colorToUse = isCover 
-        ? effectiveCoverColor 
-        : (isInner 
-            ? effectiveInnerColor 
-            : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : (defCoverColor || '4+0')))));
+      const colorToUse = isCover
+        ? effectiveCoverColor
+        : (isInner
+          ? effectiveInnerColor
+          : (b1 || b2 || (isBag ? '4+0' : (isBrochure ? '4+4' : (defCoverColor || '4+0')))));
 
       let printSize = m.print_size;
       if (!printSize) {
-        printSize = isCover 
-          ? getDefaultPrintSize(category, currentA7Size, true, formValues.binding_type, coverRules) 
+        printSize = isCover
+          ? getDefaultPrintSize(category, currentA7Size, true, formValues.binding_type, coverRules)
           : (isBag ? 'B2' : (isBrochure ? 'A2' : getDefaultPrintSize(category, currentA7Size, false, formValues.binding_type, coverRules)));
       }
 
@@ -3074,7 +3077,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   useEffect(() => {
     let perUnitCost = 0;
     let fixedCtpCost = 0;
-    
+
     const parsePrice = (str: any) => {
       if (!str) return NaN;
       const s = String(str).trim();
@@ -3115,7 +3118,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (p) perUnitCost += p.unit_cost;
       }
     }
-    
+
     if (formValues.inner_color) {
       const c = groupedConstants['INNER_COLOR']?.find((x: any) => x.value === formValues.inner_color);
       const parsedPrice = c ? parsePrice(c.description) : NaN;
@@ -3139,7 +3142,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         if (p) perUnitCost += p.unit_cost;
       }
     }
-    
+
     const finalCost = (perUnitCost * (Number(formValues.total_qty) || 0)) + fixedCtpCost;
     setValue('print_cost', finalCost);
   }, [formValues.cover_color, formValues.inner_color, formValues.total_qty, formValues.materials, masterPrices, setValue, groupedConstants]);
@@ -3369,8 +3372,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         }
         const isManualExtra = Boolean(m.is_manual_extra);
         const rowColor = isCover ? formValues.cover_color : formValues.inner_color;
-        const extra = (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0) 
-          ? Number(m.extra_qty) 
+        const extra = (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0)
+          ? Number(m.extra_qty)
           : calculateMakeready(base, { category: cat, isCover, color: rowColor });
         if (!isManualExtra) {
           setValue(`materials.${index}.extra_qty`, extra);
@@ -3418,13 +3421,13 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const handleAddHardcoverAuxiliary = (overrideOptions?: { isPrintedEndpaper?: boolean; hasRibbon?: boolean }) => {
     const size = (getValues('size') || 'A5').toUpperCase();
     const totalQty = Number(getValues('total_qty')) || 0;
-    const isPrintedEndpaper = overrideOptions?.isPrintedEndpaper !== undefined 
-      ? overrideOptions.isPrintedEndpaper 
+    const isPrintedEndpaper = overrideOptions?.isPrintedEndpaper !== undefined
+      ? overrideOptions.isPrintedEndpaper
       : !!getValues('has_printed_endpaper');
-    const hasRibbon = overrideOptions?.hasRibbon !== undefined 
-      ? overrideOptions.hasRibbon 
+    const hasRibbon = overrideOptions?.hasRibbon !== undefined
+      ? overrideOptions.hasRibbon
       : !!getValues('has_bookmark');
-    
+
     const specs = getHardcoverAuxiliarySpecs(size);
     const cardboardDiv = specs.cardboardDiv;
     const endpaperDiv = specs.endpaperDiv;
@@ -3446,8 +3449,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     });
 
     const isBFormat = size.startsWith('B') || size.startsWith('В');
-    const targetCoverName = isBFormat 
-      ? 'Мат цаас 157гр B1 (889x1194)' 
+    const targetCoverName = isBFormat
+      ? 'Мат цаас 157гр B1 (889x1194)'
       : 'Мат цаас 157гр A0 (889x1194)';
     const targetSize = isBFormat ? 'B1' : 'A0';
     const targetPrice = isBFormat ? 710 : 940;
@@ -3977,62 +3980,62 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
 
       const aux = getMaterialType(matName, m.notes);
       if (aux.type === 'ctp') return;
-      
+
       // Special logic for Бүрэлт
       if (matName.includes('Бүрэлт')) {
-         const coverMat = mats.find((row: any) => row.is_cover);
-         const mainMat = mats.find((row: any) => {
-           const a = getMaterialType(row.material_name, row.notes);
-           return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
-         });
-         const targetMat = coverMat || mainMat;
-         const targetPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, formValues.binding_type, coverRules) : getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules)) || 'A2';
-         if (m.print_size !== targetPrintSize) {
-           setValue(`materials.${index}.print_size`, targetPrintSize);
-         }
+        const coverMat = mats.find((row: any) => row.is_cover);
+        const mainMat = mats.find((row: any) => {
+          const a = getMaterialType(row.material_name, row.notes);
+          return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+        });
+        const targetMat = coverMat || mainMat;
+        const targetPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, formValues.binding_type, coverRules) : getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules)) || 'A2';
+        if (m.print_size !== targetPrintSize) {
+          setValue(`materials.${index}.print_size`, targetPrintSize);
+        }
 
-         const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
-         const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
-         const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
-         if (String(m.press_sheet || '') !== targetPressSheet) {
-           setValue(`materials.${index}.press_sheet`, targetPressSheet);
-         }
-         if (Number(m.divide_by) !== 1) {
-           setValue(`materials.${index}.divide_by`, 1);
-         }
+        const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
+        const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+        const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
+        if (String(m.press_sheet || '') !== targetPressSheet) {
+          setValue(`materials.${index}.press_sheet`, targetPressSheet);
+        }
+        if (Number(m.divide_by) !== 1) {
+          setValue(`materials.${index}.divide_by`, 1);
+        }
 
-         const curWidth = m.size || getCoatingWidthFromPrintSize(targetPrintSize);
-         if (!m.size) {
-           setValue(`materials.${index}.size`, curWidth);
-         }
-         const coef = getCoatingCoefficient(curWidth || targetPrintSize);
+        const curWidth = m.size || getCoatingWidthFromPrintSize(targetPrintSize);
+        if (!m.size) {
+          setValue(`materials.${index}.size`, curWidth);
+        }
+        const coef = getCoatingCoefficient(curWidth || targetPrintSize);
 
-         const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : a6;
-         const expectedBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
-         const base = m.is_manual_base && Number(m.base_qty) > 0 ? Number(m.base_qty) : (expectedBase > 0 ? expectedBase : a6);
-         const currentOps = formValues.operations || [];
-         let extra = Number(m.extra_qty);
-         if (isNaN(extra) || extra < 0 || !m.is_manual_extra) {
-           extra = calculateCoatingMakeready(base, currentOps, `${m.material_name || ''} ${m.notes || ''}`);
-           if (Number(m.extra_qty) !== extra) setValue(`materials.${index}.extra_qty`, extra);
-         }
-         const tQty = base + extra;
-         
-         if (Number(m.total_qty) !== tQty) setValue(`materials.${index}.total_qty`, tQty);
-         const sQty = Number((tQty * coef).toFixed(2));
-         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
-         if (Number(m.base_qty) !== base) setValue(`materials.${index}.base_qty`, base);
-         return;
+        const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : a6;
+        const expectedBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
+        const base = m.is_manual_base && Number(m.base_qty) > 0 ? Number(m.base_qty) : (expectedBase > 0 ? expectedBase : a6);
+        const currentOps = formValues.operations || [];
+        let extra = Number(m.extra_qty);
+        if (isNaN(extra) || extra < 0 || !m.is_manual_extra) {
+          extra = calculateCoatingMakeready(base, currentOps, `${m.material_name || ''} ${m.notes || ''}`);
+          if (Number(m.extra_qty) !== extra) setValue(`materials.${index}.extra_qty`, extra);
+        }
+        const tQty = base + extra;
+
+        if (Number(m.total_qty) !== tQty) setValue(`materials.${index}.total_qty`, tQty);
+        const sQty = Number((tQty * coef).toFixed(2));
+        if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+        if (Number(m.base_qty) !== base) setValue(`materials.${index}.base_qty`, base);
+        return;
       }
-      
+
       // Special logic for Оосор
       if (matName.includes('Оосор')) {
-         const sQty = a6 * 2;
-         if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
-         if (Number(m.total_qty) !== sQty) setValue(`materials.${index}.total_qty`, sQty);
-         if (Number(m.base_qty) !== sQty) setValue(`materials.${index}.base_qty`, sQty);
-         if (Number(m.divide_by) !== 1) setValue(`materials.${index}.divide_by`, 1);
-         return;
+        const sQty = a6 * 2;
+        if (Number(m.sheet_qty) !== sQty) setValue(`materials.${index}.sheet_qty`, sQty);
+        if (Number(m.total_qty) !== sQty) setValue(`materials.${index}.total_qty`, sQty);
+        if (Number(m.base_qty) !== sQty) setValue(`materials.${index}.base_qty`, sQty);
+        if (Number(m.divide_by) !== 1) setValue(`materials.${index}.divide_by`, 1);
+        return;
       }
 
       if (aux.isAux || aux.isNonPrinted) return;
@@ -4101,8 +4104,8 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         const total = (m5 * pressNum) + (curExtra * setups);
         if (Number(m.total_qty) !== total) setValue(`materials.${index}.total_qty`, total);
 
-        const rawDiv = isBag 
-          ? (Number(m.divide_by) || 2) 
+        const rawDiv = isBag
+          ? (Number(m.divide_by) || 2)
           : (calculatePaperDivision(m.size || 'A0', m3) || 4);
         if (Number(m.divide_by) !== rawDiv) setValue(`materials.${index}.divide_by`, rawDiv);
         const sQty = Math.ceil(total / rawDiv);
@@ -4158,7 +4161,7 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
         return;
       }
     }
-    
+
     let targetStatus = initialData?.current_status || 'Санхүү хүлээгдэж буй';
     if (submitType === 'Үнийн санал') {
       targetStatus = 'Үнийн санал';
@@ -4169,21 +4172,21 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
     const cleanMaterials = (data.materials || []).filter(m => m.material_name && m.material_name.trim() !== '');
     const cleanOperations = (data.operations || []).filter(o => o.operation_name && o.operation_name.trim() !== '');
 
-    const payload = { 
-      ...data, 
+    const payload = {
+      ...data,
       materials: cleanMaterials,
       operations: cleanOperations,
-      ...prices, 
+      ...prices,
       final_price: prices?.finalPrice || 0,
       current_status: targetStatus
     };
     const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}` : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders`;
-    
+
     setIsSubmitting(true);
     fetch(url, {
       method,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
@@ -4211,4377 +4214,4378 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   return (
     <div className="erp-shell">
 
-    <div className="erp-main">
+      <div className="erp-main">
 
-      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
-        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
-          e.preventDefault();
-        }
-      }}>
-        
-        {/* 3-Column Layout: Customer Sidebar + Product & Calc Column + Price Summary Rail */}
-        <div className="erp-three-col-layout">
-          
-          {/* 1. Left Sidebar: Customer Information Panel */}
-          <div className="erp-customer-panel">
-            <div className="erp-card erp-card--blue" id="sec1">
-              <div className="erp-card-head" style={{ cursor: 'default' }}>
-                <div className="erp-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="step-badge">1</div>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="section-icon">🤝</span>
-                      <span>1. Харилцагчийн мэдээлэл</span>
-                    </h2>
-                    <div className="sub" style={{ fontSize: '11px', color: '#64748b' }}>Захиалагч & Бүртгэл</div>
+        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            e.preventDefault();
+          }
+        }}>
+
+          {/* 3-Column Layout: Customer Sidebar + Product & Calc Column + Price Summary Rail */}
+          <div className="erp-three-col-layout">
+
+            {/* 1. Left Sidebar: Customer Information Panel */}
+            <div className="erp-customer-panel">
+              <div className="erp-card erp-card--blue" id="sec1">
+                <div className="erp-card-head" style={{ cursor: 'default' }}>
+                  <div className="erp-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="step-badge">1</div>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="section-icon">🤝</span>
+                        <span>1. Харилцагчийн мэдээлэл</span>
+                      </h2>
+                      <div className="sub" style={{ fontSize: '11px', color: '#64748b' }}>Захиалагч & Бүртгэл</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="erp-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div className="erp-field">
-                  <label>Захиалагчийн нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '11px', color: '#64748b'}}>(сонголттой)</span> : <span style={{ color: 'red' }}>*</span>}</label>
-                  <Controller
-                    name="customer_name"
-                    control={control}
-                    render={({ field }) => (
-                      <CreatableSelect
-                        {...field}
-                        options={customers.map(c => ({ value: c.name, label: c.name, customer: c }))}
-                        onChange={(selected: any) => {
-                          field.onChange(selected ? selected.value : '');
-                          if (selected && selected.customer) {
-                            setValue('phone', selected.customer.phone || '');
-                            if (selected.customer.company_name) setValue('company_name', selected.customer.company_name);
-                            if (selected.customer.company_registry) setValue('company_registry', selected.customer.company_registry);
-                            if (selected.customer.discount_margin) {
-                              const dm = Number(selected.customer.discount_margin);
-                              const mult = dm > 100 ? dm / 100 : (dm > 10 ? 2.3 : dm);
-                              setValue('profit_margin', mult);
+
+                <div className="erp-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="erp-field">
+                    <label>Захиалагчийн нэр {isQuoteMode ? <span style={{ fontWeight: 'normal', fontSize: '11px', color: '#64748b' }}>(сонголттой)</span> : <span style={{ color: 'red' }}>*</span>}</label>
+                    <Controller
+                      name="customer_name"
+                      control={control}
+                      render={({ field }) => (
+                        <CreatableSelect
+                          {...field}
+                          options={customers.map(c => ({ value: c.name, label: c.name, customer: c }))}
+                          onChange={(selected: any) => {
+                            field.onChange(selected ? selected.value : '');
+                            if (selected && selected.customer) {
+                              setValue('phone', selected.customer.phone || '');
+                              if (selected.customer.company_name) setValue('company_name', selected.customer.company_name);
+                              if (selected.customer.company_registry) setValue('company_registry', selected.customer.company_registry);
+                              if (selected.customer.discount_margin) {
+                                const dm = Number(selected.customer.discount_margin);
+                                const mult = dm > 100 ? dm / 100 : (dm > 10 ? 2.3 : dm);
+                                setValue('profit_margin', mult);
+                              }
+                            }
+                          }}
+                          value={field.value ? { value: field.value, label: field.value } : null}
+                          placeholder="Хайх эсвэл шинээр..."
+                          isClearable
+                          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                          menuPosition="fixed"
+                          classNamePrefix="react-select"
+                          styles={compactSelectStyles}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="erp-field">
+                    <label title="[A2]">Утасны дугаар</label>
+                    <input {...register("phone")} placeholder="9911..." />
+                  </div>
+
+                  <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <div className="erp-field">
+                      <label>Байгууллагын нэр</label>
+                      <input {...register("company_name")} placeholder="Компани..." />
+                    </div>
+                    <div className="erp-field">
+                      <label>Регистр</label>
+                      <input {...register("company_registry")} placeholder="РД..." />
+                    </div>
+                  </div>
+
+                  <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <div className="erp-field">
+                      <label>Захиалгын төрөл</label>
+                      <select
+                        {...register("order_type")}
+                        value={formValues.order_type || 'STANDARD'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setValue("order_type", val);
+                          if (val === 'BARTER') {
+                            setValue('payment_method_1', 'Бартер');
+                            setValue('payment_percent_1', 100);
+                            setValue('payment_percent_2', 0);
+                          } else if (val === 'DONATION') {
+                            setValue('payment_method_1', 'Хандив');
+                            setValue('payment_percent_1', 100);
+                            setValue('payment_percent_2', 0);
+                          } else if (val === 'STANDARD') {
+                            if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
+                              setValue('payment_method_1', 'Дансаар');
+                              setValue('payment_percent_1', 50);
+                              setValue('payment_percent_2', 50);
                             }
                           }
                         }}
-                        value={field.value ? { value: field.value, label: field.value } : null}
-                        placeholder="Хайх эсвэл шинээр..."
+                      >
+                        <option value="STANDARD">Стандарт</option>
+                        <option value="BARTER">Бартер</option>
+                        <option value="DONATION">Хандив</option>
+                        <option value="INTERNAL">Дотоод</option>
+                      </select>
+                    </div>
+                    <div className="erp-field">
+                      <label>Эх үүсвэр</label>
+                      <select {...register("lead_source")} defaultValue="Шууд харилцагч">
+                        <option value="Шууд харилцагч">Шууд</option>
+                        <option value="Сошиал медиа">Сошиал</option>
+                        <option value="Утсаар">Утсаар</option>
+                        <option value="Имэйлээр">Имэйл</option>
+                        <option value="Гэрээт байгууллага">Гэрээт</option>
+                        <option value="Хуучин харилцагч">Хуучин</option>
+                        <option value="Танил">Танил</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="erp-field">
+                    <label>Хүлээлгэн өгөх огноо</label>
+                    <input type="date" {...register("deadline")} />
+                  </div>
+
+                  <div className="erp-field">
+                    <label>Хаяг / Тэмдэглэл</label>
+                    <textarea {...register("notes")} placeholder="Хаяг, хүргэлтийн санамж..." style={{ minHeight: '44px', fontSize: '12px' }} />
+                  </div>
+
+                  <div className="toggle-row" style={{ marginTop: '2px', padding: '5px 8px' }}>
+                    <span className="t" style={{ fontSize: '11.8px' }}>⚡ Яаралтай захиалга</span>
+                    <label className="switch">
+                      <input type="checkbox" {...register("is_urgent")} />
+                      <span className="track"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Center Column: Product & Calculation Workspace */}
+            <div className="erp-calc-col">
+
+              {/* Quick Section Navigation Ribbon */}
+              <SectionNavRibbon />
+
+              {/* Compact Presets & Templates Bar directly atop the calculation form */}
+              <div className="compact-presets-bar">
+                <div className="compact-presets-chips">
+                  {/* 1. Main Button: Opens Interactive Catalog Modal */}
+                  <button
+                    type="button"
+                    className="template-catalog-trigger-btn"
+                    onClick={() => setIsTemplateModalOpen(true)}
+                    title="Бүх бэлэн бүтээгдэхүүний загварыг ангилал, хайлттай дэлгэрэнгүй харах"
+                  >
+                    ⚡ Бэлэн загварын каталог ({templates.length || '16'})
+                  </button>
+
+                  {/* 2. Top Quick Preset Chips */}
+                  {[
+                    {
+                      key: 'soft_book',
+                      label: '📚 Зөөлөн ном (A5)',
+                      finder: (t: any) => (t.template_name?.includes('Ном') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
+                    },
+                    {
+                      key: 'hard_book',
+                      label: '📖 Хатуу хавтас (A5)',
+                      finder: (t: any) => t.template_name?.includes('Ном') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
+                    },
+                    {
+                      key: 'paper_bag',
+                      label: '🛍️ Цаасан тор (B2)',
+                      finder: (t: any) => t.category === 'Тор' || t.template_name?.includes('Тор')
+                    },
+                    {
+                      key: 'brochure',
+                      label: '📄 Танилцуулга (A4)',
+                      finder: (t: any) => t.category === 'Танилцуулга' || t.category === 'Брошур' || t.template_name?.includes('Танилцуулга') || t.template_name?.includes('Брошур')
+                    },
+                    {
+                      key: 'calendar',
+                      label: '🗓️ Календар (A5)',
+                      finder: (t: any) => t.category === 'Календар' || t.category === 'Календарь' || t.template_name?.includes('Календар')
+                    },
+                    {
+                      key: 'blank',
+                      label: '📑 Албан бланк (A4)',
+                      finder: (t: any) => t.category === 'Бланк' || t.template_name?.includes('бланк')
+                    }
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className="preset-chip-btn"
+                      onClick={() => {
+                        const matched = templates.find(item.finder);
+                        if (matched) {
+                          applyFullTemplate(matched);
+                        }
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 3. Searchable Select Dropdown */}
+                <div style={{ width: '220px', flex: 'none' }}>
+                  {(() => {
+                    const groupedOptions = Object.values(templates.reduce((acc: any, t: any) => {
+                      const cat = t.category || 'Бусад';
+                      if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
+                      acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
+                      return acc;
+                    }, {} as Record<string, any>));
+
+                    return (
+                      <Select
+                        options={groupedOptions}
+                        onChange={(selected: any) => {
+                          if (selected && selected.template) {
+                            applyFullTemplate(selected.template);
+                          }
+                        }}
+                        placeholder="🔍 Загвар хайх..."
                         isClearable
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         menuPosition="fixed"
                         classNamePrefix="react-select"
                         styles={compactSelectStyles}
                       />
-                    )}
-                  />
-                </div>
-
-                <div className="erp-field">
-                  <label title="[A2]">Утасны дугаар</label>
-                  <input {...register("phone")} placeholder="9911..." />
-                </div>
-
-                <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  <div className="erp-field">
-                    <label>Байгууллагын нэр</label>
-                    <input {...register("company_name")} placeholder="Компани..." />
-                  </div>
-                  <div className="erp-field">
-                    <label>Регистр</label>
-                    <input {...register("company_registry")} placeholder="РД..." />
-                  </div>
-                </div>
-
-                <div className="erp-grid erp-grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  <div className="erp-field">
-                    <label>Захиалгын төрөл</label>
-                    <select
-                      {...register("order_type")}
-                      value={formValues.order_type || 'STANDARD'}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setValue("order_type", val);
-                        if (val === 'BARTER') {
-                          setValue('payment_method_1', 'Бартер');
-                          setValue('payment_percent_1', 100);
-                          setValue('payment_percent_2', 0);
-                        } else if (val === 'DONATION') {
-                          setValue('payment_method_1', 'Хандив');
-                          setValue('payment_percent_1', 100);
-                          setValue('payment_percent_2', 0);
-                        } else if (val === 'STANDARD') {
-                          if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
-                            setValue('payment_method_1', 'Дансаар');
-                            setValue('payment_percent_1', 50);
-                            setValue('payment_percent_2', 50);
-                          }
-                        }
-                      }}
-                    >
-                      <option value="STANDARD">Стандарт</option>
-                      <option value="BARTER">Бартер</option>
-                      <option value="DONATION">Хандив</option>
-                      <option value="INTERNAL">Дотоод</option>
-                    </select>
-                  </div>
-                  <div className="erp-field">
-                    <label>Эх үүсвэр</label>
-                    <select {...register("lead_source")} defaultValue="Шууд харилцагч">
-                      <option value="Шууд харилцагч">Шууд</option>
-                      <option value="Сошиал медиа">Сошиал</option>
-                      <option value="Утсаар">Утсаар</option>
-                      <option value="Имэйлээр">Имэйл</option>
-                      <option value="Гэрээт байгууллага">Гэрээт</option>
-                      <option value="Хуучин харилцагч">Хуучин</option>
-                      <option value="Танил">Танил</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="erp-field">
-                  <label>Хүлээлгэн өгөх огноо</label>
-                  <input type="date" {...register("deadline")} />
-                </div>
-
-                <div className="erp-field">
-                  <label>Хаяг / Тэмдэглэл</label>
-                  <textarea {...register("notes")} placeholder="Хаяг, хүргэлтийн санамж..." style={{ minHeight: '44px', fontSize: '12px' }} />
-                </div>
-
-                <div className="toggle-row" style={{ marginTop: '2px', padding: '5px 8px' }}>
-                  <span className="t" style={{ fontSize: '11.8px' }}>⚡ Яаралтай захиалга</span>
-                  <label className="switch">
-                    <input type="checkbox" {...register("is_urgent")} />
-                    <span className="track"></span>
-                  </label>
+                    );
+                  })()}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* 2. Center Column: Product & Calculation Workspace */}
-          <div className="erp-calc-col">
+              {/* Template Catalog Modal */}
+              <TemplateCatalogModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                templates={templates}
+                onSelectTemplate={applyFullTemplate}
+              />
 
-            {/* Quick Section Navigation Ribbon */}
-            <SectionNavRibbon />
+              {/* 2. Захиалгын мэдээлэл */}
+              <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл" theme="purple" icon="📋">
 
-            {/* Compact Presets & Templates Bar directly atop the calculation form */}
-            <div className="compact-presets-bar">
-              <div className="compact-presets-chips">
-                {/* 1. Main Button: Opens Interactive Catalog Modal */}
-                <button
-                  type="button"
-                  className="template-catalog-trigger-btn"
-                  onClick={() => setIsTemplateModalOpen(true)}
-                  title="Бүх бэлэн бүтээгдэхүүний загварыг ангилал, хайлттай дэлгэрэнгүй харах"
-                >
-                  ⚡ Бэлэн загварын каталог ({templates.length || '16'})
-                </button>
+                <div className="erp-grid erp-grid-5">
+                  <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{ fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b' }}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
+                  <div className="erp-field">
+                    <label>Бүтээгдэхүүний ангилал</label>
+                    <Controller
+                      name="category"
+                      control={control}
+                      render={({ field }) => {
+                        const flatCategories = categoryOptions.flatMap((g: any) => g.options || [g]);
+                        const selectedOption = field.value
+                          ? (flatCategories.find((o: any) => o.value === field.value) || { value: field.value, label: field.value })
+                          : null;
+                        return (
+                          <CreatableSelect
+                            {...field}
+                            options={categoryOptions}
+                            formatGroupLabel={(data: any) => (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700, color: '#334155', fontSize: '0.8rem', padding: '2px 0' }}>
+                                <span>{data.label}</span>
+                                <span style={{ background: '#e2e8f0', borderRadius: '10px', padding: '1px 6px', fontSize: '0.7rem', color: '#64748b' }}>
+                                  {data.options?.length || 0}
+                                </span>
+                              </div>
+                            )}
+                            onChange={(selected: any) => {
+                              const val = selected ? selected.value : '';
+                              field.onChange(val);
+                              setValue('category', val);
+                              const selectedCatConfig = productCategories.find(c => c.name === val);
+                              const curBt = getValues('binding_type');
+                              if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Дэвтэр' || val === 'Брошур') {
+                                setValue('binding_type', 'Үдээстэй');
+                              } else if (val === 'Календар') {
+                                setValue('binding_type', 'Спираль');
+                              } else if (val === 'Ном хар' || val === 'Ном өнгөт') {
+                                setValue('binding_type', 'Наалттай');
+                              } else if (selectedCatConfig?.has_cover && (!curBt || curBt.trim() === '')) {
+                                setValue('binding_type', 'Наалттай');
+                              }
 
-                {/* 2. Top Quick Preset Chips */}
-                {[
-                  {
-                    key: 'soft_book',
-                    label: '📚 Зөөлөн ном (A5)',
-                    finder: (t: any) => (t.template_name?.includes('Ном') && t.binding_type === 'Наалттай') || t.template_name?.includes('Зөөлөн хавтас')
-                  },
-                  {
-                    key: 'hard_book',
-                    label: '📖 Хатуу хавтас (A5)',
-                    finder: (t: any) => t.template_name?.includes('Ном') && (t.template_name?.includes('Хатуу хавтас') || t.binding_type === 'Хатуу хавтастай')
-                  },
-                  {
-                    key: 'paper_bag',
-                    label: '🛍️ Цаасан тор (B2)',
-                    finder: (t: any) => t.category === 'Тор' || t.template_name?.includes('Тор')
-                  },
-                  {
-                    key: 'brochure',
-                    label: '📄 Танилцуулга (A4)',
-                    finder: (t: any) => t.category === 'Танилцуулга' || t.category === 'Брошур' || t.template_name?.includes('Танилцуулга') || t.template_name?.includes('Брошур')
-                  },
-                  {
-                    key: 'calendar',
-                    label: '🗓️ Календар (A5)',
-                    finder: (t: any) => t.category === 'Календар' || t.category === 'Календарь' || t.template_name?.includes('Календар')
-                  },
-                  {
-                    key: 'blank',
-                    label: '📑 Албан бланк (A4)',
-                    finder: (t: any) => t.category === 'Бланк' || t.template_name?.includes('бланк')
-                  }
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className="preset-chip-btn"
-                    onClick={() => {
-                      const matched = templates.find(item.finder);
-                      if (matched) {
-                        applyFullTemplate(matched);
-                      }
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+                              const curPages = Number(getValues('total_pages')) || 0;
+                              if (curPages === 0) {
+                                if (val === 'Сэтгүүл') setValue('total_pages', 28);
+                                else if (val === 'Дэвтэр') setValue('total_pages', 44);
+                                else if (val === 'Сонин') setValue('total_pages', 8);
+                                else if (val === 'Танилцуулга' || val === 'Брошур') setValue('total_pages', 4);
+                                else if (val === 'Календар') setValue('total_pages', 26);
+                                else if (val === 'Ном өнгөт') setValue('total_pages', 96);
+                                else if (val === 'Ном хар') setValue('total_pages', 160);
+                              }
 
-              {/* 3. Searchable Select Dropdown */}
-              <div style={{ width: '220px', flex: 'none' }}>
-                {(() => {
-                  const groupedOptions = Object.values(templates.reduce((acc: any, t: any) => {
-                    const cat = t.category || 'Бусад';
-                    if (!acc[cat]) acc[cat] = { label: `📦 ${cat}`, options: [] };
-                    acc[cat].options.push({ value: t.id, label: t.template_name, template: t });
-                    return acc;
-                  }, {} as Record<string, any>));
-                  
-                  return (
-                    <Select
-                      options={groupedOptions}
-                      onChange={(selected: any) => {
-                        if (selected && selected.template) {
-                          applyFullTemplate(selected.template);
-                        }
+                              const colors = getDefaultColorsForCategory(val);
+                              if (!getValues('cover_color') && colors.coverColor) {
+                                setValue('cover_color', colors.coverColor);
+                              }
+                              if (!getValues('inner_color') && colors.innerColor) {
+                                setValue('inner_color', colors.innerColor);
+                              }
+                              if (!getValues('size')) {
+                                setValue('size', getDefaultSizeForCategory(val));
+                              }
+
+                              if (val === 'Түргэн хэвлэл' || val === 'Түргэн хэвлэл Konica') {
+                                const currentSize = getValues('size') || 'А3 (8 гарах)';
+                                let qPrintSize = 'А3 (8 гарах)';
+                                let qDivBy = 8;
+                                const sLower = currentSize.toLowerCase();
+                                if (sLower.includes('6')) {
+                                  qPrintSize = 'А3 (6 гарах)';
+                                  qDivBy = 6;
+                                } else if (sLower.includes('480') || sLower.includes('320') || sLower.includes('5')) {
+                                  qPrintSize = '480х320 (А0-оос 5 гарна)';
+                                  qDivBy = 5;
+                                } else if (sLower.includes('a4') || sLower.includes('а4')) {
+                                  qPrintSize = 'А4';
+                                  qDivBy = 16;
+                                }
+                                setValue('size', qPrintSize);
+                                const totalQ = Number(getValues('total_qty')) || 0;
+                                const materials = getValues('materials') || [];
+                                materials.forEach((m: any, index: number) => {
+                                  setValue(`materials.${index}.print_size`, qPrintSize);
+                                  setValue(`materials.${index}.divide_by`, qDivBy);
+                                  setValue(`materials.${index}.press_sheet`, '1');
+                                  setValue(`materials.${index}.base_qty`, totalQ);
+                                  setValue(`materials.${index}.extra_qty`, 0);
+                                  setValue(`materials.${index}.total_qty`, totalQ);
+                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
+                                });
+                              }
+
+                              if (val === 'Нэрийн хуудас') {
+                                setValue('size', '90x50');
+                                const totalQ = Number(getValues('total_qty')) || 0;
+                                const pDiv = 40;
+                                const base = Math.ceil(totalQ / pDiv);
+                                const extra = calculateMakeready(base, { category: val, color: '4+0' });
+                                const materials = getValues('materials') || [];
+                                materials.forEach((m: any, index: number) => {
+                                  const aux = getMaterialType(m.material_name, m.notes);
+                                  if (aux.type === 'ctp') return;
+                                  if (aux.type === 'coating') {
+                                    setValue(`materials.${index}.print_size`, 'A2');
+                                    setValue(`materials.${index}.divide_by`, 4);
+                                    setValue(`materials.${index}.press_sheet`, '1');
+                                    setValue(`materials.${index}.base_qty`, base);
+                                    setValue(`materials.${index}.extra_qty`, 20);
+                                    setValue(`materials.${index}.total_qty`, base + 20);
+                                    setValue(`materials.${index}.sheet_qty`, Number(((base + 20) * 0.006).toFixed(2)));
+                                    return;
+                                  }
+                                  setValue(`materials.${index}.print_size`, 'A2');
+                                  setValue(`materials.${index}.divide_by`, 4);
+                                  setValue(`materials.${index}.press_sheet`, '1');
+                                  setValue(`materials.${index}.base_qty`, base);
+                                  setValue(`materials.${index}.extra_qty`, extra);
+                                  setValue(`materials.${index}.total_qty`, base + extra);
+                                  setValue(`materials.${index}.sheet_qty`, Math.ceil((base + extra) / 4));
+                                });
+                              }
+                            }}
+                            value={selectedOption}
+                            placeholder="Бүтээгдэхүүний ангилал сонгох эсвэл шинээр бичих..."
+                            isClearable
+                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                            menuPosition="fixed"
+                            classNamePrefix="react-select"
+                            styles={compactSelectStyles}
+                          />
+                        );
                       }}
-                      placeholder="🔍 Загвар хайх..."
-                      isClearable
-                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                      menuPosition="fixed"
-                      classNamePrefix="react-select"
-                      styles={compactSelectStyles}
                     />
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Template Catalog Modal */}
-            <TemplateCatalogModal
-              isOpen={isTemplateModalOpen}
-              onClose={() => setIsTemplateModalOpen(false)}
-              templates={templates}
-              onSelectTemplate={applyFullTemplate}
-            />
-
-            {/* 2. Захиалгын мэдээлэл */}
-            <SectionCard id="sec2" step="2" title="2. Захиалгын мэдээлэл" theme="purple" icon="📋">
-          
-          <div className="erp-grid erp-grid-5">
-            <div className="erp-field"><label>Бүтээгдэхүүний нэр {isQuoteMode ? <span style={{fontWeight: 'normal', fontSize: '0.85rem', color: '#64748b'}}>(Захиалга үүсгэхэд заавал)</span> : <span style={{ color: 'red' }}>*</span>}</label><input {...register("product_name")} /></div>
-            <div className="erp-field">
-              <label>Бүтээгдэхүүний ангилал</label>
-              <Controller
-                name="category"
-                control={control}
-                render={({ field }) => {
-                  const flatCategories = categoryOptions.flatMap((g: any) => g.options || [g]);
-                  const selectedOption = field.value 
-                    ? (flatCategories.find((o: any) => o.value === field.value) || { value: field.value, label: field.value }) 
-                    : null;
-                  return (
-                    <CreatableSelect
-                      {...field}
-                      options={categoryOptions}
-                      formatGroupLabel={(data: any) => (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700, color: '#334155', fontSize: '0.8rem', padding: '2px 0' }}>
-                          <span>{data.label}</span>
-                          <span style={{ background: '#e2e8f0', borderRadius: '10px', padding: '1px 6px', fontSize: '0.7rem', color: '#64748b' }}>
-                            {data.options?.length || 0}
-                          </span>
-                        </div>
-                      )}
-                      onChange={(selected: any) => {
-                        const val = selected ? selected.value : '';
-                        field.onChange(val);
-                        setValue('category', val);
-                        const selectedCatConfig = productCategories.find(c => c.name === val);
-                        const curBt = getValues('binding_type');
-                        if (val === 'Сэтгүүл' || val === 'Танилцуулга' || val === 'Дэвтэр' || val === 'Брошур') {
-                          setValue('binding_type', 'Үдээстэй');
-                        } else if (val === 'Календар') {
-                          setValue('binding_type', 'Спираль');
-                        } else if (val === 'Ном хар' || val === 'Ном өнгөт') {
-                          setValue('binding_type', 'Наалттай');
-                        } else if (selectedCatConfig?.has_cover && (!curBt || curBt.trim() === '')) {
-                          setValue('binding_type', 'Наалттай');
-                        }
-
-                        const curPages = Number(getValues('total_pages')) || 0;
-                        if (curPages === 0) {
-                          if (val === 'Сэтгүүл') setValue('total_pages', 28);
-                          else if (val === 'Дэвтэр') setValue('total_pages', 44);
-                          else if (val === 'Сонин') setValue('total_pages', 8);
-                          else if (val === 'Танилцуулга' || val === 'Брошур') setValue('total_pages', 4);
-                          else if (val === 'Календар') setValue('total_pages', 26);
-                          else if (val === 'Ном өнгөт') setValue('total_pages', 96);
-                          else if (val === 'Ном хар') setValue('total_pages', 160);
-                        }
-
-                        const colors = getDefaultColorsForCategory(val);
-                        if (!getValues('cover_color') && colors.coverColor) {
-                          setValue('cover_color', colors.coverColor);
-                        }
-                        if (!getValues('inner_color') && colors.innerColor) {
-                          setValue('inner_color', colors.innerColor);
-                        }
-                        if (!getValues('size')) {
-                          setValue('size', getDefaultSizeForCategory(val));
-                        }
-
-                        if (val === 'Түргэн хэвлэл' || val === 'Түргэн хэвлэл Konica') {
-                          const currentSize = getValues('size') || 'А3 (8 гарах)';
-                          let qPrintSize = 'А3 (8 гарах)';
-                          let qDivBy = 8;
-                          const sLower = currentSize.toLowerCase();
-                          if (sLower.includes('6')) {
-                            qPrintSize = 'А3 (6 гарах)';
-                            qDivBy = 6;
-                          } else if (sLower.includes('480') || sLower.includes('320') || sLower.includes('5')) {
-                            qPrintSize = '480х320 (А0-оос 5 гарна)';
-                            qDivBy = 5;
-                          } else if (sLower.includes('a4') || sLower.includes('а4')) {
-                            qPrintSize = 'А4';
-                            qDivBy = 16;
-                          }
-                          setValue('size', qPrintSize);
-                          const totalQ = Number(getValues('total_qty')) || 0;
-                          const materials = getValues('materials') || [];
-                          materials.forEach((m: any, index: number) => {
-                            setValue(`materials.${index}.print_size`, qPrintSize);
-                            setValue(`materials.${index}.divide_by`, qDivBy);
-                            setValue(`materials.${index}.press_sheet`, '1');
-                            setValue(`materials.${index}.base_qty`, totalQ);
+                  </div>
+                  <div className="erp-field">
+                    <label title="[A6]">Хэвлэгдэх тоо нийт</label>
+                    <input type="number" {...register("total_qty", {
+                      onChange: (e) => {
+                        const a6 = Number(e.target.value) || 0;
+                        const oldA6 = Number(getValues('total_qty')) || 0;
+                        const materials = getValues('materials') || [];
+                        if (a6 === 0) {
+                          materials.forEach((m, index) => {
+                            setValue(`materials.${index}.base_qty`, 0);
                             setValue(`materials.${index}.extra_qty`, 0);
-                            setValue(`materials.${index}.total_qty`, totalQ);
-                            setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
+                            setValue(`materials.${index}.total_qty`, 0);
+                            setValue(`materials.${index}.sheet_qty`, 0);
                           });
+                          return;
                         }
+                        materials.forEach((m, index) => {
+                          if (!m.material_name || !m.material_name.trim()) return;
+                          const aux = getMaterialType(m.material_name, m.notes);
+                          if (aux.type === 'ctp') return;
 
-                        if (val === 'Нэрийн хуудас') {
-                          setValue('size', '90x50');
-                          const totalQ = Number(getValues('total_qty')) || 0;
-                          const pDiv = 40;
-                          const base = Math.ceil(totalQ / pDiv);
-                          const extra = calculateMakeready(base, { category: val, color: '4+0' });
-                          const materials = getValues('materials') || [];
-                          materials.forEach((m: any, index: number) => {
-                            const aux = getMaterialType(m.material_name, m.notes);
-                            if (aux.type === 'ctp') return;
-                            if (aux.type === 'coating') {
-                              setValue(`materials.${index}.print_size`, 'A2');
-                              setValue(`materials.${index}.divide_by`, 4);
-                              setValue(`materials.${index}.press_sheet`, '1');
-                              setValue(`materials.${index}.base_qty`, base);
-                              setValue(`materials.${index}.extra_qty`, 20);
-                              setValue(`materials.${index}.total_qty`, base + 20);
-                              setValue(`materials.${index}.sheet_qty`, Number(((base + 20) * 0.006).toFixed(2)));
+                          const currentBase = Number(m.base_qty) || 0;
+                          const cat = getValues('category');
+                          const isQuickPrint = cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica';
+                          if (isQuickPrint) {
+                            setValue(`materials.${index}.base_qty`, a6);
+                            setValue(`materials.${index}.extra_qty`, 0);
+                            setValue(`materials.${index}.total_qty`, a6);
+                            const divBy = Number(m.divide_by) || 8;
+                            setValue(`materials.${index}.sheet_qty`, Math.ceil(a6 / divBy));
+                            return;
+                          }
+
+                          const isDividedCat = cat === 'Брошур' || cat === 'Флаер' || cat === 'Хортой маягт' || cat === 'Нэрийн хуудас';
+                          const a7 = getA7Size();
+                          const pDiv = isDividedCat ? (calculatePaperDivision(m.print_size || 'A2', a7) || 1) : 1;
+                          const isManualBase = Boolean(m.is_manual_base);
+                          const newBase = isManualBase ? currentBase : (isDividedCat ? Math.ceil(a6 / pDiv) : a6);
+                          setValue(`materials.${index}.base_qty`, newBase);
+
+                          if (aux.isAux) {
+                            const a7 = getA7Size();
+                            const specs = getHardcoverAuxiliarySpecs(a7);
+                            if (aux.type === 'cardboard') {
+                              const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
+                              const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+                              const cardboardPieces = isCalendar ? newBase : newBase * 2;
+                              setValue(`materials.${index}.base_qty`, cardboardPieces);
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, cardboardPieces);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
                               return;
                             }
-                            setValue(`materials.${index}.print_size`, 'A2');
-                            setValue(`materials.${index}.divide_by`, 4);
-                            setValue(`materials.${index}.press_sheet`, '1');
-                            setValue(`materials.${index}.base_qty`, base);
+                            if (aux.type === 'spiral_wire') {
+                              const loops = getSpiralLoops(a7);
+                              const totalLoops = newBase * loops;
+                              setValue(`materials.${index}.base_qty`, totalLoops);
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, totalLoops);
+                              setValue(`materials.${index}.sheet_qty`, totalLoops);
+                              return;
+                            }
+                            if (aux.type === 'stand_lining') {
+                              const lDiv = specs.standLiningDiv || 7;
+                              setValue(`materials.${index}.base_qty`, newBase);
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / lDiv));
+                              return;
+                            }
+                            if (aux.type === 'endpaper_super') {
+                              const superSpecs = getSuperCoverSpecs(a7);
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / superSpecs.endpaperDiv));
+                              return;
+                            }
+                            if (aux.type === 'super_cover') {
+                              const superSpecs = getSuperCoverSpecs(a7);
+                              const coverTotal = newBase + 100;
+                              setValue(`materials.${index}.extra_qty`, 100);
+                              setValue(`materials.${index}.total_qty`, coverTotal);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
+                              return;
+                            }
+                            if (aux.type === 'endpaper_plain') {
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.endpaperDiv));
+                              return;
+                            }
+                            if (aux.type === 'capital') {
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.headbandDiv));
+                              return;
+                            }
+                            if (aux.type === 'ribbon') {
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase * specs.ribbonLength));
+                              return;
+                            }
+                            if (aux.type === 'strap') {
+                              setValue(`materials.${index}.extra_qty`, 0);
+                              setValue(`materials.${index}.total_qty`, newBase * 2);
+                              setValue(`materials.${index}.sheet_qty`, newBase * 2);
+                              return;
+                            }
+                            if (aux.type === 'endpaper_printed') {
+                              const epTotal = (newBase * specs.endpaperPrinted.baseMultiplier) + specs.endpaperPrinted.extra;
+                              setValue(`materials.${index}.extra_qty`, specs.endpaperPrinted.extra);
+                              setValue(`materials.${index}.total_qty`, epTotal);
+                              setValue(`materials.${index}.sheet_qty`, Math.ceil(epTotal / specs.endpaperPrinted.divBy));
+                              return;
+                            }
+                            if (aux.type === 'coating') {
+                              const coverMat = materials.find((row: any) => row.is_cover);
+                              const mainMat = materials.find((row: any) => {
+                                const a = getMaterialType(row.material_name, row.notes);
+                                return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+                              });
+                              const targetMat = coverMat || mainMat;
+                              const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+                              const formCat = getValues('category');
+                              const isBagCategory = formCat === 'Тор' || formCat === 'Цаасан тор' || (getValues('size') && String(getValues('size')).startsWith('Тор'));
+                              const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : newBase;
+                              const targetBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
+                              const ops = getValues('operations') || [];
+                              const coatExtra = calculateCoatingMakeready(targetBase, ops, m.notes);
+                              setValue(`materials.${index}.base_qty`, targetBase);
+                              setValue(`materials.${index}.extra_qty`, coatExtra);
+                              setValue(`materials.${index}.is_manual_extra`, false as any);
+                              const tQty = targetBase + coatExtra;
+                              setValue(`materials.${index}.total_qty`, tQty);
+                              setValue(`materials.${index}.divide_by`, 1);
+                              const m3 = m.print_size || targetMat?.print_size || 'A3';
+                              const curWidth = m.size || getCoatingWidthFromPrintSize(m3);
+                              const coef = getCoatingCoefficient(curWidth || m3);
+                              setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                              return;
+                            }
+                          }
+
+                          let press = Number(m.press_sheet) || 0;
+                          if (press === 0 && isInnerPageMaterial(m, getValues('category'))) {
+                            const b4 = Number(getValues('total_pages')) || 0;
+                            if (b4 > 0) {
+                              const a7 = getA7Size();
+                              press = calculateInnerPressSheet(b4, m.print_size || 'A2', a7);
+                              if (press > 0) {
+                                setValue(`materials.${index}.press_sheet`, String(press));
+                              }
+                            }
+                          }
+                          if (isInnerPageMaterial(m, getValues('category')) && press === 0) {
+                            setValue(`materials.${index}.total_qty`, 0);
+                            setValue(`materials.${index}.sheet_qty`, 0);
+                            return;
+                          }
+                          if (press === 0) press = 1;
+
+                          const isAuxiliaryNoMakeready = aux.isAux;
+                          const isManualExtra = Boolean(m.is_manual_extra);
+                          const isCov = isCoverMaterial(m);
+                          const rowColor = isCov ? getValues('cover_color') : getValues('inner_color');
+                          const extra = isAuxiliaryNoMakeready
+                            ? (Number(m.extra_qty) || 0)
+                            : (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0
+                              ? Number(m.extra_qty)
+                              : calculateMakeready(newBase, { category: cat, isCover: isCov, color: rowColor }));
+                          if (!isManualExtra) {
                             setValue(`materials.${index}.extra_qty`, extra);
-                            setValue(`materials.${index}.total_qty`, base + extra);
-                            setValue(`materials.${index}.sheet_qty`, Math.ceil((base + extra) / 4));
-                          });
-                        }
-                      }}
-                      value={selectedOption}
-                      placeholder="Бүтээгдэхүүний ангилал сонгох эсвэл шинээр бичих..."
-                      isClearable
-                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                      menuPosition="fixed"
-                      classNamePrefix="react-select"
-                      styles={compactSelectStyles}
-                    />
-                  );
-                }}
-              />
-            </div>
-            <div className="erp-field">
-              <label title="[A6]">Хэвлэгдэх тоо нийт</label>
-              <input type="number" {...register("total_qty", {
-                onChange: (e) => {
-                  const a6 = Number(e.target.value) || 0;
-                  const oldA6 = Number(getValues('total_qty')) || 0;
-                  const materials = getValues('materials') || [];
-                  if (a6 === 0) {
-                    materials.forEach((m, index) => {
-                      setValue(`materials.${index}.base_qty`, 0);
-                      setValue(`materials.${index}.extra_qty`, 0);
-                      setValue(`materials.${index}.total_qty`, 0);
-                      setValue(`materials.${index}.sheet_qty`, 0);
-                    });
-                    return;
-                  }
-                  materials.forEach((m, index) => {
-                    if (!m.material_name || !m.material_name.trim()) return;
-                    const aux = getMaterialType(m.material_name, m.notes);
-                    if (aux.type === 'ctp') return;
-
-                    const currentBase = Number(m.base_qty) || 0;
-                    const cat = getValues('category');
-                    const isQuickPrint = cat === 'Түргэн хэвлэл' || cat === 'Түргэн хэвлэл Konica';
-                    if (isQuickPrint) {
-                      setValue(`materials.${index}.base_qty`, a6);
-                      setValue(`materials.${index}.extra_qty`, 0);
-                      setValue(`materials.${index}.total_qty`, a6);
-                      const divBy = Number(m.divide_by) || 8;
-                      setValue(`materials.${index}.sheet_qty`, Math.ceil(a6 / divBy));
-                      return;
-                    }
-
-                    const isDividedCat = cat === 'Брошур' || cat === 'Флаер' || cat === 'Хортой маягт' || cat === 'Нэрийн хуудас';
-                    const a7 = getA7Size();
-                    const pDiv = isDividedCat ? (calculatePaperDivision(m.print_size || 'A2', a7) || 1) : 1;
-                    const isManualBase = Boolean(m.is_manual_base);
-                    const newBase = isManualBase ? currentBase : (isDividedCat ? Math.ceil(a6 / pDiv) : a6);
-                    setValue(`materials.${index}.base_qty`, newBase);
-
-                    if (aux.isAux) {
-                      const a7 = getA7Size();
-                      const specs = getHardcoverAuxiliarySpecs(a7);
-                      if (aux.type === 'cardboard') {
-                        const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
-                        const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
-                        const cardboardPieces = isCalendar ? newBase : newBase * 2;
-                        setValue(`materials.${index}.base_qty`, cardboardPieces);
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, cardboardPieces);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
-                        return;
-                      }
-                      if (aux.type === 'spiral_wire') {
-                        const loops = getSpiralLoops(a7);
-                        const totalLoops = newBase * loops;
-                        setValue(`materials.${index}.base_qty`, totalLoops);
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, totalLoops);
-                        setValue(`materials.${index}.sheet_qty`, totalLoops);
-                        return;
-                      }
-                      if (aux.type === 'stand_lining') {
-                        const lDiv = specs.standLiningDiv || 7;
-                        setValue(`materials.${index}.base_qty`, newBase);
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / lDiv));
-                        return;
-                      }
-                      if (aux.type === 'endpaper_super') {
-                        const superSpecs = getSuperCoverSpecs(a7);
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / superSpecs.endpaperDiv));
-                        return;
-                      }
-                      if (aux.type === 'super_cover') {
-                        const superSpecs = getSuperCoverSpecs(a7);
-                        const coverTotal = newBase + 100;
-                        setValue(`materials.${index}.extra_qty`, 100);
-                        setValue(`materials.${index}.total_qty`, coverTotal);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
-                        return;
-                      }
-                      if (aux.type === 'endpaper_plain') {
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.endpaperDiv));
-                        return;
-                      }
-                      if (aux.type === 'capital') {
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase / specs.headbandDiv));
-                        return;
-                      }
-                      if (aux.type === 'ribbon') {
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(newBase * specs.ribbonLength));
-                        return;
-                      }
-                      if (aux.type === 'strap') {
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, newBase * 2);
-                        setValue(`materials.${index}.sheet_qty`, newBase * 2);
-                        return;
-                      }
-                      if (aux.type === 'endpaper_printed') {
-                        const epTotal = (newBase * specs.endpaperPrinted.baseMultiplier) + specs.endpaperPrinted.extra;
-                        setValue(`materials.${index}.extra_qty`, specs.endpaperPrinted.extra);
-                        setValue(`materials.${index}.total_qty`, epTotal);
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(epTotal / specs.endpaperPrinted.divBy));
-                        return;
-                      }
-                      if (aux.type === 'coating') {
-                        const coverMat = materials.find((row: any) => row.is_cover);
-                        const mainMat = materials.find((row: any) => {
-                          const a = getMaterialType(row.material_name, row.notes);
-                          return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+                          }
+                          const divs = calculatePaperDivision(m.print_size || 'A2', a7);
+                          const setups = isAuxiliaryNoMakeready ? 0 : calculateSetups(press, divs);
+                          const total = (newBase * press) + (extra * setups);
+                          setValue(`materials.${index}.total_qty`, total);
+                          let divBy = Number(m.divide_by) || 1;
+                          if (isDividedCat) {
+                            const calculatedDiv = calculatePaperDivision(m.size || 'Ao', m.print_size || 'A2') || 4;
+                            if (divBy !== calculatedDiv) {
+                              divBy = calculatedDiv;
+                              setValue(`materials.${index}.divide_by`, divBy);
+                            }
+                          }
+                          if (!evaluateDynamicFormula(index, { base_qty: newBase })) {
+                            setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                          }
                         });
-                        const targetMat = coverMat || mainMat;
-                        const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
-                        const formCat = getValues('category');
-                        const isBagCategory = formCat === 'Тор' || formCat === 'Цаасан тор' || (getValues('size') && String(getValues('size')).startsWith('Тор'));
-                        const rawBase = targetMat && Number(targetMat.base_qty) > 0 ? Number(targetMat.base_qty) : newBase;
-                        const targetBase = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
-                        const ops = getValues('operations') || [];
-                        const coatExtra = calculateCoatingMakeready(targetBase, ops, m.notes);
-                        setValue(`materials.${index}.base_qty`, targetBase);
-                        setValue(`materials.${index}.extra_qty`, coatExtra);
-                        setValue(`materials.${index}.is_manual_extra`, false as any);
-                        const tQty = targetBase + coatExtra;
-                        setValue(`materials.${index}.total_qty`, tQty);
-                        setValue(`materials.${index}.divide_by`, 1);
-                        const m3 = m.print_size || targetMat?.print_size || 'A3';
-                        const curWidth = m.size || getCoatingWidthFromPrintSize(m3);
-                        const coef = getCoatingCoefficient(curWidth || m3);
-                        setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                        return;
-                      }
-                    }
 
-                    let press = Number(m.press_sheet) || 0;
-                    if (press === 0 && isInnerPageMaterial(m, getValues('category'))) {
-                      const b4 = Number(getValues('total_pages')) || 0;
-                      if (b4 > 0) {
-                        const a7 = getA7Size();
-                        press = calculateInnerPressSheet(b4, m.print_size || 'A2', a7);
-                        if (press > 0) {
-                          setValue(`materials.${index}.press_sheet`, String(press));
+                        // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
+                        const updatedMats = getValues('materials') || [];
+                        setValue('materials', updatedMats);
+                        replaceMaterials(updatedMats);
+                        const currentOps = getValues('operations') || [];
+                        const syncedOps = syncStandardProductionOperations(currentOps, {
+                          category: getValues('category'),
+                          binding_type: getValues('binding_type'),
+                          total_qty: a6,
+                          total_pages: Number(getValues('total_pages')) || 0,
+                          cover_color: getValues('cover_color'),
+                          inner_color: getValues('inner_color'),
+                          materials: updatedMats,
+                          size: getValues('size')
+                        });
+                        setValue('operations', syncedOps);
+                        replaceOps(syncedOps);
+                      }
+                    })} />
+                  </div>
+                  <div className="erp-field">
+                    <label title="[A7]">Бүтээгдэхүүний хэмжээ</label>
+                    <Controller
+                      name="size"
+                      control={control}
+                      render={({ field }) => {
+                        const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
+                        const isBusinessCard = formValues.category === 'Нэрийн хуудас';
+                        let sizeOptions;
+                        if (isQuickPrint) {
+                          sizeOptions = [
+                            { value: 'А3 (8 гарах)', label: '⚡ А3 (8 гарах)' },
+                            { value: 'А3 (6 гарах)', label: '⚡ А3 (6 гарах)' },
+                            { value: '480х320 (А0-оос 5 гарна)', label: '⚡ 480х320 (А0-оос 5 гарна)' },
+                            { value: 'А4', label: '⚡ А4' }
+                          ];
+                        } else if (isBusinessCard) {
+                          sizeOptions = [
+                            { value: '90x50', label: '90x50 мм (А2-т 40 гарна)' },
+                            { value: '90x55', label: '90x55 мм (А2-т 40 гарна)' },
+                            { value: 'Custom', label: 'Custom' }
+                          ];
+                        } else {
+                          const rawSizes: string[] = (groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0)
+                            ? groupedConstants['SIZE'].map((c: any) => c.value)
+                            : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
+                          sizeOptions = [...rawSizes]
+                            .sort(compareProductSizes)
+                            .map(val => ({ value: val, label: val }));
                         }
-                      }
-                    }
-                    if (isInnerPageMaterial(m, getValues('category')) && press === 0) {
-                      setValue(`materials.${index}.total_qty`, 0);
-                      setValue(`materials.${index}.sheet_qty`, 0);
-                      return;
-                    }
-                    if (press === 0) press = 1;
-
-                    const isAuxiliaryNoMakeready = aux.isAux;
-                    const isManualExtra = Boolean(m.is_manual_extra);
-                    const isCov = isCoverMaterial(m);
-                    const rowColor = isCov ? getValues('cover_color') : getValues('inner_color');
-                    const extra = isAuxiliaryNoMakeready 
-                      ? (Number(m.extra_qty) || 0) 
-                      : (isManualExtra && m.extra_qty !== undefined && Number(m.extra_qty) >= 0 
-                          ? Number(m.extra_qty) 
-                          : calculateMakeready(newBase, { category: cat, isCover: isCov, color: rowColor }));
-                    if (!isManualExtra) {
-                      setValue(`materials.${index}.extra_qty`, extra);
-                    }
-                    const divs = calculatePaperDivision(m.print_size || 'A2', a7);
-                    const setups = isAuxiliaryNoMakeready ? 0 : calculateSetups(press, divs);
-                    const total = (newBase * press) + (extra * setups);
-                    setValue(`materials.${index}.total_qty`, total);
-                    let divBy = Number(m.divide_by) || 1;
-                    if (isDividedCat) {
-                      const calculatedDiv = calculatePaperDivision(m.size || 'Ao', m.print_size || 'A2') || 4;
-                      if (divBy !== calculatedDiv) {
-                        divBy = calculatedDiv;
-                        setValue(`materials.${index}.divide_by`, divBy);
-                      }
-                    }
-                    if (!evaluateDynamicFormula(index, { base_qty: newBase })) {
-                      setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
-                    }
-                  });
-
-                  // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
-                  const updatedMats = getValues('materials') || [];
-                  setValue('materials', updatedMats);
-                  replaceMaterials(updatedMats);
-                  const currentOps = getValues('operations') || [];
-                  const syncedOps = syncStandardProductionOperations(currentOps, {
-                    category: getValues('category'),
-                    binding_type: getValues('binding_type'),
-                    total_qty: a6,
-                    total_pages: Number(getValues('total_pages')) || 0,
-                    cover_color: getValues('cover_color'),
-                    inner_color: getValues('inner_color'),
-                    materials: updatedMats,
-                    size: getValues('size')
-                  });
-                  setValue('operations', syncedOps);
-                  replaceOps(syncedOps);
-                }
-              })} />
-            </div>
-            <div className="erp-field">
-              <label title="[A7]">Бүтээгдэхүүний хэмжээ</label>
-              <Controller
-                name="size"
-                control={control}
-                render={({ field }) => {
-                  const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
-                  const isBusinessCard = formValues.category === 'Нэрийн хуудас';
-                  let sizeOptions;
-                  if (isQuickPrint) {
-                    sizeOptions = [
-                      { value: 'А3 (8 гарах)', label: '⚡ А3 (8 гарах)' },
-                      { value: 'А3 (6 гарах)', label: '⚡ А3 (6 гарах)' },
-                      { value: '480х320 (А0-оос 5 гарна)', label: '⚡ 480х320 (А0-оос 5 гарна)' },
-                      { value: 'А4', label: '⚡ А4' }
-                    ];
-                  } else if (isBusinessCard) {
-                    sizeOptions = [
-                      { value: '90x50', label: '90x50 мм (А2-т 40 гарна)' },
-                      { value: '90x55', label: '90x55 мм (А2-т 40 гарна)' },
-                      { value: 'Custom', label: 'Custom' }
-                    ];
-                  } else {
-                    const rawSizes: string[] = (groupedConstants['SIZE'] && groupedConstants['SIZE'].length > 0)
-                      ? groupedConstants['SIZE'].map((c: any) => c.value)
-                      : ['A2', 'A3', 'A4', 'A5', 'A6', 'B2', 'B4', 'B5', 'B6', 'Custom'];
-                    sizeOptions = [...rawSizes]
-                      .sort(compareProductSizes)
-                      .map(val => ({ value: val, label: val }));
-                  }
-                  return (
-                    <CreatableSelect
-                      {...field}
-                      options={sizeOptions}
-                      onChange={(selected: any) => {
-                        const val = selected ? selected.value : '';
-                        field.onChange(val);
-                        recalculateMaterialsOnSizeChange(val, formValues.custom_width, formValues.custom_height);
+                        return (
+                          <CreatableSelect
+                            {...field}
+                            options={sizeOptions}
+                            onChange={(selected: any) => {
+                              const val = selected ? selected.value : '';
+                              field.onChange(val);
+                              recalculateMaterialsOnSizeChange(val, formValues.custom_width, formValues.custom_height);
+                            }}
+                            value={field.value ? { value: field.value, label: field.value } : null}
+                            placeholder="Сонгох эсвэл бичих..."
+                            isClearable
+                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                            menuPosition="fixed"
+                            classNamePrefix="react-select"
+                            styles={compactSelectStyles}
+                          />
+                        );
                       }}
-                      value={field.value ? { value: field.value, label: field.value } : null}
-                      placeholder="Сонгох эсвэл бичих..."
-                      isClearable
-                      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                      menuPosition="fixed"
-                      classNamePrefix="react-select"
-                      styles={compactSelectStyles}
                     />
-                  );
-                }}
-              />
-            </div>
-            {formValues.size === 'Custom' && (
-              <>
-                <div className="erp-field">
-                  <label>Өргөн (мм)</label>
-                  <input type="number" placeholder="Өргөн" {...register("custom_width", {
-                    valueAsNumber: true,
-                    onChange: (e) => {
-                      const w = Number(e.target.value) || 0;
-                      recalculateMaterialsOnSizeChange('Custom', w, formValues.custom_height);
-                    }
-                  })} />
-                </div>
-                <div className="erp-field">
-                  <label>Өндөр (мм)</label>
-                  <input type="number" placeholder="Өндөр" {...register("custom_height", {
-                    valueAsNumber: true,
-                    onChange: (e) => {
-                      const h = Number(e.target.value) || 0;
-                      recalculateMaterialsOnSizeChange('Custom', formValues.custom_width, h);
-                    }
-                  })} />
-                </div>
-              </>
-            )}
+                  </div>
+                  {formValues.size === 'Custom' && (
+                    <>
+                      <div className="erp-field">
+                        <label>Өргөн (мм)</label>
+                        <input type="number" placeholder="Өргөн" {...register("custom_width", {
+                          valueAsNumber: true,
+                          onChange: (e) => {
+                            const w = Number(e.target.value) || 0;
+                            recalculateMaterialsOnSizeChange('Custom', w, formValues.custom_height);
+                          }
+                        })} />
+                      </div>
+                      <div className="erp-field">
+                        <label>Өндөр (мм)</label>
+                        <input type="number" placeholder="Өндөр" {...register("custom_height", {
+                          valueAsNumber: true,
+                          onChange: (e) => {
+                            const h = Number(e.target.value) || 0;
+                            recalculateMaterialsOnSizeChange('Custom', formValues.custom_width, h);
+                          }
+                        })} />
+                      </div>
+                    </>
+                  )}
 
-            <div className="erp-field">
-              <label title="[A8]">Хавтасны төрөл</label>
-              <select {...register("binding_type", {
-                onChange: (e) => {
-                  const bt = e.target.value;
-                  const b4 = Number(getValues('total_pages')) || 0;
-                  const a7 = getA7Size();
-                  const totalQ = Number(getValues('total_qty')) || 0;
-                  const materials = getValues('materials') || [];
-                  materials.forEach((m, index) => {
-                    const isCover = m.is_cover || false;
-                    if (!isCover) return;
-                    
-                    const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
-                    if (categoryConfig.calc_mode === 'STANDARD_MODE') return;
-                    const coverLogic = getCoverLogic(a7, bt, coverRules);
-                    if (coverLogic) {
-                      const m4 = coverLogic.pressSheet;
-                      const divBy = coverLogic.divideBy;
-                      setValue(`materials.${index}.press_sheet`, String(m4));
-                      setValue(`materials.${index}.divide_by`, divBy);
-                      if (coverLogic?.printSize) {
-                        setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                      }
-                      
-                      const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
-                      if (base > 0 && Number(m.base_qty) !== base) {
-                        setValue(`materials.${index}.base_qty`, base);
-                      }
-                      const extra = calculateMakeready(base, { category: getValues('category'), isCover: true, color: getValues('cover_color') });
-                      setValue(`materials.${index}.extra_qty`, extra);
-                      const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
-                      const setups = calculateSetups(m4, divs);
-                      const total = (base * m4) + (extra * setups);
-                      setValue(`materials.${index}.total_qty`, total);
-                      if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                    }
-                  });
+                  <div className="erp-field">
+                    <label title="[A8]">Хавтасны төрөл</label>
+                    <select {...register("binding_type", {
+                      onChange: (e) => {
+                        const bt = e.target.value;
+                        const b4 = Number(getValues('total_pages')) || 0;
+                        const a7 = getA7Size();
+                        const totalQ = Number(getValues('total_qty')) || 0;
+                        const materials = getValues('materials') || [];
+                        materials.forEach((m, index) => {
+                          const isCover = m.is_cover || false;
+                          if (!isCover) return;
 
-                  if (bt.includes('хатуу')) {
-                    const isBFormat = a7.startsWith('B') || a7.startsWith('В');
-                    const targetCoverName = isBFormat 
-                      ? 'Мат цаас 157гр B1 (889x1194)' 
-                      : 'Мат цаас 157гр A0 (889x1194)';
-                    const targetSize = isBFormat ? 'B1' : 'A0';
-                    const targetPrice = isBFormat ? 710 : 940;
+                          const categoryConfig = productCategories.find((c: any) => c.name === getValues('category')) || {};
+                          if (categoryConfig.calc_mode === 'STANDARD_MODE') return;
+                          const coverLogic = getCoverLogic(a7, bt, coverRules);
+                          if (coverLogic) {
+                            const m4 = coverLogic.pressSheet;
+                            const divBy = coverLogic.divideBy;
+                            setValue(`materials.${index}.press_sheet`, String(m4));
+                            setValue(`materials.${index}.divide_by`, divBy);
+                            if (coverLogic?.printSize) {
+                              setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                            }
 
-                    const curMats = getValues('materials') || [];
-                    curMats.forEach((m: any, idx: number) => {
-                      if (m.is_cover || idx === 0) {
-                        setValue(`materials.${idx}.material_name`, targetCoverName);
-                        setValue(`materials.${idx}.size`, targetSize);
-                        setValue(`materials.${idx}.unit_cost`, targetPrice);
-                        setValue(`materials.${idx}.notes`, 'Хавтасны цаас (Матт 157гр)');
-                      }
-                    });
+                            const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
+                            if (base > 0 && Number(m.base_qty) !== base) {
+                              setValue(`materials.${index}.base_qty`, base);
+                            }
+                            const extra = calculateMakeready(base, { category: getValues('category'), isCover: true, color: getValues('cover_color') });
+                            setValue(`materials.${index}.extra_qty`, extra);
+                            const divs = calculatePaperDivision(coverLogic?.printSize || m.print_size || 'A2', a7);
+                            const setups = calculateSetups(m4, divs);
+                            const total = (base * m4) + (extra * setups);
+                            setValue(`materials.${index}.total_qty`, total);
+                            if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                          }
+                        });
 
-                    handleAddHardcoverAuxiliary();
-                  } else if (bt === 'Супер хавтастай') {
-                    // Changing to 'Супер хавтастай': The main cover row (is_cover: true) is the super cover!
-                    // Do NOT add auxiliary superCoverRow or endpaper (no duplicate papers).
-                    const currentMats = getValues('materials') || [];
-                    const cleanMats = currentMats.filter((m: any) => {
-                      const aux = getMaterialType(m.material_name, m.notes);
-                      if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
-                        return false;
-                      }
-                      return true;
-                    });
-                    if (cleanMats.length !== currentMats.length) {
-                      setValue('materials', cleanMats);
-                      replaceMaterials(cleanMats);
-                    }
+                        if (bt.includes('хатуу')) {
+                          const isBFormat = a7.startsWith('B') || a7.startsWith('В');
+                          const targetCoverName = isBFormat
+                            ? 'Мат цаас 157гр B1 (889x1194)'
+                            : 'Мат цаас 157гр A0 (889x1194)';
+                          const targetSize = isBFormat ? 'B1' : 'A0';
+                          const targetPrice = isBFormat ? 710 : 940;
 
-                    // Ensure cover is Matte 250gr
-                    cleanMats.forEach((m: any, idx: number) => {
-                      if (m.is_cover) {
-                        if (!m.material_name || !m.material_name.includes('250гр')) {
-                          setValue(`materials.${idx}.material_name`, 'Мат цаас 250гр B1 (787x1092)');
-                          setValue(`materials.${idx}.size`, 'B1');
-                          setValue(`materials.${idx}.unit_cost`, 1150);
-                          setValue(`materials.${idx}.notes`, 'Үндсэн хавтасны цаас');
+                          const curMats = getValues('materials') || [];
+                          curMats.forEach((m: any, idx: number) => {
+                            if (m.is_cover || idx === 0) {
+                              setValue(`materials.${idx}.material_name`, targetCoverName);
+                              setValue(`materials.${idx}.size`, targetSize);
+                              setValue(`materials.${idx}.unit_cost`, targetPrice);
+                              setValue(`materials.${idx}.notes`, 'Хавтасны цаас (Матт 157гр)');
+                            }
+                          });
+
+                          handleAddHardcoverAuxiliary();
+                        } else if (bt === 'Супер хавтастай') {
+                          // Changing to 'Супер хавтастай': The main cover row (is_cover: true) is the super cover!
+                          // Do NOT add auxiliary superCoverRow or endpaper (no duplicate papers).
+                          const currentMats = getValues('materials') || [];
+                          const cleanMats = currentMats.filter((m: any) => {
+                            const aux = getMaterialType(m.material_name, m.notes);
+                            if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
+                              return false;
+                            }
+                            return true;
+                          });
+                          if (cleanMats.length !== currentMats.length) {
+                            setValue('materials', cleanMats);
+                            replaceMaterials(cleanMats);
+                          }
+
+                          // Ensure cover is Matte 250gr
+                          cleanMats.forEach((m: any, idx: number) => {
+                            if (m.is_cover) {
+                              if (!m.material_name || !m.material_name.includes('250гр')) {
+                                setValue(`materials.${idx}.material_name`, 'Мат цаас 250гр B1 (787x1092)');
+                                setValue(`materials.${idx}.size`, 'B1');
+                                setValue(`materials.${idx}.unit_cost`, 1150);
+                                setValue(`materials.${idx}.notes`, 'Үндсэн хавтасны цаас');
+                              }
+                            }
+                          });
+
+                          // Super cover is 1-sided printing: default cover_color to '4+0'
+                          if (!getValues('cover_color') || getValues('cover_color') === '4+4') {
+                            setValue('cover_color', '4+0');
+                          }
+
+                          // Add operation 'Супер хавтас хийх'
+                          const currentOps = getValues('operations') || [];
+                          const hasSuperOp = currentOps.some((o: any) => o.operation_name?.includes('Супер хавтас'));
+                          if (!hasSuperOp) {
+                            const nextOps = [
+                              ...currentOps,
+                              {
+                                operation_name: 'Супер хавтас хийх',
+                                qty: totalQ,
+                                unit_cost: 0,
+                                notes: `${a7} супер хавтас нугалах, өмсгөх`,
+                                is_pricing: false,
+                                production_stage: 'POST_PRESS'
+                              }
+                            ];
+                            setValue('operations', nextOps);
+                            replaceOps(nextOps);
+                          }
+                        } else {
+                          // Changing to softcover: clean up leftover hardcover / supercover auxiliaries
+                          const currentMats = getValues('materials') || [];
+                          const cleanMats = currentMats.filter((m: any) => {
+                            const aux = getMaterialType(m.material_name, m.notes);
+                            if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
+                              return false;
+                            }
+                            return true;
+                          });
+                          if (cleanMats.length !== currentMats.length) {
+                            setValue('materials', cleanMats);
+                            replaceMaterials(cleanMats);
+                          }
+                          const currentOps = getValues('operations') || [];
+                          const cleanOps = currentOps.filter((o: any) => {
+                            const name = o.operation_name || '';
+                            return !name.includes('Хатуу хавтас') && !name.includes('Супер хавтас');
+                          });
+                          if (cleanOps.length !== currentOps.length) {
+                            setValue('operations', cleanOps);
+                            replaceOps(cleanOps);
+                          }
+                        }
+
+                        if (bt === 'Блокон оёо') {
+                          const ops = getValues('operations') || [];
+                          if (!ops.some(o => o.operation_name === 'Блокон оёо')) {
+                            const mp = masterPrices.find(p => p.item_name === 'Блокон оёо');
+                            const formula = mp?.formula?.expression || 'ceil(total_pages / 16) * total_qty';
+                            const qty = evaluateOperationFormula(formula);
+                            const nextOps = [
+                              ...ops,
+                              {
+                                operation_name: 'Блокон оёо',
+                                qty,
+                                unit_cost: 0,
+                                is_pricing: false,
+                                production_stage: 'POST_PRESS',
+                                is_manual: false,
+                                notes: 'Утас блокон оёо'
+                              }
+                            ];
+                            setValue('operations', nextOps);
+                            replaceOps(nextOps);
+                          }
                         }
                       }
-                    });
-
-                    // Super cover is 1-sided printing: default cover_color to '4+0'
-                    if (!getValues('cover_color') || getValues('cover_color') === '4+4') {
-                      setValue('cover_color', '4+0');
-                    }
-
-                    // Add operation 'Супер хавтас хийх'
-                    const currentOps = getValues('operations') || [];
-                    const hasSuperOp = currentOps.some((o: any) => o.operation_name?.includes('Супер хавтас'));
-                    if (!hasSuperOp) {
-                      const nextOps = [
-                        ...currentOps,
-                        {
-                          operation_name: 'Супер хавтас хийх',
-                          qty: totalQ,
-                          unit_cost: 0,
-                          notes: `${a7} супер хавтас нугалах, өмсгөх`,
-                          is_pricing: false,
-                          production_stage: 'POST_PRESS'
-                        }
-                      ];
-                      setValue('operations', nextOps);
-                      replaceOps(nextOps);
-                    }
-                  } else {
-                    // Changing to softcover: clean up leftover hardcover / supercover auxiliaries
-                    const currentMats = getValues('materials') || [];
-                    const cleanMats = currentMats.filter((m: any) => {
-                      const aux = getMaterialType(m.material_name, m.notes);
-                      if (aux.type === 'cardboard' || aux.type === 'capital' || aux.type === 'ribbon' || aux.type === 'endpaper_plain' || aux.type === 'endpaper_super' || aux.type === 'super_cover') {
-                        return false;
-                      }
-                      return true;
-                    });
-                    if (cleanMats.length !== currentMats.length) {
-                      setValue('materials', cleanMats);
-                      replaceMaterials(cleanMats);
-                    }
-                    const currentOps = getValues('operations') || [];
-                    const cleanOps = currentOps.filter((o: any) => {
-                      const name = o.operation_name || '';
-                      return !name.includes('Хатуу хавтас') && !name.includes('Супер хавтас');
-                    });
-                    if (cleanOps.length !== currentOps.length) {
-                      setValue('operations', cleanOps);
-                      replaceOps(cleanOps);
-                    }
-                  }
-
-                  if (bt === 'Блокон оёо') {
-                    const ops = getValues('operations') || [];
-                    if (!ops.some(o => o.operation_name === 'Блокон оёо')) {
-                      const mp = masterPrices.find(p => p.item_name === 'Блокон оёо');
-                      const formula = mp?.formula?.expression || 'ceil(total_pages / 16) * total_qty';
-                      const qty = evaluateOperationFormula(formula);
-                      const nextOps = [
-                        ...ops,
-                        {
-                          operation_name: 'Блокон оёо',
-                          qty,
-                          unit_cost: 0,
-                          is_pricing: false,
-                          production_stage: 'POST_PRESS',
-                          is_manual: false,
-                          notes: 'Утас блокон оёо'
-                        }
-                      ];
-                      setValue('operations', nextOps);
-                      replaceOps(nextOps);
-                    }
-                  }
-                }
-              })}>
-                <option value="">Сонгох...</option>
-                <option value="Наалттай">Наалттай</option>
-                <option value="Үдээстэй">Үдээстэй</option>
-                <option value="Хатуу хавтастай">Хатуу хавтастай</option>
-                <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
-                <option value="Супер хавтастай">Супер хавтастай</option>
-                <option value="Блокон оёо">Блокон оёо</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ⚡ Konica Minolta Дижитал Түргэн Хэвлэлийн Тарифт Тооцооны самбар */}
-          {isQuickPrint && (
-            <div style={{
-              margin: '12px 0',
-              padding: '14px 18px',
-              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-              border: '1.5px solid #0284c7',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(2, 132, 199, 0.08)'
-            }}>
-              {/* Дээд хэсэг: Гарчиг ба Идэвхтэй тарифт үнийн карт */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px', borderBottom: '1px solid #bae6fd', paddingBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '18px' }}>⚡</span>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '14px', color: '#0369a1', letterSpacing: '-0.01em' }}>
-                      ТҮРГЭН ХЭВЛЭЛ ҮНИЙН САНАЛ (KONICA MINOLTA)
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#0284c7' }}>
-                      {activeKonicaTariff?.description || 'Албан ёсны батлагдсан тарифаар нэгж үнэ автоматаар бодогдоно'}
-                    </div>
+                    })}>
+                      <option value="">Сонгох...</option>
+                      <option value="Наалттай">Наалттай</option>
+                      <option value="Үдээстэй">Үдээстэй</option>
+                      <option value="Хатуу хавтастай">Хатуу хавтастай</option>
+                      <option value="Хөндлөн хатуу хавтастай">Хөндлөн хатуу хавтастай</option>
+                      <option value="Супер хавтастай">Супер хавтастай</option>
+                      <option value="Блокон оёо">Блокон оёо</option>
+                    </select>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* ⚡ Konica Minolta Дижитал Түргэн Хэвлэлийн Тарифт Тооцооны самбар */}
+                {isQuickPrint && (
                   <div style={{
-                    background: '#ffffff',
+                    margin: '12px 0',
+                    padding: '14px 18px',
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
                     border: '1.5px solid #0284c7',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '6px'
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(2, 132, 199, 0.08)'
                   }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Тарифт нэгж үнэ:</span>
-                    <span style={{ fontSize: '16px', fontWeight: 800, color: '#0369a1' }}>
-                      {activeKonicaTariff ? activeKonicaTariff.unitPrice.toLocaleString() : '—'} ₮
-                    </span>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>/ш</span>
-                  </div>
+                    {/* Дээд хэсэг: Гарчиг ба Идэвхтэй тарифт үнийн карт */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px', borderBottom: '1px solid #bae6fd', paddingBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '18px' }}>⚡</span>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '14px', color: '#0369a1', letterSpacing: '-0.01em' }}>
+                            ТҮРГЭН ХЭВЛЭЛ ҮНИЙН САНАЛ (KONICA MINOLTA)
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#0284c7' }}>
+                            {activeKonicaTariff?.description || 'Албан ёсны батлагдсан тарифаар нэгж үнэ автоматаар бодогдоно'}
+                          </div>
+                        </div>
+                      </div>
 
-                  {formValues.manual_unit_price === activeKonicaTariff?.unitPrice ? (
-                    <span style={{ fontSize: '11px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontWeight: 700, border: '1px solid #86efac' }}>
-                      ✅ Үнэ холбогдсон
-                    </span>
-                  ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          background: '#ffffff',
+                          border: '1.5px solid #0284c7',
+                          borderRadius: '6px',
+                          padding: '4px 12px',
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '6px'
+                        }}>
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Тарифт нэгж үнэ:</span>
+                          <span style={{ fontSize: '16px', fontWeight: 800, color: '#0369a1' }}>
+                            {activeKonicaTariff ? activeKonicaTariff.unitPrice.toLocaleString() : '—'} ₮
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>/ш</span>
+                        </div>
+
+                        {formValues.manual_unit_price === activeKonicaTariff?.unitPrice ? (
+                          <span style={{ fontSize: '11px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontWeight: 700, border: '1px solid #86efac' }}>
+                            ✅ Үнэ холбогдсон
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (activeKonicaTariff) {
+                                setValue('manual_unit_price', activeKonicaTariff.unitPrice);
+                              }
+                            }}
+                            style={{
+                              background: '#0284c7',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '5px 10px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer'
+                            }}
+                            title="Тарифт үнийг захиалгын нэгж үнэ рүү оноох"
+                          >
+                            🔄 Тарифт үнийг оноох ({activeKonicaTariff?.unitPrice.toLocaleString()} ₮)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 5 Дэд төрлийн сонголт (Subtype Pills) */}
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.03em' }}>
+                        Бүтээгдэхүүний дэд төрөл (Тарифын хүснэгт):
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {[
+                          { key: 'PRINT_SHEET', label: 'Хэвлэлийн үнэ (1-200 ш)', hint: 'Өнгөт /A4/, Өнгөт /A3/' },
+                          { key: 'PRINT_MULTI_PAGE', label: 'Хуудастай хэвлэлийн үнэ (1-100 ш)', hint: 'Өнгөт /A4/' },
+                          { key: 'OFFICIAL_BLANK', label: 'Албан бланк (100 гр)', hint: 'A5 (330₮), A4 (440₮)' },
+                          { key: 'BUSINESS_CARD', label: 'Нэрийн хуудас', hint: '300 гр матт цаас, Арт цаас, Лактай, Булан дугуйлах' },
+                          { key: 'BLACK_BOOK', label: 'Хар ном (Номын гөлгөр шар 80 гр)', hint: 'A5, A4, A3' }
+                        ].map(item => {
+                          const isActive = konicaSubtype === item.key;
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => handleSelectKonicaSubtype(item.key as KonicaSubtype)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: isActive ? 700 : 500,
+                                color: isActive ? '#ffffff' : '#1e293b',
+                                backgroundColor: isActive ? '#0284c7' : '#ffffff',
+                                border: isActive ? '1px solid #0369a1' : '1px solid #cbd5e1',
+                                cursor: 'pointer',
+                                boxShadow: isActive ? '0 1px 3px rgba(2, 132, 199, 0.3)' : 'none',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={item.hint}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Дэд сонголтуудын эгнээ (Subtype specifics) */}
+                    <div style={{ background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '6px', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px' }}>
+
+                      {/* 1. Өнгөт хуудас & Хуудастай товхимол сонголтууд */}
+                      {(konicaSubtype === 'PRINT_SHEET' || konicaSubtype === 'PRINT_MULTI_PAGE') && (
+                        <>
+                          {konicaSubtype === 'PRINT_SHEET' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Формат:</span>
+                              {[
+                                { label: 'Өнгөт /A4/', val: 'А4' },
+                                { label: 'Өнгөт /A3/ (8 гарах)', val: 'А3 (8 гарах)' },
+                                { label: 'Өнгөт /A3/ (6 гарах)', val: 'А3 (6 гарах)' },
+                                { label: '480х320 (5 гарна)', val: '480х320 (А0-оос 5 гарна)' }
+                              ].map(s => {
+                                const isCur = formValues.size === s.val;
+                                return (
+                                  <button
+                                    key={s.val}
+                                    type="button"
+                                    onClick={() => handleSelectKonicaSize(s.val)}
+                                    style={{
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      fontWeight: isCur ? 700 : 500,
+                                      background: isCur ? '#0284c7' : '#f1f5f9',
+                                      color: isCur ? '#ffffff' : '#334155',
+                                      border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    {s.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Грамм:</span>
+                            {[105, 128, 157, 200, 250, 300].map(g => {
+                              const curGram = parseGrammage(formValues.materials?.[0]?.material_name, 250);
+                              const isCur = curGram === g;
+                              return (
+                                <button
+                                  key={g}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaGrammage(g)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {g} гр
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                            {[
+                              { label: '1 тал', val: 1 as const },
+                              { label: '2 тал', val: 2 as const }
+                            ].map(side => {
+                              const curSide = parseSidesFromColor(formValues.cover_color);
+                              const isCur = curSide === side.val;
+                              return (
+                                <button
+                                  key={side.val}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaSides(side.val)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {side.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {konicaSubtype === 'PRINT_MULTI_PAGE' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
+                              {[8, 12, 16, 20, 24, 32, 48].map(p => (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() => {
+                                    setValue('total_pages', p);
+                                  }}
+                                  style={{
+                                    padding: '2px 6px',
+                                    borderRadius: '3px',
+                                    fontSize: '10.5px',
+                                    background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
+                                    color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
+                                    border: '1px solid #cbd5e1',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* 2. Албан бланк (100 гр) сонголтууд */}
+                      {konicaSubtype === 'OFFICIAL_BLANK' && (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
+                            {[
+                              { label: 'А5 (330 ₮)', val: 'A5' },
+                              { label: 'А4 (440 ₮)', val: 'A4' }
+                            ].map(s => {
+                              const isCur = formValues.size === s.val || (s.val === 'A4' && formValues.size === 'А4');
+                              return (
+                                <button
+                                  key={s.val}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaSize(s.val)}
+                                  style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '4px',
+                                    fontSize: '11.5px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {s.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>
+                            100 гр
+                          </div>
+                        </>
+                      )}
+
+                      {/* 3. Нэрийн хуудас сонголтууд */}
+                      {konicaSubtype === 'BUSINESS_CARD' && (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас:</span>
+                            {[
+                              { label: '300 гр матт цаас (330/440₮)', val: '300 гр матт цаас' },
+                              { label: 'Арт цаас (550/660₮)', val: 'Арт цаас' },
+                              { label: 'Лактай (880₮)', val: 'Лактай' }
+                            ].map(c => {
+                              const isCur = konicaPaperType === c.val;
+                              return (
+                                <button
+                                  key={c.val}
+                                  type="button"
+                                  onClick={() => handleSelectCardType(c.val)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {c.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                            {[
+                              { label: '1 тал', val: 1 as const },
+                              { label: '2 тал', val: 2 as const }
+                            ].map(side => {
+                              const curSide = parseSidesFromColor(formValues.cover_color);
+                              const isCur = curSide === side.val;
+                              return (
+                                <button
+                                  key={side.val}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaSides(side.val)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {side.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#1e293b', background: konicaRoundedCorners ? '#e0f2fe' : '#f8fafc', padding: '3px 8px', borderRadius: '4px', border: konicaRoundedCorners ? '1px solid #0284c7' : '1px solid #cbd5e1' }}>
+                            <input
+                              type="checkbox"
+                              checked={konicaRoundedCorners}
+                              onChange={handleToggleRoundedCorners}
+                            />
+                            <span>Булан дугуйлах (+50₮)</span>
+                          </label>
+                        </>
+                      )}
+
+                      {/* 4. Хар ном сонголтууд */}
+                      {konicaSubtype === 'BLACK_BOOK' && (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ [Номын гөлгөр шар 80 гр]:</span>
+                            {[
+                              { label: 'A5 (150/300₮)', val: 'A5' },
+                              { label: 'A4 (200/400₮)', val: 'A4' },
+                              { label: 'A3 (300/600₮)', val: 'A3' }
+                            ].map(s => {
+                              const isCur = formValues.size === s.val;
+                              return (
+                                <button
+                                  key={s.val}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaSize(s.val)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {s.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
+                            {[
+                              { label: '1 тал', val: 1 as const },
+                              { label: '2 тал', val: 2 as const }
+                            ].map(side => {
+                              const curSide = parseSidesFromColor(formValues.cover_color);
+                              const isCur = curSide === side.val;
+                              return (
+                                <button
+                                  key={side.val}
+                                  type="button"
+                                  onClick={() => handleSelectKonicaSides(side.val)}
+                                  style={{
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: isCur ? 700 : 500,
+                                    background: isCur ? '#0284c7' : '#f1f5f9',
+                                    color: isCur ? '#ffffff' : '#334155',
+                                    border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {side.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
+                            {[16, 20, 32, 50, 64, 100, 160].map(p => (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => {
+                                  setValue('total_pages', p);
+                                }}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '3px',
+                                  fontSize: '10.5px',
+                                  background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
+                                  color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
+                                  border: '1px solid #cbd5e1',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {p}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                    </div>
+                  </div>
+                )}
+
+                {/* 2-р эгнээ: Эх бэлтгэл ба Нэмэлт сонголтууд цэгцтэй нэг эгнээнд */}
+                <div className="erp-sec2-row2">
+                  <div className="erp-field" style={{ width: '180px', flexShrink: 0 }}>
+                    <label>Эх бэлтгэлийн төлөв</label>
+                    <select {...register("design_status", {
+                      onChange: (e) => {
+                        const val = e.target.value;
+                        setValue('needs_design', val !== 'Эх бэлэн');
+                        if (val === 'Эх бэлтгэл хийх') {
+                          setValue('design_cost', 20000);
+                        } else if (val === 'Засварлах шаардлагатай') {
+                          setValue('design_cost', 10000);
+                        } else {
+                          setValue('design_cost', 0);
+                        }
+                      }
+                    })}>
+                      <option value="Эх бэлэн">Эх бэлэн</option>
+                      <option value="Эх бэлтгэл хийх">Эх бэлтгэл хийх</option>
+                      <option value="Засварлах шаардлагатай">Засварлах шаардлагатай</option>
+                    </select>
+                  </div>
+                  {formValues.design_status !== 'Эх бэлэн' && (
+                    <div className="erp-field" style={{ width: '130px', flexShrink: 0 }}>
+                      <label>Эх бэлтгэлийн үнэ (₮)</label>
+                      <input type="number" {...register("design_cost", { valueAsNumber: true })} />
+                    </div>
+                  )}
+
+                  {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
+                  {(() => {
+                    const hasSpotUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Хэсэгчилсэн)'));
+                    const hasRoughUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Барзгар)'));
+                    const hasEmboss = Boolean(formValues.operations?.some(o => o.operation_name === 'Эмбосс'));
+                    const activeClicheTypes = CLICHE_TYPES.filter(type =>
+                      formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
+                    );
+                    const hasCliche = activeClicheTypes.length > 0;
+                    const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
+                    const isMattCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('матт'));
+                    const isGlossCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('гялгар'));
+                    const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном хар' || formValues.category === 'Ном өнгөт';
+
+                    return (
+                      <div className="erp-field" style={{ flex: 1, minWidth: '320px' }}>
+                        <label>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ color: '#d97706' }}>✨</span>
+                            <span>Нэмэлт сонголтууд & өнгөлгөө</span>
+                          </span>
+                          <span className="tag" style={{ fontSize: '9.5px', background: '#fef3c7', color: '#92400e' }}>Шуурхай</span>
+                        </label>
+                        <div className="erp-addon-bar">
+                          {isHardcoverType && (
+                            <>
+                              <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
+                                <input
+                                  type="checkbox"
+                                  {...register("has_super_cover", {
+                                    onChange: (e) => {
+                                      if (e.target.checked) {
+                                        handleAddSuperCoverAuxiliary();
+                                      } else {
+                                        const existingMats = getValues('materials') || [];
+                                        const cleanMats = existingMats.filter(m => {
+                                          const n = (m.material_name || '').toLowerCase();
+                                          const notes = (m.notes || '').toLowerCase();
+                                          return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
+                                        });
+                                        setValue('materials', cleanMats);
+                                        replaceMaterials(cleanMats);
+                                        const existingOps = getValues('operations') || [];
+                                        const nextOps = existingOps.filter(o => !o.operation_name?.includes('Супер хавтас'));
+                                        setValue('operations', nextOps);
+                                        replaceOps(nextOps);
+                                      }
+                                    }
+                                  })}
+                                />
+                                <span>🧥 Супер</span>
+                              </label>
+
+                              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
+                                <>
+                                  <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
+                                    <input
+                                      type="checkbox"
+                                      {...register("has_printed_endpaper", {
+                                        onChange: (e) => {
+                                          if (isHardcoverCalculated) {
+                                            handleAddHardcoverAuxiliary({ isPrintedEndpaper: e.target.checked });
+                                          }
+                                        }
+                                      })}
+                                    />
+                                    <span>📄 Форзац</span>
+                                  </label>
+
+                                  <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
+                                    <input
+                                      type="checkbox"
+                                      {...register("has_bookmark", {
+                                        onChange: (e) => {
+                                          if (isHardcoverCalculated) {
+                                            handleAddHardcoverAuxiliary({ hasRibbon: e.target.checked });
+                                          }
+                                        }
+                                      })}
+                                    />
+                                    <span>🔖 Тууз</span>
+                                  </label>
+                                </>
+                              )}
+                              <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
+                            </>
+                          )}
+
+                          {/* Бүрэлтийн сонголтууд (Матт, Гялгар, болон 10 төрлийн бүрэлтийн сонголт) */}
+                          <label
+                            className={`erp-toggle-chip ${isMattCoating ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleCoating('Матт'); }}
+                            title="Матт бүрэлт нэмэх / хасах"
+                          >
+                            <input type="checkbox" checked={isMattCoating} readOnly />
+                            <span>✨ Матт бүрэлт</span>
+                          </label>
+
+                          <label
+                            className={`erp-toggle-chip ${isGlossCoating ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleCoating('Гялгар'); }}
+                            title="Гялгар бүрэлт нэмэх / хасах"
+                          >
+                            <input type="checkbox" checked={isGlossCoating} readOnly />
+                            <span>✨ Гялгар бүрэлт</span>
+                          </label>
+
+                          <select
+                            value={coatingMat?.material_name || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (!val) {
+                                if (coatingMat) toggleCoating(coatingMat.material_name);
+                              } else {
+                                toggleCoating(val);
+                              }
+                            }}
+                            style={{
+                              height: '26px',
+                              fontSize: '11.5px',
+                              borderRadius: '4px',
+                              border: coatingMat ? '1px solid #10b981' : '1px solid #cbd5e1',
+                              backgroundColor: coatingMat ? '#f0fdf4' : 'white',
+                              color: coatingMat ? '#065f46' : '#334155',
+                              fontWeight: coatingMat ? 600 : 400,
+                              padding: '0 6px',
+                              cursor: 'pointer',
+                              outline: 'none',
+                              width: 'auto',
+                              minWidth: '175px',
+                              maxWidth: '230px',
+                              flexShrink: 0
+                            }}
+                            title="Бүрэлтийн материал ба хэмжээг шууд сонгох (10 төрөл)"
+                          >
+                            <option value="">-- Бүрэлт сонгох (10 төрөл) --</option>
+                            <optgroup label="✨ Хятад гялгар">
+                              <option value="Бүрэлт гялгар Хятад 36 см">Бүрэлт гялгар Хятад 36 см (36см / B3/A3)</option>
+                              <option value="Бүрэлт гялгар Хятад 44 см">Бүрэлт гялгар Хятад 44 см (44см / A2)</option>
+                              <option value="Бүрэлт гялгар Хятад 54 см">Бүрэлт гялгар Хятад 54 см (54см / B2)</option>
+                            </optgroup>
+                            <optgroup label="✨ Хятад матт">
+                              <option value="Бүрэлт матт Хятад 36 см">Бүрэлт матт Хятад 36 см (36см / B3/A3)</option>
+                              <option value="Бүрэлт матт Хятад 44 см">Бүрэлт матт Хятад 44 см (44см / A2)</option>
+                              <option value="Бүрэлт матт Хятад 54 см">Бүрэлт матт Хятад 54 см (54см / B2)</option>
+                            </optgroup>
+                            <optgroup label="✨ Солонгос / Тусгай">
+                              <option value="Бүрэлт Илгэн Со 44 см">Бүрэлт Илгэн Со 44 см (44см / A2)</option>
+                              <option value="Бүрэлт гялгар/эмбосстой Со 36см">Бүрэлт гялгар/эмбосстой Со 36см (36см / B3/A3)</option>
+                              <option value="Бүрэлт матт/эмбосстой Со 36см">Бүрэлт матт/эмбосстой Со 36см (36см / B3/A3)</option>
+                              <option value="Бүрэлт матт/эмбосстой Со 44см">Бүрэлт матт/эмбосстой Со 44см (44см / A2)</option>
+                            </optgroup>
+                          </select>
+
+                          <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
+
+                          {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
+                          <label
+                            className={`erp-toggle-chip ${hasSpotUV ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Хэсэгчилсэн)', 150); }}
+                          >
+                            <input type="checkbox" checked={hasSpotUV} readOnly />
+                            <span>✨ Хэсэгчилсэн лак</span>
+                          </label>
+
+                          <label
+                            className={`erp-toggle-chip ${hasRoughUV ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Барзгар)', 250); }}
+                          >
+                            <input type="checkbox" checked={hasRoughUV} readOnly />
+                            <span>✨ Барзгар лак</span>
+                          </label>
+
+                          <label
+                            className={`erp-toggle-chip ${hasEmboss ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleFinishingOp('Эмбосс', 150); }}
+                          >
+                            <input type="checkbox" checked={hasEmboss} readOnly />
+                            <span>✨ Эмбосс</span>
+                          </label>
+
+                          <label
+                            className={`erp-toggle-chip ${hasCliche ? 'active' : ''}`}
+                            onClick={(e) => { e.preventDefault(); toggleAllCliche(); }}
+                          >
+                            <input type="checkbox" checked={hasCliche} readOnly />
+                            <span>✨ Клише {hasCliche ? '▾' : ''}</span>
+                          </label>
+
+                          {/* Клише задрах 5 дэд сонголтууд */}
+                          {hasCliche && (
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fff', padding: '1px 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569', marginRight: '2px' }}>Фольга:</span>
+                              {CLICHE_TYPES.map(type => {
+                                const opName = `Клише (${type})`;
+                                const isChecked = formValues.operations?.some(o => o.operation_name === opName);
+                                const cost = type === 'Бүтэн' ? 250 : 200;
+                                return (
+                                  <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => toggleFinishingOp(opName, cost)}
+                                    style={{
+                                      padding: '1px 6px',
+                                      fontSize: '11px',
+                                      fontWeight: isChecked ? 700 : 500,
+                                      borderRadius: '3px',
+                                      border: isChecked ? '1px solid #d97706' : '1px solid #cbd5e1',
+                                      background: isChecked ? '#fef3c7' : '#ffffff',
+                                      color: isChecked ? '#92400e' : '#475569',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '2px'
+                                    }}
+                                  >
+                                    {isChecked && <span style={{ color: '#d97706', fontWeight: 'bold' }}>✓</span>}
+                                    <span>{type}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
+                  <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
+                        <CalculationHelpBadge
+                          title="Цаасан торны дэлгээс хэмжээ"
+                          formula="Дэлгээс Өргөн = (Өргөн + Хажуу) × 2 | Дэлгээс Өндөр = Өндөр + Амсар (6см) + Ёроол (6см)"
+                          liveCalculation={`Дэлгээс: ${((bagDims.width + bagDims.gusset) * 2)}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см`}
+                          details={[
+                            "3 хэмжээст торыг хэвлэлийн цаасан дээр дэлгэхэд хажуу болон нугалааснууд нэмэгдэн тооцогдоно.",
+                            "Амсар болон Ёроол нугалааг стандартаар тус бүр 6 см гэж авна."
+                          ]}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <select
+                          style={{ fontSize: '0.85rem', padding: '0.4rem 0.6rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1e293b', minWidth: '220px' }}
+                          value={selectedBagPreset}
+                          onChange={(e) => handleSelectBagPreset(e.target.value)}
+                        >
+                          <option value="">-- Бэлэн стандарт хэмжээ сонгох --</option>
+                          {allBagPresets.map((p, idx) => (
+                            <option key={idx} value={p.label}>
+                              {p.label} {p.desc ? `(${p.desc})` : ''}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          disabled={isSavingPreset}
+                          onClick={handleSaveBagPreset}
+                          className="btn btn-outline"
+                          style={{ fontSize: '0.825rem', padding: '0.4rem 0.75rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                          title="Одоо оруулсан торны хэмжээг системд бэлдэц болгон хадгалах"
+                        >
+                          <span>💾</span>
+                          <span>{isSavingPreset ? 'Хадгалж байна...' : 'Хэмжээ хадгалах'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
+                      <div className="erp-field">
+                        <label>Өндөр (см)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={bagDims.height}
+                          onChange={(e) => {
+                            const h = Number(e.target.value) || 0;
+                            updateBagDimensions({ ...bagDims, height: h });
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field">
+                        <label>Өргөн (см)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={bagDims.width}
+                          onChange={(e) => {
+                            const w = Number(e.target.value) || 0;
+                            updateBagDimensions({ ...bagDims, width: w });
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field">
+                        <label>Хажуу (см)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={bagDims.gusset}
+                          onChange={(e) => {
+                            const g = Number(e.target.value) || 0;
+                            updateBagDimensions({ ...bagDims, gusset: g });
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field">
+                        <label>Амсар нугалаа (см)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={bagDims.topFold}
+                          onChange={(e) => {
+                            const tf = Number(e.target.value) || 0;
+                            updateBagDimensions({ ...bagDims, topFold: tf });
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field">
+                        <label>Ёроол нугалаа (см)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={bagDims.bottomFold}
+                          onChange={(e) => {
+                            const bf = Number(e.target.value) || 0;
+                            updateBagDimensions({ ...bagDims, bottomFold: bf });
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#eff6ff', borderLeft: '4px solid #3b82f6', color: '#1e3a8a', fontWeight: '500', borderRadius: '0.25rem', fontSize: '0.875rem' }}>
+                      💡 Автомат бодогдсон Дэлгээс хэмжээ: <strong>Өргөн {((bagDims.width + bagDims.gusset) * 2)} см х Өндөр {(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см</strong> ({((bagDims.width + bagDims.gusset) * 2) * 10}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold) * 10} мм) — B2 эсвэл А2 хэвлэлийн хуудсанд 1 ш багтана.
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+
+              {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
+              <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл" theme="cyan" icon="⚙️">
+                {(() => {
+                  const currentCatConfig = productCategories.find((c: any) => c.name === formValues.category);
+                  const hasCover = !currentCatConfig || currentCatConfig.has_cover;
+                  const hasPages = !currentCatConfig || currentCatConfig.has_pages;
+                  return (
+                    <div className="erp-grid erp-grid-3">
+                      <div className="erp-field">
+                        <label>[B1] {hasCover ? 'Хавтасны өнгө (Гадна)' : 'Хэвлэх өнгө'}</label>
+                        <select {...register("cover_color")}>
+                          <option value="">Сонгох...</option>
+                          {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
+                            groupedConstants['COVER_COLOR'].map((c: any) => (
+                              <option key={c.id || c.value} value={c.value}>
+                                {c.value}
+                              </option>
+                            ))
+                          ) : (
+                            [
+                              '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                              '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
+                              'алтлаг', 'бронз', 'мөнгөлөг'
+                            ].map(v => (
+                              <option key={v} value={v}>{v}</option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+                      <div className="erp-field">
+                        <label>[B2] {hasPages ? 'Хуудасны өнгө' : 'Арын талын өнгө'}</label>
+                        <select {...register("inner_color")}>
+                          <option value="">Сонгох...</option>
+                          {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
+                            groupedConstants['INNER_COLOR'].map((c: any) => (
+                              <option key={c.id || c.value} value={c.value}>
+                                {c.value}
+                              </option>
+                            ))
+                          ) : (
+                            [
+                              '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
+                              '4+0', '4+1', '4+2', '4+4'
+                            ].map(v => (
+                              <option key={v} value={v}>{v}</option>
+                            ))
+                          )}
+                          <option value="Custom (Тусгай)">Custom (Тусгай)</option>
+                        </select>
+                      </div>
+                      {formValues.inner_color === 'Custom (Тусгай)' && (
+                        <div className="erp-field">
+                          <label>[B3] Хавчуурга / Тусгай хуудасны тайлбар</label>
+                          <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
+                        </div>
+                      )}
+                      <div className="erp-field">
+                        <label>[B4] Нийт нүүр {hasCover ? '(Хавтас орохгүй)' : ''}</label>
+                        <input type="number" {...register("total_pages", {
+                          onChange: (e) => {
+                            const b4 = Number(e.target.value) || 0;
+                            const a7 = getA7Size();
+                            const category = getValues('category');
+                            const materials = getValues('materials') || [];
+                            materials.forEach((m, index) => {
+                              // Хэвлэлийн хуудасыг зөвхөн Дотор хуудсан дээр бодно!
+                              // Хавтас болон бусад туслах материалууд огт хөндөгдөхгүй!
+                              if (!isInnerPageMaterial(m, category)) {
+                                return;
+                              }
+
+                              let effectivePrintSize = m.print_size;
+                              if (!effectivePrintSize) {
+                                effectivePrintSize = getDefaultPrintSize(category, a7, false, getValues('binding_type'), coverRules);
+                                setValue(`materials.${index}.print_size`, effectivePrintSize);
+                              }
+
+                              const m4 = calculateInnerPressSheet(b4, effectivePrintSize, a7);
+                              setValue(`materials.${index}.press_sheet`, String(m4));
+
+                              const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
+                              const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
+                              let divBy = Number(m.divide_by) || 1;
+                              if (matDivs > 0) {
+                                setValue(`materials.${index}.divide_by`, matDivs);
+                                divBy = matDivs;
+                              }
+
+                              if (m4 > 0) {
+                                const totalQ = Number(getValues('total_qty')) || 0;
+                                if (totalQ === 0) {
+                                  setValue(`materials.${index}.base_qty`, 0);
+                                  setValue(`materials.${index}.extra_qty`, 0);
+                                  setValue(`materials.${index}.total_qty`, 0);
+                                  setValue(`materials.${index}.sheet_qty`, 0);
+                                  return;
+                                }
+                                const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
+                                if (base > 0 && Number(m.base_qty) !== base) {
+                                  setValue(`materials.${index}.base_qty`, base);
+                                }
+                                const extra = calculateMakeready(base, { category, isCover: false, color: getValues('inner_color') });
+                                setValue(`materials.${index}.extra_qty`, extra);
+                                const divs = calculatePaperDivision(effectivePrintSize, a7);
+                                const setups = calculateSetups(m4, divs);
+                                const total = (base * m4) + (extra * setups);
+                                setValue(`materials.${index}.total_qty`, total);
+                                if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) {
+                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                }
+                              } else {
+                                setValue(`materials.${index}.press_sheet`, '');
+                                setValue(`materials.${index}.total_qty`, 0);
+                                setValue(`materials.${index}.sheet_qty`, 0);
+                              }
+                            });
+
+                            // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
+                            const updatedMats = getValues('materials') || [];
+                            setValue('materials', updatedMats);
+                            replaceMaterials(updatedMats);
+                            const currentOps = getValues('operations') || [];
+                            const syncedOps = syncStandardProductionOperations(currentOps, {
+                              category,
+                              binding_type: getValues('binding_type'),
+                              total_qty: Number(getValues('total_qty')) || 0,
+                              total_pages: b4,
+                              cover_color: getValues('cover_color'),
+                              inner_color: getValues('inner_color'),
+                              materials: updatedMats,
+                              size: getValues('size')
+                            });
+                            setValue('operations', syncedOps);
+                            replaceOps(syncedOps);
+                          }
+                        })} />
+                      </div>
+                      <input type="hidden" {...register("print_cost")} />
+                    </div>
+                  );
+                })()}
+              </SectionCard>
+
+              {/* 6. Шаардлагатай материал */}
+              <SectionCard
+                id="sec6"
+                step="6"
+                title="6. Шаардлагатай материал"
+                sub="Цаас болон туслах материалын өртөг, хэвлэлийн бодолт"
+                theme="emerald"
+                icon="📦"
+                actions={
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      background: '#f1f5f9',
+                      padding: '2px',
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpandedMaterial(false);
+                      }}
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: !isExpandedMaterial ? 700 : 500,
+                        color: !isExpandedMaterial ? '#0f172a' : '#64748b',
+                        background: !isExpandedMaterial ? '#ffffff' : 'transparent',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      title="Хураангуй харагдац: Борлуулалтын үндсэн үнэ, өртөг"
+                    >
+                      <span>📄</span>
+                      <span>Хураангуй</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpandedMaterial(true);
+                      }}
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: isExpandedMaterial ? 700 : 500,
+                        color: isExpandedMaterial ? '#0284c7' : '#64748b',
+                        background: isExpandedMaterial ? '#ffffff' : 'transparent',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      title="Дэлгэрэнгүй харагдац: Хэвлэлийн хуудас, хуваалт, хадаас, том цаасны бодолт"
+                    >
+                      <span>🔬</span>
+                      <span>Дэлгэрэнгүй бодолт</span>
+                    </button>
+                  </div>
+                }
+              >
+
+                {(!formValues.category || !formValues.total_qty) && (
+                  <div style={{ margin: '0 0 0.6rem 0', padding: '0.4rem 0.75rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', fontSize: '0.78rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>💡</span>
+                    <span><strong>Санамж:</strong> Цаас болон материалын бодолтыг үнэн зөв ажиллуулахын тулд эхлээд дээрх <strong>Бүтээгдэхүүний ангилал</strong> болон <strong>Хэвлэгдэх тоо нийт</strong>-ийг оруулна уу.</span>
+                  </div>
+                )}
+                <div className="table-responsive" style={{ marginBottom: '1rem' }}>
+                  <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '930px' : '500px' }}>
+                    <colgroup>
+                      <col style={{ width: isExpandedMaterial ? '280px' : '48%' }} />
+                      {isExpandedMaterial && (
+                        <>
+                          <col style={{ width: '58px' }} />
+                          <col style={{ width: '48px' }} />
+                          <col style={{ width: '68px' }} />
+                          <col style={{ width: '58px' }} />
+                          <col style={{ width: '70px' }} />
+                          <col style={{ width: '50px' }} />
+                          <col style={{ width: '68px' }} />
+                        </>
+                      )}
+                      <col style={{ width: isExpandedMaterial ? '68px' : '13%' }} />
+                      <col style={{ width: isExpandedMaterial ? '84px' : '17%' }} />
+                      <col style={{ width: isExpandedMaterial ? 'auto' : '18%' }} />
+                      <col style={{ width: '30px' }} />
+                    </colgroup>
+                    <thead>
+                      {isExpandedMaterial ? (
+                        <>
+                          <tr>
+                            <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '280px' }}>Материал (Нэр, хэмжээ)</th>
+                            <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
+                              <div>Хэв.</div>
+                              <div>хэмжээ</div>
+                            </th>
+                            <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '48px', lineHeight: 1.15 }}>
+                              <div>Хэвл.</div>
+                              <div>хуудас</div>
+                            </th>
+                            <th colSpan={3} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Хэвлэгдэх тоо</th>
+                            <th rowSpan={2} title="[M8] Цаас хуваалт" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '50px', lineHeight: 1.15 }}>
+                              <div>Цаас</div>
+                              <div>хуваалт</div>
+                            </th>
+                            <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', lineHeight: 1.15 }}>
+                              <div>Том цаас</div>
+                              <div style={{ fontSize: '0.64rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
+                            </th>
+                            <th colSpan={2} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Өртөг (₮)</th>
+                            <th rowSpan={2} title="[MC] Тэмдэглэл / Заавар" style={{ padding: '0.3rem 0.35rem', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left' }}>Тэмдэглэл</th>
+                            <th rowSpan={2} style={{ padding: '0.2rem', width: '30px', textAlign: 'center' }}></th>
+                          </tr>
+                          <tr>
+                            <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Үндсэн</th>
+                            <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '58px', background: '#f8fafc' }}>Хадаас</th>
+                            <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Бүгд</th>
+                            <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Нэгж</th>
+                            <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '84px', background: '#f8fafc' }}>Нийт</th>
+                          </tr>
+                        </>
+                      ) : (
+                        <tr>
+                          <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '48%' }}>Материал</th>
+                          <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '13%' }}>Нэгж өртөг</th>
+                          <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'right', width: '17%' }}>Нийт өртөг</th>
+                          <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '18%' }}>Тэмдэглэл</th>
+                          <th style={{ padding: '0.2rem', width: '32px', textAlign: 'center' }}></th>
+                        </tr>
+                      )}
+                    </thead>
+                    <tbody>
+                      {materialFields.length === 0 && (
+                        <tr>
+                          <td colSpan={isExpandedMaterial ? 12 : 5} style={{ textAlign: 'center', padding: '1.2rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                            Материал оруулаагүй байна. Доорх "+ Материал нэмэх" товчийг дарж материал нэмнэ үү.
+                          </td>
+                        </tr>
+                      )}
+                      {materialFields.map((field, index) => {
+                        const m = formValues.materials?.[index];
+                        const amt = m?.sheet_qty || 0;
+                        const tCost = amt * (m?.unit_cost || 0);
+
+                        const currentMaterialName = formValues.materials?.[index]?.material_name || '';
+                        const parsedMasterPrices = masterPrices
+                          .filter(p => {
+                            const c = (p.category || '').toLowerCase();
+                            return c.includes('цаас') || c.includes('материал') || c.includes('paper') || c.includes('material') || c.includes('double side') || c.includes('tape');
+                          })
+                          .map(p => ({ ...p, ...parseMaterial(p.item_name) }));
+
+                        const isPaperItem = (p: any) => {
+                          const name = (p.item_name || '').toLowerCase();
+                          const cat = (p.category || '').toLowerCase();
+                          if (name.includes('ctp') || name.includes('стр') || name.includes('хавтан') || name.includes('бүрэлт') || name.includes('оосор') || name.includes('лидерин') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || (name.includes('цавуу') && !name.includes('pvc'))) {
+                            return false;
+                          }
+                          if (name.includes('pvc') || name.includes('тусгай')) return true;
+                          if (cat.includes('цаас') || cat.includes('paper')) return true;
+                          if (name.includes('цаас') || name.includes('paper')) return true;
+                          if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт') || name.includes('кай')) return true;
+                          return false;
+                        };
+
+                        const isCtpItem = (p: any) => {
+                          const name = (p.item_name || '').toLowerCase();
+                          return name.includes('ctp') || name.includes('стр') || name.includes('хавтан');
+                        };
+
+                        const isCoatingItem = (p: any) => {
+                          const name = (p.item_name || '').toLowerCase();
+                          return name.includes('бүрэлт');
+                        };
+
+                        const seenPaper = new Set<string>();
+                        const paperItems: string[] = [];
+                        parsedMasterPrices.filter(isPaperItem).forEach(p => {
+                          const fullItem = (p.item_name || '').trim();
+                          if (fullItem && !seenPaper.has(fullItem)) {
+                            seenPaper.add(fullItem);
+                            paperItems.push(fullItem);
+                          }
+                        });
+
+                        const seenCtp = new Set<string>();
+                        const ctpItems: string[] = [];
+                        parsedMasterPrices.filter(isCtpItem).forEach(p => {
+                          const fullItem = (p.item_name || '').trim();
+                          if (fullItem && !seenCtp.has(fullItem)) {
+                            seenCtp.add(fullItem);
+                            ctpItems.push(fullItem);
+                          }
+                        });
+
+                        const seenCoating = new Set<string>();
+                        const coatingItems: string[] = [];
+                        parsedMasterPrices.filter(isCoatingItem).forEach(p => {
+                          const fullItem = (p.item_name || '').trim();
+                          if (fullItem && !seenCoating.has(fullItem)) {
+                            seenCoating.add(fullItem);
+                            coatingItems.push(fullItem);
+                          }
+                        });
+
+                        const seenOther = new Set<string>();
+                        const otherItems: string[] = [];
+                        parsedMasterPrices.filter(p => !isPaperItem(p) && !isCtpItem(p) && !isCoatingItem(p)).forEach(p => {
+                          const fullItem = (p.item_name || '').trim();
+                          if (fullItem && !seenOther.has(fullItem)) {
+                            seenOther.add(fullItem);
+                            otherItems.push(fullItem);
+                          }
+                        });
+
+                        const allMaterialNames = [...paperItems, ...ctpItems, ...coatingItems, ...otherItems];
+                        const materialOptions = [
+                          ...(paperItems.length > 0 ? [{
+                            label: '📄 Цаас (Нэр ба хэмжээ)',
+                            options: paperItems.map(name => ({ value: name, label: name }))
+                          }] : []),
+                          ...(ctpItems.length > 0 ? [{
+                            label: '💿 CTP хавтан',
+                            options: ctpItems.map(name => ({ value: name, label: name }))
+                          }] : []),
+                          ...(coatingItems.length > 0 ? [{
+                            label: '✨ Бүрэлт',
+                            options: coatingItems.map(name => ({ value: name, label: name }))
+                          }] : []),
+                          ...(otherItems.length > 0 ? [{
+                            label: '📦 Бусад / Туслах материал',
+                            options: otherItems.map(name => ({ value: name, label: name }))
+                          }] : [])
+                        ];
+
+                        const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
+                        const inputStyle = tableInputStyle;
+
+                        const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
+                        const isSpecialStrap = currentMaterialName.includes('Оосор');
+                        const isSpecialWire = aux.type === 'spiral_wire' || currentMaterialName.includes('Нуруу');
+                        const isSpecialMat = isSpecialCoating || isSpecialStrap || isSpecialWire;
+                        const isCoverRow = isCoverMaterial(formValues.materials?.[index]);
+                        const curPress = Number(formValues.materials?.[index]?.press_sheet) || 0;
+                        const curBase = Number(formValues.materials?.[index]?.base_qty) || 0;
+                        const curExtra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                        const curTotal = Number(formValues.materials?.[index]?.total_qty) || 0;
+                        const curDiv = Number(formValues.materials?.[index]?.divide_by) || 1;
+                        const curSheet = Number(formValues.materials?.[index]?.sheet_qty) || 0;
+                        const isPrintedPaper = !aux.isNonPrinted && !aux.isAux && aux.type !== 'coating' && aux.type !== 'ctp';
+                        const showFractionalHint = isPrintedPaper && curPress > 0 && curPress !== 1;
+                        const disabledStyle = { ...inputStyle, backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' };
+
+                        return (
+                          <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
+                            <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '280px', minWidth: isExpandedMaterial ? '280px' : undefined }}>
+                              <input type="hidden" {...register(`materials.${index}.size`)} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
+                                <div style={{ flex: 1, minWidth: 0 }} title={formValues.materials?.[index]?.material_name || 'Материал сонгох'}>
+                                  <Controller
+                                    name={`materials.${index}.material_name`}
+                                    control={control}
+                                    render={({ field }) => {
+                                      const curVal = field.value || '';
+                                      let selectedMaterialOpt = null;
+                                      if (curVal) {
+                                        if (allMaterialNames.includes(curVal)) {
+                                          selectedMaterialOpt = { value: curVal, label: curVal };
+                                        } else {
+                                          const matched = allMaterialNames.find(n => n === curVal || n.startsWith(curVal) || curVal.startsWith(n) || n.toLowerCase().includes(curVal.toLowerCase()));
+                                          selectedMaterialOpt = matched ? { value: matched, label: matched } : { value: curVal, label: curVal };
+                                        }
+                                      }
+                                      return (
+                                        <Select
+                                          {...field}
+                                          value={selectedMaterialOpt}
+                                          options={materialOptions}
+                                          onChange={(selectedOption: any) => {
+                                            const val = selectedOption ? selectedOption.value : '';
+                                            field.onChange(val);
+                                            if (val) {
+                                              const selectedAux = getMaterialType(val);
+                                              const a7 = getA7Size();
+                                              const tQ = Number(getValues('total_qty'));
+                                              const totalQty = isNaN(tQ) || tQ < 0 ? 0 : tQ;
+                                              const isCover = Boolean(formValues.materials?.[index]?.is_cover || formValues.materials?.[index]?.notes?.includes('Хавтас'));
+                                              const bt = formValues.binding_type || '';
+                                              const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
+                                              const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
+
+                                              const matchingPrice = parsedMasterPrices.find(p => p.item_name === val) || parsedMasterPrices.find(p => p.baseName === val);
+                                              const sheetSize = extractSheetSize(val) || matchingPrice?.sizeName || 'A0';
+
+                                              if (matchingPrice) {
+                                                setValue(`materials.${index}.size`, sheetSize);
+                                                setValue(`materials.${index}.unit_cost`, matchingPrice.unit_cost);
+                                              } else {
+                                                setValue(`materials.${index}.size`, sheetSize || '');
+                                                setValue(`materials.${index}.unit_cost`, 0);
+                                              }
+
+                                              if (selectedAux.isAux) {
+                                                if (selectedAux.type === 'liderin') {
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, '');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, 'Лидерин хавтасны бүрээс');
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, totalQty);
+                                                  setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 0);
+                                                  return;
+                                                }
+                                                const specs = getHardcoverAuxiliarySpecs(a7);
+                                                if (selectedAux.type === 'ctp') {
+                                                  const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
+                                                  const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
+                                                  const curPrintSize = formValues.materials?.[index]?.print_size || 'A2';
+                                                  const explicitSize = extractSheetSize(val) || (val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : '76x60.5')));
+                                                  const plateFormat = explicitSize || (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5');
+                                                  const ctpPrice = plateFormat === '65x55' ? ctpPriceSmall : ctpPriceLarge;
+
+                                                  setValue(`materials.${index}.material_name`, val);
+                                                  setValue(`materials.${index}.size`, plateFormat);
+                                                  setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || ctpPrice);
+                                                  setValue(`materials.${index}.is_manual_size`, true as any);
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, '1');
+                                                  setValue(`materials.${index}.print_size`, curPrintSize);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  const currentBase = Number(formValues.materials?.[index]?.base_qty) || 4;
+                                                  setValue(`materials.${index}.base_qty`, currentBase);
+                                                  setValue(`materials.${index}.total_qty`, currentBase);
+                                                  setValue(`materials.${index}.sheet_qty`, currentBase);
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'cardboard') {
+                                                  const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
+                                                  const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
+                                                  const cardboardPieces = isCalendar ? totalQty : totalQty * 2;
+                                                  setValue(`materials.${index}.divide_by`, cDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '1');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, isCalendar ? `Суурийн картон (${cDiv}ш гарна)` : `Хатуу хавтасны картон (${cDiv}ш гарна)`);
+                                                  setValue(`materials.${index}.base_qty`, cardboardPieces);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, cardboardPieces);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'spiral_wire') {
+                                                  const loops = getSpiralLoops(a7);
+                                                  const totalLoops = totalQty * loops;
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, '—');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Спираль нуруу (${loops} нүх)`);
+                                                  setValue(`materials.${index}.base_qty`, totalLoops);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalLoops);
+                                                  setValue(`materials.${index}.sheet_qty`, totalLoops);
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'stand_lining') {
+                                                  const lDiv = specs.standLiningDiv || 7;
+                                                  setValue(`materials.${index}.divide_by`, lDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '—');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Суурийн дотор цаас (Под)`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / lDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'endpaper_super') {
+                                                  const superSpecs = getSuperCoverSpecs(a7);
+                                                  setValue(`materials.${index}.divide_by`, superSpecs.endpaperDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '1');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Супер хавтасны форзац 157гр (${superSpecs.endpaperDiv} хуваалт)`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / superSpecs.endpaperDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'super_cover') {
+                                                  const superSpecs = getSuperCoverSpecs(a7);
+                                                  const coverTotal = totalQty + 100;
+                                                  setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
+                                                  setValue(`materials.${index}.divide_by`, superSpecs.coverDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '1');
+                                                  setValue(`materials.${index}.notes`, `Супер хавтас 250гр (${superSpecs.coverPrintSize}, ${superSpecs.coverDiv} хуваалт)`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 100);
+                                                  setValue(`materials.${index}.total_qty`, coverTotal);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'endpaper_plain') {
+                                                  setValue(`materials.${index}.divide_by`, specs.endpaperDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '1');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Хэвлэлгүй форзац (${specs.endpaperDiv}ш гарна)`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.endpaperDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'capital') {
+                                                  setValue(`materials.${index}.divide_by`, specs.headbandDiv);
+                                                  setValue(`materials.${index}.press_sheet`, '');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Номын капитал (${totalQty}ш / ${specs.headbandDiv})`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.headbandDiv));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'ribbon') {
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, '');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.notes`, `Хавчуурга тууз (${Math.round(specs.ribbonLength * 100)}см)`);
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty);
+                                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty * specs.ribbonLength));
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'strap') {
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, '');
+                                                  setValue(`materials.${index}.print_size`, '');
+                                                  setValue(`materials.${index}.base_qty`, totalQty);
+                                                  setValue(`materials.${index}.extra_qty`, 0);
+                                                  setValue(`materials.${index}.total_qty`, totalQty * 2);
+                                                  setValue(`materials.${index}.sheet_qty`, totalQty * 2);
+                                                  return;
+                                                }
+                                                if (selectedAux.type === 'coating') {
+                                                  const coverMat = (formValues.materials || []).find((m: any) => m.is_cover);
+                                                  const mainMat = (formValues.materials || []).find((m: any) => {
+                                                    const a = getMaterialType(m.material_name, m.notes);
+                                                    return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
+                                                  });
+                                                  const targetMat = coverMat || mainMat;
+                                                  const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
+                                                  const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
+                                                  const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
+                                                  const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
+                                                  const parsed = parseMaterial(val);
+                                                  const chosenWidth = extractSheetSize(val) || parsed.sizeName || getCoatingWidthFromPrintSize(coatingPrintSize);
+
+                                                  setValue(`materials.${index}.material_name`, val);
+                                                  setValue(`materials.${index}.size`, chosenWidth);
+                                                  setValue(`materials.${index}.print_size`, coatingPrintSize);
+                                                  setValue(`materials.${index}.divide_by`, 1);
+                                                  setValue(`materials.${index}.press_sheet`, targetPressSheet);
+                                                  const rawBase = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
+                                                  const base = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
+                                                  setValue(`materials.${index}.base_qty`, base);
+                                                  const currentOps = getValues('operations') || [];
+                                                  const extra = calculateCoatingMakeready(base, currentOps, `${val} ${formValues.materials?.[index]?.notes || ''}`);
+                                                  setValue(`materials.${index}.extra_qty`, extra);
+                                                  setValue(`materials.${index}.is_manual_extra`, false as any);
+                                                  const tQty = base + extra;
+                                                  setValue(`materials.${index}.total_qty`, tQty);
+                                                  const coef = getCoatingCoefficient(chosenWidth || coatingPrintSize);
+                                                  setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                                                  setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 1500);
+                                                  const isGloss = val.includes('гялгар') || val.includes('Гялгар');
+                                                  const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
+                                                  setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet})`);
+                                                  return;
+                                                }
+                                              }
+
+                                              // Standard paper material
+                                              let printSize = formValues.materials?.[index]?.print_size;
+                                              if (!printSize) {
+                                                printSize = getDefaultPrintSize(formValues.category, a7, isCover, bt, coverRules);
+                                                setValue(`materials.${index}.print_size`, printSize);
+                                              }
+
+                                              let divBy = 1;
+                                              const sourceSize = sheetSize || 'A0';
+                                              const ratio = calculatePaperDivision(sourceSize, printSize);
+                                              if (ratio > 0) {
+                                                setValue(`materials.${index}.divide_by`, ratio);
+                                                divBy = ratio;
+                                              }
+
+                                              if (coverLogic) {
+                                                divBy = coverLogic.divideBy;
+                                                const m4 = coverLogic.pressSheet;
+                                                setValue(`materials.${index}.press_sheet`, String(m4));
+                                                setValue(`materials.${index}.divide_by`, divBy);
+                                                const coverPrintSize = coverLogic.printSize || printSize;
+                                                if (coverPrintSize) {
+                                                  setValue(`materials.${index}.print_size`, coverPrintSize);
+                                                  printSize = coverPrintSize;
+                                                }
+                                                const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
+                                                setValue(`materials.${index}.base_qty`, base);
+                                                const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
+                                                setValue(`materials.${index}.extra_qty`, extra);
+                                                const divs = calculatePaperDivision(coverPrintSize, a7);
+                                                const setups = calculateSetups(m4, divs);
+                                                const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
+                                                setValue(`materials.${index}.total_qty`, total);
+                                                setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
+                                                return;
+                                              } else if (!isCover && isInnerPageMaterial({ material_name: val, notes: formValues.materials?.[index]?.notes, is_cover: false }, formValues.category)) {
+                                                const b4 = Number(getValues('total_pages')) || 0;
+                                                if (b4 > 0 && printSize && a7) {
+                                                  const m4 = calculateInnerPressSheet(b4, printSize, a7);
+                                                  setValue(`materials.${index}.press_sheet`, String(m4));
+                                                  const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
+                                                  setValue(`materials.${index}.base_qty`, base);
+                                                  const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.inner_color });
+                                                  setValue(`materials.${index}.extra_qty`, extra);
+                                                  const divs = calculatePaperDivision(printSize, a7);
+                                                  const setups = calculateSetups(m4, divs);
+                                                  const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
+                                                  setValue(`materials.${index}.total_qty`, total);
+                                                  setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
+                                                  return;
+                                                }
+                                              } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
+                                                setValue(`materials.${index}.press_sheet`, '1');
+                                                const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт')
+                                                  ? (calculatePaperDivision(printSize, a7) || 1)
+                                                  : 1;
+                                                const base = totalQty === 0 ? 0 : Math.ceil(totalQty / pDiv);
+                                                setValue(`materials.${index}.base_qty`, base);
+                                                const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.cover_color });
+                                                setValue(`materials.${index}.extra_qty`, extra);
+                                                const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') ? calculateSetups(1, pDiv) : 1;
+                                                const total = totalQty === 0 ? 0 : ((base * 1) + (extra * setups));
+                                                setValue(`materials.${index}.total_qty`, total);
+                                                setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
+                                                return;
+                                              }
+
+                                              const currentTotal = Number(formValues.materials?.[index]?.total_qty) || totalQty;
+                                              setValue(`materials.${index}.sheet_qty`, Math.ceil(currentTotal / divBy));
+                                            } else {
+                                              setValue(`materials.${index}.size`, '');
+                                              setValue(`materials.${index}.unit_cost`, 0);
+                                            }
+                                          }}
+                                          placeholder="Хайх..."
+                                          isClearable
+                                          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                          menuPosition="fixed"
+                                          classNamePrefix="react-select"
+                                          styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 99999 }) }}
+                                        />
+                                      );
+                                    }}
+                                  />
+                                </div>
+                                {!isSpecialMat && aux.type !== 'ctp' && (
+                                  <label
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      height: '28px',
+                                      padding: '0 6px',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      fontWeight: isCoverRow ? 700 : 500,
+                                      cursor: 'pointer',
+                                      userSelect: 'none',
+                                      whiteSpace: 'nowrap',
+                                      border: isCoverRow ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                                      backgroundColor: isCoverRow ? '#eff6ff' : '#f8fafc',
+                                      color: isCoverRow ? '#1d4ed8' : '#64748b',
+                                      outline: 'none',
+                                      boxShadow: isCoverRow ? '0 1px 2px rgba(37,99,235,0.08)' : 'none',
+                                      transition: 'all 0.15s ease',
+                                      flexShrink: 0
+                                    }}
+                                    title={isCoverRow ? "Хавтасны цаас гэж тооцоолсон (Цуцлах бол дарна уу)" : "Хавтасны цаас болгож тооцоолох"}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isCoverRow}
+                                      {...register(`materials.${index}.is_cover`, {
+                                        onChange: (e) => {
+                                          const isCov = e.target.checked;
+                                          setValue(`materials.${index}.is_cover`, isCov);
+                                          const bt = getValues('binding_type') || (isCov ? 'Наалттай' : '');
+                                          const b4 = Number(getValues('total_pages')) || 0;
+                                          const a7 = getA7Size();
+
+                                          let coverLogic = null;
+                                          let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
+                                          let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
+
+                                          const category = getValues('category');
+                                          if (isCov) {
+                                            setValue(`materials.${index}.notes`, 'Хавтас');
+                                            coverLogic = getCoverLogic(a7, bt, coverRules);
+                                            if (coverLogic) {
+                                              m4 = coverLogic.pressSheet;
+                                              divBy = coverLogic.divideBy;
+                                              setValue(`materials.${index}.press_sheet`, String(m4));
+                                              setValue(`materials.${index}.divide_by`, divBy);
+                                              if (coverLogic?.printSize) {
+                                                setValue(`materials.${index}.print_size`, coverLogic.printSize);
+                                              }
+                                            } else {
+                                              m4 = 1;
+                                              setValue(`materials.${index}.press_sheet`, '1');
+                                            }
+                                          } else {
+                                            setValue(`materials.${index}.notes`, 'Үндсэн материал');
+                                            const matRow = {
+                                              material_name: getValues(`materials.${index}.material_name`),
+                                              notes: 'Үндсэн материал',
+                                              is_cover: false
+                                            };
+                                            const printSize = getValues(`materials.${index}.print_size`) || getDefaultPrintSize(category, a7, false, bt, coverRules);
+                                            setValue(`materials.${index}.print_size`, printSize);
+                                            if (isInnerPageMaterial(matRow, category)) {
+                                              m4 = calculateInnerPressSheet(b4, printSize, a7);
+                                              setValue(`materials.${index}.press_sheet`, String(m4));
+                                            } else {
+                                              m4 = 1;
+                                              setValue(`materials.${index}.press_sheet`, '1');
+                                            }
+                                          }
+
+                                          const totalQ = Number(getValues('total_qty')) || 0;
+                                          const base = totalQ > 0 ? (Number(getValues(`materials.${index}.base_qty`)) > 0 ? Number(getValues(`materials.${index}.base_qty`)) : totalQ) : 0;
+                                          setValue(`materials.${index}.base_qty`, base);
+                                          const curMatName = getValues(`materials.${index}.material_name`) || '';
+                                          const extra = totalQ === 0 ? 0 : (curMatName.includes('Бүрэлт') || curMatName.includes('Оосор')
+                                            ? (Number(getValues(`materials.${index}.extra_qty`)) || 0)
+                                            : calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color }));
+                                          setValue(`materials.${index}.extra_qty`, extra);
+                                          const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
+                                          const divs = calculatePaperDivision(currentPrintSize, a7);
+                                          const setups = calculateSetups(m4, divs);
+                                          const total = totalQ === 0 ? 0 : ((base * m4) + (extra * setups));
+                                          setValue(`materials.${index}.total_qty`, total);
+
+                                          if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) {
+                                            setValue(`materials.${index}.sheet_qty`, totalQ === 0 ? 0 : Math.ceil(total / divBy));
+                                          }
+                                          const updatedCoverMats = getValues('materials') || [];
+                                          setValue('materials', updatedCoverMats);
+                                          replaceMaterials(updatedCoverMats);
+                                        }
+                                      })}
+                                      style={{ width: '13px', height: '13px', accentColor: '#2563eb', cursor: 'pointer', margin: 0, outline: 'none' }}
+                                    />
+                                    <span>Хавтас</span>
+                                  </label>
+                                )}
+                              </div>
+                            </td>
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
+                                {aux.type === 'ctp' ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#eff6ff',
+                                      border: '1px solid #bfdbfe',
+                                      borderRadius: '4px',
+                                      fontSize: '10.5px',
+                                      color: '#1d4ed8',
+                                      fontWeight: 600,
+                                      padding: '0 2px',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    title="CTP хавтангийн формат"
+                                  >
+                                    🏷️ {formValues.materials?.[index]?.print_size || 'A2'}
+                                  </div>
+                                ) : isSpecialCoating ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f0fdf4',
+                                      border: '1px solid #bbf7d0',
+                                      borderRadius: '4px',
+                                      fontSize: '10.5px',
+                                      color: '#15803d',
+                                      fontWeight: 600,
+                                      padding: '0 2px',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    title={`Хавтасны хэвлэх форматтай синхрон: ${formValues.materials?.[index]?.print_size || 'B3'}`}
+                                  >
+                                    🏷️ {formValues.materials?.[index]?.print_size || 'B3'}
+                                  </div>
+                                ) : aux.isNonPrinted ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px dashed #cbd5e1',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#94a3b8',
+                                      fontWeight: 500
+                                    }}
+                                    title="Хэвлэх машинд орохгүй, шууд зүсэгдэх туслах материал"
+                                  >
+                                    —
+                                  </div>
+                                ) : (
+                                  <Controller
+                                    name={`materials.${index}.print_size`}
+                                    control={control}
+                                    render={({ field }) => {
+                                      const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
+                                      const printSizeOptions = isQuickPrint
+                                        ? [
+                                          { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' },
+                                          { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' },
+                                          { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' },
+                                          { value: 'А4', label: 'А4' }
+                                        ]
+                                        : [
+                                          { value: 'A1', label: 'A1' },
+                                          { value: 'A2', label: 'A2' },
+                                          { value: 'A3', label: 'A3' },
+                                          { value: 'A4', label: 'A4' },
+                                          { value: 'B1', label: 'B1' },
+                                          { value: 'B2', label: 'B2' },
+                                          { value: 'B3', label: 'B3' },
+                                          { value: 'B4', label: 'B4' }
+                                        ];
+
+                                      let selectedVal = null;
+                                      if (field.value) {
+                                        if (isQuickPrint) {
+                                          const fv = field.value.toLowerCase();
+                                          if (fv.includes('6')) {
+                                            selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
+                                          } else if (fv.includes('480') || fv.includes('320') || fv.includes('5')) {
+                                            selectedVal = { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' };
+                                          } else if (fv.includes('a4') || fv.includes('а4')) {
+                                            selectedVal = { value: 'А4', label: 'А4' };
+                                          } else {
+                                            const div = Number(formValues.materials?.[index]?.divide_by) || 8;
+                                            if (div === 6) {
+                                              selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
+                                            } else {
+                                              selectedVal = { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' };
+                                            }
+                                          }
+                                        } else {
+                                          selectedVal = { value: field.value, label: field.value };
+                                        }
+                                      }
+
+                                      return (
+                                        <div style={{ width: '100%', maxWidth: '100%' }} title={isQuickPrint ? 'Түргэн хэвлэлийн формат сонгох' : ''}>
+                                          <CreatableSelect
+                                            {...field}
+                                            options={printSizeOptions}
+                                            value={selectedVal}
+                                            onChange={(selected: any) => {
+                                              if (isSpecialStrap) return;
+                                              const val = selected ? selected.value : '';
+                                              field.onChange(val);
+
+                                              if (isQuickPrint) {
+                                                let qDivBy = 8;
+                                                if (val.includes('6')) {
+                                                  qDivBy = 6;
+                                                } else if (val.includes('480') || val.includes('320') || val.includes('5')) {
+                                                  qDivBy = 5;
+                                                } else if (val.toLowerCase().includes('a4') || val.toLowerCase().includes('а4')) {
+                                                  qDivBy = 16;
+                                                } else {
+                                                  qDivBy = 8;
+                                                }
+                                                setValue(`materials.${index}.divide_by`, qDivBy);
+                                                setValue(`materials.${index}.press_sheet`, '1');
+                                                setValue(`materials.${index}.extra_qty`, 0);
+                                                const totalQ = Number(getValues('total_qty')) || 0;
+                                                setValue(`materials.${index}.base_qty`, totalQ);
+                                                setValue(`materials.${index}.total_qty`, totalQ);
+                                                setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
+                                                setValue('size', val);
+                                                const updatedMats = getValues('materials') || [];
+                                                setValue('materials', updatedMats);
+                                                replaceMaterials(updatedMats);
+                                                return;
+                                              }
+
+                                              const sourceSize = formValues.materials?.[index]?.size || '';
+                                              const ratio = calculatePaperDivision(sourceSize, val);
+                                              const a7Raw = formValues.size || '';
+                                              const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
+                                              const isCover = formValues.materials?.[index]?.is_cover || false;
+                                              const bt = formValues.binding_type || '';
+                                              const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
+                                              let m4 = 0;
+                                              let divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+
+                                              if (coverLogic) {
+                                                m4 = coverLogic.pressSheet;
+                                                divBy = coverLogic.divideBy;
+                                                setValue(`materials.${index}.press_sheet`, String(m4));
+                                                setValue(`materials.${index}.divide_by`, divBy);
+                                              } else {
+                                                if (ratio > 0) {
+                                                  setValue(`materials.${index}.divide_by`, ratio);
+                                                  divBy = ratio;
+                                                }
+                                                if (isCover) {
+                                                  m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                                } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
+                                                  const b4 = Number(formValues.total_pages) || 0;
+                                                  if (val && a7 && b4 > 0) {
+                                                    m4 = calculateInnerPressSheet(b4, val, a7);
+                                                    setValue(`materials.${index}.press_sheet`, String(m4));
+                                                  }
+                                                } else {
+                                                  m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                                }
+                                              }
+
+                                              if (m4 > 0) {
+                                                const totalQ = Number(getValues('total_qty')) || 0;
+                                                const isDivided = formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт' || formValues.category === 'Нэрийн хуудас';
+                                                const divs = calculatePaperDivision(val || 'A2', a7) || 1;
+                                                const base = isDivided ? Math.ceil(totalQ / divs) : (Number(formValues.materials?.[index]?.base_qty) || totalQ);
+                                                if (Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                                  setValue(`materials.${index}.base_qty`, base);
+                                                }
+                                                const isCov = isCoverMaterial(formValues.materials?.[index]);
+                                                const extra = calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
+                                                setValue(`materials.${index}.extra_qty`, extra);
+                                                const setups = calculateSetups(m4, divs);
+                                                const total = (base * m4) + (extra * setups);
+                                                setValue(`materials.${index}.total_qty`, total);
+                                                if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                              } else if (ratio > 0) {
+                                                const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                                setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
+                                              }
+
+                                              const updatedMats = getValues('materials') || [];
+                                              setValue('materials', updatedMats);
+                                              replaceMaterials(updatedMats);
+                                            }}
+                                            isClearable={false}
+                                            isDisabled={isSpecialStrap}
+                                            placeholder="Формат"
+                                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                            menuPosition="fixed"
+                                            classNamePrefix="react-select"
+                                            styles={printSizeSelectStyles}
+                                          />
+                                        </div>
+                                      );
+                                    }}
+                                  />
+                                )}
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '48px' }}>
+                                {aux.type === 'ctp' ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#eff6ff',
+                                      border: '1px solid #bfdbfe',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#1d4ed8',
+                                      fontWeight: 600
+                                    }}
+                                    title="Холбогдох хэвлэлийн хуудас"
+                                  >
+                                    {formValues.materials?.[index]?.press_sheet && formValues.materials?.[index]?.press_sheet !== '1' ? `${formValues.materials?.[index]?.press_sheet} х.х` : '—'}
+                                  </div>
+                                ) : isSpecialCoating ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f0fdf4',
+                                      border: '1px solid #bbf7d0',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#166534',
+                                      fontWeight: 600
+                                    }}
+                                    title="Хавтасны хэвлэлийн хуудастай синхрончлогдсон"
+                                  >
+                                    {formValues.materials?.[index]?.press_sheet ? `${formValues.materials?.[index]?.press_sheet} х.х` : '1 х.х'}
+                                  </div>
+                                ) : aux.isNonPrinted ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f1f5f9',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#94a3b8'
+                                    }}
+                                    title="Хэвлэлийн хуудас тооцохгүй"
+                                  >
+                                    {aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '—'}
+                                  </div>
+                                ) : (() => {
+                                  const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
+                                  const isInnerMat = isInnerPageMaterial(formValues.materials?.[index], formValues.category);
+                                  const canEditPressSheet = !isSpecialMat && (isBagCategory || (!isCoverRow && !isInnerMat));
+                                  return (
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      style={canEditPressSheet ? { ...inputStyle, textAlign: 'center' } : (isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, backgroundColor: '#f1f5f9', textAlign: 'center' })}
+                                      readOnly={!canEditPressSheet}
+                                      title={
+                                        isCoverRow
+                                          ? "Хавтасны хэвлэлийн хуудасны норм (Cover Rules Matrix)"
+                                          : isInnerMat
+                                            ? `Дотор хуудас: Нийт ${formValues.total_pages || 0} нүүр / (${calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', getA7Size())} × 2 нүүр) = ${formValues.materials?.[index]?.press_sheet || 0}`
+                                            : (isBagCategory ? "Торон дээр хэвлэлийн хуудсыг гараар бичиж өөрчлөх боломжтой (1, 2 гэх мэт)" : "Хэвлэлийн хуудас")
+                                      }
+                                      {...register(`materials.${index}.press_sheet`, {
+                                        onChange: (e) => {
+                                          if (isSpecialMat) return;
+                                          const press = Number(e.target.value) || 1;
+                                          const totalQ = Number(getValues('total_qty')) || 0;
+                                          const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
+                                          if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                            setValue(`materials.${index}.base_qty`, base);
+                                          }
+                                          const isCov = isCoverMaterial(formValues.materials?.[index]);
+                                          const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
+                                          setValue(`materials.${index}.extra_qty`, extra);
+                                          const a7 = getA7Size();
+                                          const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7) || 1;
+                                          const setups = calculateSetups(press, divs);
+                                          const total = (base * press) + (extra * setups);
+                                          setValue(`materials.${index}.total_qty`, total);
+                                          const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+                                          if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) {
+                                            setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
+                                          }
+                                          const updatedMats = getValues('materials') || [];
+                                          setValue('materials', updatedMats);
+                                          replaceMaterials(updatedMats);
+                                        }
+                                      })} />
+                                  );
+                                })()}
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                                <input type="number" style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
+                                  onChange: (e) => {
+                                    if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
+                                    setValue(`materials.${index}.is_manual_base`, true as any);
+                                    if (isSpecialCoating) {
+                                      const base = Number(e.target.value) || 0;
+                                      const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                      const tQty = base + extra;
+                                      setValue(`materials.${index}.total_qty`, tQty);
+                                      const m3 = formValues.materials?.[index]?.print_size || 'A3';
+                                      let coef = 0.004;
+                                      if (m3 === 'A2') coef = 0.006;
+                                      else if (m3 === 'B2') coef = 0.007;
+                                      else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
+                                      setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                                      return;
+                                    }
+                                    const base = Number(e.target.value) || 0;
+                                    const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
+                                    const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                    const a7 = getA7Size();
+                                    const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                                    const setups = calculateSetups(press, divs);
+                                    const total = (base * press) + (extra * setups);
+                                    setValue(`materials.${index}.total_qty`, total);
+                                    const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+                                    if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                  }
+                                })} />
+                                {showFractionalHint && (
+                                  <div
+                                    style={{
+                                      fontSize: '9.5px',
+                                      color: '#1d4ed8',
+                                      fontWeight: 600,
+                                      marginTop: '1px',
+                                      textAlign: 'center',
+                                      whiteSpace: 'nowrap',
+                                      backgroundColor: '#eff6ff',
+                                      border: '1px solid #dbeafe',
+                                      borderRadius: '3px',
+                                      padding: '0 2px',
+                                      lineHeight: '14px'
+                                    }}
+                                    title={`Бүтээгдэхүүний тоо: ${curBase.toLocaleString()} × ${curPress} х.х = ${Math.round(curBase * curPress).toLocaleString()} хэвлэгдэх хуудас`}
+                                  >
+                                    ↳ {Math.round(curBase * curPress).toLocaleString()} хэвлэл
+                                  </div>
+                                )}
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
+                                <input
+                                  type="number"
+                                  style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }}
+                                  readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'}
+                                  min={0}
+                                  max={isSpecialCoating ? 500 : undefined}
+                                  title={
+                                    isSpecialCoating
+                                      ? "Бүрэлтийн хадаас (Энгийн: 20/50, Эмбосс: 40/50, Лак: 60)"
+                                      : (() => {
+                                        const rowMat = formValues.materials?.[index];
+                                        const isCov = isCoverMaterial(rowMat);
+                                        const col = isCov ? formValues.cover_color : formValues.inner_color;
+                                        const isBlack = formValues.category === 'Ном хар'
+                                          ? (isCov ? (col === '1+0' || col === '1+1' || col === '0+1') : true)
+                                          : (col === '1+1' || col === '1+0' || col === '0+1');
+                                        return `Машины хадаас (${isBlack ? 'Хар хэвлэл' : 'Өнгөт хэвлэл'})`;
+                                      })()
+                                  }
+                                  {...register(`materials.${index}.extra_qty`, {
+                                    onChange: (e) => {
+                                      if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
+                                      if (isSpecialCoating) {
+                                        let extra = Number(e.target.value) || 0;
+                                        if (extra < 0) {
+                                          extra = 0;
+                                          setValue(`materials.${index}.extra_qty`, 0);
+                                        }
+                                        setValue(`materials.${index}.is_manual_extra`, true as any);
+                                        const base = Number(formValues.materials?.[index]?.base_qty) || Number(formValues.total_qty) || 0;
+                                        const tQty = base + extra;
+                                        setValue(`materials.${index}.total_qty`, tQty);
+                                        const m3 = formValues.materials?.[index]?.print_size || 'A3';
+                                        let coef = 0.004;
+                                        if (m3 === 'A2') coef = 0.006;
+                                        else if (m3 === 'B2') coef = 0.007;
+                                        else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
+                                        setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
+                                        return;
+                                      }
+                                      const extra = Number(e.target.value) || 0;
+                                      setValue(`materials.${index}.is_manual_extra`, true as any);
+                                      const totalQ = Number(getValues('total_qty')) || 0;
+                                      const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
+                                      if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
+                                        setValue(`materials.${index}.base_qty`, base);
+                                      }
+                                      const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
+                                      const a7 = getA7Size();
+                                      const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
+                                      const setups = calculateSetups(press, divs);
+                                      const total = (base * press) + (extra * setups);
+                                      setValue(`materials.${index}.total_qty`, total);
+                                      const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
+                                      if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                    }
+                                  })} />
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '70px' }}>
+                                <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc', textAlign: 'right' }} readOnly {...register(`materials.${index}.total_qty`)} />
+                                {showFractionalHint && (
+                                  <div
+                                    style={{
+                                      fontSize: '9.5px',
+                                      color: '#15803d',
+                                      fontWeight: 600,
+                                      marginTop: '1px',
+                                      textAlign: 'center',
+                                      whiteSpace: 'nowrap',
+                                      backgroundColor: '#f0fdf4',
+                                      border: '1px solid #dcfce7',
+                                      borderRadius: '3px',
+                                      padding: '0 2px',
+                                      lineHeight: '14px'
+                                    }}
+                                    title={`Нийт хэвлэх: ${Math.round(curBase * curPress).toLocaleString()} (Үндсэн хэвлэл) + ${curExtra} (Хадаас) = ${curTotal.toLocaleString()}`}
+                                  >
+                                    ↳ {Math.round(curBase * curPress).toLocaleString()} + {curExtra}
+                                  </div>
+                                )}
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '50px' }}>
+                                {aux.type === 'ctp' ? (
+                                  <input type="number" style={{ ...disabledStyle, textAlign: 'center' }} readOnly value={1} />
+                                ) : isSpecialCoating ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#94a3b8',
+                                      fontWeight: 500
+                                    }}
+                                    title="Бүрэлтэнд цаасны хуваалт тооцохгүй (Метрээр хэмжигдэнэ)"
+                                  >
+                                    — (Хуваалтгүй)
+                                  </div>
+                                ) : isSpecialWire ? (
+                                  <div
+                                    style={{
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      color: '#94a3b8',
+                                      fontWeight: 500
+                                    }}
+                                    title="Спираль нуруунд хуваалт тооцохгүй"
+                                  >
+                                    —
+                                  </div>
+                                ) : (
+                                  <input type="number" style={isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, textAlign: 'center' }} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
+                                    onChange: (e) => {
+                                      if (isSpecialMat) return;
+                                      const divBy = Number(e.target.value) || 1;
+                                      const total = Number(formValues.materials?.[index]?.total_qty) || 0;
+                                      if (divBy > 0) if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
+                                    }
+                                  })} />
+                                )}
+                              </td>
+                            )}
+                            {isExpandedMaterial && (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
+                                <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.sheet_qty`)} />
+                                {isPrintedPaper && curDiv > 1 && (
+                                  <div
+                                    style={{
+                                      fontSize: '9.5px',
+                                      color: '#475569',
+                                      fontWeight: 500,
+                                      marginTop: '1px',
+                                      textAlign: 'center',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      backgroundColor: '#f8fafc',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '3px',
+                                      padding: '0 2px',
+                                      lineHeight: '14px'
+                                    }}
+                                    title={`Том цаас: ${curTotal.toLocaleString()} / ${curDiv} хуваалт = ${curSheet} ш`}
+                                  >
+                                    ↳ {curTotal} / {curDiv}
+                                  </div>
+                                )}
+                                {isSpecialWire && (
+                                  <div
+                                    style={{
+                                      fontSize: '9.5px',
+                                      color: '#0369a1',
+                                      fontWeight: 500,
+                                      marginTop: '1px',
+                                      textAlign: 'center',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      backgroundColor: '#f0f9ff',
+                                      border: '1px solid #bae6fd',
+                                      borderRadius: '3px',
+                                      padding: '0 2px',
+                                      lineHeight: '14px'
+                                    }}
+                                    title={`Спираль нуруу: ${curSheet} loop`}
+                                  >
+                                    ↳ {getSpiralLoops(getA7Size())} нүхтэй
+                                  </div>
+                                )}
+                                {isSpecialCoating && (
+                                  <div
+                                    style={{
+                                      fontSize: '9.5px',
+                                      color: '#166534',
+                                      fontWeight: 500,
+                                      marginTop: '1px',
+                                      textAlign: 'center',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      backgroundColor: '#f0fdf4',
+                                      border: '1px solid #dcfce7',
+                                      borderRadius: '3px',
+                                      padding: '0 2px',
+                                      lineHeight: '14px'
+                                    }}
+                                    title={`Хуулга: ${curTotal} × ${getCoatingCoefficient(formValues.materials?.[index]?.size || formValues.materials?.[index]?.print_size)} коэф = ${curSheet} метр`}
+                                  >
+                                    ↳ {curTotal} × {getCoatingCoefficient(formValues.materials?.[index]?.size || formValues.materials?.[index]?.print_size)}м
+                                  </div>
+                                )}
+                              </td>
+                            )}
+                            <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '68px' }}>
+                              <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.unit_cost`)} />
+                            </td>
+                            {isExpandedMaterial ? (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '84px', fontSize: '11px' }}>
+                                {tCost.toLocaleString()}
+                              </td>
+                            ) : (
+                              <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '17%', fontSize: '11.5px' }}>
+                                {tCost.toLocaleString()}
+                              </td>
+                            )}
+                            <td style={{ padding: '0.2rem 0.25rem', verticalAlign: 'middle', width: !isExpandedMaterial ? '18%' : undefined }}>
+                              <input style={{ ...inputStyle, width: '100%' }} {...register(`materials.${index}.notes`)} placeholder="Тэмдэглэл..." />
+                            </td>
+                            <td style={{ padding: '0.2rem', verticalAlign: 'middle', textAlign: 'center', width: '30px' }}>
+                              <button type="button" onClick={() => removeMaterial(index)} style={{ width: '22px', height: '22px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', padding: 0 }} title="Устгах">✕</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       onClick={() => {
-                        if (activeKonicaTariff) {
-                          setValue('manual_unit_price', activeKonicaTariff.unitPrice);
-                        }
+                        const a7 = getA7Size();
+                        const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules);
+                        const defRatio = calculatePaperDivision('A0', defPrintSize) || 4;
+                        const currentMats = getValues('materials') || [];
+                        const nonCtpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type !== 'ctp');
+                        const ctpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type === 'ctp');
+                        const catConfig = productCategories.find((c: any) => c.name === formValues.category);
+                        const defPress = (!catConfig?.has_cover && !catConfig?.has_pages) ? '1' : '';
+                        const newRow = {
+                          material_name: '',
+                          size: 'A0',
+                          print_size: defPrintSize,
+                          press_sheet: defPress,
+                          base_qty: Number(getValues('total_qty')) || 0,
+                          extra_qty: 0,
+                          total_qty: 0,
+                          divide_by: defRatio,
+                          sheet_qty: 0,
+                          unit_cost: 0,
+                          notes: ''
+                        };
+                        const updated = [...nonCtpMats, newRow, ...ctpMats];
+                        setValue('materials', updated);
+                        replaceMaterials(updated);
                       }}
-                      style={{
-                        background: '#0284c7',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '5px 10px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                      title="Тарифт үнийг захиалгын нэгж үнэ рүү оноох"
+                      className="btn btn-outline"
                     >
-                      🔄 Тарифт үнийг оноох ({activeKonicaTariff?.unitPrice.toLocaleString()} ₮)
+                      + Материал нэмэх
                     </button>
-                  )}
-                </div>
-              </div>
-
-              {/* 5 Дэд төрлийн сонголт (Subtype Pills) */}
-              <div style={{ marginBottom: '10px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.03em' }}>
-                  Бүтээгдэхүүний дэд төрөл (Тарифын хүснэгт):
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {[
-                    { key: 'PRINT_SHEET', label: 'Хэвлэлийн үнэ (1-200 ш)', hint: 'Өнгөт /A4/, Өнгөт /A3/' },
-                    { key: 'PRINT_MULTI_PAGE', label: 'Хуудастай хэвлэлийн үнэ (1-100 ш)', hint: 'Өнгөт /A4/' },
-                    { key: 'OFFICIAL_BLANK', label: 'Албан бланк (100 гр)', hint: 'A5 (330₮), A4 (440₮)' },
-                    { key: 'BUSINESS_CARD', label: 'Нэрийн хуудас', hint: '300 гр матт цаас, Арт цаас, Лактай, Булан дугуйлах' },
-                    { key: 'BLACK_BOOK', label: 'Хар ном (Номын гөлгөр шар 80 гр)', hint: 'A5, A4, A3' }
-                  ].map(item => {
-                    const isActive = konicaSubtype === item.key;
-                    return (
+                    {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
                       <button
-                        key={item.key}
                         type="button"
-                        onClick={() => handleSelectKonicaSubtype(item.key as KonicaSubtype)}
+                        onClick={() => handleAddHardcoverAuxiliary()}
+                        className="btn btn-primary"
                         style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: isActive ? 700 : 500,
-                          color: isActive ? '#ffffff' : '#1e293b',
-                          backgroundColor: isActive ? '#0284c7' : '#ffffff',
-                          border: isActive ? '1px solid #0369a1' : '1px solid #cbd5e1',
+                          background: '#0284c7',
+                          borderColor: '#0284c7',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          fontWeight: 600,
                           cursor: 'pointer',
-                          boxShadow: isActive ? '0 1px 3px rgba(2, 132, 199, 0.3)' : 'none',
-                          transition: 'all 0.15s ease'
+                          opacity: 1
                         }}
-                        title={item.hint}
+                        title={isHardcoverCalculated ? "Хатуу хавтасны туслах материалуудыг шинэчлэх" : "Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"}
                       >
-                        {item.label}
+                        {isHardcoverCalculated ? '✓ Хатуу хавтас шинэчлэх' : '✨ Хатуу хавтасны туслах материал бодох'}
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Дэд сонголтуудын эгнээ (Subtype specifics) */}
-              <div style={{ background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '6px', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px' }}>
-                
-                {/* 1. Өнгөт хуудас & Хуудастай товхимол сонголтууд */}
-                {(konicaSubtype === 'PRINT_SHEET' || konicaSubtype === 'PRINT_MULTI_PAGE') && (
-                  <>
-                    {konicaSubtype === 'PRINT_SHEET' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Формат:</span>
-                        {[
-                          { label: 'Өнгөт /A4/', val: 'А4' },
-                          { label: 'Өнгөт /A3/ (8 гарах)', val: 'А3 (8 гарах)' },
-                          { label: 'Өнгөт /A3/ (6 гарах)', val: 'А3 (6 гарах)' },
-                          { label: '480х320 (5 гарна)', val: '480х320 (А0-оос 5 гарна)' }
-                        ].map(s => {
-                          const isCur = formValues.size === s.val;
-                          return (
-                            <button
-                              key={s.val}
-                              type="button"
-                              onClick={() => handleSelectKonicaSize(s.val)}
-                              style={{
-                                padding: '3px 8px',
-                                borderRadius: '4px',
-                                fontSize: '11px',
-                                fontWeight: isCur ? 700 : 500,
-                                background: isCur ? '#0284c7' : '#f1f5f9',
-                                color: isCur ? '#ffffff' : '#334155',
-                                border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {s.label}
-                            </button>
-                          );
-                        })}
-                      </div>
                     )}
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Грамм:</span>
-                      {[105, 128, 157, 200, 250, 300].map(g => {
-                        const curGram = parseGrammage(formValues.materials?.[0]?.material_name, 250);
-                        const isCur = curGram === g;
-                        return (
-                          <button
-                            key={g}
-                            type="button"
-                            onClick={() => handleSelectKonicaGrammage(g)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {g} гр
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
-                      {[
-                        { label: '1 тал', val: 1 as const },
-                        { label: '2 тал', val: 2 as const }
-                      ].map(side => {
-                        const curSide = parseSidesFromColor(formValues.cover_color);
-                        const isCur = curSide === side.val;
-                        return (
-                          <button
-                            key={side.val}
-                            type="button"
-                            onClick={() => handleSelectKonicaSides(side.val)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {side.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {konicaSubtype === 'PRINT_MULTI_PAGE' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
-                        {[8, 12, 16, 20, 24, 32, 48].map(p => (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => {
-                              setValue('total_pages', p);
-                            }}
-                            style={{
-                              padding: '2px 6px',
-                              borderRadius: '3px',
-                              fontSize: '10.5px',
-                              background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
-                              color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
-                              border: '1px solid #cbd5e1',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* 2. Албан бланк (100 гр) сонголтууд */}
-                {konicaSubtype === 'OFFICIAL_BLANK' && (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ:</span>
-                      {[
-                        { label: 'А5 (330 ₮)', val: 'A5' },
-                        { label: 'А4 (440 ₮)', val: 'A4' }
-                      ].map(s => {
-                        const isCur = formValues.size === s.val || (s.val === 'A4' && formValues.size === 'А4');
-                        return (
-                          <button
-                            key={s.val}
-                            type="button"
-                            onClick={() => handleSelectKonicaSize(s.val)}
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: '4px',
-                              fontSize: '11.5px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {s.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>
-                      100 гр
-                    </div>
-                  </>
-                )}
-
-                {/* 3. Нэрийн хуудас сонголтууд */}
-                {konicaSubtype === 'BUSINESS_CARD' && (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Цаас:</span>
-                      {[
-                        { label: '300 гр матт цаас (330/440₮)', val: '300 гр матт цаас' },
-                        { label: 'Арт цаас (550/660₮)', val: 'Арт цаас' },
-                        { label: 'Лактай (880₮)', val: 'Лактай' }
-                      ].map(c => {
-                        const isCur = konicaPaperType === c.val;
-                        return (
-                          <button
-                            key={c.val}
-                            type="button"
-                            onClick={() => handleSelectCardType(c.val)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {c.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
-                      {[
-                        { label: '1 тал', val: 1 as const },
-                        { label: '2 тал', val: 2 as const }
-                      ].map(side => {
-                        const curSide = parseSidesFromColor(formValues.cover_color);
-                        const isCur = curSide === side.val;
-                        return (
-                          <button
-                            key={side.val}
-                            type="button"
-                            onClick={() => handleSelectKonicaSides(side.val)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {side.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, color: '#1e293b', background: konicaRoundedCorners ? '#e0f2fe' : '#f8fafc', padding: '3px 8px', borderRadius: '4px', border: konicaRoundedCorners ? '1px solid #0284c7' : '1px solid #cbd5e1' }}>
-                      <input
-                        type="checkbox"
-                        checked={konicaRoundedCorners}
-                        onChange={handleToggleRoundedCorners}
-                      />
-                      <span>Булан дугуйлах (+50₮)</span>
-                    </label>
-                  </>
-                )}
-
-                {/* 4. Хар ном сонголтууд */}
-                {konicaSubtype === 'BLACK_BOOK' && (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Хэмжээ [Номын гөлгөр шар 80 гр]:</span>
-                      {[
-                        { label: 'A5 (150/300₮)', val: 'A5' },
-                        { label: 'A4 (200/400₮)', val: 'A4' },
-                        { label: 'A3 (300/600₮)', val: 'A3' }
-                      ].map(s => {
-                        const isCur = formValues.size === s.val;
-                        return (
-                          <button
-                            key={s.val}
-                            type="button"
-                            onClick={() => handleSelectKonicaSize(s.val)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {s.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Тал:</span>
-                      {[
-                        { label: '1 тал', val: 1 as const },
-                        { label: '2 тал', val: 2 as const }
-                      ].map(side => {
-                        const curSide = parseSidesFromColor(formValues.cover_color);
-                        const isCur = curSide === side.val;
-                        return (
-                          <button
-                            key={side.val}
-                            type="button"
-                            onClick={() => handleSelectKonicaSides(side.val)}
-                            style={{
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: isCur ? 700 : 500,
-                              background: isCur ? '#0284c7' : '#f1f5f9',
-                              color: isCur ? '#ffffff' : '#334155',
-                              border: isCur ? '1px solid #0369a1' : '1px solid #e2e8f0',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {side.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>Нүүр:</span>
-                      {[16, 20, 32, 50, 64, 100, 160].map(p => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => {
-                            setValue('total_pages', p);
-                          }}
-                          style={{
-                            padding: '2px 6px',
-                            borderRadius: '3px',
-                            fontSize: '10.5px',
-                            background: Number(formValues.total_pages) === p ? '#0284c7' : '#f8fafc',
-                            color: Number(formValues.total_pages) === p ? '#fff' : '#475569',
-                            border: '1px solid #cbd5e1',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-              </div>
-            </div>
-          )}
-
-          {/* 2-р эгнээ: Эх бэлтгэл ба Нэмэлт сонголтууд цэгцтэй нэг эгнээнд */}
-          <div className="erp-sec2-row2">
-            <div className="erp-field" style={{ width: '180px', flexShrink: 0 }}>
-              <label>Эх бэлтгэлийн төлөв</label>
-              <select {...register("design_status", {
-                onChange: (e) => {
-                  const val = e.target.value;
-                  setValue('needs_design', val !== 'Эх бэлэн');
-                  if (val === 'Эх бэлтгэл хийх') {
-                    setValue('design_cost', 20000);
-                  } else if (val === 'Засварлах шаардлагатай') {
-                    setValue('design_cost', 10000);
-                  } else {
-                    setValue('design_cost', 0);
-                  }
-                }
-              })}>
-                <option value="Эх бэлэн">Эх бэлэн</option>
-                <option value="Эх бэлтгэл хийх">Эх бэлтгэл хийх</option>
-                <option value="Засварлах шаардлагатай">Засварлах шаардлагатай</option>
-              </select>
-            </div>
-            {formValues.design_status !== 'Эх бэлэн' && (
-              <div className="erp-field" style={{ width: '130px', flexShrink: 0 }}>
-                <label>Эх бэлтгэлийн үнэ (₮)</label>
-                <input type="number" {...register("design_cost", { valueAsNumber: true })} />
-              </div>
-            )}
-
-            {/* Нэмэлт тохиргоо - Section 2 Dedicated Options Bar */}
-            {(() => {
-              const hasSpotUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Хэсэгчилсэн)'));
-              const hasRoughUV = Boolean(formValues.operations?.some(o => o.operation_name === 'Лак (Барзгар)'));
-              const hasEmboss = Boolean(formValues.operations?.some(o => o.operation_name === 'Эмбосс'));
-              const activeClicheTypes = CLICHE_TYPES.filter(type =>
-                formValues.operations?.some(o => o.operation_name === `Клише (${type})`)
-              );
-              const hasCliche = activeClicheTypes.length > 0;
-              const coatingMat = formValues.materials?.find(m => (m.material_name || '').includes('Бүрэлт'));
-              const isMattCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('матт'));
-              const isGlossCoating = Boolean(coatingMat && (coatingMat.material_name || '').toLowerCase().includes('гялгар'));
-              const isHardcoverType = formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай' || formValues.binding_type === 'Супер хавтастай' || formValues.category === 'Ном хар' || formValues.category === 'Ном өнгөт';
-
-              return (
-                <div className="erp-field" style={{ flex: 1, minWidth: '320px' }}>
-                  <label>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ color: '#d97706' }}>✨</span>
-                      <span>Нэмэлт сонголтууд & өнгөлгөө</span>
-                    </span>
-                    <span className="tag" style={{ fontSize: '9.5px', background: '#fef3c7', color: '#92400e' }}>Шуурхай</span>
-                  </label>
-                  <div className="erp-addon-bar">
-                    {isHardcoverType && (
-                      <>
-                        <label className={`erp-toggle-chip ${formValues.has_super_cover ? 'active' : ''}`}>
-                          <input 
-                            type="checkbox" 
-                            {...register("has_super_cover", {
-                              onChange: (e) => {
-                                if (e.target.checked) {
-                                  handleAddSuperCoverAuxiliary();
-                                } else {
-                                  const existingMats = getValues('materials') || [];
-                                  const cleanMats = existingMats.filter(m => {
-                                    const n = (m.material_name || '').toLowerCase();
-                                    const notes = (m.notes || '').toLowerCase();
-                                    return !notes.includes('супер хавтас') && !n.includes('супер хавтас') && !notes.includes('супер');
-                                  });
-                                  setValue('materials', cleanMats);
-                                  replaceMaterials(cleanMats);
-                                  const existingOps = getValues('operations') || [];
-                                  const nextOps = existingOps.filter(o => !o.operation_name?.includes('Супер хавтас'));
-                                  setValue('operations', nextOps);
-                                  replaceOps(nextOps);
-                                }
-                              }
-                            })} 
-                          />
-                          <span>🧥 Супер</span>
-                        </label>
-
-                        {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
-                          <>
-                            <label className={`erp-toggle-chip ${formValues.has_printed_endpaper ? 'active' : ''}`}>
-                              <input 
-                                type="checkbox" 
-                                {...register("has_printed_endpaper", {
-                                  onChange: (e) => {
-                                    if (isHardcoverCalculated) {
-                                      handleAddHardcoverAuxiliary({ isPrintedEndpaper: e.target.checked });
-                                    }
-                                  }
-                                })} 
-                              />
-                              <span>📄 Форзац</span>
-                            </label>
-
-                            <label className={`erp-toggle-chip ${formValues.has_bookmark ? 'active' : ''}`}>
-                              <input 
-                                type="checkbox" 
-                                {...register("has_bookmark", {
-                                  onChange: (e) => {
-                                    if (isHardcoverCalculated) {
-                                      handleAddHardcoverAuxiliary({ hasRibbon: e.target.checked });
-                                    }
-                                  }
-                                })} 
-                              />
-                              <span>🔖 Тууз</span>
-                            </label>
-                          </>
-                        )}
-                        <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
-                      </>
-                    )}
-
-                    {/* Бүрэлтийн сонголтууд (Матт, Гялгар, болон 10 төрлийн бүрэлтийн сонголт) */}
-                    <label 
-                      className={`erp-toggle-chip ${isMattCoating ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleCoating('Матт'); }}
-                      title="Матт бүрэлт нэмэх / хасах"
-                    >
-                      <input type="checkbox" checked={isMattCoating} readOnly />
-                      <span>✨ Матт бүрэлт</span>
-                    </label>
-
-                    <label 
-                      className={`erp-toggle-chip ${isGlossCoating ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleCoating('Гялгар'); }}
-                      title="Гялгар бүрэлт нэмэх / хасах"
-                    >
-                      <input type="checkbox" checked={isGlossCoating} readOnly />
-                      <span>✨ Гялгар бүрэлт</span>
-                    </label>
-
-                    <select
-                      value={coatingMat?.material_name || ''}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (!val) {
-                          if (coatingMat) toggleCoating(coatingMat.material_name);
-                        } else {
-                          toggleCoating(val);
-                        }
-                      }}
-                      style={{
-                        height: '26px',
-                        fontSize: '11.5px',
-                        borderRadius: '4px',
-                        border: coatingMat ? '1px solid #10b981' : '1px solid #cbd5e1',
-                        backgroundColor: coatingMat ? '#f0fdf4' : 'white',
-                        color: coatingMat ? '#065f46' : '#334155',
-                        fontWeight: coatingMat ? 600 : 400,
-                        padding: '0 6px',
-                        cursor: 'pointer',
-                        outline: 'none',
-                        width: 'auto',
-                        minWidth: '175px',
-                        maxWidth: '230px',
-                        flexShrink: 0
-                      }}
-                      title="Бүрэлтийн материал ба хэмжээг шууд сонгох (10 төрөл)"
-                    >
-                      <option value="">-- Бүрэлт сонгох (10 төрөл) --</option>
-                      <optgroup label="✨ Хятад гялгар">
-                        <option value="Бүрэлт гялгар Хятад 36 см">Бүрэлт гялгар Хятад 36 см (36см / B3/A3)</option>
-                        <option value="Бүрэлт гялгар Хятад 44 см">Бүрэлт гялгар Хятад 44 см (44см / A2)</option>
-                        <option value="Бүрэлт гялгар Хятад 54 см">Бүрэлт гялгар Хятад 54 см (54см / B2)</option>
-                      </optgroup>
-                      <optgroup label="✨ Хятад матт">
-                        <option value="Бүрэлт матт Хятад 36 см">Бүрэлт матт Хятад 36 см (36см / B3/A3)</option>
-                        <option value="Бүрэлт матт Хятад 44 см">Бүрэлт матт Хятад 44 см (44см / A2)</option>
-                        <option value="Бүрэлт матт Хятад 54 см">Бүрэлт матт Хятад 54 см (54см / B2)</option>
-                      </optgroup>
-                      <optgroup label="✨ Солонгос / Тусгай">
-                        <option value="Бүрэлт Илгэн Со 44 см">Бүрэлт Илгэн Со 44 см (44см / A2)</option>
-                        <option value="Бүрэлт гялгар/эмбосстой Со 36см">Бүрэлт гялгар/эмбосстой Со 36см (36см / B3/A3)</option>
-                        <option value="Бүрэлт матт/эмбосстой Со 36см">Бүрэлт матт/эмбосстой Со 36см (36см / B3/A3)</option>
-                        <option value="Бүрэлт матт/эмбосстой Со 44см">Бүрэлт матт/эмбосстой Со 44см (44см / A2)</option>
-                      </optgroup>
-                    </select>
-
-                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 2px', flexShrink: 0 }} />
-
-                    {/* Гадаргуугийн тусгай өнгөлгөөний сонголтууд */}
-                    <label 
-                      className={`erp-toggle-chip ${hasSpotUV ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Хэсэгчилсэн)', 150); }}
-                    >
-                      <input type="checkbox" checked={hasSpotUV} readOnly />
-                      <span>✨ Хэсэгчилсэн лак</span>
-                    </label>
-
-                    <label 
-                      className={`erp-toggle-chip ${hasRoughUV ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Лак (Барзгар)', 250); }}
-                    >
-                      <input type="checkbox" checked={hasRoughUV} readOnly />
-                      <span>✨ Барзгар лак</span>
-                    </label>
-
-                    <label 
-                      className={`erp-toggle-chip ${hasEmboss ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleFinishingOp('Эмбосс', 150); }}
-                    >
-                      <input type="checkbox" checked={hasEmboss} readOnly />
-                      <span>✨ Эмбосс</span>
-                    </label>
-
-                    <label 
-                      className={`erp-toggle-chip ${hasCliche ? 'active' : ''}`}
-                      onClick={(e) => { e.preventDefault(); toggleAllCliche(); }}
-                    >
-                      <input type="checkbox" checked={hasCliche} readOnly />
-                      <span>✨ Клише {hasCliche ? '▾' : ''}</span>
-                    </label>
-
-                    {/* Клише задрах 5 дэд сонголтууд */}
-                    {hasCliche && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#fff', padding: '1px 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569', marginRight: '2px' }}>Фольга:</span>
-                        {CLICHE_TYPES.map(type => {
-                          const opName = `Клише (${type})`;
-                          const isChecked = formValues.operations?.some(o => o.operation_name === opName);
-                          const cost = type === 'Бүтэн' ? 250 : 200;
-                          return (
-                            <button
-                              key={type}
-                              type="button"
-                              onClick={() => toggleFinishingOp(opName, cost)}
-                              style={{
-                                padding: '1px 6px',
-                                fontSize: '11px',
-                                fontWeight: isChecked ? 700 : 500,
-                                borderRadius: '3px',
-                                border: isChecked ? '1px solid #d97706' : '1px solid #cbd5e1',
-                                background: isChecked ? '#fef3c7' : '#ffffff',
-                                color: isChecked ? '#92400e' : '#475569',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '2px'
-                              }}
-                            >
-                              {isChecked && <span style={{ color: '#d97706', fontWeight: 'bold' }}>✓</span>}
-                              <span>{type}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                    {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
+                      <button
+                        type="button"
+                        onClick={() => handleAddSuperCoverAuxiliary()}
+                        className="btn btn-primary"
+                        style={{
+                          background: '#7c3aed',
+                          borderColor: '#7c3aed',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          opacity: 1
+                        }}
+                        title={isSuperCoverCalculated ? "Супер хавтасны материалуудыг шинэчлэх" : "Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"}
+                      >
+                        {isSuperCoverCalculated ? '✓ Супер хавтас шинэчлэх' : '🧥 Супер хавтасны материал бодох'}
+                      </button>
                     )}
                   </div>
+
+                  {/* Quick View Mode Switcher at Table Bottom */}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#64748b' }}>
+                    <span>Харагдац:</span>
+                    <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '2px', borderRadius: '5px', border: '1px solid #e2e8f0' }}>
+                      <button
+                        type="button"
+                        onClick={() => setIsExpandedMaterial(false)}
+                        style={{
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          fontWeight: !isExpandedMaterial ? 700 : 500,
+                          color: !isExpandedMaterial ? '#0f172a' : '#64748b',
+                          background: !isExpandedMaterial ? '#ffffff' : 'transparent',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                        }}
+                      >
+                        📄 Хураангуй
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsExpandedMaterial(true)}
+                        style={{
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          fontWeight: isExpandedMaterial ? 700 : 500,
+                          color: isExpandedMaterial ? '#0284c7' : '#64748b',
+                          background: isExpandedMaterial ? '#ffffff' : 'transparent',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                        }}
+                      >
+                        🔬 Дэлгэрэнгүй бодолт
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              );
-            })()}
-          </div>
+              </SectionCard>
 
-          {(formValues.category === 'Тор' || formValues.category === 'Цаасан тор') && (
-            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <h4 style={{ margin: 0, color: '#1e293b', fontSize: '1rem', fontWeight: 'bold' }}>🛍️ Торны хэмжээ (см) болон Дэлгээс</h4>
-                  <CalculationHelpBadge
-                    title="Цаасан торны дэлгээс хэмжээ"
-                    formula="Дэлгээс Өргөн = (Өргөн + Хажуу) × 2 | Дэлгээс Өндөр = Өндөр + Амсар (6см) + Ёроол (6см)"
-                    liveCalculation={`Дэлгээс: ${((bagDims.width + bagDims.gusset) * 2)}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см`}
-                    details={[
-                      "3 хэмжээст торыг хэвлэлийн цаасан дээр дэлгэхэд хажуу болон нугалааснууд нэмэгдэн тооцогдоно.",
-                      "Амсар болон Ёроол нугалааг стандартаар тус бүр 6 см гэж авна."
-                    ]}
-                  />
-                </div>
+              {/* 7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа */}
+              <SectionCard
+                id="sec7"
+                step="7"
+                title="7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа"
+                sub="(Анхдагчаар 0₮ өртөгтэй цехийн технологийн зааварчилгаа болж явна. Өртөг тооцоонд оруулах бол Нэгж өртгийг бичнэ)"
+                theme="amber"
+                icon="🏭"
+              >
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <select
-                    style={{ fontSize: '0.85rem', padding: '0.4rem 0.6rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1e293b', minWidth: '220px' }}
-                    value={selectedBagPreset}
-                    onChange={(e) => handleSelectBagPreset(e.target.value)}
-                  >
-                    <option value="">-- Бэлэн стандарт хэмжээ сонгох --</option>
-                    {allBagPresets.map((p, idx) => (
-                      <option key={idx} value={p.label}>
-                        {p.label} {p.desc ? `(${p.desc})` : ''}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    type="button"
-                    disabled={isSavingPreset}
-                    onClick={handleSaveBagPreset}
-                    className="btn btn-outline"
-                    style={{ fontSize: '0.825rem', padding: '0.4rem 0.75rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                    title="Одоо оруулсан торны хэмжээг системд бэлдэц болгон хадгалах"
-                  >
-                    <span>💾</span>
-                    <span>{isSavingPreset ? 'Хадгалж байна...' : 'Хэмжээ хадгалах'}</span>
+                <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg> Нэмэлт ажиллагаа / Заавар сонгох
                   </button>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
-                <div className="erp-field">
-                  <label>Өндөр (см)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={bagDims.height}
-                    onChange={(e) => {
-                      const h = Number(e.target.value) || 0;
-                      updateBagDimensions({ ...bagDims, height: h });
-                    }}
-                  />
-                </div>
-                <div className="erp-field">
-                  <label>Өргөн (см)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={bagDims.width}
-                    onChange={(e) => {
-                      const w = Number(e.target.value) || 0;
-                      updateBagDimensions({ ...bagDims, width: w });
-                    }}
-                  />
-                </div>
-                <div className="erp-field">
-                  <label>Хажуу (см)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={bagDims.gusset}
-                    onChange={(e) => {
-                      const g = Number(e.target.value) || 0;
-                      updateBagDimensions({ ...bagDims, gusset: g });
-                    }}
-                  />
-                </div>
-                <div className="erp-field">
-                  <label>Амсар нугалаа (см)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={bagDims.topFold}
-                    onChange={(e) => {
-                      const tf = Number(e.target.value) || 0;
-                      updateBagDimensions({ ...bagDims, topFold: tf });
-                    }}
-                  />
-                </div>
-                <div className="erp-field">
-                  <label>Ёроол нугалаа (см)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={bagDims.bottomFold}
-                    onChange={(e) => {
-                      const bf = Number(e.target.value) || 0;
-                      updateBagDimensions({ ...bagDims, bottomFold: bf });
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#eff6ff', borderLeft: '4px solid #3b82f6', color: '#1e3a8a', fontWeight: '500', borderRadius: '0.25rem', fontSize: '0.875rem' }}>
-                💡 Автомат бодогдсон Дэлгээс хэмжээ: <strong>Өргөн {((bagDims.width + bagDims.gusset) * 2)} см х Өндөр {(bagDims.height + bagDims.topFold + bagDims.bottomFold)} см</strong> ({((bagDims.width + bagDims.gusset) * 2) * 10}х{(bagDims.height + bagDims.topFold + bagDims.bottomFold) * 10} мм) — B2 эсвэл А2 хэвлэлийн хуудсанд 1 ш багтана.
-              </div>
-            </div>
-          )}
-        </SectionCard>
-
-        {/* 2, 3, 4 Хавтас, Хавчуурга, Нүүр */}
-        <SectionCard id="sec3" step="3" title="3-5. Технологийн мэдээлэл" theme="cyan" icon="⚙️">
-          {(() => {
-            const currentCatConfig = productCategories.find((c: any) => c.name === formValues.category);
-            const hasCover = !currentCatConfig || currentCatConfig.has_cover;
-            const hasPages = !currentCatConfig || currentCatConfig.has_pages;
-            return (
-              <div className="erp-grid erp-grid-3">
-                <div className="erp-field">
-                  <label>[B1] {hasCover ? 'Хавтасны өнгө (Гадна)' : 'Хэвлэх өнгө'}</label>
-                  <select {...register("cover_color")}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['COVER_COLOR'] && groupedConstants['COVER_COLOR'].length > 0 ? (
-                      groupedConstants['COVER_COLOR'].map((c: any) => (
-                        <option key={c.id || c.value} value={c.value}>
-                          {c.value}
-                        </option>
-                      ))
-                    ) : (
-                      [
-                        '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
-                        '4+0', '4+1', '4+2', '4+4', '5+0', '5+1',
-                        'алтлаг', 'бронз', 'мөнгөлөг'
-                      ].map(v => (
-                        <option key={v} value={v}>{v}</option>
-                      ))
-                    )}
-                  </select>
-                </div>
-                <div className="erp-field">
-                  <label>[B2] {hasPages ? 'Хуудасны өнгө' : 'Арын талын өнгө'}</label>
-                  <select {...register("inner_color")}>
-                    <option value="">Сонгох...</option>
-                    {groupedConstants['INNER_COLOR'] && groupedConstants['INNER_COLOR'].length > 0 ? (
-                      groupedConstants['INNER_COLOR'].map((c: any) => (
-                        <option key={c.id || c.value} value={c.value}>
-                          {c.value}
-                        </option>
-                      ))
-                    ) : (
-                      [
-                        '1+0', '1+1', '2+0', '2+1', '2+2', '3+0', '3+1', '3+3',
-                        '4+0', '4+1', '4+2', '4+4'
-                      ].map(v => (
-                        <option key={v} value={v}>{v}</option>
-                      ))
-                    )}
-                    <option value="Custom (Тусгай)">Custom (Тусгай)</option>
-                  </select>
-                </div>
-                {formValues.inner_color === 'Custom (Тусгай)' && (
-                  <div className="erp-field">
-                    <label>[B3] Хавчуурга / Тусгай хуудасны тайлбар</label>
-                    <input {...register("has_bookmark")} placeholder="Жишээ: Дэлгэдэг 1 хуудас" />
-                  </div>
-                )}
-                <div className="erp-field">
-                  <label>[B4] Нийт нүүр {hasCover ? '(Хавтас орохгүй)' : ''}</label>
-              <input type="number" {...register("total_pages", {
-                onChange: (e) => {
-                  const b4 = Number(e.target.value) || 0;
-                  const a7 = getA7Size();
-                  const category = getValues('category');
-                  const materials = getValues('materials') || [];
-                  materials.forEach((m, index) => {
-                    // Хэвлэлийн хуудасыг зөвхөн Дотор хуудсан дээр бодно!
-                    // Хавтас болон бусад туслах материалууд огт хөндөгдөхгүй!
-                    if (!isInnerPageMaterial(m, category)) {
-                      return;
-                    }
-
-                    let effectivePrintSize = m.print_size;
-                    if (!effectivePrintSize) {
-                      effectivePrintSize = getDefaultPrintSize(category, a7, false, getValues('binding_type'), coverRules);
-                      setValue(`materials.${index}.print_size`, effectivePrintSize);
-                    }
-
-                    const m4 = calculateInnerPressSheet(b4, effectivePrintSize, a7);
-                    setValue(`materials.${index}.press_sheet`, String(m4));
-
-                    const sourceSize = m.size || (m.material_name ? parseMaterial(m.material_name).sizeName : 'A0') || 'A0';
-                    const matDivs = calculatePaperDivision(sourceSize, effectivePrintSize);
-                    let divBy = Number(m.divide_by) || 1;
-                    if (matDivs > 0) {
-                      setValue(`materials.${index}.divide_by`, matDivs);
-                      divBy = matDivs;
-                    }
-
-                    if (m4 > 0) {
-                      const totalQ = Number(getValues('total_qty')) || 0;
-                      if (totalQ === 0) {
-                        setValue(`materials.${index}.base_qty`, 0);
-                        setValue(`materials.${index}.extra_qty`, 0);
-                        setValue(`materials.${index}.total_qty`, 0);
-                        setValue(`materials.${index}.sheet_qty`, 0);
-                        return;
-                      }
-                      const base = Number(m.base_qty) > 0 ? Number(m.base_qty) : totalQ;
-                      if (base > 0 && Number(m.base_qty) !== base) {
-                        setValue(`materials.${index}.base_qty`, base);
-                      }
-                      const extra = calculateMakeready(base, { category, isCover: false, color: getValues('inner_color') });
-                      setValue(`materials.${index}.extra_qty`, extra);
-                      const divs = calculatePaperDivision(effectivePrintSize, a7);
-                      const setups = calculateSetups(m4, divs);
-                      const total = (base * m4) + (extra * setups);
-                      setValue(`materials.${index}.total_qty`, total);
-                      if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) {
-                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy));
-                      }
-                    } else {
-                      setValue(`materials.${index}.press_sheet`, '');
-                      setValue(`materials.${index}.total_qty`, 0);
-                      setValue(`materials.${index}.sheet_qty`, 0);
-                    }
-                  });
-
-                  // Материал болон ажиллагаануудын хэвлэх тоог нүүрний тоотой хамт шууд шинэчлэх
-                  const updatedMats = getValues('materials') || [];
-                  setValue('materials', updatedMats);
-                  replaceMaterials(updatedMats);
-                  const currentOps = getValues('operations') || [];
-                  const syncedOps = syncStandardProductionOperations(currentOps, {
-                    category,
-                    binding_type: getValues('binding_type'),
-                    total_qty: Number(getValues('total_qty')) || 0,
-                    total_pages: b4,
-                    cover_color: getValues('cover_color'),
-                    inner_color: getValues('inner_color'),
-                    materials: updatedMats,
-                    size: getValues('size')
-                  });
-                  setValue('operations', syncedOps);
-                  replaceOps(syncedOps);
-                }
-              })} />
-            </div>
-            <input type="hidden" {...register("print_cost")} />
-          </div>
-            );
-          })()}
-        </SectionCard>
-
-        {/* 6. Шаардлагатай материал */}
-        <SectionCard 
-          id="sec6" 
-          step="6" 
-          title="6. Шаардлагатай материал"
-          sub="Цаас болон туслах материалын өртөг, хэвлэлийн бодолт"
-          theme="emerald"
-          icon="📦"
-          actions={
-            <div 
-              style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                background: '#f1f5f9', 
-                padding: '2px', 
-                borderRadius: '6px', 
-                border: '1px solid #e2e8f0',
-                userSelect: 'none'
-              }}
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpandedMaterial(false);
-                }}
-                style={{
-                  padding: '3px 10px',
-                  fontSize: '11.5px',
-                  fontWeight: !isExpandedMaterial ? 700 : 500,
-                  color: !isExpandedMaterial ? '#0f172a' : '#64748b',
-                  background: !isExpandedMaterial ? '#ffffff' : 'transparent',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-                title="Хураангуй харагдац: Борлуулалтын үндсэн үнэ, өртөг"
-              >
-                <span>📄</span>
-                <span>Хураангуй</span>
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpandedMaterial(true);
-                }}
-                style={{
-                  padding: '3px 10px',
-                  fontSize: '11.5px',
-                  fontWeight: isExpandedMaterial ? 700 : 500,
-                  color: isExpandedMaterial ? '#0284c7' : '#64748b',
-                  background: isExpandedMaterial ? '#ffffff' : 'transparent',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-                title="Дэлгэрэнгүй харагдац: Хэвлэлийн хуудас, хуваалт, хадаас, том цаасны бодолт"
-              >
-                <span>🔬</span>
-                <span>Дэлгэрэнгүй бодолт</span>
-              </button>
-            </div>
-          }
-        >
-          
-          {(!formValues.category || !formValues.total_qty) && (
-            <div style={{ margin: '0 0 0.6rem 0', padding: '0.4rem 0.75rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', fontSize: '0.78rem', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>💡</span>
-              <span><strong>Санамж:</strong> Цаас болон материалын бодолтыг үнэн зөв ажиллуулахын тулд эхлээд дээрх <strong>Бүтээгдэхүүний ангилал</strong> болон <strong>Хэвлэгдэх тоо нийт</strong>-ийг оруулна уу.</span>
-            </div>
-          )}
-          <div className="table-responsive" style={{ marginBottom: '1rem' }}>
-            <table className="smart-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: isExpandedMaterial ? '930px' : '500px' }}>
-              <colgroup>
-                <col style={{ width: isExpandedMaterial ? '280px' : '48%' }} />
-                {isExpandedMaterial && (
-                  <>
-                    <col style={{ width: '58px' }} />
-                    <col style={{ width: '48px' }} />
-                    <col style={{ width: '68px' }} />
-                    <col style={{ width: '58px' }} />
-                    <col style={{ width: '70px' }} />
-                    <col style={{ width: '50px' }} />
-                    <col style={{ width: '68px' }} />
-                  </>
-                )}
-                <col style={{ width: isExpandedMaterial ? '68px' : '13%' }} />
-                <col style={{ width: isExpandedMaterial ? '84px' : '17%' }} />
-                <col style={{ width: isExpandedMaterial ? 'auto' : '18%' }} />
-                <col style={{ width: '30px' }} />
-              </colgroup>
-              <thead>
-                {isExpandedMaterial ? (
-                  <>
-                    <tr>
-                      <th rowSpan={2} title="[M1] Материал (Нэр, хэмжээ)" style={{ padding: '0.3rem 0.35rem', borderRight: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '280px' }}>Материал (Нэр, хэмжээ)</th>
-                      <th rowSpan={2} title="[M3] Хэвлэх хэмжээ / формат" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '58px', lineHeight: 1.15 }}>
-                        <div>Хэв.</div>
-                        <div>хэмжээ</div>
-                      </th>
-                      <th rowSpan={2} title="[M4] Хэвлэлийн хуудас" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '48px', lineHeight: 1.15 }}>
-                        <div>Хэвл.</div>
-                        <div>хуудас</div>
-                      </th>
-                      <th colSpan={3} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Хэвлэгдэх тоо</th>
-                      <th rowSpan={2} title="[M8] Цаас хуваалт" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '50px', lineHeight: 1.15 }}>
-                        <div>Цаас</div>
-                        <div>хуваалт</div>
-                      </th>
-                      <th rowSpan={2} title="[M9] Том цаасны хэрэгцээт тоо (эсвэл бүрэлтийн метр)" style={{ padding: '0.25rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.71rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '68px', lineHeight: 1.15 }}>
-                        <div>Том цаас</div>
-                        <div style={{ fontSize: '0.64rem', color: '#64748b', fontWeight: 'normal' }}>(ш / м)</div>
-                      </th>
-                      <th colSpan={2} style={{ padding: '0.25rem 0.2rem', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #cbd5e1', textAlign: 'center', fontSize: '0.73rem', color: '#334155', fontWeight: '700', background: '#f1f5f9' }}>Өртөг (₮)</th>
-                      <th rowSpan={2} title="[MC] Тэмдэглэл / Заавар" style={{ padding: '0.3rem 0.35rem', fontSize: '0.74rem', color: '#334155', fontWeight: '700', textAlign: 'left' }}>Тэмдэглэл</th>
-                      <th rowSpan={2} style={{ padding: '0.2rem', width: '30px', textAlign: 'center' }}></th>
-                    </tr>
-                    <tr>
-                      <th title="[M5] Үндсэн хэвлэгдэх хуудас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Үндсэн</th>
-                      <th title="[M6] Машины хадаас" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '58px', background: '#f8fafc' }}>Хадаас</th>
-                      <th title="[M7] Нийт хэвлэх тоо" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '70px', background: '#f8fafc' }}>Бүгд</th>
-                      <th title="[MA] Нэгж өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '68px', background: '#f8fafc' }}>Нэгж</th>
-                      <th title="[MB] Нийт өртөг" style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', fontSize: '0.68rem', color: '#475569', fontWeight: '600', textAlign: 'center', width: '84px', background: '#f8fafc' }}>Нийт</th>
-                    </tr>
-                  </>
-                ) : (
-                  <tr>
-                    <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '48%' }}>Материал</th>
-                    <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'center', width: '13%' }}>Нэгж өртөг</th>
-                    <th style={{ padding: '0.35rem 0.4rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'right', width: '17%' }}>Нийт өртөг</th>
-                    <th style={{ padding: '0.35rem 0.3rem', borderRight: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#334155', fontWeight: '700', textAlign: 'left', width: '18%' }}>Тэмдэглэл</th>
-                    <th style={{ padding: '0.2rem', width: '32px', textAlign: 'center' }}></th>
-                  </tr>
-                )}
-              </thead>
-              <tbody>
-                {materialFields.length === 0 && (
-                  <tr>
-                    <td colSpan={isExpandedMaterial ? 12 : 5} style={{ textAlign: 'center', padding: '1.2rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-                      Материал оруулаагүй байна. Доорх "+ Материал нэмэх" товчийг дарж материал нэмнэ үү.
-                    </td>
-                  </tr>
-                )}
-                {materialFields.map((field, index) => {
-                  const m = formValues.materials?.[index];
-                  const amt = m?.sheet_qty || 0;
-                  const tCost = amt * (m?.unit_cost || 0);
-
-                  const currentMaterialName = formValues.materials?.[index]?.material_name || '';
-                  const parsedMasterPrices = masterPrices
-                    .filter(p => {
-                      const c = (p.category || '').toLowerCase();
-                      return c.includes('цаас') || c.includes('материал') || c.includes('paper') || c.includes('material') || c.includes('double side') || c.includes('tape');
-                    })
-                    .map(p => ({ ...p, ...parseMaterial(p.item_name) }));
-                    
-                  const isPaperItem = (p: any) => {
-                    const name = (p.item_name || '').toLowerCase();
-                    const cat = (p.category || '').toLowerCase();
-                    if (name.includes('ctp') || name.includes('стр') || name.includes('хавтан') || name.includes('бүрэлт') || name.includes('оосор') || name.includes('лидерин') || name.includes('капитал') || name.includes('тууз') || name.includes('скоч') || name.includes('tape') || name.includes('соронз') || (name.includes('цавуу') && !name.includes('pvc'))) {
-                      return false;
-                    }
-                    if (name.includes('pvc') || name.includes('тусгай')) return true;
-                    if (cat.includes('цаас') || cat.includes('paper')) return true;
-                    if (name.includes('цаас') || name.includes('paper')) return true;
-                    if (name.includes('картон') || name.includes('стикер') || name.includes('номын шар') || name.includes('крафт') || name.includes('кай')) return true;
-                    return false;
-                  };
-
-                  const isCtpItem = (p: any) => {
-                    const name = (p.item_name || '').toLowerCase();
-                    return name.includes('ctp') || name.includes('стр') || name.includes('хавтан');
-                  };
-
-                  const isCoatingItem = (p: any) => {
-                    const name = (p.item_name || '').toLowerCase();
-                    return name.includes('бүрэлт');
-                  };
-
-                  const seenPaper = new Set<string>();
-                  const paperItems: string[] = [];
-                  parsedMasterPrices.filter(isPaperItem).forEach(p => {
-                    const fullItem = (p.item_name || '').trim();
-                    if (fullItem && !seenPaper.has(fullItem)) {
-                      seenPaper.add(fullItem);
-                      paperItems.push(fullItem);
-                    }
-                  });
-
-                  const seenCtp = new Set<string>();
-                  const ctpItems: string[] = [];
-                  parsedMasterPrices.filter(isCtpItem).forEach(p => {
-                    const fullItem = (p.item_name || '').trim();
-                    if (fullItem && !seenCtp.has(fullItem)) {
-                      seenCtp.add(fullItem);
-                      ctpItems.push(fullItem);
-                    }
-                  });
-
-                  const seenCoating = new Set<string>();
-                  const coatingItems: string[] = [];
-                  parsedMasterPrices.filter(isCoatingItem).forEach(p => {
-                    const fullItem = (p.item_name || '').trim();
-                    if (fullItem && !seenCoating.has(fullItem)) {
-                      seenCoating.add(fullItem);
-                      coatingItems.push(fullItem);
-                    }
-                  });
-
-                  const seenOther = new Set<string>();
-                  const otherItems: string[] = [];
-                  parsedMasterPrices.filter(p => !isPaperItem(p) && !isCtpItem(p) && !isCoatingItem(p)).forEach(p => {
-                    const fullItem = (p.item_name || '').trim();
-                    if (fullItem && !seenOther.has(fullItem)) {
-                      seenOther.add(fullItem);
-                      otherItems.push(fullItem);
-                    }
-                  });
-
-                  const allMaterialNames = [...paperItems, ...ctpItems, ...coatingItems, ...otherItems];
-                  const materialOptions = [
-                    ...(paperItems.length > 0 ? [{
-                      label: '📄 Цаас (Нэр ба хэмжээ)',
-                      options: paperItems.map(name => ({ value: name, label: name }))
-                    }] : []),
-                    ...(ctpItems.length > 0 ? [{
-                      label: '💿 CTP хавтан',
-                      options: ctpItems.map(name => ({ value: name, label: name }))
-                    }] : []),
-                    ...(coatingItems.length > 0 ? [{
-                      label: '✨ Бүрэлт',
-                      options: coatingItems.map(name => ({ value: name, label: name }))
-                    }] : []),
-                    ...(otherItems.length > 0 ? [{
-                      label: '📦 Бусад / Туслах материал',
-                      options: otherItems.map(name => ({ value: name, label: name }))
-                    }] : [])
-                  ];
-
-                  const aux = getMaterialType(currentMaterialName, formValues.materials?.[index]?.notes);
-                  const inputStyle = tableInputStyle;
-
-                  const isSpecialCoating = currentMaterialName.includes('Бүрэлт');
-                  const isSpecialStrap = currentMaterialName.includes('Оосор');
-                  const isSpecialWire = aux.type === 'spiral_wire' || currentMaterialName.includes('Нуруу');
-                  const isSpecialMat = isSpecialCoating || isSpecialStrap || isSpecialWire;
-                  const isCoverRow = isCoverMaterial(formValues.materials?.[index]);
-                  const curPress = Number(formValues.materials?.[index]?.press_sheet) || 0;
-                  const curBase = Number(formValues.materials?.[index]?.base_qty) || 0;
-                  const curExtra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                  const curTotal = Number(formValues.materials?.[index]?.total_qty) || 0;
-                  const curDiv = Number(formValues.materials?.[index]?.divide_by) || 1;
-                  const curSheet = Number(formValues.materials?.[index]?.sheet_qty) || 0;
-                  const isPrintedPaper = !aux.isNonPrinted && !aux.isAux && aux.type !== 'coating' && aux.type !== 'ctp';
-                  const showFractionalHint = isPrintedPaper && curPress > 0 && curPress !== 1;
-                  const disabledStyle = { ...inputStyle, backgroundColor: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' };
-
-                  return (
-                    <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s', backgroundColor: isSpecialMat ? '#fdf8f6' : 'transparent' }}>
-                      <td style={{ padding: '0.2rem 0.25rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '48%' : '280px', minWidth: isExpandedMaterial ? '280px' : undefined }}>
-                        <input type="hidden" {...register(`materials.${index}.size`)} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%' }}>
-                          <div style={{ flex: 1, minWidth: 0 }} title={formValues.materials?.[index]?.material_name || 'Материал сонгох'}>
-                            <Controller
-                              name={`materials.${index}.material_name`}
-                              control={control}
-                              render={({ field }) => {
-                                const curVal = field.value || '';
-                                let selectedMaterialOpt = null;
-                                if (curVal) {
-                                  if (allMaterialNames.includes(curVal)) {
-                                    selectedMaterialOpt = { value: curVal, label: curVal };
-                                  } else {
-                                    const matched = allMaterialNames.find(n => n === curVal || n.startsWith(curVal) || curVal.startsWith(n) || n.toLowerCase().includes(curVal.toLowerCase()));
-                                    selectedMaterialOpt = matched ? { value: matched, label: matched } : { value: curVal, label: curVal };
-                                  }
-                                }
-                                return (
-                                <Select
-                                  {...field}
-                                  value={selectedMaterialOpt}
-                                  options={materialOptions}
-                                  onChange={(selectedOption: any) => {
-                                    const val = selectedOption ? selectedOption.value : '';
-                                    field.onChange(val);
-                                    if (val) {
-                                      const selectedAux = getMaterialType(val);
-                                      const a7 = getA7Size();
-                                      const tQ = Number(getValues('total_qty'));
-                                      const totalQty = isNaN(tQ) || tQ < 0 ? 0 : tQ;
-                                      const isCover = Boolean(formValues.materials?.[index]?.is_cover || formValues.materials?.[index]?.notes?.includes('Хавтас'));
-                                      const bt = formValues.binding_type || '';
-                                      const categoryConfig = productCategories.find((c: any) => c.name === formValues.category) || {};
-                                      const coverLogic = (isCover && categoryConfig.calc_mode !== 'STANDARD_MODE') ? getCoverLogic(a7, bt, coverRules) : null;
-
-                                      const matchingPrice = parsedMasterPrices.find(p => p.item_name === val) || parsedMasterPrices.find(p => p.baseName === val);
-                                      const sheetSize = extractSheetSize(val) || matchingPrice?.sizeName || 'A0';
-
-                                      if (matchingPrice) {
-                                        setValue(`materials.${index}.size`, sheetSize);
-                                        setValue(`materials.${index}.unit_cost`, matchingPrice.unit_cost);
-                                      } else {
-                                        setValue(`materials.${index}.size`, sheetSize || '');
-                                        setValue(`materials.${index}.unit_cost`, 0);
-                                      }
-
-                                      if (selectedAux.isAux) {
-                                        if (selectedAux.type === 'liderin') {
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, '');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, 'Лидерин хавтасны бүрээс');
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, totalQty);
-                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 0);
-                                          return;
-                                        }
-                                        const specs = getHardcoverAuxiliarySpecs(a7);
-                                        if (selectedAux.type === 'ctp') {
-                                          const ctpPriceLarge = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE')?.value || '8800') || 8800;
-                                          const ctpPriceSmall = Number(constants.find(c => c.type === 'CTP_PLATE_PRICE_SMALL')?.value || '6800') || 6800;
-                                          const curPrintSize = formValues.materials?.[index]?.print_size || 'A2';
-                                          const explicitSize = extractSheetSize(val) || (val.includes('65') ? '65x55' : (val.includes('74.5') ? '74.5x60.5' : (val.includes('76') ? '76x60.5' : '76x60.5')));
-                                          const plateFormat = explicitSize || (curPrintSize.toUpperCase().startsWith('B') ? '74.5x60.5' : '76x60.5');
-                                          const ctpPrice = plateFormat === '65x55' ? ctpPriceSmall : ctpPriceLarge;
-
-                                          setValue(`materials.${index}.material_name`, val);
-                                          setValue(`materials.${index}.size`, plateFormat);
-                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || ctpPrice);
-                                          setValue(`materials.${index}.is_manual_size`, true as any);
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.print_size`, curPrintSize);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          const currentBase = Number(formValues.materials?.[index]?.base_qty) || 4;
-                                          setValue(`materials.${index}.base_qty`, currentBase);
-                                          setValue(`materials.${index}.total_qty`, currentBase);
-                                          setValue(`materials.${index}.sheet_qty`, currentBase);
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'cardboard') {
-                                          const isCalendar = formValues.category === 'Календар' || formValues.category === 'Календарь' || formValues.binding_type === 'Спираль';
-                                          const cDiv = isCalendar ? (specs.standCardboardDiv || 8) : specs.cardboardDiv;
-                                          const cardboardPieces = isCalendar ? totalQty : totalQty * 2;
-                                          setValue(`materials.${index}.divide_by`, cDiv);
-                                          setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, isCalendar ? `Суурийн картон (${cDiv}ш гарна)` : `Хатуу хавтасны картон (${cDiv}ш гарна)`);
-                                          setValue(`materials.${index}.base_qty`, cardboardPieces);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, cardboardPieces);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(cardboardPieces / cDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'spiral_wire') {
-                                          const loops = getSpiralLoops(a7);
-                                          const totalLoops = totalQty * loops;
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, '—');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Спираль нуруу (${loops} нүх)`);
-                                          setValue(`materials.${index}.base_qty`, totalLoops);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalLoops);
-                                          setValue(`materials.${index}.sheet_qty`, totalLoops);
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'stand_lining') {
-                                          const lDiv = specs.standLiningDiv || 7;
-                                          setValue(`materials.${index}.divide_by`, lDiv);
-                                          setValue(`materials.${index}.press_sheet`, '—');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Суурийн дотор цаас (Под)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / lDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'endpaper_super') {
-                                          const superSpecs = getSuperCoverSpecs(a7);
-                                          setValue(`materials.${index}.divide_by`, superSpecs.endpaperDiv);
-                                          setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Супер хавтасны форзац 157гр (${superSpecs.endpaperDiv} хуваалт)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / superSpecs.endpaperDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'super_cover') {
-                                          const superSpecs = getSuperCoverSpecs(a7);
-                                          const coverTotal = totalQty + 100;
-                                          setValue(`materials.${index}.print_size`, superSpecs.coverPrintSize);
-                                          setValue(`materials.${index}.divide_by`, superSpecs.coverDiv);
-                                          setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.notes`, `Супер хавтас 250гр (${superSpecs.coverPrintSize}, ${superSpecs.coverDiv} хуваалт)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 100);
-                                          setValue(`materials.${index}.total_qty`, coverTotal);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(coverTotal / superSpecs.coverDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'endpaper_plain') {
-                                          setValue(`materials.${index}.divide_by`, specs.endpaperDiv);
-                                          setValue(`materials.${index}.press_sheet`, '1');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Хэвлэлгүй форзац (${specs.endpaperDiv}ш гарна)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.endpaperDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'capital') {
-                                          setValue(`materials.${index}.divide_by`, specs.headbandDiv);
-                                          setValue(`materials.${index}.press_sheet`, '');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Номын капитал (${totalQty}ш / ${specs.headbandDiv})`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty / specs.headbandDiv));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'ribbon') {
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, '');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.notes`, `Хавчуурга тууз (${Math.round(specs.ribbonLength * 100)}см)`);
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty);
-                                          setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQty * specs.ribbonLength));
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'strap') {
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, '');
-                                          setValue(`materials.${index}.print_size`, '');
-                                          setValue(`materials.${index}.base_qty`, totalQty);
-                                          setValue(`materials.${index}.extra_qty`, 0);
-                                          setValue(`materials.${index}.total_qty`, totalQty * 2);
-                                          setValue(`materials.${index}.sheet_qty`, totalQty * 2);
-                                          return;
-                                        }
-                                        if (selectedAux.type === 'coating') {
-                                          const coverMat = (formValues.materials || []).find((m: any) => m.is_cover);
-                                          const mainMat = (formValues.materials || []).find((m: any) => {
-                                            const a = getMaterialType(m.material_name, m.notes);
-                                            return !a.isNonPrinted && !a.isAux && a.type !== 'coating' && a.type !== 'ctp';
-                                          });
-                                          const targetMat = coverMat || mainMat;
-                                          const coatingPrintSize = targetMat?.print_size || (coverMat ? getDefaultPrintSize(formValues.category, a7, true, bt, coverRules) : getDefaultPrintSize(formValues.category, a7, false, bt, coverRules)) || 'A2';
-                                          const targetPressSheet = targetMat?.press_sheet !== undefined && targetMat?.press_sheet !== '' ? String(targetMat?.press_sheet) : '1';
-                                          const targetPressNum = Number(targetMat?.press_sheet) > 0 ? Number(targetMat?.press_sheet) : 1;
-                                          const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
-                                          const parsed = parseMaterial(val);
-                                          const chosenWidth = extractSheetSize(val) || parsed.sizeName || getCoatingWidthFromPrintSize(coatingPrintSize);
-
-                                          setValue(`materials.${index}.material_name`, val);
-                                          setValue(`materials.${index}.size`, chosenWidth);
-                                          setValue(`materials.${index}.print_size`, coatingPrintSize);
-                                          setValue(`materials.${index}.divide_by`, 1);
-                                          setValue(`materials.${index}.press_sheet`, targetPressSheet);
-                                          const rawBase = Number(targetMat?.base_qty) > 0 ? Number(targetMat?.base_qty) : totalQty;
-                                          const base = isBagCategory ? Math.round(rawBase * targetPressNum) : rawBase;
-                                          setValue(`materials.${index}.base_qty`, base);
-                                          const currentOps = getValues('operations') || [];
-                                          const extra = calculateCoatingMakeready(base, currentOps, `${val} ${formValues.materials?.[index]?.notes || ''}`);
-                                          setValue(`materials.${index}.extra_qty`, extra);
-                                          setValue(`materials.${index}.is_manual_extra`, false as any);
-                                          const tQty = base + extra;
-                                          setValue(`materials.${index}.total_qty`, tQty);
-                                          const coef = getCoatingCoefficient(chosenWidth || coatingPrintSize);
-                                          setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                                          setValue(`materials.${index}.unit_cost`, matchingPrice?.unit_cost || 1500);
-                                          const isGloss = val.includes('гялгар') || val.includes('Гялгар');
-                                          const notePrefix = isBagCategory ? 'Торны' : 'Хавтасны';
-                                          setValue(`materials.${index}.notes`, `${notePrefix} ${isGloss ? 'гялгар' : 'матт'} бүрэлт (${chosenWidth} хуулга, коэф: ${coef}, Х.хуудас: ${targetPressSheet})`);
-                                          return;
-                                        }
-                                      }
-
-                                      // Standard paper material
-                                      let printSize = formValues.materials?.[index]?.print_size;
-                                      if (!printSize) {
-                                        printSize = getDefaultPrintSize(formValues.category, a7, isCover, bt, coverRules);
-                                        setValue(`materials.${index}.print_size`, printSize);
-                                      }
-
-                                      let divBy = 1;
-                                      const sourceSize = sheetSize || 'A0';
-                                      const ratio = calculatePaperDivision(sourceSize, printSize);
-                                      if (ratio > 0) {
-                                        setValue(`materials.${index}.divide_by`, ratio);
-                                        divBy = ratio;
-                                      }
-
-                                      if (coverLogic) {
-                                        divBy = coverLogic.divideBy;
-                                        const m4 = coverLogic.pressSheet;
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
-                                        setValue(`materials.${index}.divide_by`, divBy);
-                                        const coverPrintSize = coverLogic.printSize || printSize;
-                                        if (coverPrintSize) {
-                                          setValue(`materials.${index}.print_size`, coverPrintSize);
-                                          printSize = coverPrintSize;
-                                        }
-                                        const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
-                                        setValue(`materials.${index}.base_qty`, base);
-                                        const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: true, color: formValues.cover_color });
-                                        setValue(`materials.${index}.extra_qty`, extra);
-                                        const divs = calculatePaperDivision(coverPrintSize, a7);
-                                        const setups = calculateSetups(m4, divs);
-                                        const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
-                                        setValue(`materials.${index}.total_qty`, total);
-                                        setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
-                                        return;
-                                      } else if (!isCover && isInnerPageMaterial({ material_name: val, notes: formValues.materials?.[index]?.notes, is_cover: false }, formValues.category)) {
-                                        const b4 = Number(getValues('total_pages')) || 0;
-                                        if (b4 > 0 && printSize && a7) {
-                                          const m4 = calculateInnerPressSheet(b4, printSize, a7);
-                                          setValue(`materials.${index}.press_sheet`, String(m4));
-                                          const base = totalQty > 0 ? (Number(getValues(`materials.${index}.base_qty`)) || totalQty) : 0;
-                                          setValue(`materials.${index}.base_qty`, base);
-                                          const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.inner_color });
-                                          setValue(`materials.${index}.extra_qty`, extra);
-                                          const divs = calculatePaperDivision(printSize, a7);
-                                          const setups = calculateSetups(m4, divs);
-                                          const total = totalQty === 0 ? 0 : ((base * m4) + (extra * setups));
-                                          setValue(`materials.${index}.total_qty`, total);
-                                          setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
-                                          return;
-                                        }
-                                      } else if (!isCover && !categoryConfig.has_cover && !categoryConfig.has_pages) {
-                                        setValue(`materials.${index}.press_sheet`, '1');
-                                        const pDiv = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') 
-                                          ? (calculatePaperDivision(printSize, a7) || 1) 
-                                          : 1;
-                                        const base = totalQty === 0 ? 0 : Math.ceil(totalQty / pDiv);
-                                        setValue(`materials.${index}.base_qty`, base);
-                                        const extra = totalQty === 0 ? 0 : calculateMakeready(base, { category: formValues.category, isCover: false, color: formValues.cover_color });
-                                        setValue(`materials.${index}.extra_qty`, extra);
-                                        const setups = (formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт') ? calculateSetups(1, pDiv) : 1;
-                                        const total = totalQty === 0 ? 0 : ((base * 1) + (extra * setups));
-                                        setValue(`materials.${index}.total_qty`, total);
-                                        setValue(`materials.${index}.sheet_qty`, totalQty === 0 ? 0 : Math.ceil(total / divBy));
-                                        return;
-                                      }
-
-                                      const currentTotal = Number(formValues.materials?.[index]?.total_qty) || totalQty;
-                                      setValue(`materials.${index}.sheet_qty`, Math.ceil(currentTotal / divBy));
-                                    } else {
-                                      setValue(`materials.${index}.size`, '');
-                                      setValue(`materials.${index}.unit_cost`, 0);
-                                    }
-                                  }}
-                                  placeholder="Хайх..."
-                                  isClearable
-                                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                  menuPosition="fixed"
-                                  classNamePrefix="react-select"
-                                  styles={{ ...tableSelectStyles, menuPortal: base => ({ ...base, zIndex: 99999 }) }}
-                                />
-                              );
-                            }}
-                            />
-                          </div>
-                          {!isSpecialMat && aux.type !== 'ctp' && (
-                            <label
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                height: '28px',
-                                padding: '0 6px',
-                                borderRadius: '4px',
-                                fontSize: '11px',
-                                fontWeight: isCoverRow ? 700 : 500,
-                                cursor: 'pointer',
-                                userSelect: 'none',
-                                whiteSpace: 'nowrap',
-                                border: isCoverRow ? '1px solid #2563eb' : '1px solid #cbd5e1',
-                                backgroundColor: isCoverRow ? '#eff6ff' : '#f8fafc',
-                                color: isCoverRow ? '#1d4ed8' : '#64748b',
-                                outline: 'none',
-                                boxShadow: isCoverRow ? '0 1px 2px rgba(37,99,235,0.08)' : 'none',
-                                transition: 'all 0.15s ease',
-                                flexShrink: 0
-                              }}
-                              title={isCoverRow ? "Хавтасны цаас гэж тооцоолсон (Цуцлах бол дарна уу)" : "Хавтасны цаас болгож тооцоолох"}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isCoverRow}
-                                {...register(`materials.${index}.is_cover`, {
-                                  onChange: (e) => {
-                                    const isCov = e.target.checked;
-                                    setValue(`materials.${index}.is_cover`, isCov);
-                                    const bt = getValues('binding_type') || (isCov ? 'Наалттай' : '');
-                                    const b4 = Number(getValues('total_pages')) || 0;
-                                    const a7 = getA7Size();
-                                    
-                                    let coverLogic = null;
-                                    let m4 = Number(getValues(`materials.${index}.press_sheet`)) || 0;
-                                    let divBy = Number(getValues(`materials.${index}.divide_by`)) || 1;
-
-                                    const category = getValues('category');
-                                    if (isCov) {
-                                      setValue(`materials.${index}.notes`, 'Хавтас');
-                                      coverLogic = getCoverLogic(a7, bt, coverRules);
-                                      if (coverLogic) {
-                                        m4 = coverLogic.pressSheet;
-                                        divBy = coverLogic.divideBy;
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
-                                        setValue(`materials.${index}.divide_by`, divBy);
-                                        if (coverLogic?.printSize) {
-                                          setValue(`materials.${index}.print_size`, coverLogic.printSize);
-                                        }
-                                      } else {
-                                        m4 = 1;
-                                        setValue(`materials.${index}.press_sheet`, '1');
-                                      }
-                                    } else {
-                                      setValue(`materials.${index}.notes`, 'Үндсэн материал');
-                                      const matRow = {
-                                        material_name: getValues(`materials.${index}.material_name`),
-                                        notes: 'Үндсэн материал',
-                                        is_cover: false
-                                      };
-                                      const printSize = getValues(`materials.${index}.print_size`) || getDefaultPrintSize(category, a7, false, bt, coverRules);
-                                      setValue(`materials.${index}.print_size`, printSize);
-                                      if (isInnerPageMaterial(matRow, category)) {
-                                        m4 = calculateInnerPressSheet(b4, printSize, a7);
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
-                                      } else {
-                                        m4 = 1;
-                                        setValue(`materials.${index}.press_sheet`, '1');
-                                      }
-                                    }
-
-                                    const totalQ = Number(getValues('total_qty')) || 0;
-                                    const base = totalQ > 0 ? (Number(getValues(`materials.${index}.base_qty`)) > 0 ? Number(getValues(`materials.${index}.base_qty`)) : totalQ) : 0;
-                                    setValue(`materials.${index}.base_qty`, base);
-                                    const curMatName = getValues(`materials.${index}.material_name`) || '';
-                                    const extra = totalQ === 0 ? 0 : (curMatName.includes('Бүрэлт') || curMatName.includes('Оосор') 
-                                      ? (Number(getValues(`materials.${index}.extra_qty`)) || 0) 
-                                      : calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color }));
-                                    setValue(`materials.${index}.extra_qty`, extra);
-                                    const currentPrintSize = coverLogic?.printSize || getValues(`materials.${index}.print_size`) || 'A2';
-                                    const divs = calculatePaperDivision(currentPrintSize, a7);
-                                    const setups = calculateSetups(m4, divs);
-                                    const total = totalQ === 0 ? 0 : ((base * m4) + (extra * setups));
-                                    setValue(`materials.${index}.total_qty`, total);
-                                    
-                                    if (!evaluateDynamicFormula(index, { is_cover: isCov, press_sheet: m4, divide_by: divBy })) { 
-                                      setValue(`materials.${index}.sheet_qty`, totalQ === 0 ? 0 : Math.ceil(total / divBy)); 
-                                    }
-                                    const updatedCoverMats = getValues('materials') || [];
-                                    setValue('materials', updatedCoverMats);
-                                    replaceMaterials(updatedCoverMats);
-                                  }
-                                })}
-                                style={{ width: '13px', height: '13px', accentColor: '#2563eb', cursor: 'pointer', margin: 0, outline: 'none' }}
-                              />
-                              <span>Хавтас</span>
-                            </label>
-                          )}
-                        </div>
-                      </td>
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
-                        {aux.type === 'ctp' ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#eff6ff', 
-                              border: '1px solid #bfdbfe', 
-                              borderRadius: '4px', 
-                              fontSize: '10.5px', 
-                              color: '#1d4ed8', 
-                              fontWeight: 600,
-                              padding: '0 2px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                            title="CTP хавтангийн формат"
-                          >
-                            🏷️ {formValues.materials?.[index]?.print_size || 'A2'}
-                          </div>
-                        ) : isSpecialCoating ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #bbf7d0', 
-                              borderRadius: '4px', 
-                              fontSize: '10.5px', 
-                              color: '#15803d', 
-                              fontWeight: 600,
-                              padding: '0 2px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                            title={`Хавтасны хэвлэх форматтай синхрон: ${formValues.materials?.[index]?.print_size || 'B3'}`}
-                          >
-                            🏷️ {formValues.materials?.[index]?.print_size || 'B3'}
-                          </div>
-                        ) : aux.isNonPrinted ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f8fafc', 
-                              border: '1px dashed #cbd5e1', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#94a3b8', 
-                              fontWeight: 500 
-                            }}
-                            title="Хэвлэх машинд орохгүй, шууд зүсэгдэх туслах материал"
-                          >
-                            —
-                          </div>
-                        ) : (
-                          <Controller
-                            name={`materials.${index}.print_size`}
-                            control={control}
-                            render={({ field }) => {
-                              const isQuickPrint = formValues.category === 'Түргэн хэвлэл' || formValues.category === 'Түргэн хэвлэл Konica';
-                              const printSizeOptions = isQuickPrint
-                                ? [
-                                    { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' },
-                                    { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' },
-                                    { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' },
-                                    { value: 'А4', label: 'А4' }
-                                  ]
-                                : [
-                                    { value: 'A1', label: 'A1' },
-                                    { value: 'A2', label: 'A2' },
-                                    { value: 'A3', label: 'A3' },
-                                    { value: 'A4', label: 'A4' },
-                                    { value: 'B1', label: 'B1' },
-                                    { value: 'B2', label: 'B2' },
-                                    { value: 'B3', label: 'B3' },
-                                    { value: 'B4', label: 'B4' }
-                                  ];
-
-                              let selectedVal = null;
-                              if (field.value) {
-                                if (isQuickPrint) {
-                                  const fv = field.value.toLowerCase();
-                                  if (fv.includes('6')) {
-                                    selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
-                                  } else if (fv.includes('480') || fv.includes('320') || fv.includes('5')) {
-                                    selectedVal = { value: '480х320 (А0-оос 5 гарна)', label: '480х320 (5 гарна)' };
-                                  } else if (fv.includes('a4') || fv.includes('а4')) {
-                                    selectedVal = { value: 'А4', label: 'А4' };
-                                  } else {
-                                    const div = Number(formValues.materials?.[index]?.divide_by) || 8;
-                                    if (div === 6) {
-                                      selectedVal = { value: 'А3 (6 гарах)', label: 'А3 (6 гарах)' };
-                                    } else {
-                                      selectedVal = { value: 'А3 (8 гарах)', label: 'А3 (8 гарах)' };
-                                    }
-                                  }
-                                } else {
-                                  selectedVal = { value: field.value, label: field.value };
-                                }
-                              }
-
-                              return (
-                                <div style={{ width: '100%', maxWidth: '100%' }} title={isQuickPrint ? 'Түргэн хэвлэлийн формат сонгох' : ''}>
-                                  <CreatableSelect
-                                    {...field}
-                                    options={printSizeOptions}
-                                    value={selectedVal}
-                                    onChange={(selected: any) => {
-                                      if (isSpecialStrap) return;
-                                      const val = selected ? selected.value : '';
-                                      field.onChange(val);
-
-                                      if (isQuickPrint) {
-                                        let qDivBy = 8;
-                                        if (val.includes('6')) {
-                                          qDivBy = 6;
-                                        } else if (val.includes('480') || val.includes('320') || val.includes('5')) {
-                                          qDivBy = 5;
-                                        } else if (val.toLowerCase().includes('a4') || val.toLowerCase().includes('а4')) {
-                                          qDivBy = 16;
-                                        } else {
-                                          qDivBy = 8;
-                                        }
-                                        setValue(`materials.${index}.divide_by`, qDivBy);
-                                        setValue(`materials.${index}.press_sheet`, '1');
-                                        setValue(`materials.${index}.extra_qty`, 0);
-                                        const totalQ = Number(getValues('total_qty')) || 0;
-                                        setValue(`materials.${index}.base_qty`, totalQ);
-                                        setValue(`materials.${index}.total_qty`, totalQ);
-                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(totalQ / qDivBy));
-                                        setValue('size', val);
-                                        const updatedMats = getValues('materials') || [];
-                                        setValue('materials', updatedMats);
-                                        replaceMaterials(updatedMats);
-                                        return;
-                                      }
-
-                                      const sourceSize = formValues.materials?.[index]?.size || '';
-                                      const ratio = calculatePaperDivision(sourceSize, val);
-                                      const a7Raw = formValues.size || '';
-                                      const a7 = a7Raw === 'Custom' ? `${formValues.custom_width}x${formValues.custom_height}` : a7Raw;
-                                      const isCover = formValues.materials?.[index]?.is_cover || false;
-                                      const bt = formValues.binding_type || '';
-                                      const coverLogic = isCover ? getCoverLogic(a7, bt, coverRules) : null;
-                                      let m4 = 0;
-                                      let divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-
-                                      if (coverLogic) {
-                                        m4 = coverLogic.pressSheet;
-                                        divBy = coverLogic.divideBy;
-                                        setValue(`materials.${index}.press_sheet`, String(m4));
-                                        setValue(`materials.${index}.divide_by`, divBy);
-                                      } else {
-                                        if (ratio > 0) {
-                                          setValue(`materials.${index}.divide_by`, ratio);
-                                          divBy = ratio;
-                                        }
-                                        if (isCover) {
-                                          m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                                        } else if (isInnerPageMaterial(formValues.materials?.[index], formValues.category)) {
-                                          const b4 = Number(formValues.total_pages) || 0;
-                                          if (val && a7 && b4 > 0) {
-                                            m4 = calculateInnerPressSheet(b4, val, a7);
-                                            setValue(`materials.${index}.press_sheet`, String(m4));
-                                          }
-                                        } else {
-                                          m4 = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                                        }
-                                      }
-
-                                      if (m4 > 0) {
-                                        const totalQ = Number(getValues('total_qty')) || 0;
-                                        const isDivided = formValues.category === 'Брошур' || formValues.category === 'Флаер' || formValues.category === 'Хортой маягт' || formValues.category === 'Нэрийн хуудас';
-                                        const divs = calculatePaperDivision(val || 'A2', a7) || 1;
-                                        const base = isDivided ? Math.ceil(totalQ / divs) : (Number(formValues.materials?.[index]?.base_qty) || totalQ);
-                                        if (Number(formValues.materials?.[index]?.base_qty) !== base) {
-                                          setValue(`materials.${index}.base_qty`, base);
-                                        }
-                                        const isCov = isCoverMaterial(formValues.materials?.[index]);
-                                        const extra = calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
-                                        setValue(`materials.${index}.extra_qty`, extra);
-                                        const setups = calculateSetups(m4, divs);
-                                        const total = (base * m4) + (extra * setups);
-                                        setValue(`materials.${index}.total_qty`, total);
-                                        if (!evaluateDynamicFormula(index, {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                                      } else if (ratio > 0) {
-                                        const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                                        setValue(`materials.${index}.sheet_qty`, Math.ceil(total / ratio));
-                                      }
-
-                                      const updatedMats = getValues('materials') || [];
-                                      setValue('materials', updatedMats);
-                                      replaceMaterials(updatedMats);
-                                    }}
-                                    isClearable={false}
-                                    isDisabled={isSpecialStrap}
-                                    placeholder="Формат"
-                                    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                                    menuPosition="fixed"
-                                    classNamePrefix="react-select"
-                                    styles={printSizeSelectStyles}
-                                  />
-                                </div>
-                              );
-                            }}
-                          />
-                        )}
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '48px' }}>
-                        {aux.type === 'ctp' ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#eff6ff', 
-                              border: '1px solid #bfdbfe', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#1d4ed8', 
-                              fontWeight: 600 
-                            }}
-                            title="Холбогдох хэвлэлийн хуудас"
-                          >
-                            {formValues.materials?.[index]?.press_sheet && formValues.materials?.[index]?.press_sheet !== '1' ? `${formValues.materials?.[index]?.press_sheet} х.х` : '—'}
-                          </div>
-                        ) : isSpecialCoating ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #bbf7d0', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#166534',
-                              fontWeight: 600
-                            }}
-                            title="Хавтасны хэвлэлийн хуудастай синхрончлогдсон"
-                          >
-                            {formValues.materials?.[index]?.press_sheet ? `${formValues.materials?.[index]?.press_sheet} х.х` : '1 х.х'}
-                          </div>
-                        ) : aux.isNonPrinted ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f1f5f9', 
-                              border: '1px solid #e2e8f0', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#94a3b8' 
-                            }}
-                            title="Хэвлэлийн хуудас тооцохгүй"
-                          >
-                            {aux.type === 'cardboard' || aux.type === 'endpaper_plain' ? '1' : '—'}
-                          </div>
-                        ) : (() => {
-                          const isBagCategory = formValues.category === 'Тор' || formValues.category === 'Цаасан тор' || (formValues.size && formValues.size.startsWith('Тор'));
-                          const isInnerMat = isInnerPageMaterial(formValues.materials?.[index], formValues.category);
-                          const canEditPressSheet = !isSpecialMat && (isBagCategory || (!isCoverRow && !isInnerMat));
-                          return (
-                            <input 
-                              type="number"
-                              step="any"
-                              style={canEditPressSheet ? { ...inputStyle, textAlign: 'center' } : (isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, backgroundColor: '#f1f5f9', textAlign: 'center' })} 
-                              readOnly={!canEditPressSheet} 
-                              title={
-                                isCoverRow 
-                                  ? "Хавтасны хэвлэлийн хуудасны норм (Cover Rules Matrix)" 
-                                  : isInnerMat
-                                    ? `Дотор хуудас: Нийт ${formValues.total_pages || 0} нүүр / (${calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', getA7Size())} × 2 нүүр) = ${formValues.materials?.[index]?.press_sheet || 0}`
-                                    : (isBagCategory ? "Торон дээр хэвлэлийн хуудсыг гараар бичиж өөрчлөх боломжтой (1, 2 гэх мэт)" : "Хэвлэлийн хуудас")
-                              } 
-                              {...register(`materials.${index}.press_sheet`, {
-                              onChange: (e) => {
-                                if (isSpecialMat) return;
-                                const press = Number(e.target.value) || 1;
-                                const totalQ = Number(getValues('total_qty')) || 0;
-                                const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
-                                if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
-                                  setValue(`materials.${index}.base_qty`, base);
-                                }
-                                const isCov = isCoverMaterial(formValues.materials?.[index]);
-                                const extra = Number(formValues.materials?.[index]?.extra_qty) || calculateMakeready(base, { category: formValues.category, isCover: isCov, color: isCov ? formValues.cover_color : formValues.inner_color });
-                                setValue(`materials.${index}.extra_qty`, extra);
-                                const a7 = getA7Size();
-                                const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7) || 1;
-                                const setups = calculateSetups(press, divs);
-                                const total = (base * press) + (extra * setups);
-                                setValue(`materials.${index}.total_qty`, total);
-                                const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                                if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { 
-                                  setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); 
-                                }
-                                const updatedMats = getValues('materials') || [];
-                                setValue('materials', updatedMats);
-                                replaceMaterials(updatedMats);
-                              }
-                            })} />
-                          );
-                        })()}
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
-                        <input type="number" style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'} {...register(`materials.${index}.base_qty`, {
-                          onChange: (e) => {
-                            if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
-                            setValue(`materials.${index}.is_manual_base`, true as any);
-                            if (isSpecialCoating) {
-                              const base = Number(e.target.value) || 0;
-                              const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                              const tQty = base + extra;
-                              setValue(`materials.${index}.total_qty`, tQty);
-                              const m3 = formValues.materials?.[index]?.print_size || 'A3';
-                              let coef = 0.004;
-                              if (m3 === 'A2') coef = 0.006;
-                              else if (m3 === 'B2') coef = 0.007;
-                              else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
-                              setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                              return;
-                            }
-                            const base = Number(e.target.value) || 0;
-                            const extra = Number(formValues.materials?.[index]?.extra_qty) || 0;
-                            const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const a7 = getA7Size();
-                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
-                            const setups = calculateSetups(press, divs);
-                            const total = (base * press) + (extra * setups);
-                            setValue(`materials.${index}.total_qty`, total);
-                            const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                          }
-                        })} />
-                        {showFractionalHint && (
-                          <div 
-                            style={{ 
-                              fontSize: '9.5px', 
-                              color: '#1d4ed8', 
-                              fontWeight: 600, 
-                              marginTop: '1px', 
-                              textAlign: 'center', 
-                              whiteSpace: 'nowrap',
-                              backgroundColor: '#eff6ff',
-                              border: '1px solid #dbeafe',
-                              borderRadius: '3px',
-                              padding: '0 2px',
-                              lineHeight: '14px'
-                            }}
-                            title={`Бүтээгдэхүүний тоо: ${curBase.toLocaleString()} × ${curPress} х.х = ${Math.round(curBase * curPress).toLocaleString()} хэвлэгдэх хуудас`}
-                          >
-                            ↳ {Math.round(curBase * curPress).toLocaleString()} хэвлэл
-                          </div>
-                        )}
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '58px' }}>
-                        <input 
-                          type="number" 
-                          style={isSpecialStrap || isSpecialWire || aux.type === 'ctp' ? { ...disabledStyle, textAlign: 'right' } : { ...inputStyle, textAlign: 'right' }} 
-                          readOnly={isSpecialStrap || isSpecialWire || aux.type === 'ctp'} 
-                          min={0}
-                          max={isSpecialCoating ? 500 : undefined}
-                          title={
-                            isSpecialCoating 
-                              ? "Бүрэлтийн хадаас (Энгийн: 20/50, Эмбосс: 40/50, Лак: 60)" 
-                              : (() => {
-                                  const rowMat = formValues.materials?.[index];
-                                  const isCov = isCoverMaterial(rowMat);
-                                  const col = isCov ? formValues.cover_color : formValues.inner_color;
-                                  const isBlack = formValues.category === 'Ном хар' 
-                                    ? (isCov ? (col === '1+0' || col === '1+1' || col === '0+1') : true) 
-                                    : (col === '1+1' || col === '1+0' || col === '0+1');
-                                  return `Машины хадаас (${isBlack ? 'Хар хэвлэл' : 'Өнгөт хэвлэл'})`;
-                                })()
-                          }
-                          {...register(`materials.${index}.extra_qty`, {
-                          onChange: (e) => {
-                            if (isSpecialStrap || isSpecialWire || aux.type === 'ctp') return;
-                            if (isSpecialCoating) {
-                              let extra = Number(e.target.value) || 0;
-                              if (extra < 0) {
-                                extra = 0;
-                                setValue(`materials.${index}.extra_qty`, 0);
-                              }
-                              setValue(`materials.${index}.is_manual_extra`, true as any);
-                              const base = Number(formValues.materials?.[index]?.base_qty) || Number(formValues.total_qty) || 0;
-                              const tQty = base + extra;
-                              setValue(`materials.${index}.total_qty`, tQty);
-                              const m3 = formValues.materials?.[index]?.print_size || 'A3';
-                              let coef = 0.004;
-                              if (m3 === 'A2') coef = 0.006;
-                              else if (m3 === 'B2') coef = 0.007;
-                              else if (m3 === 'A3' || m3 === 'B3') coef = 0.004;
-                              setValue(`materials.${index}.sheet_qty`, Number((tQty * coef).toFixed(2)));
-                              return;
-                            }
-                            const extra = Number(e.target.value) || 0;
-                            setValue(`materials.${index}.is_manual_extra`, true as any);
-                            const totalQ = Number(getValues('total_qty')) || 0;
-                            const base = Number(formValues.materials?.[index]?.base_qty) > 0 ? Number(formValues.materials?.[index]?.base_qty) : totalQ;
-                            if (base > 0 && Number(formValues.materials?.[index]?.base_qty) !== base) {
-                              setValue(`materials.${index}.base_qty`, base);
-                            }
-                            const press = Number(formValues.materials?.[index]?.press_sheet) || 1;
-                            const a7 = getA7Size();
-                            const divs = calculatePaperDivision(formValues.materials?.[index]?.print_size || 'A2', a7);
-                            const setups = calculateSetups(press, divs);
-                            const total = (base * press) + (extra * setups);
-                            setValue(`materials.${index}.total_qty`, total);
-                            const divBy = Number(formValues.materials?.[index]?.divide_by) || 1;
-                            if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                          }
-                        })} />
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '70px' }}>
-                        <input type="number" style={{ ...inputStyle, backgroundColor: '#f8fafc', textAlign: 'right' }} readOnly {...register(`materials.${index}.total_qty`)} />
-                        {showFractionalHint && (
-                          <div 
-                            style={{ 
-                              fontSize: '9.5px', 
-                              color: '#15803d', 
-                              fontWeight: 600, 
-                              marginTop: '1px', 
-                              textAlign: 'center', 
-                              whiteSpace: 'nowrap', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #dcfce7', 
-                              borderRadius: '3px', 
-                              padding: '0 2px', 
-                              lineHeight: '14px' 
-                            }}
-                            title={`Нийт хэвлэх: ${Math.round(curBase * curPress).toLocaleString()} (Үндсэн хэвлэл) + ${curExtra} (Хадаас) = ${curTotal.toLocaleString()}`}
-                          >
-                            ↳ {Math.round(curBase * curPress).toLocaleString()} + {curExtra}
-                          </div>
-                        )}
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '50px' }}>
-                        {aux.type === 'ctp' ? (
-                          <input type="number" style={{ ...disabledStyle, textAlign: 'center' }} readOnly value={1} />
-                        ) : isSpecialCoating ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f8fafc', 
-                              border: '1px solid #e2e8f0', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#94a3b8',
-                              fontWeight: 500
-                            }}
-                            title="Бүрэлтэнд цаасны хуваалт тооцохгүй (Метрээр хэмжигдэнэ)"
-                          >
-                            — (Хуваалтгүй)
-                          </div>
-                        ) : isSpecialWire ? (
-                          <div 
-                            style={{ 
-                              height: '28px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              backgroundColor: '#f8fafc', 
-                              border: '1px solid #e2e8f0', 
-                              borderRadius: '4px', 
-                              fontSize: '11px', 
-                              color: '#94a3b8', 
-                              fontWeight: 500 
-                            }}
-                            title="Спираль нуруунд хуваалт тооцохгүй"
-                          >
-                            —
-                          </div>
-                        ) : (
-                          <input type="number" style={isSpecialMat ? { ...disabledStyle, textAlign: 'center' } : { ...inputStyle, textAlign: 'center' }} readOnly={isSpecialMat} {...register(`materials.${index}.divide_by`, {
-                            onChange: (e) => {
-                              if (isSpecialMat) return;
-                              const divBy = Number(e.target.value) || 1;
-                              const total = Number(formValues.materials?.[index]?.total_qty) || 0;
-                              if (divBy > 0) if (!evaluateDynamicFormula(index, (e && e.target && e.target.name) ? { [e.target.name.split('.').pop()]: e.target.value } : {})) { setValue(`materials.${index}.sheet_qty`, Math.ceil(total / divBy)); }
-                            }
-                          })} />
-                        )}
-                      </td>
-                      )}
-                      {isExpandedMaterial && (
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: '68px' }}>
-                        <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.sheet_qty`)} />
-                        {isPrintedPaper && curDiv > 1 && (
-                          <div 
-                            style={{ 
-                              fontSize: '9.5px', 
-                              color: '#475569', 
-                              fontWeight: 500, 
-                              marginTop: '1px', 
-                              textAlign: 'center', 
-                              whiteSpace: 'nowrap', 
-                              overflow: 'hidden', 
-                              textOverflow: 'ellipsis', 
-                              backgroundColor: '#f8fafc', 
-                              border: '1px solid #e2e8f0', 
-                              borderRadius: '3px', 
-                              padding: '0 2px', 
-                              lineHeight: '14px' 
-                            }}
-                            title={`Том цаас: ${curTotal.toLocaleString()} / ${curDiv} хуваалт = ${curSheet} ш`}
-                          >
-                            ↳ {curTotal} / {curDiv}
-                          </div>
-                        )}
-                        {isSpecialWire && (
-                          <div 
-                            style={{ 
-                              fontSize: '9.5px', 
-                              color: '#0369a1', 
-                              fontWeight: 500, 
-                              marginTop: '1px', 
-                              textAlign: 'center', 
-                              whiteSpace: 'nowrap', 
-                              overflow: 'hidden', 
-                              textOverflow: 'ellipsis', 
-                              backgroundColor: '#f0f9ff', 
-                              border: '1px solid #bae6fd', 
-                              borderRadius: '3px', 
-                              padding: '0 2px', 
-                              lineHeight: '14px' 
-                            }}
-                            title={`Спираль нуруу: ${curSheet} loop`}
-                          >
-                            ↳ {getSpiralLoops(getA7Size())} нүхтэй
-                          </div>
-                        )}
-                        {isSpecialCoating && (
-                          <div 
-                            style={{ 
-                              fontSize: '9.5px', 
-                              color: '#166534', 
-                              fontWeight: 500, 
-                              marginTop: '1px', 
-                              textAlign: 'center', 
-                              whiteSpace: 'nowrap', 
-                              overflow: 'hidden', 
-                              textOverflow: 'ellipsis', 
-                              backgroundColor: '#f0fdf4', 
-                              border: '1px solid #dcfce7', 
-                              borderRadius: '3px', 
-                              padding: '0 2px', 
-                              lineHeight: '14px' 
-                            }}
-                            title={`Хуулга: ${curTotal} × ${getCoatingCoefficient(formValues.materials?.[index]?.size || formValues.materials?.[index]?.print_size)} коэф = ${curSheet} метр`}
-                          >
-                            ↳ {curTotal} × {getCoatingCoefficient(formValues.materials?.[index]?.size || formValues.materials?.[index]?.print_size)}м
-                          </div>
-                        )}
-                      </td>
-                      )}
-                      <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', width: !isExpandedMaterial ? '13%' : '68px' }}>
-                        <input type="number" step="any" style={{ ...inputStyle, textAlign: 'right' }} {...register(`materials.${index}.unit_cost`)} />
-                      </td>
-                      {isExpandedMaterial ? (
-                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '84px', fontSize: '11px' }}>
-                          {tCost.toLocaleString()}
-                        </td>
-                      ) : (
-                        <td style={{ padding: '0.2rem 0.15rem', borderRight: '1px solid #e2e8f0', verticalAlign: 'middle', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', width: '17%', fontSize: '11.5px' }}>
-                          {tCost.toLocaleString()}
-                        </td>
-                      )}
-                      <td style={{ padding: '0.2rem 0.25rem', verticalAlign: 'middle', width: !isExpandedMaterial ? '18%' : undefined }}>
-                        <input style={{ ...inputStyle, width: '100%' }} {...register(`materials.${index}.notes`)} placeholder="Тэмдэглэл..." />
-                      </td>
-                      <td style={{ padding: '0.2rem', verticalAlign: 'middle', textAlign: 'center', width: '30px' }}>
-                        <button type="button" onClick={() => removeMaterial(index)} style={{ width: '22px', height: '22px', borderRadius: '4px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', padding: 0 }} title="Устгах">✕</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                type="button" 
-                onClick={() => {
-                  const a7 = getA7Size();
-                  const defPrintSize = getDefaultPrintSize(formValues.category, a7, false, formValues.binding_type, coverRules);
-                  const defRatio = calculatePaperDivision('A0', defPrintSize) || 4;
-                  const currentMats = getValues('materials') || [];
-                  const nonCtpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type !== 'ctp');
-                  const ctpMats = currentMats.filter((m: any) => getMaterialType(m.material_name, m.notes).type === 'ctp');
-                  const catConfig = productCategories.find((c: any) => c.name === formValues.category);
-                  const defPress = (!catConfig?.has_cover && !catConfig?.has_pages) ? '1' : '';
-                  const newRow = { 
-                    material_name: '', 
-                    size: 'A0', 
-                    print_size: defPrintSize, 
-                    press_sheet: defPress, 
-                    base_qty: Number(getValues('total_qty')) || 0, 
-                    extra_qty: 0, 
-                    total_qty: 0, 
-                    divide_by: defRatio, 
-                    sheet_qty: 0, 
-                    unit_cost: 0, 
-                    notes: '' 
-                  };
-                  const updated = [...nonCtpMats, newRow, ...ctpMats];
-                  setValue('materials', updated);
-                  replaceMaterials(updated);
-                }} 
-                className="btn btn-outline"
-              >
-                + Материал нэмэх
-              </button>
-              {(formValues.binding_type === 'Хатуу хавтастай' || formValues.binding_type === 'Хөндлөн хатуу хавтастай') && (
-                <button 
-                  type="button" 
-                  onClick={() => handleAddHardcoverAuxiliary()} 
-                  className="btn btn-primary"
-                  style={{ 
-                    background: '#0284c7', 
-                    borderColor: '#0284c7', 
-                    color: '#fff', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.4rem', 
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    opacity: 1
-                  }}
-                  title={isHardcoverCalculated ? "Хатуу хавтасны туслах материалуудыг шинэчлэх" : "Картон, Форзац, Капитал тууз, Хавчуурга тууз болон Хатуу хавтас угсралтын ажиллагааг автоматаар бодох"}
-                >
-                  {isHardcoverCalculated ? '✓ Хатуу хавтас шинэчлэх' : '✨ Хатуу хавтасны туслах материал бодох'}
-                </button>
-              )}
-              {(formValues.binding_type === 'Супер хавтастай' || formValues.has_super_cover) && (
-                <button 
-                  type="button" 
-                  onClick={() => handleAddSuperCoverAuxiliary()} 
-                  className="btn btn-primary"
-                  style={{ 
-                    background: '#7c3aed', 
-                    borderColor: '#7c3aed', 
-                    color: '#fff', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.4rem', 
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    opacity: 1
-                  }}
-                  title={isSuperCoverCalculated ? "Супер хавтасны материалуудыг шинэчлэх" : "Супер хавтас 250гр болон 157гр форзац, угсрах ажиллагааг нэмэх"}
-                >
-                  {isSuperCoverCalculated ? '✓ Супер хавтас шинэчлэх' : '🧥 Супер хавтасны материал бодох'}
-                </button>
-              )}
-            </div>
-
-            {/* Quick View Mode Switcher at Table Bottom */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#64748b' }}>
-              <span>Харагдац:</span>
-              <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '2px', borderRadius: '5px', border: '1px solid #e2e8f0' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsExpandedMaterial(false)}
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '11px',
-                    fontWeight: !isExpandedMaterial ? 700 : 500,
-                    color: !isExpandedMaterial ? '#0f172a' : '#64748b',
-                    background: !isExpandedMaterial ? '#ffffff' : 'transparent',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    boxShadow: !isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-                  }}
-                >
-                  📄 Хураангуй
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsExpandedMaterial(true)}
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '11px',
-                    fontWeight: isExpandedMaterial ? 700 : 500,
-                    color: isExpandedMaterial ? '#0284c7' : '#64748b',
-                    background: isExpandedMaterial ? '#ffffff' : 'transparent',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    boxShadow: isExpandedMaterial ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-                  }}
-                >
-                  🔬 Дэлгэрэнгүй бодолт
-                </button>
-              </div>
-            </div>
-          </div>
-        </SectionCard>
-
-        {/* 7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа */}
-        <SectionCard 
-          id="sec7" 
-          step="7" 
-          title="7. Үйлдвэрлэлийн технологийн ажиллагаа ба зааварчилгаа"
-          sub="(Анхдагчаар 0₮ өртөгтэй цехийн технологийн зааварчилгаа болж явна. Өртөг тооцоонд оруулах бол Нэгж өртгийг бичнэ)"
-          theme="amber"
-          icon="🏭"
-        >
-          
-          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <button type="button" onClick={() => setShowOperationsModal(true)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Нэмэлт ажиллагаа / Заавар сонгох
-            </button>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.85rem' }}>
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.35rem 0.8rem', borderRadius: '6px', fontWeight: 600 }}>
-                💵 Нийт ажиллагааны өртөг: <strong>{prices.totalOperationCost.toLocaleString()} ₮</strong>
-              </div>
-            </div>
-          </div>
-
-          {opFields.length === 0 ? (
-            <div style={{ padding: '1.75rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-              Одоогоор ажиллагаа сонгогдоогүй байна. Дээрх "Нэмэлт ажиллагаа / Заавар сонгох" товчоор нэмнэ үү.
-            </div>
-          ) : (
-            <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
-              <div className="table-responsive">
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                  <thead>
-                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569', width: '135px' }}>Дамжлага</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Ажиллагааны нэр</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '130px' }}>Тоо хэмжээ</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '175px' }}>Нэгж өртөг</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '110px' }}>Ашгийн үе шат</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '125px' }}>Нийт өртөг</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Цехийн зааварчилгаа / Тайлбар</th>
-                      <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '50px' }}>Устгах</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {opFields.map((field, index) => {
-                      const o = formValues.operations?.[index];
-                      const rawUnitCost = Number(o?.unit_cost) || 0;
-                      const isPricing = rawUnitCost > 0;
-                      const tCost = (Number(o?.qty) || 0) * rawUnitCost;
-                      const mp = masterPrices.find(p => p.item_name === o?.operation_name);
-                      const mpFormula = mp?.formula?.expression;
-                      const suggestedPrice = mp?.unit_cost && mp.unit_cost > 0 ? mp.unit_cost : 0;
-                      const inputStyle = tableInputStyle;
-
-                      return (
-                        <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', background: isPricing ? '#fcfdfc' : '#fff' }}>
-                          {/* 1. Production Stage */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
-                            <select
-                              value={o?.production_stage || 'POST_PRESS'}
-                              onChange={e => setValue(`operations.${index}.production_stage`, e.target.value)}
-                              style={{ height: '28px', padding: '0 4px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', width: '100%' }}
-                            >
-                              {PRODUCTION_STAGES.map(s => (
-                                <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                              ))}
-                            </select>
-                          </td>
-
-                          {/* 2. Operation Name */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                              <span>{o?.operation_name}</span>
-                              {mpFormula && (
-                                <CalculationHelpBadge
-                                  title="Динамик томьёо"
-                                  formula={mpFormula}
-                                  liveCalculation={`Үр дүн: ${o?.qty || 0}`}
-                                  details={["Мастер үнийн сангийн томьёогоор бодогдож байна."]}
-                                />
-                              )}
-                            </div>
-                            <input type="hidden" {...register(`operations.${index}.operation_name`)} />
-                            <input type="hidden" {...register(`operations.${index}.is_pricing`)} value={isPricing ? "true" : "false"} />
-                          </td>
-
-                          {/* 3. Quantity */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                              <input 
-                                type="number" 
-                                step="any" 
-                                style={{ 
-                                  ...inputStyle, 
-                                  width: '85px', 
-                                  backgroundColor: (!mpFormula || o?.is_manual) ? '#fff' : '#f1f5f9', 
-                                  color: (!mpFormula || o?.is_manual) ? '#000' : '#475569', 
-                                  cursor: (!mpFormula || o?.is_manual) ? 'text' : 'not-allowed' 
-                                }} 
-                                readOnly={!!mpFormula && !o?.is_manual}
-                                {...register(`operations.${index}.qty`)} 
-                              />
-                              {mpFormula && (
-                                <button
-                                  type="button"
-                                  title={o?.is_manual ? "Гараар засаж байна" : "Автоматаар бодогдож байна"}
-                                  onClick={() => setValue(`operations.${index}.is_manual`, !o?.is_manual)}
-                                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: o?.is_manual ? 1 : 0.6 }}
-                                >
-                                  {o?.is_manual ? '🔓' : '🔒'}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* 4. Unit Cost */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                              <input 
-                                type="number" 
-                                step="any" 
-                                placeholder="0"
-                                style={{ 
-                                  ...inputStyle, 
-                                  width: '85px', 
-                                  textAlign: 'right',
-                                  borderColor: isPricing ? '#86efac' : '#cbd5e1',
-                                  background: isPricing ? '#f0fdf4' : '#fff',
-                                  fontWeight: isPricing ? 700 : 400,
-                                  color: isPricing ? '#166534' : '#475569'
-                                }} 
-                                {...register(`operations.${index}.unit_cost`, {
-                                  onChange: (e) => {
-                                    const val = Number(e.target.value) || 0;
-                                    setValue(`operations.${index}.is_pricing`, val > 0);
-                                  }
-                                })} 
-                              />
-                              {suggestedPrice > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setValue(`operations.${index}.unit_cost`, suggestedPrice);
-                                    setValue(`operations.${index}.is_pricing`, true);
-                                  }}
-                                  title={`Мастер сангийн жишиг үнэ (${suggestedPrice.toLocaleString()}₮) оруулах`}
-                                  style={{
-                                    background: '#f8fafc',
-                                    border: '1px solid #cbd5e1',
-                                    borderRadius: '4px',
-                                    padding: '2px 5px',
-                                    fontSize: '0.7rem',
-                                    cursor: 'pointer',
-                                    color: '#64748b',
-                                    whiteSpace: 'nowrap',
-                                    lineHeight: 1.2
-                                  }}
-                                >
-                                  💡 {suggestedPrice >= 1000 ? `${suggestedPrice / 1000}к` : suggestedPrice}₮
-                                </button>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* 5. Profit Phase Badge */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setValue(`operations.${index}.is_post_profit`, !o?.is_post_profit);
-                              }}
-                              title="Дарж ашгийн тооцооллын үе шатыг солих (Ашгийн өмнөх <-> Ашгийн дараах)"
-                              style={{
-                                padding: '3px 8px',
-                                borderRadius: '12px',
-                                border: o?.is_post_profit ? '1px solid #93c5fd' : '1px solid #86efac',
-                                background: o?.is_post_profit ? '#eff6ff' : '#f0fdf4',
-                                color: o?.is_post_profit ? '#1d4ed8' : '#15803d',
-                                fontSize: '0.72rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
-                              }}
-                            >
-                              <span>{o?.is_post_profit ? '🔵 Дараах (+)' : '🟢 Өмнөх (×)'}</span>
-                              <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>⇄</span>
-                            </button>
-                            <input type="hidden" {...register(`operations.${index}.is_post_profit`)} />
-                          </td>
-
-                          {/* 6. Total Cost */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
-                            {isPricing ? (
-                              <span style={{ fontWeight: 700, color: '#166534' }}>
-                                {tCost.toLocaleString()} ₮
-                              </span>
-                            ) : (
-                              <span style={{ color: '#64748b', fontSize: '0.78rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                                0 ₮ (Заавар)
-                              </span>
-                            )}
-                          </td>
-
-                          {/* 6. Notes / Technical instruction */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
-                            <input 
-                              style={{ ...inputStyle, width: '100%' }} 
-                              {...register(`operations.${index}.notes`)} 
-                              placeholder="Цехийн ажилтанд зориулсан заавар / тэмдэглэл..." 
-                            />
-                          </td>
-
-                          {/* 7. Action: Delete */}
-                          <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => removeOp(index)}
-                              title="Устгах"
-                              style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', color: '#b91c1c', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </SectionCard>
-
-        {/* 8. Гадуур ажил */}
-        <SectionCard id="sec8" step="8" title="8. Гадуур ажил" theme="rose" icon="🚚">
-          
-          {outFields.map((field, index) => {
-            const out = formValues.outsourced?.[index];
-            const tCost = (out?.qty || 0) * (out?.unit_cost || 0);
-            return (
-            <div key={field.id} className="row-item">
-              <div className="erp-field" style={{ flex: 1 }}>
-                <label title="[A4]">Ажлын нэр</label>
-                <Controller
-                  name={`outsourced.${index}.job_name`}
-                  control={control}
-                  render={({ field }) => {
-                    const defaultOutsourcedJobs = [
-                      'Клише даралт',
-                      'Клише хэв',
-                      'Эмбосс даралт',
-                      'Эмбосс хэв',
-                      'Тор хийх',
-                      'Хэв хийх',
-                      'Хэв даралт'
-                    ];
-                    const dbJobValues = (groupedConstants['OUTSOURCED_JOB'] || []).map((c: any) => c.value);
-                    const combinedJobs = Array.from(new Set([...defaultOutsourcedJobs, ...dbJobValues]));
-                    const jobOptions = combinedJobs.map((val: string) => ({ value: val, label: val }));
-                    return (
-                      <CreatableSelect
-                        {...field}
-                        options={jobOptions}
-                        onChange={(selected: any) => field.onChange(selected ? selected.value : '')}
-                        value={field.value ? { value: field.value, label: field.value } : null}
-                        placeholder="Сонгох эсвэл бичих..."
-                        isClearable
-                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                        menuPosition="fixed"
-                        classNamePrefix="react-select"
-                        styles={compactSelectStyles}
-                      />
-                    );
-                  }}
-                />
-              </div>
-              <div className="erp-field" style={{ flex: 1 }}>
-                <label>Гүйцэтгэгч</label>
-                <Controller
-                  name={`outsourced.${index}.contractor_name` as any}
-                  control={control}
-                  render={({ field }) => {
-                    const contractorOptions = groupedConstants['OUTSOURCED_CONTRACTOR']?.map((c: any) => ({ value: c.value, label: c.value })) || [];
-                    return (
-                      <CreatableSelect
-                        {...field}
-                        options={contractorOptions}
-                        onChange={(selected: any) => field.onChange(selected ? selected.value : '')}
-                        value={field.value ? { value: field.value, label: field.value } : null}
-                        placeholder="Сонгох эсвэл бичих..."
-                        isClearable
-                        menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-                        menuPosition="fixed"
-                        classNamePrefix="react-select"
-                        styles={compactSelectStyles}
-                      />
-                    );
-                  }}
-                />
-              </div>
-              <div className="erp-field"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
-              <div className="erp-field"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
-              <div className="erp-field" style={{width: '100px'}}><label title="[X4]">Нийт өртөг</label><div style={{padding: '0 8px', background: '#e2e8f0', borderRadius: '4px', height: '34px', fontSize: '12.8px', display: 'flex', alignItems: 'center'}}>{tCost.toLocaleString()}</div></div>
-              <div className="erp-field" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
-              <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{height: '34px', padding: '0 10px'}}>X</button>
-            </div>
-          )})}
-          <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
-        </SectionCard>
-
-        </div> {/* End of erp-calc-col */}
-
-        <div className="erp-rail-col" id="rail-summary">
-          <div className="summary-card">
-            <div className="summary-top">
-              <div className="lbl">Нийт үнэ (харилцагчид)</div>
-              <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
-              <div className="margin-badge">📈 Ашиг {formValues.profit_margin || 2.3} {formValues.has_vat ? '• НӨАТ-тай' : ''}</div>
-            </div>
-
-            <div className="summary-body">
-              {/* Sales Person Badge */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '10px', fontSize: '12px' }}>
-                <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>👤 Борлуулагч:</span>
-                <span style={{ fontWeight: 600, color: '#0f172a' }}>{formValues.sales_person_name || user?.full_name || user?.name || 'Бүртгэгдээгүй'}</span>
-                <input type="hidden" {...register("sales_person_name")} />
-              </div>
-
-              <div className="stat-grid">
-                <div className="stat"><div className="l">Материалын өртөг</div><div className="v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
-                <div className="stat"><div className="l">Ажиллагааны өртөг</div><div className="v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
-                <div className="stat"><div className="l">Нийт бодит өртөг</div><div className="v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
-                <div className="stat profit"><div className="l">Цэвэр ашиг</div><div className="v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
-              </div>
-
-              {/* Pre & Post Profit Cost Breakdown */}
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                padding: '8px 10px',
-                margin: '8px 0',
-                fontSize: '11.5px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    🟢 Ашгийн өмнөх суурь:
-                  </span>
-                  <span style={{ fontWeight: 700, color: '#166534' }}>
-                    {prices.preProfitBaseCost.toLocaleString()} ₮
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#1d4ed8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    🔵 Ашгийн дараах өртөг:
-                  </span>
-                  <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
-                    {prices.postProfitTotalCost.toLocaleString()} ₮
-                  </span>
-                </div>
-                {prices.totalOutsourcedCost > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: '#64748b', paddingLeft: '8px' }}>
-                    <span>🚚 Үүнээс гадуур ажил:</span>
-                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{prices.totalOutsourcedCost.toLocaleString()} ₮</span>
-                  </div>
-                )}
-                <div style={{
-                  fontSize: '10px',
-                  color: '#64748b',
-                  background: '#ffffff',
-                  padding: '3px 6px',
-                  borderRadius: '4px',
-                  border: '1px dashed #cbd5e1',
-                  marginTop: '2px',
-                  textAlign: 'center'
-                }}>
-                  Томьёо: ({prices.preProfitBaseCost.toLocaleString()} ₮ × {formValues.profit_margin || 2.3}) + {prices.postProfitTotalCost.toLocaleString()} ₮
-                </div>
-              </div>
-
-              <div className="row-line">
-                <span className="l">Нэгжийн өртөг:</span>
-                <span className="v" style={{ fontWeight: 700 }}>{prices.unitCost.toLocaleString()} ₮</span>
-              </div>
-              <div className="erp-field-inline">
-                <label>Ашиг (үржигч)</label>
-                <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
-              </div>
-              <div className="erp-field-inline" style={{ alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>Нэгжийн үнэ</span>
-                    {prices.isManualUnitPrice ? (
-                      <span style={{ fontSize: '10px', background: '#fef3c7', color: '#92400e', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
-                        ✏️ Гараар
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
-                        ⚡ Автомат
-                      </span>
-                    )}
-                  </label>
-                  {prices.isManualUnitPrice && (
-                    <button
-                      type="button"
-                      onClick={() => setValue("manual_unit_price", null as any)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        color: '#2563eb',
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        textDecoration: 'underline'
-                      }}
-                      title="Автомат томьёоны үнэ рүү буцаах"
-                    >
-                      🔄 Автомат руу буцах ({(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮)
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                  <div className="erp-mini-input" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <input
-                      type="number"
-                      step="1"
-                      min="0"
-                      placeholder={String(prices.baseAutoUnitPrice || prices.autoUnitPrice)}
-                      value={formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null ? formValues.manual_unit_price : ''}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === '') {
-                          setValue("manual_unit_price", null as any);
-                        } else {
-                          setValue("manual_unit_price", Math.round(Number(val)));
-                        }
-                      }}
-                      style={{
-                        fontWeight: 700,
-                        color: prices.isManualUnitPrice ? '#b45309' : '#0f172a',
-                        background: prices.isManualUnitPrice ? '#fffbeb' : '#ffffff',
-                        borderColor: prices.isManualUnitPrice ? '#f59e0b' : '#cbd5e1'
-                      }}
-                      title={prices.isManualUnitPrice ? "Гараар оруулсан нэгжийн суурь үнэ (НӨАТ-гүй)" : `Автомат тооцоолсон нэгжийн суурь үнэ: ${(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮`}
-                    />
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>₮</span>
-                  </div>
-                  {formValues.has_vat && (
-                    <div style={{ fontSize: '10.5px', color: '#0284c7', fontWeight: 600 }}>
-                      НӨАТ-тай нэгж: {prices.unitPrice.toLocaleString()} ₮
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.85rem' }}>
+                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.35rem 0.8rem', borderRadius: '6px', fontWeight: 600 }}>
+                      💵 Нийт ажиллагааны өртөг: <strong>{prices.totalOperationCost.toLocaleString()} ₮</strong>
                     </div>
-                  )}
-                  {isQuickPrint && activeKonicaTariff && (
-                    <div style={{ marginTop: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#0284c7', fontWeight: 600 }}>
-                        ⚡ Тариф: {activeKonicaTariff.unitPrice.toLocaleString()} ₮
+                  </div>
+                </div>
+
+                {opFields.length === 0 ? (
+                  <div style={{ padding: '1.75rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                    Одоогоор ажиллагаа сонгогдоогүй байна. Дээрх "Нэмэлт ажиллагаа / Заавар сонгох" товчоор нэмнэ үү.
+                  </div>
+                ) : (
+                  <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569', width: '135px' }}>Дамжлага</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Ажиллагааны нэр</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '130px' }}>Тоо хэмжээ</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '175px' }}>Нэгж өртөг</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '110px' }}>Ашгийн үе шат</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'right', color: '#475569', width: '125px' }}>Нийт өртөг</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'left', color: '#475569' }}>Цехийн зааварчилгаа / Тайлбар</th>
+                            <th style={{ padding: '0.55rem 0.6rem', textAlign: 'center', color: '#475569', width: '50px' }}>Устгах</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {opFields.map((field, index) => {
+                            const o = formValues.operations?.[index];
+                            const rawUnitCost = Number(o?.unit_cost) || 0;
+                            const isPricing = rawUnitCost > 0;
+                            const tCost = (Number(o?.qty) || 0) * rawUnitCost;
+                            const mp = masterPrices.find(p => p.item_name === o?.operation_name);
+                            const mpFormula = mp?.formula?.expression;
+                            const suggestedPrice = mp?.unit_cost && mp.unit_cost > 0 ? mp.unit_cost : 0;
+                            const inputStyle = tableInputStyle;
+
+                            return (
+                              <tr key={field.id} style={{ borderBottom: '1px solid #e2e8f0', background: isPricing ? '#fcfdfc' : '#fff' }}>
+                                {/* 1. Production Stage */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <select
+                                    value={o?.production_stage || 'POST_PRESS'}
+                                    onChange={e => setValue(`operations.${index}.production_stage`, e.target.value)}
+                                    style={{ height: '28px', padding: '0 4px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff', width: '100%' }}
+                                  >
+                                    {PRODUCTION_STAGES.map(s => (
+                                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                                    ))}
+                                  </select>
+                                </td>
+
+                                {/* 2. Operation Name */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', fontWeight: 600, color: '#1e293b' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                    <span>{o?.operation_name}</span>
+                                    {mpFormula && (
+                                      <CalculationHelpBadge
+                                        title="Динамик томьёо"
+                                        formula={mpFormula}
+                                        liveCalculation={`Үр дүн: ${o?.qty || 0}`}
+                                        details={["Мастер үнийн сангийн томьёогоор бодогдож байна."]}
+                                      />
+                                    )}
+                                  </div>
+                                  <input type="hidden" {...register(`operations.${index}.operation_name`)} />
+                                  <input type="hidden" {...register(`operations.${index}.is_pricing`)} value={isPricing ? "true" : "false"} />
+                                </td>
+
+                                {/* 3. Quantity */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      style={{
+                                        ...inputStyle,
+                                        width: '85px',
+                                        backgroundColor: (!mpFormula || o?.is_manual) ? '#fff' : '#f1f5f9',
+                                        color: (!mpFormula || o?.is_manual) ? '#000' : '#475569',
+                                        cursor: (!mpFormula || o?.is_manual) ? 'text' : 'not-allowed'
+                                      }}
+                                      readOnly={!!mpFormula && !o?.is_manual}
+                                      {...register(`operations.${index}.qty`)}
+                                    />
+                                    {mpFormula && (
+                                      <button
+                                        type="button"
+                                        title={o?.is_manual ? "Гараар засаж байна" : "Автоматаар бодогдож байна"}
+                                        onClick={() => setValue(`operations.${index}.is_manual`, !o?.is_manual)}
+                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: o?.is_manual ? 1 : 0.6 }}
+                                      >
+                                        {o?.is_manual ? '🔓' : '🔒'}
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* 4. Unit Cost */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      placeholder="0"
+                                      style={{
+                                        ...inputStyle,
+                                        width: '85px',
+                                        textAlign: 'right',
+                                        borderColor: isPricing ? '#86efac' : '#cbd5e1',
+                                        background: isPricing ? '#f0fdf4' : '#fff',
+                                        fontWeight: isPricing ? 700 : 400,
+                                        color: isPricing ? '#166534' : '#475569'
+                                      }}
+                                      {...register(`operations.${index}.unit_cost`, {
+                                        onChange: (e) => {
+                                          const val = Number(e.target.value) || 0;
+                                          setValue(`operations.${index}.is_pricing`, val > 0);
+                                        }
+                                      })}
+                                    />
+                                    {suggestedPrice > 0 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setValue(`operations.${index}.unit_cost`, suggestedPrice);
+                                          setValue(`operations.${index}.is_pricing`, true);
+                                        }}
+                                        title={`Мастер сангийн жишиг үнэ (${suggestedPrice.toLocaleString()}₮) оруулах`}
+                                        style={{
+                                          background: '#f8fafc',
+                                          border: '1px solid #cbd5e1',
+                                          borderRadius: '4px',
+                                          padding: '2px 5px',
+                                          fontSize: '0.7rem',
+                                          cursor: 'pointer',
+                                          color: '#64748b',
+                                          whiteSpace: 'nowrap',
+                                          lineHeight: 1.2
+                                        }}
+                                      >
+                                        💡 {suggestedPrice >= 1000 ? `${suggestedPrice / 1000}к` : suggestedPrice}₮
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* 5. Profit Phase Badge */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setValue(`operations.${index}.is_post_profit`, !o?.is_post_profit);
+                                    }}
+                                    title="Дарж ашгийн тооцооллын үе шатыг солих (Ашгийн өмнөх <-> Ашгийн дараах)"
+                                    style={{
+                                      padding: '3px 8px',
+                                      borderRadius: '12px',
+                                      border: o?.is_post_profit ? '1px solid #93c5fd' : '1px solid #86efac',
+                                      background: o?.is_post_profit ? '#eff6ff' : '#f0fdf4',
+                                      color: o?.is_post_profit ? '#1d4ed8' : '#15803d',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px'
+                                    }}
+                                  >
+                                    <span>{o?.is_post_profit ? '🔵 Дараах (+)' : '🟢 Өмнөх (×)'}</span>
+                                    <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>⇄</span>
+                                  </button>
+                                  <input type="hidden" {...register(`operations.${index}.is_post_profit`)} />
+                                </td>
+
+                                {/* 6. Total Cost */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'right' }}>
+                                  {isPricing ? (
+                                    <span style={{ fontWeight: 700, color: '#166534' }}>
+                                      {tCost.toLocaleString()} ₮
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#64748b', fontSize: '0.78rem', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                      0 ₮ (Заавар)
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* 6. Notes / Technical instruction */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle' }}>
+                                  <input
+                                    style={{ ...inputStyle, width: '100%' }}
+                                    {...register(`operations.${index}.notes`)}
+                                    placeholder="Цехийн ажилтанд зориулсан заавар / тэмдэглэл..."
+                                  />
+                                </td>
+
+                                {/* 7. Action: Delete */}
+                                <td style={{ padding: '0.4rem 0.6rem', verticalAlign: 'middle', textAlign: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeOp(index)}
+                                    title="Устгах"
+                                    style={{ background: '#fee2e2', border: 'none', borderRadius: '4px', color: '#b91c1c', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                  >
+                                    ✕
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+
+              {/* 8. Гадуур ажил */}
+              <SectionCard id="sec8" step="8" title="8. Гадуур ажил" theme="rose" icon="🚚">
+
+                {outFields.map((field, index) => {
+                  const out = formValues.outsourced?.[index];
+                  const tCost = (out?.qty || 0) * (out?.unit_cost || 0);
+                  return (
+                    <div key={field.id} className="row-item">
+                      <div className="erp-field" style={{ flex: 1 }}>
+                        <label title="[A4]">Ажлын нэр</label>
+                        <Controller
+                          name={`outsourced.${index}.job_name`}
+                          control={control}
+                          render={({ field }) => {
+                            const defaultOutsourcedJobs = [
+                              'Клише даралт',
+                              'Клише хэв',
+                              'Эмбосс даралт',
+                              'Эмбосс хэв',
+                              'Тор хийх',
+                              'Хэв хийх',
+                              'Хэв даралт'
+                            ];
+                            const dbJobValues = (groupedConstants['OUTSOURCED_JOB'] || []).map((c: any) => c.value);
+                            const combinedJobs = Array.from(new Set([...defaultOutsourcedJobs, ...dbJobValues]));
+                            const jobOptions = combinedJobs.map((val: string) => ({ value: val, label: val }));
+                            return (
+                              <CreatableSelect
+                                {...field}
+                                options={jobOptions}
+                                onChange={(selected: any) => field.onChange(selected ? selected.value : '')}
+                                value={field.value ? { value: field.value, label: field.value } : null}
+                                placeholder="Сонгох эсвэл бичих..."
+                                isClearable
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                menuPosition="fixed"
+                                classNamePrefix="react-select"
+                                styles={compactSelectStyles}
+                              />
+                            );
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field" style={{ flex: 1 }}>
+                        <label>Гүйцэтгэгч</label>
+                        <Controller
+                          name={`outsourced.${index}.contractor_name` as any}
+                          control={control}
+                          render={({ field }) => {
+                            const contractorOptions = groupedConstants['OUTSOURCED_CONTRACTOR']?.map((c: any) => ({ value: c.value, label: c.value })) || [];
+                            return (
+                              <CreatableSelect
+                                {...field}
+                                options={contractorOptions}
+                                onChange={(selected: any) => field.onChange(selected ? selected.value : '')}
+                                value={field.value ? { value: field.value, label: field.value } : null}
+                                placeholder="Сонгох эсвэл бичих..."
+                                isClearable
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                                menuPosition="fixed"
+                                classNamePrefix="react-select"
+                                styles={compactSelectStyles}
+                              />
+                            );
+                          }}
+                        />
+                      </div>
+                      <div className="erp-field"><label>Тоо</label><input type="number" step="any" {...register(`outsourced.${index}.qty`)} /></div>
+                      <div className="erp-field"><label title="[X3]">Нэгж өртөг</label><input type="number" step="any" {...register(`outsourced.${index}.unit_cost`)} /></div>
+                      <div className="erp-field" style={{ width: '100px' }}><label title="[X4]">Нийт өртөг</label><div style={{ padding: '0 8px', background: '#e2e8f0', borderRadius: '4px', height: '34px', fontSize: '12.8px', display: 'flex', alignItems: 'center' }}>{tCost.toLocaleString()}</div></div>
+                      <div className="erp-field" style={{ flex: 1 }}><label title="[X5]">Тэмдэглэл</label><input {...register(`outsourced.${index}.notes`)} /></div>
+                      <button type="button" onClick={() => removeOut(index)} className="btn btn-danger" style={{ height: '34px', padding: '0 10px' }}>X</button>
+                    </div>
+                  )
+                })}
+                <button type="button" onClick={() => appendOut({ job_name: '', contractor_name: '', qty: 0, unit_cost: 0, notes: '' })} className="btn btn-outline">+ Гадуур ажил нэмэх</button>
+              </SectionCard>
+
+            </div> {/* End of erp-calc-col */}
+
+            <div className="erp-rail-col" id="rail-summary">
+              <div className="summary-card">
+                <div className="summary-top">
+                  <div className="lbl">Нийт үнэ (харилцагчид)</div>
+                  <div className="big"><span className="cur">₮</span><span id="totalPriceOut">{prices.finalPrice.toLocaleString()}</span></div>
+                  <div className="margin-badge">📈 Ашиг {formValues.profit_margin || 2.3} {formValues.has_vat ? '• НӨАТ-тай' : ''}</div>
+                </div>
+
+                <div className="summary-body">
+                  {/* Sales Person Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '10px', fontSize: '12px' }}>
+                    <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>👤 Борлуулагч:</span>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{formValues.sales_person_name || user?.full_name || user?.name || 'Бүртгэгдээгүй'}</span>
+                    <input type="hidden" {...register("sales_person_name")} />
+                  </div>
+
+                  <div className="stat-grid">
+                    <div className="stat"><div className="l">Материалын өртөг</div><div className="v">{prices.totalMaterialCost.toLocaleString()} ₮</div></div>
+                    <div className="stat"><div className="l">Ажиллагааны өртөг</div><div className="v">{prices.totalOperationCost.toLocaleString()} ₮</div></div>
+                    <div className="stat"><div className="l">Нийт бодит өртөг</div><div className="v">{prices.factoryTotalCost.toLocaleString()} ₮</div></div>
+                    <div className="stat profit"><div className="l">Цэвэр ашиг</div><div className="v">{(prices.finalPrice - prices.factoryTotalCost).toLocaleString()} ₮</div></div>
+                  </div>
+
+                  {/* Pre & Post Profit Cost Breakdown */}
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    padding: '8px 10px',
+                    margin: '8px 0',
+                    fontSize: '11.5px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        🟢 Ашгийн өмнөх суурь:
                       </span>
-                      {formValues.manual_unit_price !== activeKonicaTariff.unitPrice && (
+                      <span style={{ fontWeight: 700, color: '#166534' }}>
+                        {prices.preProfitBaseCost.toLocaleString()} ₮
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#1d4ed8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        🔵 Ашгийн дараах өртөг:
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
+                        {prices.postProfitTotalCost.toLocaleString()} ₮
+                      </span>
+                    </div>
+                    {prices.totalOutsourcedCost > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: '#64748b', paddingLeft: '8px' }}>
+                        <span>🚚 Үүнээс гадуур ажил:</span>
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{prices.totalOutsourcedCost.toLocaleString()} ₮</span>
+                      </div>
+                    )}
+                    <div style={{
+                      fontSize: '10px',
+                      color: '#64748b',
+                      background: '#ffffff',
+                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      border: '1px dashed #cbd5e1',
+                      marginTop: '2px',
+                      textAlign: 'center'
+                    }}>
+                      Томьёо: ({prices.preProfitBaseCost.toLocaleString()} ₮ × {formValues.profit_margin || 2.3}) + {prices.postProfitTotalCost.toLocaleString()} ₮
+                    </div>
+                  </div>
+
+                  <div className="row-line">
+                    <span className="l">Нэгжийн өртөг:</span>
+                    <span className="v" style={{ fontWeight: 700 }}>{prices.unitCost.toLocaleString()} ₮</span>
+                  </div>
+                  <div className="erp-field-inline">
+                    <label>Ашиг (үржигч)</label>
+                    <div className="erp-mini-input"><input type="number" step="0.01" placeholder="2.3" {...register("profit_margin")} /></div>
+                  </div>
+                  <div className="erp-field-inline" style={{ alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <label style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>Нэгжийн үнэ</span>
+                        {prices.isManualUnitPrice ? (
+                          <span style={{ fontSize: '10px', background: '#fef3c7', color: '#92400e', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                            ✏️ Гараар
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '3px', fontWeight: 600 }}>
+                            ⚡ Автомат
+                          </span>
+                        )}
+                      </label>
+                      {prices.isManualUnitPrice && (
                         <button
                           type="button"
-                          onClick={() => setValue('manual_unit_price', activeKonicaTariff.unitPrice)}
+                          onClick={() => setValue("manual_unit_price", null as any)}
                           style={{
                             background: 'none',
                             border: 'none',
                             padding: 0,
-                            color: '#0284c7',
+                            color: '#2563eb',
                             fontSize: '11px',
                             cursor: 'pointer',
+                            textAlign: 'left',
                             textDecoration: 'underline'
                           }}
+                          title="Автомат томьёоны үнэ рүү буцаах"
                         >
-                          Тарифт буцах
+                          🔄 Автомат руу буцах ({(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮)
                         </button>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* НӨАТ тооцох switch */}
-              <div className="erp-field-inline" style={{ marginTop: '8px', marginBottom: '8px', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ margin: 0, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <span>🏛️ НӨАТ тооцох (10%)</span>
-                </label>
-                <label className="switch" style={{ margin: 0 }}>
-                  <input type="checkbox" {...register("has_vat")} />
-                  <span className="track"></span>
-                </label>
-              </div>
-              {formValues.has_vat && (
-                <div style={{ fontSize: '11.5px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 4px 6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Цэвэр үнэ (НӨАТ-гүй):</span>
-                    <span style={{ fontWeight: 600, color: '#334155' }}>{prices.netPrice.toLocaleString()} ₮</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>НӨАТ (10%):</span>
-                    <span style={{ fontWeight: 600, color: '#0284c7' }}>{(prices.finalPrice - prices.netPrice).toLocaleString()} ₮</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="summary-sub" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span>💳 Төлбөрийн нөхцөл & Хуваарилалт</span>
-                <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 'normal' }}>
-                  Нийт: <strong style={{ color: 'var(--text-main)' }}>{prices.finalPrice.toLocaleString()} ₮</strong>
-                </span>
-              </div>
-
-              {/* Түргэн сонголтын товчнууд (Presets) */}
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-                {[
-                  { label: '50% (Стандарт)', val: 50 },
-                  { label: '100% (Бүрэн)', val: 100 },
-                  { label: '70%', val: 70 },
-                  { label: '30%', val: 30 },
-                  { label: '0% (Зээл)', val: 0 },
-                  { label: '🤝 Бартер', val: 100, method: 'Бартер', orderType: 'BARTER' },
-                  { label: '🎁 Хандив', val: 100, method: 'Хандив', orderType: 'DONATION' }
-                ].map((p: any) => {
-                  const isActive = p.orderType
-                    ? (formValues.order_type === p.orderType || formValues.payment_method_1 === p.method)
-                    : (Number(formValues.payment_percent_1) === p.val && formValues.order_type !== 'BARTER' && formValues.order_type !== 'DONATION');
-                  return (
-                    <button
-                      key={p.label}
-                      type="button"
-                      onClick={() => {
-                        setValue('payment_percent_1', p.val);
-                        setValue('payment_percent_2', 100 - p.val);
-                        if (p.method) {
-                          setValue('payment_method_1', p.method);
-                        }
-                        if (p.orderType) {
-                          setValue('order_type', p.orderType);
-                        } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
-                          setValue('order_type', 'STANDARD');
-                          if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
-                            setValue('payment_method_1', 'Дансаар');
-                          }
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '4px 2px',
-                        fontSize: '10px',
-                        borderRadius: '6px',
-                        border: isActive ? '1px solid #10b981' : '1px solid var(--line)',
-                        background: isActive ? '#ecfdf5' : 'var(--paper)',
-                        color: isActive ? '#065f46' : 'var(--text-main)',
-                        fontWeight: isActive ? 700 : 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Төлбөрийн визуал прогресс бар & 2 Картын задаргаа */}
-              {(() => {
-                const p1 = Math.min(100, Math.max(0, Number(formValues.payment_percent_1 ?? 50)));
-                const p2 = Math.max(0, 100 - p1);
-                const advanceAmt = Math.round((prices.finalPrice * p1) / 100);
-                const remainingAmt = Math.max(0, prices.finalPrice - advanceAmt);
-
-                return (
-                  <div>
-                    <div style={{
-                      display: 'flex',
-                      height: '8px',
-                      borderRadius: '999px',
-                      overflow: 'hidden',
-                      background: '#e2e8f0',
-                      marginBottom: '10px'
-                    }}>
-                      <div style={{
-                        width: `${p1}%`,
-                        background: '#10b981',
-                        transition: 'width 0.25s ease'
-                      }} title={`Урьдчилгаа: ${p1}% (${advanceAmt.toLocaleString()} ₮)`} />
-                      <div style={{
-                        width: `${p2}%`,
-                        background: p2 > 0 ? '#f59e0b' : '#10b981',
-                        transition: 'width 0.25s ease'
-                      }} title={`Үлдэгдэл: ${p2}% (${remainingAmt.toLocaleString()} ₮)`} />
-                    </div>
-
-                    {/* 2 Картын харьцуулалт: Урьдчилгаа ба Үлдэгдэл (Босоо дээр доор) */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                      {/* 1. Урьдчилгаа картын блок */}
-                      <div style={{
-                        background: '#f0fdf4',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: '8px',
-                        padding: '8px 10px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#166534' }}>
-                              🟢 1. Урьдчилгаа
-                            </span>
-                            <span style={{
-                              fontSize: '10.5px',
-                              fontWeight: 700,
-                              color: '#15803d',
-                              background: '#dcfce7',
-                              border: '1px solid #86efac',
-                              padding: '1px 6px',
-                              borderRadius: '999px'
-                            }}>
-                              {p1}%
-                            </span>
-                          </div>
-                          <div style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: '13px',
-                            fontWeight: 800,
-                            color: '#15803d'
-                          }}>
-                            {advanceAmt.toLocaleString()} ₮
-                          </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <div className="erp-mini-input" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          placeholder={String(prices.baseAutoUnitPrice || prices.autoUnitPrice)}
+                          value={formValues.manual_unit_price !== undefined && formValues.manual_unit_price !== null ? formValues.manual_unit_price : ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              setValue("manual_unit_price", null as any);
+                            } else {
+                              setValue("manual_unit_price", Math.round(Number(val)));
+                            }
+                          }}
+                          style={{
+                            fontWeight: 700,
+                            color: prices.isManualUnitPrice ? '#b45309' : '#0f172a',
+                            background: prices.isManualUnitPrice ? '#fffbeb' : '#ffffff',
+                            borderColor: prices.isManualUnitPrice ? '#f59e0b' : '#cbd5e1'
+                          }}
+                          title={prices.isManualUnitPrice ? "Гараар оруулсан нэгжийн суурь үнэ (НӨАТ-гүй)" : `Автомат тооцоолсон нэгжийн суурь үнэ: ${(prices.baseAutoUnitPrice || prices.autoUnitPrice).toLocaleString()} ₮`}
+                        />
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>₮</span>
+                      </div>
+                      {formValues.has_vat && (
+                        <div style={{ fontSize: '10.5px', color: '#0284c7', fontWeight: 600 }}>
+                          НӨАТ-тай нэгж: {prices.unitPrice.toLocaleString()} ₮
                         </div>
-
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          <select
-                            {...register("payment_method_1")}
-                            value={formValues.payment_method_1 || 'Дансаар'}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setValue("payment_method_1", val);
-                              if (val === 'Бартер') {
-                                setValue('order_type', 'BARTER');
-                                setValue('payment_percent_1', 100);
-                                setValue('payment_percent_2', 0);
-                              } else if (val === 'Хандив') {
-                                setValue('order_type', 'DONATION');
-                                setValue('payment_percent_1', 100);
-                                setValue('payment_percent_2', 0);
-                              } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
-                                setValue('order_type', 'STANDARD');
-                              }
-                            }}
-                            style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #86efac', background: '#fff', color: '#1e293b', fontWeight: 500 }}
-                          >
-                            <option value="Дансаар">Дансаар</option>
-                            <option value="Бэлэн">Бэлэн</option>
-                            <option value="QPay">QPay</option>
-                            <option value="Картаар">Картаар</option>
-                            <option value="Гэрээгээр">Гэрээгээр</option>
-                            <option value="Бартер">Бартер</option>
-                            <option value="Хандив">Хандив</option>
-                          </select>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#fff', border: '1px solid #86efac', borderRadius: '5px', padding: '1px 6px' }}>
-                            <input
-                              type="number"
-                              step="any"
-                              value={formValues.payment_percent_1 ?? 50}
-                              onChange={(e) => {
-                                const val = Math.min(100, Math.max(0, Number(e.target.value) || 0));
-                                setValue('payment_percent_1', val);
-                                setValue('payment_percent_2', 100 - val);
+                      )}
+                      {isQuickPrint && activeKonicaTariff && (
+                        <div style={{ marginTop: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#0284c7', fontWeight: 600 }}>
+                            ⚡ Тариф: {activeKonicaTariff.unitPrice.toLocaleString()} ₮
+                          </span>
+                          {formValues.manual_unit_price !== activeKonicaTariff.unitPrice && (
+                            <button
+                              type="button"
+                              onClick={() => setValue('manual_unit_price', activeKonicaTariff.unitPrice)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: '#0284c7',
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                textDecoration: 'underline'
                               }}
-                              style={{ width: '38px', padding: '4px 0', fontSize: '11.5px', textAlign: 'center', border: 'none', background: 'transparent', fontWeight: 700, color: '#166534', outline: 'none' }}
-                              title="Урьдчилгаа хувь (%)"
-                            />
-                            <span style={{ fontSize: '11px', color: '#166534', fontWeight: 600 }}>%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 2. Үлдэгдэл картын блок */}
-                      <div style={{
-                        background: p2 > 0 ? '#fffbeb' : '#f8fafc',
-                        border: p2 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        padding: '8px 10px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
-                              {p2 > 0 ? '🟠 2. Үлдэгдэл' : '✓ Бүрэн төлөлт'}
-                            </span>
-                            <span style={{
-                              fontSize: '10.5px',
-                              fontWeight: 700,
-                              color: p2 > 0 ? '#b45309' : '#475569',
-                              background: p2 > 0 ? '#fef3c7' : '#e2e8f0',
-                              border: p2 > 0 ? '1px solid #fcd34d' : '1px solid #cbd5e1',
-                              padding: '1px 6px',
-                              borderRadius: '999px'
-                            }}>
-                              {p2}%
-                            </span>
-                          </div>
-                          <div style={{
-                            fontFamily: "'IBM Plex Mono', monospace",
-                            fontSize: '13px',
-                            fontWeight: 800,
-                            color: p2 > 0 ? '#b45309' : '#475569'
-                          }}>
-                            {remainingAmt.toLocaleString()} ₮
-                          </div>
-                        </div>
-
-                        {p2 > 0 ? (
-                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                            <select
-                              {...register("payment_method_2")}
-                              style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #fcd34d', background: '#fff', color: '#1e293b', fontWeight: 500 }}
                             >
-                              <option value="Бэлэн болоход">Бэлэн болоход</option>
-                              <option value="Хүлээлгэн өгөхөд">Хүлээлгэн өгөхөд</option>
-                              <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
-                              <option value="Гэрээгээр 30 хоног">Гэрээгээр 30 хоног</option>
-                              <option value="Дансаар">Дансаар</option>
-                              <option value="Бэлэн">Бэлэн</option>
-                              <option value="Бартер">Бартер</option>
-                              <option value="Хандив">Хандив</option>
-                            </select>
-                            <div style={{
-                              fontSize: '11px',
-                              color: '#92400e',
-                              fontWeight: 600,
-                              padding: '3px 8px',
-                              background: '#fef3c7',
-                              borderRadius: '5px',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              Үлдэгдэл {p2}%
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '2px 0' }}>
-                            ✓ Урьдчилгаагаар 100% бүрэн төлөгдсөн тул үлдэгдэл төлбөр байхгүй.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="erp-field" style={{marginBottom:'10px'}}>
-                <label>Санхүүгийн тайлбар, тэмдэглэл</label>
-                <textarea {...register("finance_notes")} style={{minHeight:'44px'}}></textarea>
-              </div>
-
-
-              
-              {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
-              <div style={{ marginTop: '12px', fontSize: '11.5px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '9px', padding: '10px' }}>
-                <div style={{ fontWeight: 600, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Задаргаа</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ color: 'var(--muted)' }}>Захиалгын тоо:</span>
-                  <span style={{ fontWeight: 600 }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
-                </div>
-                {formValues.design_cost ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: 'var(--muted)' }}>Эх бэлтгэл:</span>
-                    <span style={{ fontWeight: 600 }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
-                  </div>
-                ) : null}
-              </div>
-
-            </div>
-
-            <div className="summary-actions">
-              {!isEdit ? (
-                <>
-                  {isQuoteMode ? (
-                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block" disabled={isSubmitting}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> {isSubmitting && submitType === 'Үнийн санал' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Үнийн санал' ? '✅ Амжилттай' : 'Үнийн санал хадгалах (Draft)'}
-                    </button>
-                  ) : (
-                    <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg> {isSubmitting && submitType === 'Шинэ захиалга' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Шинэ захиалга' ? '✅ Амжилттай' : 'Захиалга үүсгэх'}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <button type="submit" className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
-                    {isSubmitting ? '⏳ Уншиж байна...' : isSuccess ? '✅ Амжилттай' : (isQuoteMode ? '💾 Үнийн санал шинэчлэх' : '💾 Захиалга шинэчлэх')}
-                  </button>
-                  
-                  {isQuoteMode && (
-                    <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981', marginTop: '10px'}}>
-                      📦 Захиалга болгож батлах
-                    </button>
-                  )}
-
-                  {!isQuoteMode && orderId && initialData?.current_status === 'Бэлэн болсон' && (
-                    <button type="button" onClick={async () => {
-                      if (!confirm("Энэ захиалгыг хэрэглэгчид хүлээлгэн өгсөн гэж тэмдэглэх үү? (Дахин өөрчлөх боломжгүй)")) return;
-                      try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}/status`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                          body: JSON.stringify({ new_status: 'Хүлээлгэн өгсөн' })
-                        });
-                        if (res.ok) {
-                          alert("Захиалгыг хүлээлгэн өгсөн төлөвт шилжүүллээ!");
-                          window.location.href = '/sales/history';
-                        } else {
-                          const err = await res.json();
-                          alert("Алдаа: " + err.error);
-                        }
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }} className="erp-btn erp-btn-block" style={{background: '#10b981', color: '#fff', marginTop: '10px', border: 'none'}}>
-                      ✅ Хүлээлгэн өгөх
-                    </button>
-                  )}
-
-                  {!isQuoteMode && orderId && (
-                    <>
-                      <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'#10b981', borderColor:'#10b981'}} onClick={async () => {
-                        const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
-                        if (!name) return;
-                        try {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${orderId}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ template_name: name })
-                          });
-                          if (res.ok) alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
-                          else alert("Алдаа гарлаа");
-                        } catch(e) { console.error(e); }
-                      }}>
-                        💾 Загвар болгож хадгалах
-                      </button>
-                      <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{color:'var(--primary-color)', borderColor:'var(--primary-color)'}} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
-                        📄 Үнийн санал (PDF) хэвлэх
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* 📋 Үнийн санал хуулах (Copy Quote) */}
-              <button
-                type="button"
-                onClick={() => {
-                  const pName = formValues.product_name || 'Бүтээгдэхүүн';
-                  const pQty = Number(formValues.total_qty || 0).toLocaleString();
-                  const pSize = formValues.size || '-';
-                  const uPrice = prices.unitPrice.toLocaleString();
-                  const tPrice = prices.finalPrice.toLocaleString();
-                  const deadline = formValues.deadline || '-';
-                  const text = `📌 ҮНИЙН САНАЛ:\n• Бүтээгдэхүүн: ${pName}\n• Хэмжээ: ${pSize}\n• Тоо ширхэг: ${pQty} ш\n• Нэгжийн үнэ: ${uPrice} ₮\n• Нийт дүн: ${tPrice} ₮\n• Хугацаа: ${deadline}`;
-                  navigator.clipboard.writeText(text);
-                  alert("Үнийн саналын хураангуй текстийг амжилттай хууллаа!");
-                }}
-                className="erp-btn erp-btn-ghost erp-btn-block"
-                style={{ marginTop: '10px', fontSize: '12px', borderColor: '#cbd5e1', color: '#334155' }}
-              >
-                📋 Үнийн санал хуулах
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      </form>
-
-      {/* Нэмэлт ажиллагаа сонгох Modal */}
-      {showOperationsModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '0.75rem' }}>
-          <div style={{ background: '#fff', borderRadius: '10px', width: '100%', maxWidth: '560px', maxHeight: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', overflow: 'hidden' }}>
-            
-            {/* Modal Header */}
-            <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1rem' }}>⚙️</span>
-                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа / заавар</h3>
-              </div>
-              <button 
-                type="button" 
-                onClick={() => setShowOperationsModal(false)} 
-                style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}
-                title="Хаах"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div style={{ padding: '0.65rem 1rem', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: '#94a3b8' }}>🔍</span>
-                  <input
-                    type="text"
-                    value={opModalSearch}
-                    onChange={e => setOpModalSearch(e.target.value)}
-                    placeholder="Ажиллагааны нэрээр хайх..."
-                    style={{
-                      width: '100%',
-                      padding: '5px 24px 5px 28px',
-                      fontSize: '0.8rem',
-                      borderRadius: '5px',
-                      border: '1px solid #cbd5e1',
-                      outline: 'none'
-                    }}
-                  />
-                  {opModalSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setOpModalSearch('')}
-                      style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1 }}
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
-
-                <select
-                  value={opModalStage}
-                  onChange={e => setOpModalStage(e.target.value)}
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: '5px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155', maxWidth: '140px' }}
-                >
-                  <option value="All">Бүх дамжлага</option>
-                  {PRODUCTION_STAGES.map(s => (
-                    <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Segmented Mini Tabs */}
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => setOpModalTab('ALL')}
-                  style={{
-                    padding: '3px 9px',
-                    borderRadius: '4px',
-                    fontSize: '0.74rem',
-                    fontWeight: opModalTab === 'ALL' ? 700 : 500,
-                    background: opModalTab === 'ALL' ? '#0f172a' : '#f1f5f9',
-                    color: opModalTab === 'ALL' ? '#fff' : '#475569',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Бүгд ({masterPrices.filter(op => op.category === 'Ажиллагаа').length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpModalTab('BILLABLE')}
-                  style={{
-                    padding: '3px 9px',
-                    borderRadius: '4px',
-                    fontSize: '0.74rem',
-                    fontWeight: opModalTab === 'BILLABLE' ? 700 : 500,
-                    background: opModalTab === 'BILLABLE' ? '#16a34a' : '#f0fdf4',
-                    color: opModalTab === 'BILLABLE' ? '#fff' : '#166534',
-                    border: '1px solid ' + (opModalTab === 'BILLABLE' ? 'transparent' : '#bbf7d0'),
-                    cursor: 'pointer'
-                  }}
-                >
-                  💵 Үнэ бодох ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing !== false).length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpModalTab('NON_BILLABLE')}
-                  style={{
-                    padding: '3px 9px',
-                    borderRadius: '4px',
-                    fontSize: '0.74rem',
-                    fontWeight: opModalTab === 'NON_BILLABLE' ? 700 : 500,
-                    background: opModalTab === 'NON_BILLABLE' ? '#0284c7' : '#f0f9ff',
-                    color: opModalTab === 'NON_BILLABLE' ? '#fff' : '#0369a1',
-                    border: '1px solid ' + (opModalTab === 'NON_BILLABLE' ? 'transparent' : '#bae6fd'),
-                    cursor: 'pointer'
-                  }}
-                >
-                  ⚙️ Заавар 0₮ ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing === false).length})
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body: Compact Items List */}
-            <div style={{ padding: '0.75rem 1rem', overflowY: 'auto', flex: 1 }}>
-              {(() => {
-                const search = opModalSearch.toLowerCase().trim();
-                const ops = masterPrices.filter((op: any) => {
-                  if (op.category !== 'Ажиллагаа') return false;
-                  if (opModalTab === 'BILLABLE' && op.is_pricing === false) return false;
-                  if (opModalTab === 'NON_BILLABLE' && op.is_pricing !== false) return false;
-                  if (opModalStage !== 'All' && (op.production_stage || 'POST_PRESS') !== opModalStage) return false;
-                  if (search && !op.item_name.toLowerCase().includes(search)) return false;
-                  return true;
-                });
-
-                if (ops.length === 0) {
-                  return (
-                    <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-                      Тохирох ажиллагаа олдсонгүй.
-                    </div>
-                  );
-                }
-
-                const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
-                ops.forEach((op: any) => {
-                  const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
-                  if (match) {
-                    const baseName = match[1].trim();
-                    const variantName = match[2].trim();
-                    let group = groups.find(g => g.baseName === baseName);
-                    if (!group) {
-                      group = { baseName, isGroup: true, options: [] };
-                      groups.push(group);
-                    }
-                    group.options.push({ ...op, variantName });
-                  } else {
-                    groups.push({ baseName: op.item_name, isGroup: false, options: [{ ...op, variantName: op.item_name }] });
-                  }
-                });
-
-                return (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '6px' }}>
-                    {groups.map(group => {
-                      const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
-                      const isAdded = !!activeOpInGroup;
-                      const repOp = group.options[0];
-                      const isPricing = repOp.is_pricing !== false;
-                      const stageObj = PRODUCTION_STAGES.find(s => s.id === (repOp.production_stage || 'POST_PRESS'));
-
-                      return (
-                        <div key={group.baseName} style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '2px',
-                          padding: '5px 8px',
-                          background: isAdded ? '#f0fdf4' : '#ffffff',
-                          border: isAdded ? '1px solid #86efac' : '1px solid #e2e8f0',
-                          borderRadius: '5px',
-                          transition: 'all 0.1s ease',
-                          boxShadow: isAdded ? '0 1px 2px rgba(22, 163, 74, 0.08)' : 'none'
-                        }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#166534' : '#1e293b', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                              <input
-                                type="checkbox"
-                                checked={isAdded}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    addQuickOp(group.options[0]);
-                                  } else {
-                                    const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                    if (idx !== -1) removeOp(idx);
-                                  }
-                                }}
-                                style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#16a34a', flexShrink: 0 }}
-                              />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={group.baseName}>
-                                {group.baseName}
-                              </span>
-                            </label>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                              <span title={stageObj?.label} style={{ fontSize: '0.72rem' }}>
-                                {stageObj?.icon || '⚙️'}
-                              </span>
-                              <span style={{
-                                fontSize: '0.72rem',
-                                fontWeight: 600,
-                                color: isPricing ? '#16a34a' : '#0284c7',
-                                background: isPricing ? '#f0fdf4' : '#f0f9ff',
-                                padding: '1px 4px',
-                                borderRadius: '3px',
-                                border: '1px solid ' + (isPricing ? '#dcfce7' : '#e0f2fe')
-                              }}>
-                                {isPricing ? `${repOp.unit_cost?.toLocaleString()}₮` : '0₮'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {isAdded && group.isGroup && (
-                            <div style={{ marginTop: '2px', paddingLeft: '21px' }}>
-                              <select
-                                value={activeOpInGroup?.item_name || ''}
-                                onChange={(e) => {
-                                  const newOpName = e.target.value;
-                                  const newOp = group.options.find(o => o.item_name === newOpName);
-                                  if (newOp) {
-                                    const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
-                                    if (idx !== -1) {
-                                      const currentOp = formValues.operations?.[idx];
-                                      updateOp(idx, { 
-                                        ...currentOp,
-                                        operation_name: newOp.item_name, 
-                                        unit_cost: 0,
-                                        qty: currentOp?.qty || 0,
-                                        notes: currentOp?.notes || '',
-                                        is_pricing: false,
-                                        production_stage: newOp.production_stage || 'POST_PRESS'
-                                      } as any);
-                                    }
-                                  }
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '2px 4px',
-                                  fontSize: '0.74rem',
-                                  borderRadius: '3px',
-                                  border: '1px solid #86efac',
-                                  background: '#fff',
-                                  color: '#166534',
-                                  outline: 'none',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                {group.options.map(opt => (
-                                  <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
-                                ))}
-                              </select>
-                            </div>
+                              Тарифт буцах
+                            </button>
                           )}
                         </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* НӨАТ тооцох switch */}
+                  <div className="erp-field-inline" style={{ marginTop: '8px', marginBottom: '8px', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ margin: 0, fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                      <span>🏛️ НӨАТ тооцох (10%)</span>
+                    </label>
+                    <label className="switch" style={{ margin: 0 }}>
+                      <input type="checkbox" {...register("has_vat")} />
+                      <span className="track"></span>
+                    </label>
+                  </div>
+                  {formValues.has_vat && (
+                    <div style={{ fontSize: '11.5px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '3px', padding: '0 4px 6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Цэвэр үнэ (НӨАТ-гүй):</span>
+                        <span style={{ fontWeight: 600, color: '#334155' }}>{prices.netPrice.toLocaleString()} ₮</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>НӨАТ (10%):</span>
+                        <span style={{ fontWeight: 600, color: '#0284c7' }}>{(prices.finalPrice - prices.netPrice).toLocaleString()} ₮</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="summary-sub" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span>💳 Төлбөрийн нөхцөл & Хуваарилалт</span>
+                    <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 'normal' }}>
+                      Нийт: <strong style={{ color: 'var(--text-main)' }}>{prices.finalPrice.toLocaleString()} ₮</strong>
+                    </span>
+                  </div>
+
+                  {/* Түргэн сонголтын товчнууд (Presets) */}
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+                    {[
+                      { label: '50% (Стандарт)', val: 50 },
+                      { label: '100% (Бүрэн)', val: 100 },
+                      { label: '70%', val: 70 },
+                      { label: '30%', val: 30 },
+                      { label: '0% (Зээл)', val: 0 },
+                      { label: '🤝 Бартер', val: 100, method: 'Бартер', orderType: 'BARTER' },
+                      { label: '🎁 Хандив', val: 100, method: 'Хандив', orderType: 'DONATION' }
+                    ].map((p: any) => {
+                      const isActive = p.orderType
+                        ? (formValues.order_type === p.orderType || formValues.payment_method_1 === p.method)
+                        : (Number(formValues.payment_percent_1) === p.val && formValues.order_type !== 'BARTER' && formValues.order_type !== 'DONATION');
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => {
+                            setValue('payment_percent_1', p.val);
+                            setValue('payment_percent_2', 100 - p.val);
+                            if (p.method) {
+                              setValue('payment_method_1', p.method);
+                            }
+                            if (p.orderType) {
+                              setValue('order_type', p.orderType);
+                            } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
+                              setValue('order_type', 'STANDARD');
+                              if (formValues.payment_method_1 === 'Бартер' || formValues.payment_method_1 === 'Хандив') {
+                                setValue('payment_method_1', 'Дансаар');
+                              }
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '4px 2px',
+                            fontSize: '10px',
+                            borderRadius: '6px',
+                            border: isActive ? '1px solid #10b981' : '1px solid var(--line)',
+                            background: isActive ? '#ecfdf5' : 'var(--paper)',
+                            color: isActive ? '#065f46' : 'var(--text-main)',
+                            fontWeight: isActive ? 700 : 500,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {p.label}
+                        </button>
                       );
                     })}
                   </div>
-                );
-              })()}
-            </div>
 
-            {/* Modal Footer */}
-            <div style={{ padding: '0.6rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                Сонгогдсон: <strong style={{ color: '#0f172a' }}>{opFields.length}</strong> ажиллагаа
-              </span>
-              <button 
-                type="button" 
-                onClick={() => setShowOperationsModal(false)} 
-                className="btn btn-primary" 
-                style={{ padding: '0.35rem 1.25rem', fontSize: '0.82rem', fontWeight: 600, borderRadius: '5px' }}
-              >
-                Болсон
-              </button>
+                  {/* Төлбөрийн визуал прогресс бар & 2 Картын задаргаа */}
+                  {(() => {
+                    const p1 = Math.min(100, Math.max(0, Number(formValues.payment_percent_1 ?? 50)));
+                    const p2 = Math.max(0, 100 - p1);
+                    const advanceAmt = Math.round((prices.finalPrice * p1) / 100);
+                    const remainingAmt = Math.max(0, prices.finalPrice - advanceAmt);
+
+                    return (
+                      <div>
+                        <div style={{
+                          display: 'flex',
+                          height: '8px',
+                          borderRadius: '999px',
+                          overflow: 'hidden',
+                          background: '#e2e8f0',
+                          marginBottom: '10px'
+                        }}>
+                          <div style={{
+                            width: `${p1}%`,
+                            background: '#10b981',
+                            transition: 'width 0.25s ease'
+                          }} title={`Урьдчилгаа: ${p1}% (${advanceAmt.toLocaleString()} ₮)`} />
+                          <div style={{
+                            width: `${p2}%`,
+                            background: p2 > 0 ? '#f59e0b' : '#10b981',
+                            transition: 'width 0.25s ease'
+                          }} title={`Үлдэгдэл: ${p2}% (${remainingAmt.toLocaleString()} ₮)`} />
+                        </div>
+
+                        {/* 2 Картын харьцуулалт: Урьдчилгаа ба Үлдэгдэл (Босоо дээр доор) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                          {/* 1. Урьдчилгаа картын блок */}
+                          <div style={{
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#166534' }}>
+                                  🟢 1. Урьдчилгаа
+                                </span>
+                                <span style={{
+                                  fontSize: '10.5px',
+                                  fontWeight: 700,
+                                  color: '#15803d',
+                                  background: '#dcfce7',
+                                  border: '1px solid #86efac',
+                                  padding: '1px 6px',
+                                  borderRadius: '999px'
+                                }}>
+                                  {p1}%
+                                </span>
+                              </div>
+                              <div style={{
+                                fontFamily: "'IBM Plex Mono', monospace",
+                                fontSize: '13px',
+                                fontWeight: 800,
+                                color: '#15803d'
+                              }}>
+                                {advanceAmt.toLocaleString()} ₮
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <select
+                                {...register("payment_method_1")}
+                                value={formValues.payment_method_1 || 'Дансаар'}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setValue("payment_method_1", val);
+                                  if (val === 'Бартер') {
+                                    setValue('order_type', 'BARTER');
+                                    setValue('payment_percent_1', 100);
+                                    setValue('payment_percent_2', 0);
+                                  } else if (val === 'Хандив') {
+                                    setValue('order_type', 'DONATION');
+                                    setValue('payment_percent_1', 100);
+                                    setValue('payment_percent_2', 0);
+                                  } else if (formValues.order_type === 'BARTER' || formValues.order_type === 'DONATION') {
+                                    setValue('order_type', 'STANDARD');
+                                  }
+                                }}
+                                style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #86efac', background: '#fff', color: '#1e293b', fontWeight: 500 }}
+                              >
+                                <option value="Дансаар">Дансаар</option>
+                                <option value="Бэлэн">Бэлэн</option>
+                                <option value="QPay">QPay</option>
+                                <option value="Картаар">Картаар</option>
+                                <option value="Гэрээгээр">Гэрээгээр</option>
+                                <option value="Бартер">Бартер</option>
+                                <option value="Хандив">Хандив</option>
+                              </select>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#fff', border: '1px solid #86efac', borderRadius: '5px', padding: '1px 6px' }}>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={formValues.payment_percent_1 ?? 50}
+                                  onChange={(e) => {
+                                    const val = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                                    setValue('payment_percent_1', val);
+                                    setValue('payment_percent_2', 100 - val);
+                                  }}
+                                  style={{ width: '38px', padding: '4px 0', fontSize: '11.5px', textAlign: 'center', border: 'none', background: 'transparent', fontWeight: 700, color: '#166534', outline: 'none' }}
+                                  title="Урьдчилгаа хувь (%)"
+                                />
+                                <span style={{ fontSize: '11px', color: '#166534', fontWeight: 600 }}>%</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 2. Үлдэгдэл картын блок */}
+                          <div style={{
+                            background: p2 > 0 ? '#fffbeb' : '#f8fafc',
+                            border: p2 > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '11.5px', fontWeight: 700, color: p2 > 0 ? '#92400e' : '#475569' }}>
+                                  {p2 > 0 ? '🟠 2. Үлдэгдэл' : '✓ Бүрэн төлөлт'}
+                                </span>
+                                <span style={{
+                                  fontSize: '10.5px',
+                                  fontWeight: 700,
+                                  color: p2 > 0 ? '#b45309' : '#475569',
+                                  background: p2 > 0 ? '#fef3c7' : '#e2e8f0',
+                                  border: p2 > 0 ? '1px solid #fcd34d' : '1px solid #cbd5e1',
+                                  padding: '1px 6px',
+                                  borderRadius: '999px'
+                                }}>
+                                  {p2}%
+                                </span>
+                              </div>
+                              <div style={{
+                                fontFamily: "'IBM Plex Mono', monospace",
+                                fontSize: '13px',
+                                fontWeight: 800,
+                                color: p2 > 0 ? '#b45309' : '#475569'
+                              }}>
+                                {remainingAmt.toLocaleString()} ₮
+                              </div>
+                            </div>
+
+                            {p2 > 0 ? (
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <select
+                                  {...register("payment_method_2")}
+                                  style={{ flex: 1, padding: '5px 8px', fontSize: '11.5px', borderRadius: '5px', border: '1px solid #fcd34d', background: '#fff', color: '#1e293b', fontWeight: 500 }}
+                                >
+                                  <option value="Бэлэн болоход">Бэлэн болоход</option>
+                                  <option value="Хүлээлгэн өгөхөд">Хүлээлгэн өгөхөд</option>
+                                  <option value="Гэрээгээр 14 хоног">Гэрээгээр 14 хоног</option>
+                                  <option value="Гэрээгээр 30 хоног">Гэрээгээр 30 хоног</option>
+                                  <option value="Дансаар">Дансаар</option>
+                                  <option value="Бэлэн">Бэлэн</option>
+                                  <option value="Бартер">Бартер</option>
+                                  <option value="Хандив">Хандив</option>
+                                </select>
+                                <div style={{
+                                  fontSize: '11px',
+                                  color: '#92400e',
+                                  fontWeight: 600,
+                                  padding: '3px 8px',
+                                  background: '#fef3c7',
+                                  borderRadius: '5px',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  Үлдэгдэл {p2}%
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '2px 0' }}>
+                                ✓ Урьдчилгаагаар 100% бүрэн төлөгдсөн тул үлдэгдэл төлбөр байхгүй.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="erp-field" style={{ marginBottom: '10px' }}>
+                    <label>Санхүүгийн тайлбар, тэмдэглэл</label>
+                    <textarea {...register("finance_notes")} style={{ minHeight: '44px' }}></textarea>
+                  </div>
+
+
+
+                  {/* Захиалгын хураангуй (Хураангуйлсан/Маш жижиг) */}
+                  <div style={{ marginTop: '12px', fontSize: '11.5px', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: '9px', padding: '10px' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: '8px' }}>Задаргаа</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ color: 'var(--muted)' }}>Захиалгын тоо:</span>
+                      <span style={{ fontWeight: 600 }}>{Number(formValues.total_qty || 0).toLocaleString()} ш</span>
+                    </div>
+                    {formValues.design_cost ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ color: 'var(--muted)' }}>Эх бэлтгэл:</span>
+                        <span style={{ fontWeight: 600 }}>{Math.round(formValues.design_cost).toLocaleString()} ₮</span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                </div>
+
+                <div className="summary-actions">
+                  {!isEdit ? (
+                    <>
+                      {isQuoteMode ? (
+                        <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Үнийн санал'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-ghost erp-btn-block" disabled={isSubmitting}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" /><path d="M17 21v-8H7v8M7 3v5h8" /></svg> {isSubmitting && submitType === 'Үнийн санал' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Үнийн санал' ? '✅ Амжилттай' : 'Үнийн санал хадгалах (Draft)'}
+                        </button>
+                      ) : (
+                        <button type="button" onClick={(e) => { e.preventDefault(); setSubmitType('Шинэ захиалга'); handleSubmit(onSubmit)(); }} className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg> {isSubmitting && submitType === 'Шинэ захиалга' ? '⏳ Уншиж байна...' : isSuccess && submitType === 'Шинэ захиалга' ? '✅ Амжилттай' : 'Захиалга үүсгэх'}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <button type="submit" className="erp-btn erp-btn-primary erp-btn-block" disabled={isSubmitting}>
+                        {isSubmitting ? '⏳ Уншиж байна...' : isSuccess ? '✅ Амжилттай' : (isQuoteMode ? '💾 Үнийн санал шинэчлэх' : '💾 Захиалга шинэчлэх')}
+                      </button>
+
+                      {isQuoteMode && (
+                        <button type="submit" onClick={() => setSubmitType('Шинэ захиалга')} className="erp-btn erp-btn-ghost erp-btn-block" style={{ color: '#10b981', borderColor: '#10b981', marginTop: '10px' }}>
+                          📦 Захиалга болгож батлах
+                        </button>
+                      )}
+
+                      {!isQuoteMode && orderId && initialData?.current_status === 'Бэлэн болсон' && (
+                        <button type="button" onClick={async () => {
+                          if (!confirm("Энэ захиалгыг хэрэглэгчид хүлээлгэн өгсөн гэж тэмдэглэх үү? (Дахин өөрчлөх боломжгүй)")) return;
+                          try {
+                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/orders/${orderId}/status`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                              body: JSON.stringify({ new_status: 'Хүлээлгэн өгсөн' })
+                            });
+                            if (res.ok) {
+                              alert("Захиалгыг хүлээлгэн өгсөн төлөвт шилжүүллээ!");
+                              window.location.href = '/sales/history';
+                            } else {
+                              const err = await res.json();
+                              alert("Алдаа: " + err.error);
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        }} className="erp-btn erp-btn-block" style={{ background: '#10b981', color: '#fff', marginTop: '10px', border: 'none' }}>
+                          ✅ Хүлээлгэн өгөх
+                        </button>
+                      )}
+
+                      {!isQuoteMode && orderId && (
+                        <>
+                          <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{ color: '#10b981', borderColor: '#10b981' }} onClick={async () => {
+                            const name = window.prompt("Бэлэн загвар болгож хадгалах нэрээ оруулна уу (Жишээ: А5 24-нүүр Ширээний календарь):");
+                            if (!name) return;
+                            try {
+                              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/templates/from-order/${orderId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ template_name: name })
+                              });
+                              if (res.ok) alert("Амжилттай хадгалагдлаа! Одоо шинэ захиалга үүсгэхдээ энэ загварыг шууд сонгох боломжтой.");
+                              else alert("Алдаа гарлаа");
+                            } catch (e) { console.error(e); }
+                          }}>
+                            💾 Загвар болгож хадгалах
+                          </button>
+                          <button type="button" className="erp-btn erp-btn-ghost erp-btn-block" style={{ color: 'var(--primary-color)', borderColor: 'var(--primary-color)' }} onClick={() => window.open(`/sales/orders/${orderId}/quote`, '_blank')}>
+                            📄 Үнийн санал (PDF) хэвлэх
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {/* 📋 Үнийн санал хуулах (Copy Quote) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pName = formValues.product_name || 'Бүтээгдэхүүн';
+                      const pQty = Number(formValues.total_qty || 0).toLocaleString();
+                      const pSize = formValues.size || '-';
+                      const uPrice = prices.unitPrice.toLocaleString();
+                      const tPrice = prices.finalPrice.toLocaleString();
+                      const deadline = formValues.deadline || '-';
+                      const text = `📌 ҮНИЙН САНАЛ:\n• Бүтээгдэхүүн: ${pName}\n• Хэмжээ: ${pSize}\n• Тоо ширхэг: ${pQty} ш\n• Нэгжийн үнэ: ${uPrice} ₮\n• Нийт дүн: ${tPrice} ₮\n• Хугацаа: ${deadline}`;
+                      navigator.clipboard.writeText(text);
+                      alert("Үнийн саналын хураангуй текстийг амжилттай хууллаа!");
+                    }}
+                    className="erp-btn erp-btn-ghost erp-btn-block"
+                    style={{ marginTop: '10px', fontSize: '12px', borderColor: '#cbd5e1', color: '#334155' }}
+                  >
+                    📋 Үнийн санал хуулах
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </form>
 
-    </div>
+        {/* Нэмэлт ажиллагаа сонгох Modal */}
+        {showOperationsModal && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '0.75rem' }}>
+            <div style={{ background: '#fff', borderRadius: '10px', width: '100%', maxWidth: '560px', maxHeight: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', overflow: 'hidden' }}>
+
+              {/* Modal Header */}
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1rem' }}>⚙️</span>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>Нэмэлт ажиллагаа / заавар</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowOperationsModal(false)}
+                  style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}
+                  title="Хаах"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Filter & Search Bar */}
+              <div style={{ padding: '0.65rem 1rem', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: '#94a3b8' }}>🔍</span>
+                    <input
+                      type="text"
+                      value={opModalSearch}
+                      onChange={e => setOpModalSearch(e.target.value)}
+                      placeholder="Ажиллагааны нэрээр хайх..."
+                      style={{
+                        width: '100%',
+                        padding: '5px 24px 5px 28px',
+                        fontSize: '0.8rem',
+                        borderRadius: '5px',
+                        border: '1px solid #cbd5e1',
+                        outline: 'none'
+                      }}
+                    />
+                    {opModalSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setOpModalSearch('')}
+                        style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1 }}
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+
+                  <select
+                    value={opModalStage}
+                    onChange={e => setOpModalStage(e.target.value)}
+                    style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: '5px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155', maxWidth: '140px' }}
+                  >
+                    <option value="All">Бүх дамжлага</option>
+                    {PRODUCTION_STAGES.map(s => (
+                      <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Segmented Mini Tabs */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('ALL')}
+                    style={{
+                      padding: '3px 9px',
+                      borderRadius: '4px',
+                      fontSize: '0.74rem',
+                      fontWeight: opModalTab === 'ALL' ? 700 : 500,
+                      background: opModalTab === 'ALL' ? '#0f172a' : '#f1f5f9',
+                      color: opModalTab === 'ALL' ? '#fff' : '#475569',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Бүгд ({masterPrices.filter(op => op.category === 'Ажиллагаа').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('BILLABLE')}
+                    style={{
+                      padding: '3px 9px',
+                      borderRadius: '4px',
+                      fontSize: '0.74rem',
+                      fontWeight: opModalTab === 'BILLABLE' ? 700 : 500,
+                      background: opModalTab === 'BILLABLE' ? '#16a34a' : '#f0fdf4',
+                      color: opModalTab === 'BILLABLE' ? '#fff' : '#166534',
+                      border: '1px solid ' + (opModalTab === 'BILLABLE' ? 'transparent' : '#bbf7d0'),
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💵 Үнэ бодох ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing !== false).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpModalTab('NON_BILLABLE')}
+                    style={{
+                      padding: '3px 9px',
+                      borderRadius: '4px',
+                      fontSize: '0.74rem',
+                      fontWeight: opModalTab === 'NON_BILLABLE' ? 700 : 500,
+                      background: opModalTab === 'NON_BILLABLE' ? '#0284c7' : '#f0f9ff',
+                      color: opModalTab === 'NON_BILLABLE' ? '#fff' : '#0369a1',
+                      border: '1px solid ' + (opModalTab === 'NON_BILLABLE' ? 'transparent' : '#bae6fd'),
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⚙️ Заавар 0₮ ({masterPrices.filter(op => op.category === 'Ажиллагаа' && op.is_pricing === false).length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body: Compact Items List */}
+              <div style={{ padding: '0.75rem 1rem', overflowY: 'auto', flex: 1 }}>
+                {(() => {
+                  const search = opModalSearch.toLowerCase().trim();
+                  const ops = masterPrices.filter((op: any) => {
+                    if (op.category !== 'Ажиллагаа') return false;
+                    if (opModalTab === 'BILLABLE' && op.is_pricing === false) return false;
+                    if (opModalTab === 'NON_BILLABLE' && op.is_pricing !== false) return false;
+                    if (opModalStage !== 'All' && (op.production_stage || 'POST_PRESS') !== opModalStage) return false;
+                    if (search && !op.item_name.toLowerCase().includes(search)) return false;
+                    return true;
+                  });
+
+                  if (ops.length === 0) {
+                    return (
+                      <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                        Тохирох ажиллагаа олдсонгүй.
+                      </div>
+                    );
+                  }
+
+                  const groups: { baseName: string, options: any[], isGroup: boolean }[] = [];
+                  ops.forEach((op: any) => {
+                    const match = op.item_name.match(/^(.*)\s*\((.*)\)$/);
+                    if (match) {
+                      const baseName = match[1].trim();
+                      const variantName = match[2].trim();
+                      let group = groups.find(g => g.baseName === baseName);
+                      if (!group) {
+                        group = { baseName, isGroup: true, options: [] };
+                        groups.push(group);
+                      }
+                      group.options.push({ ...op, variantName });
+                    } else {
+                      groups.push({ baseName: op.item_name, isGroup: false, options: [{ ...op, variantName: op.item_name }] });
+                    }
+                  });
+
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '6px' }}>
+                      {groups.map(group => {
+                        const activeOpInGroup = group.options.find(o => opFields.some((f: any) => f.operation_name === o.item_name));
+                        const isAdded = !!activeOpInGroup;
+                        const repOp = group.options[0];
+                        const isPricing = repOp.is_pricing !== false;
+                        const stageObj = PRODUCTION_STAGES.find(s => s.id === (repOp.production_stage || 'POST_PRESS'));
+
+                        return (
+                          <div key={group.baseName} style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '2px',
+                            padding: '5px 8px',
+                            background: isAdded ? '#f0fdf4' : '#ffffff',
+                            border: isAdded ? '1px solid #86efac' : '1px solid #e2e8f0',
+                            borderRadius: '5px',
+                            transition: 'all 0.1s ease',
+                            boxShadow: isAdded ? '0 1px 2px rgba(22, 163, 74, 0.08)' : 'none'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: isAdded ? 600 : 500, color: isAdded ? '#166534' : '#1e293b', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isAdded}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      addQuickOp(group.options[0]);
+                                    } else {
+                                      const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                      if (idx !== -1) removeOp(idx);
+                                    }
+                                  }}
+                                  style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#16a34a', flexShrink: 0 }}
+                                />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={group.baseName}>
+                                  {group.baseName}
+                                </span>
+                              </label>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                                <span title={stageObj?.label} style={{ fontSize: '0.72rem' }}>
+                                  {stageObj?.icon || '⚙️'}
+                                </span>
+                                <span style={{
+                                  fontSize: '0.72rem',
+                                  fontWeight: 600,
+                                  color: isPricing ? '#16a34a' : '#0284c7',
+                                  background: isPricing ? '#f0fdf4' : '#f0f9ff',
+                                  padding: '1px 4px',
+                                  borderRadius: '3px',
+                                  border: '1px solid ' + (isPricing ? '#dcfce7' : '#e0f2fe')
+                                }}>
+                                  {isPricing ? `${repOp.unit_cost?.toLocaleString()}₮` : '0₮'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {isAdded && group.isGroup && (
+                              <div style={{ marginTop: '2px', paddingLeft: '21px' }}>
+                                <select
+                                  value={activeOpInGroup?.item_name || ''}
+                                  onChange={(e) => {
+                                    const newOpName = e.target.value;
+                                    const newOp = group.options.find(o => o.item_name === newOpName);
+                                    if (newOp) {
+                                      const idx = opFields.findIndex((f: any) => group.options.some(o => o.item_name === f.operation_name));
+                                      if (idx !== -1) {
+                                        const currentOp = formValues.operations?.[idx];
+                                        updateOp(idx, {
+                                          ...currentOp,
+                                          operation_name: newOp.item_name,
+                                          unit_cost: 0,
+                                          qty: currentOp?.qty || 0,
+                                          notes: currentOp?.notes || '',
+                                          is_pricing: false,
+                                          production_stage: newOp.production_stage || 'POST_PRESS'
+                                        } as any);
+                                      }
+                                    }
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '2px 4px',
+                                    fontSize: '0.74rem',
+                                    borderRadius: '3px',
+                                    border: '1px solid #86efac',
+                                    background: '#fff',
+                                    color: '#166534',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {group.options.map(opt => (
+                                    <option key={opt.id} value={opt.item_name}>{opt.variantName}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ padding: '0.6rem 1rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Сонгогдсон: <strong style={{ color: '#0f172a' }}>{opFields.length}</strong> ажиллагаа
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowOperationsModal(false)}
+                  className="btn btn-primary"
+                  style={{ padding: '0.35rem 1.25rem', fontSize: '0.82rem', fontWeight: 600, borderRadius: '5px' }}
+                >
+                  Болсон
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
