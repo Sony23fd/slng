@@ -1146,61 +1146,153 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
   const ctpPrice = ctpPriceLarge;
 
   const categoryOptions = React.useMemo(() => {
-    const map = new Map<string, { value: string; label: string }>();
+    // Standard groups in prioritized order
+    const GROUP_ORDER = [
+      '⭐ Түгээмэл хэвлэл',
+      '📚 Ном, сэтгүүл',
+      '📢 Маркетинг, сурталчилгаа',
+      '📦 Сав баглаа боодол',
+      '🏢 Албан хэрэгцээ, маягт',
+      '⚙️ Бусад / Тусгай хэвлэл'
+    ];
+
+    const DEFAULT_GROUPS: Record<string, string> = {
+      'Ном өнгөт': '⭐ Түгээмэл хэвлэл',
+      'Ном хар': '⭐ Түгээмэл хэвлэл',
+      'Түргэн хэвлэл': '⭐ Түгээмэл хэвлэл',
+      'Нэрийн хуудас': '⭐ Түгээмэл хэвлэл',
+      'Тор': '⭐ Түгээмэл хэвлэл',
+      'Брошур': '⭐ Түгээмэл хэвлэл',
+      'Календар': '⭐ Түгээмэл хэвлэл',
+      'Хортой маягт': '⭐ Түгээмэл хэвлэл',
+      'Сэтгүүл': '📚 Ном, сэтгүүл',
+      'Дэвтэр': '📚 Ном, сэтгүүл',
+      'Танилцуулга': '📚 Ном, сэтгүүл',
+      'Сонин': '📚 Ном, сэтгүүл',
+      'Зурагт хуудас': '📢 Маркетинг, сурталчилгаа',
+      'Постер': '📢 Маркетинг, сурталчилгаа',
+      'Урилга': '📢 Маркетинг, сурталчилгаа',
+      'Меню': '📢 Маркетинг, сурталчилгаа',
+      'Хайрцаг': '📦 Сав баглаа боодол',
+      'Шошго': '📦 Сав баглаа боодол',
+      'Стикер': '📦 Сав баглаа боодол',
+      'Албан бланк': '🏢 Албан хэрэгцээ, маягт',
+      'Хавтас': '🏢 Албан хэрэгцээ, маягт',
+      'Дугтуй': '🏢 Албан хэрэгцээ, маягт',
+      'Сертификат': '🏢 Албан хэрэгцээ, маягт',
+      'Билет': '🏢 Албан хэрэгцээ, маягт',
+      'Маягт': '🏢 Албан хэрэгцээ, маягт',
+      'Даралт': '⚙️ Бусад / Тусгай хэвлэл',
+      'Промо': '⚙️ Бусад / Тусгай хэвлэл',
+      'Дахин хэвлэлт': '⚙️ Бусад / Тусгай хэвлэл',
+      'Бусад': '⚙️ Бусад / Тусгай хэвлэл',
+    };
+
+    const itemMap = new Map<string, { value: string; label: string; group: string; sort_order: number }>();
 
     // 1. Dynamic product_category from DB (managed in /admin/product-categories)
     if (Array.isArray(productCategories) && productCategories.length > 0) {
       productCategories.forEach((cat: any) => {
         if (cat?.name) {
-          map.set(cat.name, { value: cat.name, label: cat.name });
+          const group = cat.group_name || DEFAULT_GROUPS[cat.name] || '⚙️ Бусад / Тусгай хэвлэл';
+          const sortOrder = Number(cat.sort_order) || 99;
+          itemMap.set(cat.name, { value: cat.name, label: cat.name, group, sort_order: sortOrder });
         }
       });
     }
 
-    // 2. Constants table (type: 'CATEGORY')
-    if (groupedConstants['CATEGORY']) {
-      groupedConstants['CATEGORY'].forEach((c: any) => {
-        if (c?.value && !map.has(c.value)) {
-          map.set(c.value, { value: c.value, label: c.value });
-        }
-      });
-    }
-
-    // 3. Complete list of all 27 standard printing product categories
+    // 2. Complete list of all 29 standard printing product categories with canonical sort orders
     const standardCategories = [
-      { value: 'Танилцуулга', label: 'Танилцуулга' },
-      { value: 'Бланк', label: 'Бланк' },
-      { value: 'Даралт', label: 'Даралт' },
-      { value: 'Зурагт хуудас', label: 'Зурагт хуудас' },
-      { value: 'Календар', label: 'Календар' },
-      { value: 'Ном хар', label: 'Ном хар' },
-      { value: 'Ном өнгөт', label: 'Ном өнгөт' },
-      { value: 'Сонин', label: 'Сонин' },
-      { value: 'Сэтгүүл', label: 'Сэтгүүл' },
-      { value: 'Түргэн хэвлэл', label: 'Түргэн хэвлэл' },
-      { value: 'Тор', label: 'Тор' },
-      { value: 'Хортой маягт', label: 'Хортой маягт' },
-      { value: 'Шошго', label: 'Шошго' },
-      { value: 'Дэвтэр', label: 'Дэвтэр' },
-      { value: 'Маягт', label: 'Маягт' },
-      { value: 'Хавтас', label: 'Хавтас' },
-      { value: 'Дугтуй', label: 'Дугтуй' },
-      { value: 'Урилга', label: 'Урилга' },
-      { value: 'Меню', label: 'Меню' },
-      { value: 'Нэрийн хуудас', label: 'Нэрийн хуудас' },
-      { value: 'Дахин хэвлэлт', label: 'Дахин хэвлэлт' },
-      { value: 'Промо', label: 'Промо' },
-      { value: 'Билет', label: 'Билет' },
-      { value: 'Бусад', label: 'Бусад' }
+      { name: 'Ном өнгөт', order: 1 },
+      { name: 'Ном хар', order: 2 },
+      { name: 'Түргэн хэвлэл', order: 3 },
+      { name: 'Нэрийн хуудас', order: 4 },
+      { name: 'Тор', order: 5 },
+      { name: 'Брошур', order: 6 },
+      { name: 'Календар', order: 7 },
+      { name: 'Хортой маягт', order: 8 },
+      { name: 'Сэтгүүл', order: 9 },
+      { name: 'Дэвтэр', order: 10 },
+      { name: 'Танилцуулга', order: 11 },
+      { name: 'Сонин', order: 12 },
+      { name: 'Зурагт хуудас', order: 13 },
+      { name: 'Постер', order: 14 },
+      { name: 'Урилга', order: 15 },
+      { name: 'Меню', order: 16 },
+      { name: 'Хайрцаг', order: 17 },
+      { name: 'Шошго', order: 18 },
+      { name: 'Стикер', order: 19 },
+      { name: 'Албан бланк', order: 20 },
+      { name: 'Хавтас', order: 21 },
+      { name: 'Дугтуй', order: 22 },
+      { name: 'Сертификат', order: 23 },
+      { name: 'Билет', order: 24 },
+      { name: 'Маягт', order: 25 },
+      { name: 'Даралт', order: 26 },
+      { name: 'Промо', order: 27 },
+      { name: 'Дахин хэвлэлт', order: 28 },
+      { name: 'Бусад', order: 29 },
     ];
 
     standardCategories.forEach(sc => {
-      if (!map.has(sc.value)) {
-        map.set(sc.value, sc);
+      if (!itemMap.has(sc.name)) {
+        itemMap.set(sc.name, {
+          value: sc.name,
+          label: sc.name,
+          group: DEFAULT_GROUPS[sc.name] || '⚙️ Бусад / Тусгай хэвлэл',
+          sort_order: sc.order
+        });
       }
     });
 
-    return Array.from(map.values());
+    // 3. Constants table (type: 'CATEGORY')
+    if (groupedConstants['CATEGORY']) {
+      groupedConstants['CATEGORY'].forEach((c: any) => {
+        if (c?.value && !itemMap.has(c.value)) {
+          itemMap.set(c.value, {
+            value: c.value,
+            label: c.value,
+            group: DEFAULT_GROUPS[c.value] || '⚙️ Бусад / Тусгай хэвлэл',
+            sort_order: 99
+          });
+        }
+      });
+    }
+
+    // Group items into React-Select grouped options format
+    const groupBuckets: Record<string, { value: string; label: string; sort_order: number }[]> = {};
+    GROUP_ORDER.forEach(g => { groupBuckets[g] = []; });
+
+    itemMap.forEach(item => {
+      const g = item.group;
+      if (!groupBuckets[g]) {
+        groupBuckets[g] = [];
+      }
+      groupBuckets[g].push({ value: item.value, label: item.label, sort_order: item.sort_order });
+    });
+
+    const result: { label: string; options: { value: string; label: string }[] }[] = [];
+    GROUP_ORDER.forEach(g => {
+      if (groupBuckets[g] && groupBuckets[g].length > 0) {
+        groupBuckets[g].sort((a, b) => a.sort_order - b.sort_order);
+        result.push({
+          label: g,
+          options: groupBuckets[g].map(it => ({ value: it.value, label: it.label }))
+        });
+      }
+    });
+
+    Object.keys(groupBuckets).forEach(g => {
+      if (!GROUP_ORDER.includes(g) && groupBuckets[g].length > 0) {
+        groupBuckets[g].sort((a, b) => a.sort_order - b.sort_order);
+        result.push({
+          label: g,
+          options: groupBuckets[g].map(it => ({ value: it.value, label: it.label }))
+        });
+      }
+    });
+
+    return result;
   }, [productCategories, groupedConstants]);
 
   // Format deadline for date input
@@ -4365,13 +4457,22 @@ export default function OrderForm({ initialData, isEdit, orderId, isQuoteMode }:
                 name="category"
                 control={control}
                 render={({ field }) => {
+                  const flatCategories = categoryOptions.flatMap((g: any) => g.options || [g]);
                   const selectedOption = field.value 
-                    ? (categoryOptions.find(o => o.value === field.value) || { value: field.value, label: field.value }) 
+                    ? (flatCategories.find((o: any) => o.value === field.value) || { value: field.value, label: field.value }) 
                     : null;
                   return (
                     <CreatableSelect
                       {...field}
                       options={categoryOptions}
+                      formatGroupLabel={(data: any) => (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700, color: '#334155', fontSize: '0.8rem', padding: '2px 0' }}>
+                          <span>{data.label}</span>
+                          <span style={{ background: '#e2e8f0', borderRadius: '10px', padding: '1px 6px', fontSize: '0.7rem', color: '#64748b' }}>
+                            {data.options?.length || 0}
+                          </span>
+                        </div>
+                      )}
                       onChange={(selected: any) => {
                         const val = selected ? selected.value : '';
                         field.onChange(val);

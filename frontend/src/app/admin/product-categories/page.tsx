@@ -16,6 +16,8 @@ interface ProductCategory {
   waste_qty: number;
   default_operations?: any;
   default_materials?: any;
+  sort_order?: number;
+  group_name?: string | null;
 }
 
 export default function ProductCategoriesPage() {
@@ -37,6 +39,8 @@ export default function ProductCategoriesPage() {
     has_pages: true,
     has_bookmark: false,
     waste_qty: 100,
+    sort_order: 10,
+    group_name: '⭐ Түгээмэл хэвлэл',
     default_operations: [] as string[],
     default_materials: [] as string[]
   });
@@ -99,7 +103,7 @@ export default function ProductCategoriesPage() {
       if (res.ok) {
         setShowAdd(false);
         setEditingId(null);
-        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [], default_materials: [] });
+        setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, sort_order: 10, group_name: '⭐ Түгээмэл хэвлэл', default_operations: [], default_materials: [] });
         fetchCategories();
       } else {
         alert("Алдаа гарлаа. Нэр давхардсан байж болзошгүй.");
@@ -121,6 +125,8 @@ export default function ProductCategoriesPage() {
       has_pages: c.has_pages,
       has_bookmark: c.has_bookmark,
       waste_qty: c.waste_qty,
+      sort_order: c.sort_order ?? 0,
+      group_name: c.group_name || '⭐ Түгээмэл хэвлэл',
       default_operations: c.default_operations ? (Array.isArray(c.default_operations) ? c.default_operations : JSON.parse(c.default_operations)) : [],
       default_materials: c.default_materials ? (Array.isArray(c.default_materials) ? c.default_materials : JSON.parse(c.default_materials)) : []
     });
@@ -147,7 +153,7 @@ export default function ProductCategoriesPage() {
         <button className="btn btn-primary" onClick={() => {
           setShowAdd(!showAdd);
           setEditingId(null);
-          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, default_operations: [], default_materials: [] });
+          setFormData({ name: '', calc_mode: 'BOOK_MODE', has_cover: true, has_inner: true, has_binding: true, has_pages: true, has_bookmark: false, waste_qty: 100, sort_order: 10, group_name: '⭐ Түгээмэл хэвлэл', default_operations: [], default_materials: [] });
         }}>
           {showAdd ? 'Буцах' : '+ Төрөл нэмэх'}
         </button>
@@ -160,6 +166,22 @@ export default function ProductCategoriesPage() {
             <div className="form-group">
               <label className="label">Нэр*</label>
               <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="Жишээ: Зурагт хуудас, Календарь..." />
+            </div>
+            <div className="form-group">
+              <label className="label">Бүлэг (Ангилал)*</label>
+              <select value={formData.group_name} onChange={e => setFormData({...formData, group_name: e.target.value})} className="input">
+                <option value="⭐ Түгээмэл хэвлэл">⭐ Түгээмэл хэвлэл</option>
+                <option value="📚 Ном, сэтгүүл">📚 Ном, сэтгүүл</option>
+                <option value="📢 Маркетинг, сурталчилгаа">📢 Маркетинг, сурталчилгаа</option>
+                <option value="📦 Сав баглаа боодол">📦 Сав баглаа боодол</option>
+                <option value="🏢 Албан хэрэгцээ, маягт">🏢 Албан хэрэгцээ, маягт</option>
+                <option value="⚙️ Бусад / Тусгай хэвлэл">⚙️ Бусад / Тусгай хэвлэл</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="label">Эрэмбэ (Дараалал #)*</label>
+              <input type="number" required value={formData.sort_order} onChange={e => setFormData({...formData, sort_order: Number(e.target.value)})} className="input" />
+              <small style={{ color: '#64748b' }}>Бага тоотой нь жагсаалтын эхэнд гарна (жишээ: 1, 2, 3...)</small>
             </div>
             <div className="form-group">
               <label className="label">Бодолтын горим (Calc Mode)*</label>
@@ -312,6 +334,8 @@ export default function ProductCategoriesPage() {
         <table className="table">
           <thead>
             <tr>
+              <th style={{ width: '60px' }}>#</th>
+              <th>Бүлэг</th>
               <th>Нэр</th>
               <th>Горим</th>
               <th>Хадаас</th>
@@ -325,6 +349,8 @@ export default function ProductCategoriesPage() {
           <tbody>
             {categories.map(c => (
               <tr key={c.id}>
+                <td style={{ fontWeight: 600, color: '#64748b' }}>{c.sort_order ?? 0}</td>
+                <td><span style={{ fontSize: '0.85rem', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>{c.group_name || 'Бусад'}</span></td>
                 <td style={{ fontWeight: 600 }}>{c.name}</td>
                 <td>{c.calc_mode}</td>
                 <td>{c.waste_qty}</td>
