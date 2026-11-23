@@ -373,8 +373,6 @@ function getHardcoverAuxiliarySpecs(size?: string) {
       cardboardDiv: 9,
       standCardboardDiv: 4,
       standLiningDiv: 4,
-      endpaperDiv: 2.5,
-      endpaperPrinted: { printSize: 'A2', pressSheet: '1.0', divBy: 5, extra: 100, baseMultiplier: 2.0 },
       endpaperDiv: 2,
       endpaperPrinted: { printSize: 'B2', pressSheet: '1.0', divBy: 2, extra: 100, baseMultiplier: 1.0 },
       headbandDiv: 12,
