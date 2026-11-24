@@ -65,6 +65,54 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
+export const updateUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, full_name, password, role, phone, stamp_url } = req.body;
+  try {
+    const userId = parseInt(id as string);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Буруу хэрэглэгчийн дугаар' });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Хэрэглэгч олдсонгүй' });
+    }
+
+    // Check if name is taken by another user
+    if (name && name !== existing.name) {
+      const duplicate = await prisma.user.findFirst({
+        where: { name, NOT: { id: userId } }
+      });
+      if (duplicate) {
+        return res.status(400).json({ error: 'Хэрэглэгчийн нэр давхцаж байна' });
+      }
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (full_name !== undefined) updateData.full_name = full_name;
+    if (role !== undefined) updateData.role = role;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (stamp_url !== undefined) updateData.stamp_url = stamp_url || null;
+
+    // Only update password if provided and not empty
+    if (password && typeof password === 'string' && password.trim() !== '') {
+      updateData.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, name: true, full_name: true, role: true, phone: true, stamp_url: true, createdAt: true, updatedAt: true }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+};
+
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
