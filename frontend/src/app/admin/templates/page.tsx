@@ -203,6 +203,7 @@ export default function TemplatesPage() {
               <th style={{ padding: '0.5rem' }}>Хэмжээ</th>
               <th style={{ padding: '0.5rem' }}>Хавтас / Дотор</th>
               <th style={{ padding: '0.5rem' }}>Хуудас</th>
+              <th style={{ padding: '0.5rem' }}>Өгөгдөл</th>
               <th style={{ padding: '0.5rem', width: '150px' }}>Үйлдэл</th>
             </tr>
           </thead>
@@ -214,6 +215,17 @@ export default function TemplatesPage() {
                 <td style={{ padding: '0.5rem' }}>{t.size || '-'}</td>
                 <td style={{ padding: '0.5rem' }}>{t.cover_color || '-'} / {t.inner_color || '-'}</td>
                 <td style={{ padding: '0.5rem' }}>{t.total_pages || '-'}</td>
+                <td style={{ padding: '0.5rem' }}>
+                  {t.order_data ? (
+                    <span style={{ padding: '0.2rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600, background: '#dcfce7', color: '#166534' }}>
+                      📦 Бүрэн бэлдэцтэй
+                    </span>
+                  ) : (
+                    <span style={{ padding: '0.2rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 500, background: '#f1f5f9', color: '#64748b' }}>
+                      📄 Үзүүлэлт
+                    </span>
+                  )}
+                </td>
                 <td style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem' }}>
                   <button onClick={() => handleEdit(t)} style={{ color: 'var(--primary-color)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Засах</button>
                   <button onClick={() => handleDelete(t.id)} style={{ color: 'var(--danger-color)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Устгах</button>
@@ -221,7 +233,7 @@ export default function TemplatesPage() {
               </tr>
             ))}
             {templates.length === 0 && (
-              <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Загвар байхгүй байна.</td></tr>
+              <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Загвар байхгүй байна.</td></tr>
             )}
           </tbody>
         </table>

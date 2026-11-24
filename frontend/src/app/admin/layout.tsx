@@ -141,6 +141,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span style={{ fontSize: '1.1rem' }}>⚙️</span>
                 {!collapsed && <span>Системийн Тохиргоо</span>}
               </Link>
+
+              <Link href="/admin/order-statuses" title="Захиалгын төлвүүд" style={{ padding: '0.6rem', borderRadius: '0.375rem', background: '#f8fafc', fontWeight: 600, textDecoration: 'none', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                <span style={{ fontSize: '1.1rem' }}>🏷️</span>
+                {!collapsed && <span>Захиалгын төлвүүд</span>}
+              </Link>
             </>
           )}
         </nav>

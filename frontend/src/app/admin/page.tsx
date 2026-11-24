@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
   const [period, setPeriod] = useState('this_month');
 
   useEffect(() => {
-    if (user && user.role !== 'ADMIN') {
+    if (user && user.role !== 'ADMIN' && user.role !== 'FINANCE') {
       router.push('/');
     } else if (token) {
       fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/analytics/admin?period=${period}`, {

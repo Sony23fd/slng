@@ -78,16 +78,24 @@ export default function AdminFormulasPage() {
       </div>
 
       <div style={{ background: '#e0f2fe', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #bae6fd' }}>
-        <h4 style={{ margin: '0 0 0.5rem', color: '#0284c7' }}>💡 Ашиглах боломжтой хувьсагчид:</h4>
-        <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#0369a1', fontSize: '0.9rem' }}>
-          <li><code>base_qty</code> - Үндсэн тоо (Ж: 1000)</li>
-          <li><code>extra_qty</code> - Нэмэлт тоо (Ж: 50)</li>
-          <li><code>divide_by</code> - Хуваалт буюу нэг хуудсанд хэд багтах тоо (Ж: 8)</li>
-          <li><code>press_sheet</code> - Хэвлэлийн хуудас буюу Үржвэр (Ж: 2.5)</li>
-          <li><code>total_pages</code> - Нийт нүүр хуудасны тоо (Ж: 100)</li>
-          <li><code>setups</code> - Сет буюу Хэвлэлийн хуудсыг дээшээ татаж бүхэлдсэн тоо (Ж: 3)</li>
+        <h4 style={{ margin: '0 0 0.5rem', color: '#0284c7' }}>💡 Ажиллагааны томьёонд ашиглах бодит хувьсагчид (OrderForm Scope):</h4>
+        <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#0369a1', fontSize: '0.9rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.25rem' }}>
+          <li><code>total_qty</code> - Захиалгын нийт тоо (Ж: 1000)</li>
+          <li><code>total_pages</code> - Нийт нүүр хуудасны тоо (Ж: 160)</li>
+          <li><code>total_base_sheets</code> - Нийт хэвлэлийн хуудас (Ж: 2000)</li>
+          <li><code>total_printed_sheets</code> - Нийт хэвлэл (Үндсэн + Хадаас)</li>
+          <li><code>inner_base_sheets</code> - Дотор цаасны хэвлэх хуудас</li>
+          <li><code>cover_base_sheets</code> - Хавтасны хэвлэх хуудас</li>
+          <li><code>press_sheet</code> - Хэвлэлийн хуудасны үржвэр (х.х)</li>
+          <li><code>inner_press_sheet</code> - Дотор хэвлэлийн хуудас (х.х)</li>
+          <li><code>cover_press_sheet</code> - Хавтас хэвлэлийн хуудас (х.х)</li>
+          <li><code>cover_colors</code> / <code>inner_colors</code> - Өнгөний нийлбэр (4+4=8)</li>
+          <li><code>waste_qty</code> - Ангиллын хадаасны норм (Ж: 100)</li>
+          <li>Математик функцууд: <code>ceil()</code>, <code>floor()</code>, <code>round()</code>, <code>max()</code>, <code>min()</code></li>
         </ul>
-        <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.85rem', color: '#0284c7' }}>Жишээ томъёо: <code>((base_qty * (total_pages / 2)) / press_sheet) + (extra_qty * setups)</code></p>
+        <p style={{ marginTop: '0.5rem', marginBottom: 0, fontSize: '0.85rem', color: '#0284c7' }}>
+          Жишээ томьёонууд: <code>total_qty * 2</code> (Торны оосор), <code>total_base_sheets</code> (Офсет хэвлэх тоо), <code>ceil(total_pages / 16) * total_qty</code> (Нугалаа / Оёдол), <code>ceil(total_qty / 500)</code> (Зүсэлт)
+        </p>
       </div>
 
       {showAdd ? (
